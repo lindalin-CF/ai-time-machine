@@ -1,0 +1,72 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ai-portal-library",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-05",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // ---- Static Assets (KUMO gallery front-end) ----
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    // API + image streaming run the Worker script first; everything else is a static file.
+    "run_worker_first": ["/api/*", "/img/*"]
+  },
+
+  "observability": { "enabled": true },
+
+  // ---- Cron: every Monday 09:00 UTC kicks off the weekly capture ----
+  "triggers": { "crons": ["0 9 * * 1"] },
+
+  // ---- D1: capture + portal + week metadata ----
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ai-portal-library",
+      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+    }
+  ],
+
+  // ---- R2: the actual screenshot PNG bytes ----
+  "r2_buckets": [
+    { "binding": "SHOTS", "bucket_name": "ai-portal-shots" }
+  ],
+
+  // ---- KV: cached API responses + latest-week pointer ----
+  "kv_namespaces": [
+    { "binding": "CACHE", "id": "REPLACE_WITH_YOUR_KV_NAMESPACE_ID" }
+  ],
+
+  // ---- Workers AI: vision analysis of each screenshot ----
+  "ai": { "binding": "AI" },
+
+  // ---- Browser Rendering: headless Chromium that takes the screenshots ----
+  "browser": { "binding": "BROWSER" },
+
+  // ---- Queues: fan-out one capture job per portal, with retries + DLQ ----
+  "queues": {
+    "producers": [
+      { "queue": "ai-portal-capture", "binding": "CAPTURE_QUEUE" }
+    ],
+    "consumers": [
+      {
+        "queue": "ai-portal-capture",
+        "max_batch_size": 3,
+        "max_batch_timeout": 30,
+        "max_retries": 3,
+        "max_concurrency": 2,
+        "dead_letter_queue": "ai-portal-capture-dlq"
+      }
+    ]
+  },
+
+  // ---- Workflows: durable weekly orchestration ----
+  "workflows": [
+    {
+      "name": "ai-portal-capture-workflow",
+      "binding": "CAPTURE_WORKFLOW",
+      "class_name": "CaptureWorkflow"
+    }
+  ]
+}

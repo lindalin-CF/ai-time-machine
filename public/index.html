@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en" data-theme="kumo">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Portal Screenshot Library</title>
+  <meta name="description" content="A weekly-captured reference library of every major AI / LLM portal landing page — screenshots, design analysis and colour palettes. Built on Cloudflare Workers." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <!-- top bar -->
+  <header class="topbar">
+    <a class="wordmark" href="/">
+      <span class="wordmark-dot"></span>LINDA<span class="wordmark-thin">.DESIGN</span>
+    </a>
+    <nav class="topnav">
+      <a href="https://cchs62023.github.io/linda-in-design-resume/" class="topnav-link">Back to portfolio &#8599;</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- hero -->
+    <section class="hero">
+      <div class="dotgrid" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <span class="corner corner-tl" aria-hidden="true"></span>
+        <span class="corner corner-tr" aria-hidden="true"></span>
+        <span class="corner corner-bl" aria-hidden="true"></span>
+        <span class="corner corner-br" aria-hidden="true"></span>
+
+        <span class="pill">Weekly capture &middot; AI / LLM portals</span>
+        <h1 class="hero-title">AI Portal <span class="accent">Screenshot Library</span></h1>
+        <p class="hero-sub">
+          Every week a headless browser visits the major AI portals, captures the landing page,
+          files the image, and writes a short design note. A living UI reference I can scan when
+          I need inspiration for hierarchy, colour and layout.
+        </p>
+
+        <dl class="stats" id="stats">
+          <div class="stat"><dt>Screenshots</dt><dd data-stat="screenshots">–</dd></div>
+          <div class="stat"><dt>Portals tracked</dt><dd data-stat="portals">–</dd></div>
+          <div class="stat"><dt>Weeks archived</dt><dd data-stat="weeks">–</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <!-- controls -->
+    <section class="controls">
+      <div class="filters" id="filters" role="tablist" aria-label="Filter by portal"></div>
+      <div class="weekpick">
+        <label for="weekSelect">Week</label>
+        <select id="weekSelect" aria-label="Choose a week"></select>
+      </div>
+    </section>
+
+    <!-- section heading -->
+    <div class="section-head">
+      <h2 id="weekHeading">Loading…</h2>
+      <span class="section-rule" aria-hidden="true"></span>
+    </div>
+
+    <!-- gallery -->
+    <section class="grid" id="grid" aria-live="polite"></section>
+    <div class="empty" id="empty" hidden>No captures for this filter yet.</div>
+  </main>
+
+  <footer class="sitefoot">
+    <div class="foot-left">
+      <strong>AI Portal Screenshot Library</strong>
+      <span>Weekly UI reference &middot; captured &amp; served on Cloudflare</span>
+    </div>
+    <ul class="foot-stack" aria-label="Cloudflare products used">
+      <li>Workers</li><li>Static Assets</li><li>D1</li><li>R2</li><li>KV</li>
+      <li>Workers AI</li><li>Browser Rendering</li><li>Workflows</li><li>Queues</li><li>Cron</li>
+    </ul>
+  </footer>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

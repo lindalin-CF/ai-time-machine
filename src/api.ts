@@ -1,0 +1,118 @@
+import type { Env, CaptureRow } from "./types";
+import { listPortals, listWeeks, latestWeek, capturesForWeek } from "./db";
+
+const JSON_HEADERS = { "content-type": "application/json; charset=utf-8" };
+
+function json(data: unknown, status = 200, extra: Record<string, string> = {}) {
+  return new Response(JSON.stringify(data), { status, headers: { ...JSON_HEADERS, ...extra } });
+}
+
+/** Public image URL for a capture: R2 object when present, else the seeded sample asset. */
+function imageUrl(row: CaptureRow): string {
+  return row.r2_key ? `/img/${row.r2_key}` : `/samples/${row.slug}.svg`;
+}
+
+function shapeCapture(row: CaptureRow) {
+  let palette: string[] = [];
+  try { palette = JSON.parse(row.palette || "[]"); } catch { palette = []; }
+  return {
+    id: row.id, slug: row.slug, portal: row.portal, company: row.company,
+    url: row.url, brand: row.brand, week: row.week,
+    image: imageUrl(row), width: row.width, height: row.height,
+    palette, analysis: row.analysis, analysisBy: row.analysis_by,
+    status: row.status, sample: !row.r2_key, capturedAt: row.captured_at,
+  };
+}
+
+/** Cache-through a JSON payload in KV for `ttl` seconds. */
+async function cached<T>(env: Env, key: string, ttl: number, build: () => Promise<T>): Promise<T> {
+  const hit = await env.CACHE.get(key, "json");
+  if (hit) return hit as T;
+  const fresh = await build();
+  await env.CACHE.put(key, JSON.stringify(fresh), { expirationTtl: ttl });
+  return fresh;
+}
+
+export async function handleApi(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  const url = new URL(request.url);
+  const path = url.pathname;
+
+  if (path === "/api/health") return json({ ok: true, ts: Date.now() });
+
+  if (path === "/api/portals") {
+    const data = await cached(env, "cache:portals", 300, async () => {
+      const ps = await listPortals(env);
+      return ps.map((p) => ({ slug: p.slug, name: p.name, company: p.company, url: p.url, brand: p.brand }));
+    });
+    return json({ portals: data });
+  }
+
+  if (path === "/api/weeks") {
+    const data = await cached(env, "cache:weeks", 300, async () => await listWeeks(env));
+    return json({ weeks: data });
+  }
+
+  if (path === "/api/stats") {
+    const data = await cached(env, "cache:stats", 300, async () => {
+      const [shots, portals, weeks] = await Promise.all([
+        env.DB.prepare(`SELECT COUNT(*) AS n FROM captures WHERE status='ok'`).first<{ n: number }>(),
+        env.DB.prepare(`SELECT COUNT(*) AS n FROM portals WHERE active=1`).first<{ n: number }>(),
+        env.DB.prepare(`SELECT COUNT(*) AS n FROM weeks`).first<{ n: number }>(),
+      ]);
+      return { screenshots: shots?.n ?? 0, portals: portals?.n ?? 0, weeks: weeks?.n ?? 0 };
+    });
+    return json(data);
+  }
+
+  if (path === "/api/captures") {
+    const requested = url.searchParams.get("week");
+    const week = requested ?? (await latestWeek(env));
+    if (!week) return json({ week: null, label: null, captures: [] });
+    const payload = await cached(env, `cache:captures:${week}`, 300, async () => {
+      const rows = await capturesForWeek(env, week);
+      const weeks = await listWeeks(env);
+      const label = weeks.find((w) => w.week === week)?.label ?? week;
+      return { week, label, captures: rows.map(shapeCapture) };
+    });
+    return json(payload);
+  }
+
+  // Admin: manually trigger a capture run for the current (or supplied) week.
+  if (path === "/api/capture/run" && request.method === "POST") {
+    const body = await request.json<{ week?: string; label?: string }>().catch(() => ({}));
+    const week = body.week ?? isoMonday(new Date());
+    const label = body.label ?? weekLabel(week);
+    const instance = await env.CAPTURE_WORKFLOW.create({ params: { week, label } });
+    return json({ started: true, week, label, instanceId: instance.id });
+  }
+
+  return json({ error: "not_found" }, 404);
+}
+
+/** Stream a screenshot straight out of R2. */
+export async function handleImage(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const key = decodeURIComponent(url.pathname.replace(/^\/img\//, ""));
+  if (!key) return new Response("missing key", { status: 400 });
+  const obj = await env.SHOTS.get(key);
+  if (!obj) return new Response("not found", { status: 404 });
+  const headers = new Headers();
+  obj.writeHttpMetadata(headers);
+  headers.set("etag", obj.httpEtag);
+  headers.set("cache-control", "public, max-age=86400");
+  return new Response(obj.body, { headers });
+}
+
+// ---------- date helpers ----------
+export function isoMonday(d: Date): string {
+  const date = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const day = date.getUTCDay(); // 0 Sun .. 6 Sat
+  const diff = (day === 0 ? -6 : 1) - day; // shift to Monday
+  date.setUTCDate(date.getUTCDate() + diff);
+  return date.toISOString().slice(0, 10);
+}
+export function weekLabel(iso: string): string {
+  const d = new Date(iso + "T00:00:00Z");
+  const m = d.toLocaleString("en-US", { month: "short", timeZone: "UTC" });
+  return `Week of ${m} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
+}
