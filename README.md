@@ -161,6 +161,23 @@ curl -X POST https://<your-worker>.workers.dev/api/capture/run
 
 ---
 
+## 重跑單一 / 指定 portal
+
+某個 portal 擷取失敗（例如需要登入或載入超時）時，可以只重跑它，不必整批重來：
+
+```bash
+# 單一
+curl -X POST https://<your-worker>.workers.dev/api/capture/portal \
+  -H 'content-type: application/json' -d '{"slug":"gemini"}'
+
+# 多個
+curl -X POST https://<your-worker>.workers.dev/api/capture/portal \
+  -H 'content-type: application/json' -d '{"slugs":["gemini","you"]}'
+```
+
+省略 `week` 時預設為本週。這條路徑會把工作丟進同一個 Queue，走一樣的
+Browser Rendering → R2 → Workers AI → D1 流程（含自動重試）。
+
 ## 管理 portal 清單
 
 清單存在 D1 的 `portals` 資料表。新增或移除只要改資料庫即可，不用改程式：

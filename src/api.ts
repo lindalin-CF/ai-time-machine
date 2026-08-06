@@ -88,6 +88,24 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     }
   }
 
+  // Admin: re-run capture for specific portal(s) only (e.g. ones that failed).
+  if (path === "/api/capture/portal" && request.method === "POST") {
+    const body = await request
+      .json<{ week?: string; slug?: string; slugs?: string[] }>()
+      .catch(() => ({} as { week?: string; slug?: string; slugs?: string[] }));
+    const week = body.week ?? isoMonday(new Date());
+    const requested = body.slugs ?? (body.slug ? [body.slug] : []);
+    if (!requested.length) return json({ error: "provide slug or slugs[]" }, 400);
+    const portals = await listPortals(env);
+    const valid = new Set(portals.map((p) => p.slug));
+    const slugs = requested.filter((s) => valid.has(s));
+    const unknown = requested.filter((s) => !valid.has(s));
+    if (!slugs.length) return json({ error: "no valid slugs", unknown }, 400);
+    // Reuse the Queue consumer -> Browser Rendering + R2 + Workers AI + D1 + retries.
+    await env.CAPTURE_QUEUE.sendBatch(slugs.map((slug) => ({ body: { week, slug } })));
+    return json({ enqueued: true, week, slugs, unknown });
+  }
+
   // Admin: manually trigger a capture run for the current (or supplied) week.
   if (path === "/api/capture/run" && request.method === "POST") {
     const body = await request
