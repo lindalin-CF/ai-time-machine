@@ -24,7 +24,7 @@
     {
       "binding": "DB",
       "database_name": "ai-portal-library",
-      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+      "database_id": "5ba25c01-2dc6-49d8-ba92-8078863057ad"
     }
   ],
 
@@ -35,7 +35,7 @@
 
   // ---- KV: cached API responses + latest-week pointer ----
   "kv_namespaces": [
-    { "binding": "CACHE", "id": "REPLACE_WITH_YOUR_KV_NAMESPACE_ID" }
+    { "binding": "CACHE", "id": "5c7252cb79964f8cab90d2171096c386" }
   ],
 
   // ---- Workers AI: vision analysis of each screenshot ----
