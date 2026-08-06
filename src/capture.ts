@@ -69,22 +69,37 @@ async function screenshot(env: Env, portal: PortalRow): Promise<Uint8Array> {
   }
 }
 
+// Meta vision models require a one-time license acceptance per account.
+// Send a single { prompt: "agree" } request, guarded by a KV flag so it only happens once.
+const VISION_MODEL = "@cf/meta/llama-3.2-11b-vision-instruct";
+
+async function ensureAgreed(env: Env): Promise<void> {
+  try {
+    if (await env.CACHE.get("ai:agreed")) return;
+    await env.AI.run(VISION_MODEL, { prompt: "agree" });
+    await env.CACHE.put("ai:agreed", "1", { expirationTtl: 60 * 60 * 24 * 365 });
+  } catch (err) {
+    console.error("Workers AI license agreement failed:", err);
+  }
+}
+
 async function analyse(env: Env, png: Uint8Array, portal: PortalRow): Promise<{ text: string; by: string }> {
   const prompt =
     `You are a senior product designer writing one tight paragraph (3-4 sentences) of design analysis ` +
     `for a UI reference library. Describe the landing page of ${portal.name} by ${portal.company}: its layout, ` +
     `visual hierarchy, use of colour and typography, and how it guides the user to the primary action. ` +
     `Be specific and critical. Do not mention that this is a screenshot.`;
+  await ensureAgreed(env);
   try {
-    const res: any = await env.AI.run("@cf/meta/llama-3.2-11b-vision-instruct", {
-      image: [...png],
+    const res: any = await env.AI.run(VISION_MODEL, {
       prompt,
+      image: [...png],
       max_tokens: 320,
     });
     const text = (res?.response ?? "").toString().trim();
     if (text.length > 20) return { text, by: "workers-ai" };
-  } catch (_err) {
-    // fall through to placeholder
+  } catch (err) {
+    console.error(`vision analysis failed for ${portal.slug}:`, err);
   }
   return {
     text: `${portal.name} by ${portal.company}. Automated design analysis was unavailable for this capture; ` +

@@ -143,7 +143,18 @@ npm run deploy
 Browser Rendering、Workers AI、Workflows、Queues 這些 binding 在部署時會自動掛上，
 不需要額外開資源。部署後每週一 09:00 UTC 就會自動擷取。
 
-### 6.（可選）手動先跑一次擷取
+### 6. Workers AI 一次性授權（重要）
+
+Meta 的視覺模型（Llama 3.2 Vision）第一次使用前，需要對你的帳號同意一次授權，
+否則設計分析會全部退回預設文字。部署後先打一次：
+
+```bash
+curl -X POST https://<your-worker>.workers.dev/api/ai/agree
+```
+
+回傳 `{"agreed":true,...}` 即可。（程式也內建自動同意，但手動打一次最保險。）
+
+### 7.（可選）手動先跑一次擷取
 ```bash
 curl -X POST https://<your-worker>.workers.dev/api/capture/run
 ```

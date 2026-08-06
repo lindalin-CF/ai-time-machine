@@ -77,9 +77,22 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     return json(payload);
   }
 
+  // Admin: one-time Meta license acceptance for the vision model.
+  if (path === "/api/ai/agree" && request.method === "POST") {
+    try {
+      const r = await env.AI.run("@cf/meta/llama-3.2-11b-vision-instruct", { prompt: "agree" });
+      await env.CACHE.put("ai:agreed", "1", { expirationTtl: 60 * 60 * 24 * 365 });
+      return json({ agreed: true, result: r });
+    } catch (e) {
+      return json({ agreed: false, error: String(e) }, 500);
+    }
+  }
+
   // Admin: manually trigger a capture run for the current (or supplied) week.
   if (path === "/api/capture/run" && request.method === "POST") {
-    const body = await request.json<{ week?: string; label?: string }>().catch(() => ({}));
+    const body = await request
+      .json<{ week?: string; label?: string }>()
+      .catch(() => ({} as { week?: string; label?: string }));
     const week = body.week ?? isoMonday(new Date());
     const label = body.label ?? weekLabel(week);
     const instance = await env.CAPTURE_WORKFLOW.create({ params: { week, label } });
