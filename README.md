@@ -208,6 +208,51 @@ Browser Rendering → R2 → Workers AI → D1 流程（含自動重試）。
 （`ERR_CONNECTION_RESET` 或 Cloudflare 錯誤頁），此時 cookie 也救不了。Claude／Perplexity／Poe
 ／HuggingChat 這類「只有登入牆、沒有網路封鎖」的站，cookie 注入才有效。
 
+## 截取「登入後的真實介面」— 本機截圖 agent
+
+ChatGPT／Gemini／Claude 這類站會擋「資料中心 IP + headless 瀏覽器」，所以雲端的 Browser
+Rendering 永遠只能看到它們的**未登入頁**。要截到你**每天實際互動的登入介面**，唯一可行的方式是
+在**你自己的電腦**上截圖（你的住宅 IP + 你真正登入的瀏覽器），再上傳到 Worker。
+
+流程：
+```
+你的 Chrome（登入一次，profile 記住）
+   └─ scripts/local-capture/capture.mjs 截圖
+        └─ POST /api/upload（Bearer token）
+             └─ 沿用雲端同一條管線：R2 存圖 → Workers AI 分析 → D1 → KUMO gallery
+```
+
+### 一次性設定
+1. 設定上傳用的 token secret（自己想一組長字串）：
+   ```bash
+   wrangler secret put UPLOAD_TOKEN      # 貼上你的 token
+   npm run deploy
+   ```
+2. 安裝本機 agent 的相依套件：
+   ```bash
+   cd scripts/local-capture
+   npm install                            # 會下載一份 Chromium
+   ```
+
+### 每次擷取
+```bash
+cd scripts/local-capture
+export UPLOAD_TOKEN=<和上面 secret 一樣的值>
+node capture.mjs                # 全部 portal；每個會停下來讓你登入 / 打開想要的畫面，按 Enter 擷取
+node capture.mjs claude chatgpt # 只做指定幾個
+node capture.mjs --auto         # 不暫停（登入狀態已存在 profile 後可用，適合排程）
+```
+- **第一次**跑會開一個 Chrome 視窗，停在每個站等你登入；登入狀態會存進 `scripts/local-capture/.capture-profile`
+  （已 gitignore），之後的 `--auto` 就能全自動。
+- 截完打開你的網站就能看到「登入後」的真實 UI，並附上 Workers AI 的設計分析。
+
+### 每週自動化（可選，macOS）
+用 `--auto` 搭配 macOS 的 launchd 或 cron，在你電腦上每週跑一次即可（因為登入必須在你的機器上）。
+
+### 安全性
+`UPLOAD_TOKEN` 只存成 `wrangler secret` 和你本機的環境變數，別 commit。`.capture-profile` 含你的登入
+session，等同帳號存取權——已 gitignore，別上傳、別分享。
+
 ## 管理 portal 清單
 
 清單存在 D1 的 `portals` 資料表。新增或移除只要改資料庫即可，不用改程式：

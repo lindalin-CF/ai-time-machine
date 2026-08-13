@@ -1,6 +1,6 @@
 import type { Env, CaptureRow } from "./types";
-import { listPortals, listWeeks, latestWeek, capturesForWeek } from "./db";
-import { hasCookieSecret } from "./capture";
+import { listPortals, listWeeks, latestWeek, capturesForWeek, getPortal } from "./db";
+import { hasCookieSecret, storeCapture } from "./capture";
 
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8" };
 
@@ -90,6 +90,41 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
   }
 
   // Admin: re-run capture for specific portal(s) only (e.g. ones that failed).
+  // Local upload: a screenshot taken on YOUR machine (real login, residential IP) is stored
+  // through the same R2 -> Workers AI -> D1 pipeline as cloud captures. Token-gated.
+  if (path === "/api/upload" && request.method === "POST") {
+    const auth = request.headers.get("authorization") ?? "";
+    const token = auth.replace(/^Bearer\s+/i, "").trim();
+    const expected = (env as unknown as Record<string, unknown>).UPLOAD_TOKEN;
+    if (typeof expected !== "string" || !expected) {
+      return json({ error: "server missing UPLOAD_TOKEN secret" }, 500);
+    }
+    if (token !== expected) return json({ error: "unauthorized" }, 401);
+
+    const body = await request
+      .json<{ slug?: string; week?: string; imageBase64?: string }>()
+      .catch(() => ({} as { slug?: string; week?: string; imageBase64?: string }));
+    if (!body.slug || !body.imageBase64) return json({ error: "slug and imageBase64 required" }, 400);
+
+    const portal = await getPortal(env, body.slug);
+    if (!portal) return json({ error: "unknown slug: " + body.slug }, 400);
+
+    const week = body.week ?? isoMonday(new Date());
+    const b64 = body.imageBase64.replace(/^data:image\/png;base64,/, "");
+    let png: Uint8Array;
+    try {
+      const bin = atob(b64);
+      png = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) png[i] = bin.charCodeAt(i);
+    } catch {
+      return json({ error: "invalid base64 image" }, 400);
+    }
+    if (png.length < 100) return json({ error: "image too small" }, 400);
+
+    await storeCapture(env, week, portal, png);
+    return json({ ok: true, slug: body.slug, week, bytes: png.length });
+  }
+
   // Which portals have a COOKIES_<SLUG> secret configured (booleans only; never leaks values).
   if (path === "/api/auth/status") {
     const portals = await listPortals(env);

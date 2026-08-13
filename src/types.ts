@@ -23,6 +23,8 @@ export interface Env {
   CAPTURE_QUEUE: Queue<CaptureJob>;
   // Workflow — durable weekly orchestration
   CAPTURE_WORKFLOW: Workflow;
+  // Secret: bearer token that authorizes POST /api/upload (local screenshot uploads)
+  UPLOAD_TOKEN?: string;
 }
 
 export interface PortalRow {

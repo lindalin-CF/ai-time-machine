@@ -1,0 +1,9 @@
+{
+  "name": "ai-portal-local-capture",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Runs on your machine to screenshot logged-in AI portals and upload them to the Worker.",
+  "scripts": { "capture": "node capture.mjs" },
+  "dependencies": { "puppeteer": "^23.0.0" }
+}

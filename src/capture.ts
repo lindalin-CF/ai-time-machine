@@ -1,6 +1,6 @@
 import puppeteer from "@cloudflare/puppeteer";
 import type { Env, PortalRow, CaptureRow } from "./types";
-import { getPortal, paletteFromBrand, upsertCapture, refreshWeekCount } from "./db";
+import { getPortal, paletteFromBrand, upsertCapture, refreshWeekCount, upsertWeek } from "./db";
 
 const VIEWPORT = { width: 1280, height: 800 };
 
@@ -14,7 +14,6 @@ export async function capturePortal(env: Env, week: string, slug: string): Promi
   if (!portal) throw new Error(`unknown portal: ${slug}`);
 
   const id = `${slug}-${week}`;
-  const r2Key = `shots/${week}/${slug}.png`;
 
   let png: Uint8Array;
   try {
@@ -26,10 +25,21 @@ export async function capturePortal(env: Env, week: string, slug: string): Promi
     throw err; // let the Queue retry
   }
 
-  // Store the PNG bytes in R2.
+  await storeCapture(env, week, portal, png);
+}
+
+/**
+ * Store a captured PNG: ensure the week row exists -> R2 -> Workers AI analysis -> D1 -> cache bust.
+ * Shared by the cloud Browser Rendering path (capturePortal) and the local-upload endpoint (/api/upload),
+ * so a screenshot taken on your own machine flows through the exact same storage + analysis pipeline.
+ */
+export async function storeCapture(env: Env, week: string, portal: PortalRow, png: Uint8Array): Promise<void> {
+  const id = `${portal.slug}-${week}`;
+  const r2Key = `shots/${week}/${portal.slug}.png`;
+
+  await upsertWeek(env, week, weekLabelLocal(week));
   await env.SHOTS.put(r2Key, png, { httpMetadata: { contentType: "image/png" } });
 
-  // Ask Workers AI to describe the design (best-effort).
   const analysis = await analyse(env, png, portal);
 
   const row: CaptureRow = {
@@ -43,6 +53,12 @@ export async function capturePortal(env: Env, week: string, slug: string): Promi
   await upsertCapture(env, row);
   await refreshWeekCount(env, week);
   await invalidate(env, week);
+}
+
+function weekLabelLocal(iso: string): string {
+  const d = new Date(iso + "T00:00:00Z");
+  const m = d.toLocaleString("en-US", { month: "short", timeZone: "UTC" });
+  return `Week of ${m} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
 }
 
 function baseRow(p: PortalRow, week: string, id: string, r2Key: string | null, status: string): CaptureRow {
