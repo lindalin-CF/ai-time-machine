@@ -1,5 +1,6 @@
 import type { Env, CaptureRow } from "./types";
 import { listPortals, listWeeks, latestWeek, capturesForWeek } from "./db";
+import { hasCookieSecret } from "./capture";
 
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8" };
 
@@ -89,6 +90,14 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
   }
 
   // Admin: re-run capture for specific portal(s) only (e.g. ones that failed).
+  // Which portals have a COOKIES_<SLUG> secret configured (booleans only; never leaks values).
+  if (path === "/api/auth/status") {
+    const portals = await listPortals(env);
+    return json({
+      portals: portals.map((p) => ({ slug: p.slug, name: p.name, hasCookies: hasCookieSecret(env, p.slug) })),
+    });
+  }
+
   if (path === "/api/capture/portal" && request.method === "POST") {
     const body = await request
       .json<{ week?: string; slug?: string; slugs?: string[] }>()

@@ -55,18 +55,108 @@ function baseRow(p: PortalRow, week: string, id: string, r2Key: string | null, s
   };
 }
 
+const USER_AGENT =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
+
 async function screenshot(env: Env, portal: PortalRow): Promise<Uint8Array> {
   const browser = await puppeteer.launch(env.BROWSER);
   try {
     const page = await browser.newPage();
     await page.setViewport(VIEWPORT);
-    await page.goto(portal.url, { waitUntil: "networkidle2", timeout: 30000 });
-    await new Promise((r) => setTimeout(r, portal.wait_for ?? 4000));
+    await page.setUserAgent(USER_AGENT);
+
+    // If a COOKIES_<SLUG> secret is set, inject the logged-in session BEFORE navigating.
+    const cookies = loadCookies(env, portal.slug);
+    const authed = cookies.length > 0;
+    if (authed) {
+      try {
+        await page.setCookie(...(cookies as Parameters<typeof page.setCookie>));
+        console.log(`injected ${cookies.length} cookie(s) for ${portal.slug}`);
+      } catch (err) {
+        console.error(`setCookie failed for ${portal.slug}:`, err);
+      }
+    }
+
+    // Authenticated pages redirect/hydrate more, so be a little more patient.
+    const timeout = authed ? 45000 : 30000;
+    const settle = authed ? Math.max(portal.wait_for ?? 4000, 6000) : (portal.wait_for ?? 4000);
+    await page.goto(portal.url, { waitUntil: "networkidle2", timeout });
+    await new Promise((r) => setTimeout(r, settle));
     const buf = (await page.screenshot({ type: "png", fullPage: false })) as Uint8Array;
     return buf;
   } finally {
     await browser.close();
   }
+}
+
+/** Secret name for a portal's cookies, e.g. "chatgpt" -> "COOKIES_CHATGPT", "meta-ai" -> "COOKIES_META_AI". */
+export function cookieSecretName(slug: string): string {
+  return "COOKIES_" + slug.toUpperCase().replace(/[^A-Z0-9]/g, "_");
+}
+
+/** True if a cookies secret is configured for this portal (used by /api/auth/status). */
+export function hasCookieSecret(env: Env, slug: string): boolean {
+  const v = (env as unknown as Record<string, unknown>)[cookieSecretName(slug)];
+  return typeof v === "string" && v.trim().length > 0;
+}
+
+interface NormalizedCookie {
+  name: string;
+  value: string;
+  domain?: string;
+  path?: string;
+  expires?: number;
+  httpOnly?: boolean;
+  secure?: boolean;
+  sameSite?: "Strict" | "Lax" | "None";
+}
+
+/** Read + normalize the COOKIES_<SLUG> secret (Cookie-Editor / EditThisCookie JSON) into Puppeteer cookies. */
+function loadCookies(env: Env, slug: string): NormalizedCookie[] {
+  const raw = (env as unknown as Record<string, unknown>)[cookieSecretName(slug)];
+  if (typeof raw !== "string" || !raw.trim()) return [];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (err) {
+    console.error(`COOKIES secret for ${slug} is not valid JSON:`, err);
+    return [];
+  }
+  const arr = Array.isArray(parsed) ? parsed : (parsed as { cookies?: unknown[] })?.cookies;
+  if (!Array.isArray(arr)) return [];
+
+  const out: NormalizedCookie[] = [];
+  for (const item of arr) {
+    const c = item as Record<string, unknown>;
+    if (!c || typeof c.name !== "string" || typeof c.value !== "string") continue;
+    const cookie: NormalizedCookie = { name: c.name, value: c.value };
+
+    if (typeof c.domain === "string") {
+      // hostOnly cookies must not carry a leading dot.
+      cookie.domain = c.hostOnly === true ? c.domain.replace(/^./, "") : c.domain;
+    }
+    if (typeof c.path === "string") cookie.path = c.path;
+    if (typeof c.httpOnly === "boolean") cookie.httpOnly = c.httpOnly;
+    if (typeof c.secure === "boolean") cookie.secure = c.secure;
+
+    // expirationDate (float seconds) -> expires; omit for session cookies.
+    if (c.session !== true && typeof c.expirationDate === "number") {
+      cookie.expires = Math.floor(c.expirationDate);
+    } else if (typeof c.expires === "number") {
+      cookie.expires = Math.floor(c.expires);
+    }
+
+    // sameSite normalization.
+    const ss = typeof c.sameSite === "string" ? c.sameSite.toLowerCase() : "";
+    if (ss === "strict") cookie.sameSite = "Strict";
+    else if (ss === "lax") cookie.sameSite = "Lax";
+    else if (ss === "none" || ss === "no_restriction") cookie.sameSite = "None";
+    // "unspecified"/missing -> leave undefined
+    if (cookie.sameSite === "None") cookie.secure = true; // None requires Secure
+
+    out.push(cookie);
+  }
+  return out;
 }
 
 // Meta vision models require a one-time license acceptance per account.

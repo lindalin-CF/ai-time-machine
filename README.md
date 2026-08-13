@@ -178,6 +178,36 @@ curl -X POST https://<your-worker>.workers.dev/api/capture/portal \
 省略 `week` 時預設為本週。這條路徑會把工作丟進同一個 Queue，走一樣的
 Browser Rendering → R2 → Workers AI → D1 流程（含自動重試）。
 
+## 登入截圖（authenticated capture）
+
+有登入牆的 portal（例如 Claude）預設只會截到未登入畫面。要截到登入後的畫面，用
+**cookie 注入**：你在自己的瀏覽器登入，把該站 cookie 匯出成 JSON，存成 Worker secret，
+截圖時會自動注入。
+
+1. 在瀏覽器登入該站（確認看到的是登入後畫面）。
+2. 用 **Cookie-Editor** 擴充套件 → Export → JSON（複製）。
+3. 存成 secret（secret 名稱＝`COOKIES_` + slug 大寫，非英數字元換成 `_`）：
+   ```bash
+   wrangler secret put COOKIES_CLAUDE     # claude
+   wrangler secret put COOKIES_PERPLEXITY # perplexity
+   wrangler secret put COOKIES_META_AI    # meta-ai
+   ```
+   貼上剛剛複製的 JSON 當 secret 值。
+4. `npm run deploy`
+5. 重跑該 portal：
+   ```bash
+   curl -X POST https://<worker>/api/capture/portal \
+     -H 'content-type: application/json' -d '{"slug":"claude"}'
+   ```
+6. 用 `GET /api/auth/status` 確認哪些 portal 已設定 cookie（只回布林，不外洩內容）。
+
+**安全性**：session cookie 等同帳號完整存取權，請當成密碼看待——只存成 `wrangler secret`
+（絕不 commit、絕不放進 wrangler.jsonc 的 vars）。截圖若又出現未登入畫面，代表 cookie 過期，重新匯出即可。
+
+**現實限制**：ChatGPT／Gemini 這類站在**網路層**就會擋掉 Cloudflare 資料中心的連線
+（`ERR_CONNECTION_RESET` 或 Cloudflare 錯誤頁），此時 cookie 也救不了。Claude／Perplexity／Poe
+／HuggingChat 這類「只有登入牆、沒有網路封鎖」的站，cookie 注入才有效。
+
 ## 管理 portal 清單
 
 清單存在 D1 的 `portals` 資料表。新增或移除只要改資料庫即可，不用改程式：
