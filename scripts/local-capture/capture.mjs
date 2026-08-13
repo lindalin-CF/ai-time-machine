@@ -113,7 +113,7 @@ async function main() {
       const up = await fetch(`${WORKER_URL}/api/upload`, {
         method: "POST",
         headers: { "content-type": "application/json", authorization: `Bearer ${UPLOAD_TOKEN}` },
-        body: JSON.stringify({ slug: p.slug, week, imageBase64: buf.toString("base64") }),
+        body: JSON.stringify({ slug: p.slug, week, imageBase64: Buffer.from(buf).toString("base64") }),
       });
       if (up.ok) { console.log(`    ✓ uploaded (${(buf.length / 1024).toFixed(0)} KB)`); ok++; }
       else { console.log(`    ✗ upload failed: ${up.status} ${await up.text()}`); fail++; }
