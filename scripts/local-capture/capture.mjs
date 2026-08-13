@@ -78,12 +78,22 @@ async function main() {
   const week = isoMonday();
   console.log(`→ Week: ${week}  |  ${list.length} portal(s)  |  profile: ${PROFILE_DIR}`);
 
-  const browser = await puppeteer.launch({
+  const launchOpts = {
     headless: false,
     userDataDir: PROFILE_DIR,
     defaultViewport: VIEWPORT,
     args: ["--disable-blink-features=AutomationControlled", `--window-size=${VIEWPORT.width},${VIEWPORT.height + 140}`],
-  });
+  };
+  // Prefer your installed Google Chrome (correct architecture, no bundled-binary download problems);
+  // fall back to Puppeteer's bundled Chromium only if Chrome can't be found.
+  let browser;
+  try {
+    browser = await puppeteer.launch({ ...launchOpts, channel: "chrome" });
+    console.log("→ Using your installed Google Chrome");
+  } catch (err) {
+    console.log("→ System Chrome not usable (" + err.message + "); trying bundled Chromium…");
+    browser = await puppeteer.launch(launchOpts);
+  }
   const rl = auto ? null : readline.createInterface({ input, output });
   const pages = await browser.pages();
   const page = pages[0] ?? (await browser.newPage());
