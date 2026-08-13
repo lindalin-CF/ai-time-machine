@@ -165,3 +165,6 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   main{padding:0 18px 48px}
   .topbar{padding:18px}
 }
+
+/* Signed-in (local-agent) capture badge */
+.badge.signedin{background:var(--cf-orange);color:#fff;}

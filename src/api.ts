@@ -10,7 +10,10 @@ function json(data: unknown, status = 200, extra: Record<string, string> = {}) {
 
 /** Public image URL for a capture: R2 object when present, else the seeded sample asset. */
 function imageUrl(row: CaptureRow): string {
-  return row.r2_key ? `/img/${row.r2_key}` : `/samples/${row.slug}.svg`;
+  if (!row.r2_key) return `/samples/${row.slug}.svg`;
+  // Version the URL by capture time so a fresh screenshot busts the browser's 24h image cache.
+  const v = Date.parse(row.captured_at) || 0;
+  return `/img/${row.r2_key}?v=${v}`;
 }
 
 function shapeCapture(row: CaptureRow) {
@@ -22,6 +25,7 @@ function shapeCapture(row: CaptureRow) {
     image: imageUrl(row), width: row.width, height: row.height,
     palette, analysis: row.analysis, analysisBy: row.analysis_by,
     status: row.status, sample: !row.r2_key, capturedAt: row.captured_at,
+    signedIn: !!row.r2_key && row.r2_key.endsWith(".local.png"),
   };
 }
 
@@ -121,7 +125,7 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     }
     if (png.length < 100) return json({ error: "image too small" }, 400);
 
-    await storeCapture(env, week, portal, png);
+    await storeCapture(env, week, portal, png, "local");
     return json({ ok: true, slug: body.slug, week, bytes: png.length });
   }
 

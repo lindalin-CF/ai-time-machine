@@ -15,17 +15,30 @@ export async function capturePortal(env: Env, week: string, slug: string): Promi
 
   const id = `${slug}-${week}`;
 
+  // What (if anything) is already stored for this portal this week?
+  const existing = await env.DB.prepare(
+    `SELECT status, r2_key FROM captures WHERE id = ?`
+  ).bind(id).first<{ status: string; r2_key: string | null }>();
+
+  // Never let a cloud Browser Rendering run clobber a screenshot you uploaded from the
+  // local agent (your real signed-in browser). Those are stored under a *.local.png key.
+  if (existing && existing.status === "ok" && existing.r2_key && existing.r2_key.endsWith(".local.png")) {
+    return;
+  }
+
   let png: Uint8Array;
   try {
     png = await screenshot(env, portal);
   } catch (err) {
-    // Record the failure so the gallery can show a graceful placeholder.
-    await upsertCapture(env, baseRow(portal, week, id, null, "error"));
-    await invalidate(env, week);
+    // Only record a failure if we're not overwriting an already-good capture.
+    if (!(existing && existing.status === "ok" && existing.r2_key)) {
+      await upsertCapture(env, baseRow(portal, week, id, null, "error"));
+      await invalidate(env, week);
+    }
     throw err; // let the Queue retry
   }
 
-  await storeCapture(env, week, portal, png);
+  await storeCapture(env, week, portal, png, "cloud");
 }
 
 /**
@@ -33,9 +46,18 @@ export async function capturePortal(env: Env, week: string, slug: string): Promi
  * Shared by the cloud Browser Rendering path (capturePortal) and the local-upload endpoint (/api/upload),
  * so a screenshot taken on your own machine flows through the exact same storage + analysis pipeline.
  */
-export async function storeCapture(env: Env, week: string, portal: PortalRow, png: Uint8Array): Promise<void> {
+export async function storeCapture(
+  env: Env,
+  week: string,
+  portal: PortalRow,
+  png: Uint8Array,
+  source: "cloud" | "local" = "cloud",
+): Promise<void> {
   const id = `${portal.slug}-${week}`;
-  const r2Key = `shots/${week}/${portal.slug}.png`;
+  // Local (signed-in) uploads use a distinct key so cloud runs can recognise + preserve them.
+  const r2Key = source === "local"
+    ? `shots/${week}/${portal.slug}.local.png`
+    : `shots/${week}/${portal.slug}.png`;
 
   await upsertWeek(env, week, weekLabelLocal(week));
   await env.SHOTS.put(r2Key, png, { httpMetadata: { contentType: "image/png" } });

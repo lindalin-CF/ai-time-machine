@@ -138,6 +138,8 @@ function card(c) {
       ? `<span class="badge err">Capture failed</span>`
       : c.sample
       ? `<span class="badge">Sample</span>`
+      : c.signedIn
+      ? `<span class="badge signedin">Signed in · ${esc(fmtDate(c.capturedAt))}</span>`
       : `<span class="badge">${esc(fmtDate(c.capturedAt))}</span>`;
   const by = c.analysisBy === "workers-ai" ? "Workers AI" : "sample";
   return `
