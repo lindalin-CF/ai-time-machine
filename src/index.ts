@@ -1,15 +1,23 @@
+import { routeAgentRequest } from "agents";
 import type { Env, CaptureJob } from "./types";
 import { handleApi, handleImage, isoMonday, weekLabel } from "./api";
 import { capturePortal } from "./capture";
 
 // Export the Workflow class so the runtime can find it (class_name in wrangler.jsonc).
 export { CaptureWorkflow } from "./workflow";
+// Export the voice Durable Object so the runtime can find it (class_name in wrangler.jsonc).
+export { PortalVoiceAgent } from "./voice";
 
 export default {
   // ---- HTTP: API + R2 image streaming; everything else falls through to static assets ----
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     try {
+      // Voice agent WebSocket + control routes (/agents/portal-voice-agent/<name>).
+      if (url.pathname.startsWith("/agents/")) {
+        const routed = await routeAgentRequest(request, env);
+        if (routed) return routed;
+      }
       if (url.pathname.startsWith("/api/")) return await handleApi(request, env, ctx);
       if (url.pathname.startsWith("/img/")) return await handleImage(request, env);
     } catch (err) {

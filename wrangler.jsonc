@@ -11,7 +11,7 @@
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
     // API + image streaming run the Worker script first; everything else is a static file.
-    "run_worker_first": ["/api/*", "/img/*"]
+    "run_worker_first": ["/agents/*", "/api/*", "/img/*"]
   },
 
   "observability": { "enabled": true },
@@ -68,5 +68,17 @@
       "binding": "CAPTURE_WORKFLOW",
       "class_name": "CaptureWorkflow"
     }
+  ],
+
+  // ---- Durable Objects: voice agent (SQLite-backed, required by the agents SDK) ----
+  // Binding name kebab-cases to "portal-voice-agent", which is what the browser
+  // VoiceClient connects to at /agents/portal-voice-agent/<name>.
+  "durable_objects": {
+    "bindings": [
+      { "name": "PortalVoiceAgent", "class_name": "PortalVoiceAgent" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["PortalVoiceAgent"] }
   ]
 }
