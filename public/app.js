@@ -133,20 +133,22 @@ function card(c) {
   const palette = (c.palette || [])
     .map((hex) => `<i style="background:${esc(hex)}" title="${esc(hex)}"></i>`)
     .join("");
+  // Status chip only for meaningful states — no date (design cleanup).
   const badge =
     c.status === "error"
       ? `<span class="badge err">Capture failed</span>`
       : c.sample
       ? `<span class="badge">Sample</span>`
       : c.signedIn
-      ? `<span class="badge signedin">Signed in · ${esc(fmtDate(c.capturedAt))}</span>`
-      : `<span class="badge">${esc(fmtDate(c.capturedAt))}</span>`;
-  const by = c.analysisBy === "workers-ai" ? "Workers AI" : "sample";
+      ? `<span class="badge signedin">Signed in</span>`
+      : "";
+  const zoom = !c.sample && c.status !== "error";
   return `
   <article class="card">
-    <div class="shot" style="--brand:${esc(c.brand)}">
+    <div class="shot${zoom ? " zoomable" : ""}" style="--brand:${esc(c.brand)}"${zoom ? ` data-full="${esc(c.image)}" data-title="${esc(c.portal)}" data-file="${esc(c.slug)}-${esc(c.week)}"` : ""}>
       ${badge}
       <img loading="lazy" src="${esc(c.image)}" alt="${esc(c.portal)} landing page" />
+      ${zoom ? `<button class="zoom-hint" type="button" aria-label="Enlarge screenshot">Click to enlarge</button>` : ""}
     </div>
     <div class="card-body">
       <div class="card-head">
@@ -163,7 +165,6 @@ function card(c) {
       <p class="analysis">${esc(c.analysis)}</p>
       <div class="card-foot">
         <div class="palette">${palette}</div>
-        <div class="by">By <b>${esc(by)}</b></div>
       </div>
     </div>
   </article>`;
@@ -177,4 +178,69 @@ function fmtDate(iso) {
   }
 }
 
+// ---- lightbox: click a screenshot to enlarge + download --------------------
+function initLightbox() {
+  const el = document.createElement("div");
+  el.className = "lb";
+  el.hidden = true;
+  el.innerHTML = `
+    <div class="lb-backdrop" data-close></div>
+    <figure class="lb-figure">
+      <img class="lb-img" alt="" />
+      <figcaption class="lb-bar">
+        <span class="lb-title"></span>
+        <span class="lb-actions">
+          <a class="lb-download" href="#" download>Download PNG</a>
+          <button class="lb-close" type="button" aria-label="Close" data-close>&times;</button>
+        </span>
+      </figcaption>
+    </figure>`;
+  document.body.appendChild(el);
+  const img = el.querySelector(".lb-img");
+  const title = el.querySelector(".lb-title");
+  const dl = el.querySelector(".lb-download");
+
+  const close = () => {
+    el.hidden = true;
+    img.removeAttribute("src");
+    document.body.style.overflow = "";
+  };
+  const open = (full, t, file) => {
+    img.src = full;
+    img.alt = t + " screenshot";
+    title.textContent = t;
+    dl.href = full;
+    dl.setAttribute("download", (file || "screenshot") + ".png");
+    el.hidden = false;
+    document.body.style.overflow = "hidden";
+  };
+
+  el.addEventListener("click", (e) => { if (e.target.hasAttribute("data-close")) close(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !el.hidden) close(); });
+
+  // Force a real download (same-origin) instead of navigating to the image.
+  dl.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const name = dl.getAttribute("download") || "screenshot.png";
+    try {
+      const res = await fetch(dl.href);
+      const url = URL.createObjectURL(await res.blob());
+      const a = document.createElement("a");
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+    } catch {
+      window.open(dl.href, "_blank", "noopener");
+    }
+  });
+
+  // Delegate clicks from any card thumbnail (grid re-renders on filter/week change).
+  $("#grid").addEventListener("click", (e) => {
+    const shot = e.target.closest(".shot.zoomable");
+    if (!shot) return;
+    open(shot.dataset.full, shot.dataset.title || "Screenshot", shot.dataset.file);
+  });
+}
+
+initLightbox();
 boot();

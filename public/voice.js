@@ -161,7 +161,7 @@ function renderTranscript(messages) {
     for (const m of messages) {
       const div = document.createElement("div");
       div.className = "vp-msg " + (m.role === "user" ? "user" : "assistant");
-      div.textContent = m.content;
+      div.textContent = m.text;
       body.appendChild(div);
     }
   }
