@@ -12,11 +12,18 @@
  *             Enter in this terminal to capture. Your logins are saved in ./.capture-profile and
  *             reused on every future run (so later runs can be fully automatic with --auto).
  *
+ * LOGGED-OUT GUARD: before uploading, the script checks whether the page still looks logged out
+ *             (login URL or a visible password box). If so it will NOT upload a logged-out shot —
+ *             in interactive mode it lets you log in and retry; in --auto it skips that portal so
+ *             it never overwrites a good signed-in capture with a login screen.
+ *
  * USAGE:
- *   export UPLOAD_TOKEN=...            # must match the Worker secret you set with `wrangler secret put UPLOAD_TOKEN`
+ *   export UPLOAD_TOKEN=...            # must match the Worker secret (`wrangler secret put UPLOAD_TOKEN`)
  *   node capture.mjs                   # all portals, pause on each so you can log in / pick the screen
  *   node capture.mjs claude chatgpt    # only these slugs
  *   node capture.mjs --auto            # no pausing (use once you're already logged in)
+ *   node capture.mjs --auto --wait=10  # in --auto, wait 10s per page before capturing (default 6)
+ *   node capture.mjs --week=2026-08-10 # store under a specific week instead of the current one
  *   WORKER_URL=https://... node capture.mjs   # override the Worker URL
  */
 import puppeteer from "puppeteer";
@@ -60,13 +67,55 @@ function isoMonday(d = new Date()) {
   return t.toISOString().slice(0, 10);
 }
 
+/**
+ * Best-effort "is this page logged out?" check. High-precision signals only, so we don't
+ * wrongly skip a good signed-in shot:
+ *   - the final URL looks like a login / OAuth page, or
+ *   - a password box is actually visible on screen.
+ * Returns { loggedOut, finalUrl, reason }.
+ */
+async function loginState(page) {
+  const finalUrl = page.url() || "";
+  const u = finalUrl.toLowerCase();
+  const urlHit =
+    /\/(login|signin|sign-in|sign_in|auth|authenticate)(\/|\?|$)/.test(u) ||
+    u.includes("accounts.google.com") ||
+    u.includes("login.microsoftonline.com") ||
+    u.includes("login.live.com") ||
+    u.includes("auth0.com") ||
+    u.includes("auth.openai.com") ||
+    u.includes("/oauth");
+  let pwField = false;
+  try {
+    pwField = await page.evaluate(() => {
+      const visible = (el) => !!(el && el.offsetParent !== null && el.getClientRects().length);
+      return [...document.querySelectorAll('input[type="password"]')].some(visible);
+    });
+  } catch { /* evaluate can fail on cross-origin/redirecting pages; ignore */ }
+  const reason = urlHit ? `login URL (${finalUrl})` : pwField ? "a visible password field" : "";
+  return { loggedOut: urlHit || pwField, finalUrl, reason };
+}
+
+function parseArgs() {
+  const argv = process.argv.slice(2);
+  const auto = argv.includes("--auto");
+  const weekArg = (argv.find((a) => a.startsWith("--week=")) || "").split("=")[1];
+  const waitArg = (argv.find((a) => a.startsWith("--wait=")) || "").split("=")[1];
+  const only = argv.filter((a) => !a.startsWith("--"));
+  if (weekArg && !/^\d{4}-\d{2}-\d{2}$/.test(weekArg)) {
+    console.error(`✗ --week must be YYYY-MM-DD (got "${weekArg}")`);
+    process.exit(1);
+  }
+  const waitMs = waitArg ? Math.max(1, parseInt(waitArg, 10)) * 1000 : 6000;
+  return { auto, week: weekArg || isoMonday(), waitMs, only };
+}
+
 async function main() {
   if (!UPLOAD_TOKEN) {
     console.error("✗ Set UPLOAD_TOKEN first:  export UPLOAD_TOKEN=<the value you gave `wrangler secret put UPLOAD_TOKEN`>");
     process.exit(1);
   }
-  const auto = process.argv.includes("--auto");
-  const only = process.argv.slice(2).filter((a) => !a.startsWith("--"));
+  const { auto, week, waitMs, only } = parseArgs();
 
   console.log(`→ Worker: ${WORKER_URL}`);
   const res = await fetch(`${WORKER_URL}/api/portals`);
@@ -75,8 +124,8 @@ async function main() {
   const list = only.length ? portals.filter((p) => only.includes(p.slug)) : portals;
   if (!list.length) { console.error("✗ No matching portals. Slugs:", portals.map((p) => p.slug).join(", ")); process.exit(1); }
 
-  const week = isoMonday();
-  console.log(`→ Week: ${week}  |  ${list.length} portal(s)  |  profile: ${PROFILE_DIR}`);
+  console.log(`→ Week: ${week}  |  ${list.length} portal(s)  |  ${auto ? `--auto (wait ${waitMs / 1000}s/page)` : "interactive"}`);
+  console.log(`→ Profile: ${PROFILE_DIR}`);
 
   const launchOpts = {
     headless: false,
@@ -100,28 +149,55 @@ async function main() {
   await page.setViewport(VIEWPORT);
 
   let ok = 0, fail = 0;
+  const skipped = []; // slugs skipped because they still looked logged out
+
   for (const p of list) {
     const url = APP_URL[p.slug] || p.url;
     console.log(`\n=== ${p.name} (${p.slug})\n    ${url}`);
     try { await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 }); } catch { /* keep going; user can fix */ }
 
-    if (rl) await rl.question(`    ↳ log in / open the screen you want, then press Enter to capture… `);
-    else await new Promise((r) => setTimeout(r, 6000));
+    let done = false;
+    while (!done) {
+      if (rl) {
+        const ans = (await rl.question(`    ↳ log in / open the screen, then Enter to capture  (s = skip): `)).trim().toLowerCase();
+        if (ans === "s") { console.log("    ↳ skipped."); skipped.push(p.slug); break; }
+      } else {
+        await new Promise((r) => setTimeout(r, waitMs));
+      }
 
-    try {
-      const buf = await page.screenshot({ type: "png" });
-      const up = await fetch(`${WORKER_URL}/api/upload`, {
-        method: "POST",
-        headers: { "content-type": "application/json", authorization: `Bearer ${UPLOAD_TOKEN}` },
-        body: JSON.stringify({ slug: p.slug, week, imageBase64: Buffer.from(buf).toString("base64") }),
-      });
-      if (up.ok) { console.log(`    ✓ uploaded (${(buf.length / 1024).toFixed(0)} KB)`); ok++; }
-      else { console.log(`    ✗ upload failed: ${up.status} ${await up.text()}`); fail++; }
-    } catch (e) { console.log(`    ✗ capture failed: ${e.message}`); fail++; }
+      // Guard: don't upload a logged-out page.
+      const state = await loginState(page);
+      if (state.loggedOut) {
+        console.log(`    ⚠ still looks LOGGED OUT — ${state.reason}`);
+        if (rl) { console.log("      → log in in the Chrome window, then press Enter to retry (or 's' to skip)."); continue; }
+        console.log("      → --auto: skipping so a login screen never overwrites a good shot.");
+        skipped.push(p.slug);
+        break;
+      }
+
+      // Looks signed in → capture + upload.
+      try {
+        const buf = await page.screenshot({ type: "png" });
+        const upRes = await fetch(`${WORKER_URL}/api/upload`, {
+          method: "POST",
+          headers: { "content-type": "application/json", authorization: `Bearer ${UPLOAD_TOKEN}` },
+          body: JSON.stringify({ slug: p.slug, week, imageBase64: Buffer.from(buf).toString("base64") }),
+        });
+        if (upRes.ok) { console.log(`    ✓ uploaded signed-in shot (${(buf.length / 1024).toFixed(0)} KB)`); ok++; }
+        else { console.log(`    ✗ upload failed: ${upRes.status} ${await upRes.text()}`); fail++; }
+      } catch (e) {
+        console.log(`    ✗ capture failed: ${e.message}`); fail++;
+      }
+      done = true;
+    }
   }
 
   if (rl) rl.close();
   await browser.close();
-  console.log(`\nDone. ${ok} uploaded, ${fail} failed. View: ${WORKER_URL}  (week ${week})`);
+  console.log(`\nDone. ${ok} uploaded, ${fail} failed${skipped.length ? `, ${skipped.length} skipped (logged out): ${skipped.join(", ")}` : ""}.`);
+  console.log(`View: ${WORKER_URL}  (week ${week})`);
+  if (skipped.length) {
+    console.log(`\nTo redo the skipped ones after logging in:\n  node capture.mjs ${skipped.join(" ")}${week === isoMonday() ? "" : ` --week=${week}`}`);
+  }
 }
 main().catch((e) => { console.error(e); process.exit(1); });
