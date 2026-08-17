@@ -17,11 +17,14 @@
       <span class="wordmark-dot"></span>LINDA<span class="wordmark-thin">.DESIGN</span>
     </a>
     <nav class="topnav">
+      <a href="#" class="topnav-link" data-nav="gallery">Library</a>
+      <a href="#collection" class="topnav-link" data-nav="collection">Collection</a>
       <a href="https://cchs62023.github.io/linda-in-design-resume/" class="topnav-link">Back to portfolio &#8599;</a>
     </nav>
   </header>
 
   <main>
+    <div id="galleryView">
     <!-- hero -->
     <section class="hero">
       <div class="dotgrid" aria-hidden="true"></div>
@@ -65,6 +68,23 @@
     <!-- gallery -->
     <section class="grid" id="grid" aria-live="polite"></section>
     <div class="empty" id="empty" hidden>No captures for this filter yet.</div>
+    </div><!-- /galleryView -->
+
+    <!-- collection: one-pager contact sheet of the whole week + download all -->
+    <section id="collectionView" class="collection" hidden>
+      <div class="collection-head">
+        <div class="collection-headings">
+          <span class="pill">One-pager &middot; whole week</span>
+          <h1 class="collection-title">Collection</h1>
+          <p class="collection-meta" id="collectionMeta">Loading…</p>
+        </div>
+        <button class="dl-all" id="dlAll" type="button">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1Z"/><path fill="currentColor" d="M5 19a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg>
+          <span class="dl-all-label">Download all (.zip)</span>
+        </button>
+      </div>
+      <div class="collection-grid" id="collectionGrid" aria-live="polite"></div>
+    </section>
   </main>
 
   <footer class="sitefoot">

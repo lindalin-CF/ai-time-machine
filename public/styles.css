@@ -199,3 +199,36 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .lb-close{border:none;background:transparent;font-size:24px;line-height:1;color:var(--cf-text-soft,#8a5a3c);cursor:pointer;padding:0 4px}
 .lb-close:hover{color:var(--cf-text,#521000)}
 @media (max-width:520px){.lb-img{max-height:calc(90vh - 96px)}}
+
+
+
+/* ---------- top nav active + Collection one-pager ---------- */
+.topnav-link[data-nav]{cursor:pointer}
+.topnav-link.active{color:var(--cf-orange)}
+
+#collectionView{padding-top:6px}
+.collection-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin:6px 0 24px}
+.collection-headings .pill{margin-bottom:12px}
+.collection-title{font-family:var(--font-sans);font-weight:700;font-size:34px;line-height:1.05;letter-spacing:-.02em;margin:0 0 8px}
+.collection-meta{margin:0;color:var(--cf-text-soft);font-size:14px}
+.collection-meta b{color:var(--cf-text);font-weight:600}
+.dl-all{display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer;
+  background:var(--cf-orange);color:#fff;font-family:var(--font-sans);font-weight:600;font-size:14px;
+  padding:12px 18px;border-radius:11px;box-shadow:0 6px 18px -8px rgba(217,79,34,.7);
+  transition:background .15s,transform .15s}
+.dl-all:hover{background:var(--cf-orange-ink);transform:translateY(-1px)}
+.dl-all:disabled{opacity:.55;cursor:default;transform:none;box-shadow:none}
+
+.collection-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px}
+.col-item{margin:0;display:flex;flex-direction:column;gap:9px}
+.col-item .shot{aspect-ratio:16/10;border:1px solid var(--cf-border);border-radius:12px;overflow:hidden;
+  background:var(--cf-bg-300);box-shadow:0 10px 24px -18px rgba(82,16,0,.5)}
+.col-item .shot::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--brand,var(--cf-orange));z-index:1}
+.col-cap{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px}
+.col-name{display:inline-flex;align-items:center;gap:7px;font-weight:600;color:var(--cf-text);min-width:0}
+.col-name .brand-dot{width:9px;height:9px;border-radius:50%;flex:none}
+.col-date{color:var(--cf-text-soft);font-family:var(--font-mono);white-space:nowrap}
+@media (max-width:520px){
+  .collection-title{font-size:26px}
+  .collection-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+}

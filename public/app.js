@@ -110,6 +110,7 @@ async function loadWeek(week) {
   const sel = $("#weekSelect");
   if (sel && data.week) sel.value = data.week;
   renderGrid();
+  if (location.hash === "#collection") renderCollection();
 }
 
 function renderGrid() {
@@ -234,13 +235,113 @@ function initLightbox() {
     }
   });
 
-  // Delegate clicks from any card thumbnail (grid re-renders on filter/week change).
-  $("#grid").addEventListener("click", (e) => {
-    const shot = e.target.closest(".shot.zoomable");
+  // Delegate clicks from any thumbnail carrying data-full (gallery + collection).
+  document.body.addEventListener("click", (e) => {
+    const shot = e.target.closest("[data-full]");
     if (!shot) return;
     open(shot.dataset.full, shot.dataset.title || "Screenshot", shot.dataset.file);
   });
 }
 
+// ---- collection: one-pager of the whole week + download-all ----------------
+function fmtFull(iso) {
+  try {
+    return new Date(iso + "T00:00:00Z").toLocaleDateString("en-US", {
+      month: "short", day: "numeric", year: "numeric", timeZone: "UTC",
+    });
+  } catch {
+    return iso || "";
+  }
+}
+
+function renderCollection() {
+  const meta = $("#collectionMeta");
+  const grid = $("#collectionGrid");
+  const btn = $("#dlAll");
+  if (!meta || !grid) return;
+
+  const caps = state.captures.filter((c) => c.status === "ok" && !c.sample && c.image);
+  if (!caps.length) {
+    meta.textContent = "No screenshots captured for this week yet.";
+    grid.innerHTML = "";
+    if (btn) btn.disabled = true;
+    return;
+  }
+
+  const label = state.weeks.find((w) => w.week === state.week)?.label || state.week || "Latest week";
+  const dates = [...new Set(caps.map((c) => (c.capturedAt || "").slice(0, 10)).filter(Boolean))].sort();
+  const dateStr = dates.length <= 1 ? fmtFull(dates[0]) : `${fmtFull(dates[0])} – ${fmtFull(dates[dates.length - 1])}`;
+  const signed = caps.filter((c) => c.signedIn).length;
+  meta.innerHTML =
+    `<b>${esc(label)}</b> · ${caps.length} snapshot${caps.length === 1 ? "" : "s"}` +
+    (dateStr ? ` · captured ${esc(dateStr)}` : "") +
+    (signed ? ` · ${signed} signed-in` : "");
+
+  grid.innerHTML = caps
+    .map(
+      (c) => `
+    <figure class="col-item">
+      <div class="shot zoomable" style="--brand:${esc(c.brand)}" data-full="${esc(c.image)}" data-title="${esc(c.portal)}" data-file="${esc(c.slug)}-${esc(c.week)}">
+        ${c.signedIn ? `<span class="badge signedin">Signed in</span>` : ""}
+        <img loading="lazy" src="${esc(c.image)}" alt="${esc(c.portal)} landing page" />
+        <button class="zoom-hint" type="button" aria-label="Enlarge screenshot">Click to enlarge</button>
+      </div>
+      <figcaption class="col-cap">
+        <span class="col-name"><span class="brand-dot" style="background:${esc(c.brand)}"></span>${esc(c.portal)}</span>
+        <span class="col-date">${esc(fmtDate(c.capturedAt))}</span>
+      </figcaption>
+    </figure>`
+    )
+    .join("");
+  if (btn) btn.disabled = false;
+}
+
+function initDownloadAll() {
+  const btn = $("#dlAll");
+  if (!btn) return;
+  const label = btn.querySelector(".dl-all-label");
+  btn.addEventListener("click", async () => {
+    const week = state.week;
+    if (!week) return;
+    const orig = label ? label.textContent : "";
+    if (label) label.textContent = "Preparing ZIP…";
+    btn.disabled = true;
+    const href = `/api/collection.zip?week=${encodeURIComponent(week)}`;
+    try {
+      const res = await fetch(href);
+      if (!res.ok) throw new Error("zip " + res.status);
+      const url = URL.createObjectURL(await res.blob());
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `ai-portals-${week}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 6000);
+    } catch {
+      window.location.href = href; // fallback: let the browser fetch + download it
+    } finally {
+      if (label) label.textContent = orig;
+      btn.disabled = false;
+    }
+  });
+}
+
+// ---- hash routing: #collection <-> gallery --------------------------------
+function route() {
+  const onCollection = location.hash === "#collection";
+  const gv = $("#galleryView");
+  const cv = $("#collectionView");
+  if (gv) gv.hidden = onCollection;
+  if (cv) cv.hidden = !onCollection;
+  document.querySelectorAll(".topnav-link[data-nav]").forEach((a) =>
+    a.classList.toggle("active", a.dataset.nav === (onCollection ? "collection" : "gallery"))
+  );
+  if (onCollection) renderCollection();
+  window.scrollTo(0, 0);
+}
+window.addEventListener("hashchange", route);
+
 initLightbox();
-boot();
+initDownloadAll();
+boot().then(route);

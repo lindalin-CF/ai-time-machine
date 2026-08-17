@@ -1,3 +1,4 @@
+import { zipSync } from "fflate";
 import type { Env, CaptureRow } from "./types";
 import { listPortals, listWeeks, latestWeek, capturesForWeek, getPortal } from "./db";
 import { hasCookieSecret, storeCapture } from "./capture";
@@ -80,6 +81,37 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
       return { week, label, captures: rows.map(shapeCapture) };
     });
     return json(payload);
+  }
+
+  // Download every screenshot for a week as a single ZIP (the "download all" button).
+  if (path === "/api/collection.zip") {
+    const requested = url.searchParams.get("week");
+    const week = requested ?? (await latestWeek(env));
+    if (!week) return new Response("no captures yet", { status: 404 });
+    const rows = await capturesForWeek(env, week);
+    const shots = rows.filter((r) => r.r2_key && r.status === "ok");
+    if (!shots.length) return new Response("no screenshots for this week", { status: 404 });
+
+    // Fetch each screenshot from R2 in parallel.
+    const files: Record<string, Uint8Array> = {};
+    await Promise.all(
+      shots.map(async (r) => {
+        const obj = await env.SHOTS.get(r.r2_key as string);
+        if (obj) files[`${r.slug}.png`] = new Uint8Array(await obj.arrayBuffer());
+      })
+    );
+    if (!Object.keys(files).length) return new Response("screenshots not found in storage", { status: 404 });
+
+    // level 0 = store: PNGs are already compressed, so skip re-compression (fast, low CPU).
+    const zipped = zipSync(files, { level: 0 });
+    const body = zipped.slice().buffer;
+    return new Response(body, {
+      headers: {
+        "content-type": "application/zip",
+        "content-disposition": `attachment; filename="ai-portals-${week}.zip"`,
+        "cache-control": "no-store",
+      },
+    });
   }
 
   // Admin: one-time Meta license acceptance for the vision model.
