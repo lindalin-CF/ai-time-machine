@@ -140,8 +140,6 @@ function card(c) {
       ? `<span class="badge err">Capture failed</span>`
       : c.sample
       ? `<span class="badge">Sample</span>`
-      : c.signedIn
-      ? `<span class="badge signedin">Signed in</span>`
       : "";
   const zoom = !c.sample && c.status !== "error";
   return `
@@ -282,7 +280,6 @@ function renderCollection() {
       (c) => `
     <figure class="col-item">
       <div class="shot zoomable" style="--brand:${esc(c.brand)}" data-full="${esc(c.image)}" data-title="${esc(c.portal)}" data-file="${esc(c.slug)}-${esc(c.week)}">
-        ${c.signedIn ? `<span class="badge signedin">Signed in</span>` : ""}
         <img loading="lazy" src="${esc(c.image)}" alt="${esc(c.portal)} landing page" />
         <button class="zoom-hint" type="button" aria-label="Enlarge screenshot">Click to enlarge</button>
       </div>
