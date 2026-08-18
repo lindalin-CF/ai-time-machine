@@ -52,9 +52,21 @@
     <!-- controls -->
     <section class="controls">
       <div class="filters" id="filters" role="tablist" aria-label="Filter by portal"></div>
-      <div class="weekpick">
-        <label for="weekSelect">Week</label>
-        <select id="weekSelect" aria-label="Choose a week"></select>
+      <div class="controls-right">
+        <div class="viewtoggle" role="group" aria-label="Screenshot device">
+          <button class="vt-btn active" type="button" data-device="desktop" aria-pressed="true">
+            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-4l1 2h2a1 1 0 1 1 0 2H7a1 1 0 1 1 0-2h2l1-2H6a2 2 0 0 1-2-2V5Zm2 0v9h12V5H6Z"/></svg>
+            Desktop
+          </button>
+          <button class="vt-btn" type="button" data-device="mobile" aria-pressed="false">
+            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M7 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H7Zm0 2h10v14H7V5Zm4 12h2a1 1 0 1 1 0 2h-2a1 1 0 1 1 0-2Z"/></svg>
+            Mobile
+          </button>
+        </div>
+        <div class="weekpick">
+          <label for="weekSelect">Week</label>
+          <select id="weekSelect" aria-label="Choose a week"></select>
+        </div>
       </div>
     </section>
 
@@ -76,10 +88,22 @@
           <h1 class="collection-title">Collection</h1>
           <p class="collection-meta" id="collectionMeta">Loading…</p>
         </div>
+        <div class="collection-actions">
+        <div class="viewtoggle" role="group" aria-label="Screenshot device">
+          <button class="vt-btn active" type="button" data-device="desktop" aria-pressed="true">
+            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-4l1 2h2a1 1 0 1 1 0 2H7a1 1 0 1 1 0-2h2l1-2H6a2 2 0 0 1-2-2V5Zm2 0v9h12V5H6Z"/></svg>
+            Desktop
+          </button>
+          <button class="vt-btn" type="button" data-device="mobile" aria-pressed="false">
+            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M7 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H7Zm0 2h10v14H7V5Zm4 12h2a1 1 0 1 1 0 2h-2a1 1 0 1 1 0-2Z"/></svg>
+            Mobile
+          </button>
+        </div>
         <button class="dl-all" id="dlAll" type="button">
           <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1Z"/><path fill="currentColor" d="M5 19a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg>
           <span class="dl-all-label">Download all (.zip)</span>
         </button>
+        </div><!-- /collection-actions -->
       </div>
       <div class="collection-grid" id="collectionGrid" aria-live="polite"></div>
     </section>

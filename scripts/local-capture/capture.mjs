@@ -37,6 +37,16 @@ const WORKER_URL = (process.env.WORKER_URL || "https://ai-portal-library.monthte
 const UPLOAD_TOKEN = process.env.UPLOAD_TOKEN;
 const PROFILE_DIR = join(__dirname, ".capture-profile");
 const VIEWPORT = { width: 1280, height: 800 };
+const MOBILE_VIEWPORT = { width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true };
+
+async function uploadShot(slug, week, buf, variant) {
+  const res = await fetch(`${WORKER_URL}/api/upload`, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${UPLOAD_TOKEN}` },
+    body: JSON.stringify({ slug, week, variant, imageBase64: Buffer.from(buf).toString("base64") }),
+  });
+  return res;
+}
 
 // The logged-in "app" URL you actually interact with (overrides the landing-page URL from the API).
 const APP_URL = {
@@ -175,16 +185,28 @@ async function main() {
         break;
       }
 
-      // Looks signed in → capture + upload.
+      // Looks signed in → capture desktop + mobile and upload both.
       try {
-        const buf = await page.screenshot({ type: "png" });
-        const upRes = await fetch(`${WORKER_URL}/api/upload`, {
-          method: "POST",
-          headers: { "content-type": "application/json", authorization: `Bearer ${UPLOAD_TOKEN}` },
-          body: JSON.stringify({ slug: p.slug, week, imageBase64: Buffer.from(buf).toString("base64") }),
-        });
-        if (upRes.ok) { console.log(`    ✓ uploaded signed-in shot (${(buf.length / 1024).toFixed(0)} KB)`); ok++; }
-        else { console.log(`    ✗ upload failed: ${upRes.status} ${await upRes.text()}`); fail++; }
+        // 1) desktop (current viewport)
+        const deskBuf = await page.screenshot({ type: "png" });
+        const deskRes = await uploadShot(p.slug, week, deskBuf, "desktop");
+        if (deskRes.ok) { console.log(`    ✓ desktop uploaded (${(deskBuf.length / 1024).toFixed(0)} KB)`); ok++; }
+        else { console.log(`    ✗ desktop upload failed: ${deskRes.status} ${await deskRes.text()}`); fail++; }
+
+        // 2) mobile: switch to a phone viewport, reload so responsive layout kicks in, capture
+        try {
+          await page.setViewport(MOBILE_VIEWPORT);
+          try { await page.reload({ waitUntil: "networkidle2", timeout: 60000 }); } catch { /* keep going */ }
+          await new Promise((r) => setTimeout(r, 2500));
+          const mobBuf = await page.screenshot({ type: "png" });
+          const mobRes = await uploadShot(p.slug, week, mobBuf, "mobile");
+          if (mobRes.ok) console.log(`    ✓ mobile uploaded (${(mobBuf.length / 1024).toFixed(0)} KB)`);
+          else console.log(`    ✗ mobile upload failed: ${mobRes.status} ${await mobRes.text()}`);
+        } catch (e) {
+          console.log(`    ⚠ mobile capture skipped: ${e.message}`);
+        } finally {
+          await page.setViewport(VIEWPORT); // restore for the next portal
+        }
       } catch (e) {
         console.log(`    ✗ capture failed: ${e.message}`); fail++;
       }

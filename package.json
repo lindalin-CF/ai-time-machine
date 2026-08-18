@@ -9,6 +9,8 @@
     "cf-typegen": "wrangler types",
     "db:init:local": "wrangler d1 execute ai-portal-library --local --file=./schema.sql",
     "db:init:remote": "wrangler d1 execute ai-portal-library --remote --file=./schema.sql",
+    "db:migrate:local": "wrangler d1 execute ai-portal-library --local --file=./migrations/0001_add_mobile.sql",
+    "db:migrate:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0001_add_mobile.sql",
     "seed:gen": "node ./scripts/gen-seed.mjs",
     "seed:local": "wrangler d1 execute ai-portal-library --local --file=./seed.sql",
     "seed:remote": "wrangler d1 execute ai-portal-library --remote --file=./seed.sql"

@@ -7,7 +7,17 @@ const state = {
   week: null,        // selected week (null => latest)
   portalFilter: "all",
   captures: [],
+  device: "desktop", // "desktop" | "mobile" — which screenshot variant to show
 };
+
+// Pick the screenshot to show for the current device.
+// Returns { src, missing } — missing=true when a mobile shot doesn't exist yet.
+function shotFor(c) {
+  if (state.device === "mobile") {
+    return c.hasMobile ? { src: c.imageMobile, missing: false } : { src: null, missing: true };
+  }
+  return { src: c.image, missing: false };
+}
 
 const esc = (s) =>
   String(s ?? "").replace(/[&<>"']/g, (c) =>
@@ -141,12 +151,17 @@ function card(c) {
       : c.sample
       ? `<span class="badge">Sample</span>`
       : "";
-  const zoom = !c.sample && c.status !== "error";
+  const mobile = state.device === "mobile";
+  const shot = shotFor(c);
+  const zoom = !c.sample && c.status !== "error" && !!shot.src;
+  const inner = shot.missing
+    ? `<div class="shot-missing">No mobile capture yet</div>`
+    : `<img loading="lazy" src="${esc(shot.src)}" alt="${esc(c.portal)} ${mobile ? "mobile" : "landing"} page" />`;
   return `
   <article class="card">
-    <div class="shot${zoom ? " zoomable" : ""}" style="--brand:${esc(c.brand)}"${zoom ? ` data-full="${esc(c.image)}" data-title="${esc(c.portal)}" data-file="${esc(c.slug)}-${esc(c.week)}"` : ""}>
+    <div class="shot${mobile ? " mobile" : ""}${zoom ? " zoomable" : ""}" style="--brand:${esc(c.brand)}"${zoom ? ` data-full="${esc(shot.src)}" data-title="${esc(c.portal)}" data-file="${esc(c.slug)}-${esc(c.week)}${mobile ? "-mobile" : ""}"` : ""}>
       ${badge}
-      <img loading="lazy" src="${esc(c.image)}" alt="${esc(c.portal)} landing page" />
+      ${inner}
     </div>
     <div class="card-body">
       <div class="card-head">
@@ -273,19 +288,27 @@ function renderCollection() {
     (dateStr ? ` · captured ${esc(dateStr)}` : "") +
     (signed ? ` · ${signed} signed-in` : "");
 
+  const mobile = state.device === "mobile";
   grid.innerHTML = caps
-    .map(
-      (c) => `
+    .map((c) => {
+      const shot = shotFor(c);
+      const inner = shot.missing
+        ? `<div class="shot-missing">No mobile capture yet</div>`
+        : `<img loading="lazy" src="${esc(shot.src)}" alt="${esc(c.portal)} ${mobile ? "mobile" : "landing"} page" />`;
+      const zoomAttrs = shot.src
+        ? ` zoomable" data-full="${esc(shot.src)}" data-title="${esc(c.portal)}" data-file="${esc(c.slug)}-${esc(c.week)}${mobile ? "-mobile" : ""}`
+        : `"`;
+      return `
     <figure class="col-item">
-      <div class="shot zoomable" style="--brand:${esc(c.brand)}" data-full="${esc(c.image)}" data-title="${esc(c.portal)}" data-file="${esc(c.slug)}-${esc(c.week)}">
-        <img loading="lazy" src="${esc(c.image)}" alt="${esc(c.portal)} landing page" />
+      <div class="shot${mobile ? " mobile" : ""}${zoomAttrs} style="--brand:${esc(c.brand)}">
+        ${inner}
       </div>
       <figcaption class="col-cap">
         <span class="col-name"><span class="brand-dot" style="background:${esc(c.brand)}"></span>${esc(c.portal)}</span>
         <span class="col-date">${esc(fmtDate(c.capturedAt))}</span>
       </figcaption>
-    </figure>`
-    )
+    </figure>`;
+    })
     .join("");
   if (btn) btn.disabled = false;
 }
@@ -300,14 +323,14 @@ function initDownloadAll() {
     const orig = label ? label.textContent : "";
     if (label) label.textContent = "Preparing ZIP…";
     btn.disabled = true;
-    const href = `/api/collection.zip?week=${encodeURIComponent(week)}`;
+    const href = `/api/collection.zip?week=${encodeURIComponent(week)}${state.device === "mobile" ? "&device=mobile" : ""}`;
     try {
       const res = await fetch(href);
       if (!res.ok) throw new Error("zip " + res.status);
       const url = URL.createObjectURL(await res.blob());
       const a = document.createElement("a");
       a.href = url;
-      a.download = `ai-portals-${week}.zip`;
+      a.download = `ai-portals-${week}${state.device === "mobile" ? "-mobile" : ""}.zip`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -318,6 +341,29 @@ function initDownloadAll() {
       if (label) label.textContent = orig;
       btn.disabled = false;
     }
+  });
+}
+
+// ---- device toggle: Desktop / Mobile (both Library + Collection) ----------
+function syncToggles() {
+  document.querySelectorAll(".vt-btn").forEach((b) => {
+    const on = b.dataset.device === state.device;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+}
+
+function initDeviceToggle() {
+  syncToggles();
+  document.body.addEventListener("click", (e) => {
+    const b = e.target.closest(".vt-btn");
+    if (!b) return;
+    const dev = b.dataset.device;
+    if (!dev || dev === state.device) return;
+    state.device = dev;
+    syncToggles();
+    renderGrid();
+    if (location.hash === "#collection") renderCollection();
   });
 }
 

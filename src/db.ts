@@ -66,6 +66,33 @@ export async function upsertCapture(env: Env, row: CaptureRow): Promise<void> {
   ).run();
 }
 
+/**
+ * Record a mobile screenshot for a (week, slug) without touching the desktop
+ * capture's analysis/palette/r2_key. If the desktop row already exists, only the
+ * mobile key + capture time are updated; otherwise a minimal row is created so a
+ * mobile-only capture still shows up.
+ */
+export async function upsertMobileCapture(
+  env: Env,
+  week: string,
+  portal: PortalRow,
+  r2KeyMobile: string
+): Promise<void> {
+  const id = `${portal.slug}-${week}`;
+  const now = new Date().toISOString();
+  await env.DB.prepare(
+    `INSERT INTO captures
+      (id, week, slug, portal, company, url, brand, r2_key, r2_key_mobile, width, height, palette, analysis, analysis_by, status, captured_at)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+     ON CONFLICT(id) DO UPDATE SET
+      r2_key_mobile=excluded.r2_key_mobile, captured_at=excluded.captured_at`
+  ).bind(
+    id, week, portal.slug, portal.name, portal.company, portal.url, portal.brand,
+    null, r2KeyMobile, 390, 844, JSON.stringify(paletteFromBrand(portal.brand)),
+    "", "sample", "ok", now
+  ).run();
+}
+
 // ---------- colour helpers (deterministic palette from a brand hex) ----------
 function clamp(n: number) { return Math.max(0, Math.min(255, Math.round(n))); }
 function hexToRgb(hex: string): [number, number, number] {

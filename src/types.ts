@@ -48,6 +48,7 @@ export interface CaptureRow {
   url: string;
   brand: string;
   r2_key: string | null;
+  r2_key_mobile: string | null;
   width: number;
   height: number;
   palette: string;      // JSON string

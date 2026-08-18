@@ -17,13 +17,22 @@ function imageUrl(row: CaptureRow): string {
   return `/img/${row.r2_key}?v=${v}`;
 }
 
+/** Public URL for the mobile screenshot, or null when none has been captured. */
+function imageMobileUrl(row: CaptureRow): string | null {
+  if (!row.r2_key_mobile) return null;
+  const v = Date.parse(row.captured_at) || 0;
+  return `/img/${row.r2_key_mobile}?v=${v}`;
+}
+
 function shapeCapture(row: CaptureRow) {
   let palette: string[] = [];
   try { palette = JSON.parse(row.palette || "[]"); } catch { palette = []; }
+  const mobile = imageMobileUrl(row);
   return {
     id: row.id, slug: row.slug, portal: row.portal, company: row.company,
     url: row.url, brand: row.brand, week: row.week,
-    image: imageUrl(row), width: row.width, height: row.height,
+    image: imageUrl(row), imageMobile: mobile, hasMobile: !!mobile,
+    width: row.width, height: row.height,
     palette, analysis: row.analysis, analysisBy: row.analysis_by,
     status: row.status, sample: !row.r2_key, capturedAt: row.captured_at,
     signedIn: !!row.r2_key && row.r2_key.endsWith(".local.png"),
@@ -84,19 +93,22 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
   }
 
   // Download every screenshot for a week as a single ZIP (the "download all" button).
+  // ?device=mobile zips the mobile shots instead of desktop.
   if (path === "/api/collection.zip") {
     const requested = url.searchParams.get("week");
+    const device = url.searchParams.get("device") === "mobile" ? "mobile" : "desktop";
     const week = requested ?? (await latestWeek(env));
     if (!week) return new Response("no captures yet", { status: 404 });
     const rows = await capturesForWeek(env, week);
-    const shots = rows.filter((r) => r.r2_key && r.status === "ok");
-    if (!shots.length) return new Response("no screenshots for this week", { status: 404 });
+    const keyOf = (r: CaptureRow) => (device === "mobile" ? r.r2_key_mobile : r.r2_key);
+    const shots = rows.filter((r) => keyOf(r) && r.status === "ok");
+    if (!shots.length) return new Response(`no ${device} screenshots for this week`, { status: 404 });
 
     // Fetch each screenshot from R2 in parallel.
     const files: Record<string, Uint8Array> = {};
     await Promise.all(
       shots.map(async (r) => {
-        const obj = await env.SHOTS.get(r.r2_key as string);
+        const obj = await env.SHOTS.get(keyOf(r) as string);
         if (obj) files[`${r.slug}.png`] = new Uint8Array(await obj.arrayBuffer());
       })
     );
@@ -105,10 +117,11 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     // level 0 = store: PNGs are already compressed, so skip re-compression (fast, low CPU).
     const zipped = zipSync(files, { level: 0 });
     const body = zipped.slice().buffer;
+    const suffix = device === "mobile" ? "-mobile" : "";
     return new Response(body, {
       headers: {
         "content-type": "application/zip",
-        "content-disposition": `attachment; filename="ai-portals-${week}.zip"`,
+        "content-disposition": `attachment; filename="ai-portals-${week}${suffix}.zip"`,
         "cache-control": "no-store",
       },
     });
@@ -138,13 +151,14 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     if (token !== expected) return json({ error: "unauthorized" }, 401);
 
     const body = await request
-      .json<{ slug?: string; week?: string; imageBase64?: string }>()
-      .catch(() => ({} as { slug?: string; week?: string; imageBase64?: string }));
+      .json<{ slug?: string; week?: string; imageBase64?: string; variant?: string }>()
+      .catch(() => ({} as { slug?: string; week?: string; imageBase64?: string; variant?: string }));
     if (!body.slug || !body.imageBase64) return json({ error: "slug and imageBase64 required" }, 400);
 
     const portal = await getPortal(env, body.slug);
     if (!portal) return json({ error: "unknown slug: " + body.slug }, 400);
 
+    const variant = body.variant === "mobile" ? "mobile" : "desktop";
     const week = body.week ?? isoMonday(new Date());
     const b64 = body.imageBase64.replace(/^data:image\/png;base64,/, "");
     let png: Uint8Array;
@@ -157,8 +171,8 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     }
     if (png.length < 100) return json({ error: "image too small" }, 400);
 
-    await storeCapture(env, week, portal, png, "local");
-    return json({ ok: true, slug: body.slug, week, bytes: png.length });
+    await storeCapture(env, week, portal, png, "local", variant);
+    return json({ ok: true, slug: body.slug, week, variant, bytes: png.length });
   }
 
   // Which portals have a COOKIES_<SLUG> secret configured (booleans only; never leaks values).

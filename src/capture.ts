@@ -1,6 +1,6 @@
 import puppeteer from "@cloudflare/puppeteer";
 import type { Env, PortalRow, CaptureRow } from "./types";
-import { getPortal, paletteFromBrand, upsertCapture, refreshWeekCount, upsertWeek } from "./db";
+import { getPortal, paletteFromBrand, upsertCapture, refreshWeekCount, upsertWeek, upsertMobileCapture } from "./db";
 
 const VIEWPORT = { width: 1280, height: 800 };
 
@@ -52,8 +52,24 @@ export async function storeCapture(
   portal: PortalRow,
   png: Uint8Array,
   source: "cloud" | "local" = "cloud",
+  variant: "desktop" | "mobile" = "desktop",
 ): Promise<void> {
   const id = `${portal.slug}-${week}`;
+
+  // Mobile: store the phone-viewport shot under a distinct key and record it on
+  // the row WITHOUT re-running analysis or touching the desktop screenshot.
+  if (variant === "mobile") {
+    const mobileKey = source === "local"
+      ? `shots/${week}/${portal.slug}.mobile.local.png`
+      : `shots/${week}/${portal.slug}.mobile.png`;
+    await upsertWeek(env, week, weekLabelLocal(week));
+    await env.SHOTS.put(mobileKey, png, { httpMetadata: { contentType: "image/png" } });
+    await upsertMobileCapture(env, week, portal, mobileKey);
+    await refreshWeekCount(env, week);
+    await invalidate(env, week);
+    return;
+  }
+
   // Local (signed-in) uploads use a distinct key so cloud runs can recognise + preserve them.
   const r2Key = source === "local"
     ? `shots/${week}/${portal.slug}.local.png`
@@ -86,7 +102,7 @@ function weekLabelLocal(iso: string): string {
 function baseRow(p: PortalRow, week: string, id: string, r2Key: string | null, status: string): CaptureRow {
   return {
     id, week, slug: p.slug, portal: p.name, company: p.company, url: p.url, brand: p.brand,
-    r2_key: r2Key, width: VIEWPORT.width, height: VIEWPORT.height,
+    r2_key: r2Key, r2_key_mobile: null, width: VIEWPORT.width, height: VIEWPORT.height,
     palette: JSON.stringify(paletteFromBrand(p.brand)),
     analysis: "", analysis_by: "sample", status,
     captured_at: new Date().toISOString(),

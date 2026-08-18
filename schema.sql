@@ -35,7 +35,8 @@ CREATE TABLE captures (
   company      TEXT NOT NULL,
   url          TEXT NOT NULL,
   brand        TEXT NOT NULL,
-  r2_key       TEXT,                -- key in the SHOTS bucket; NULL => use sample asset
+  r2_key       TEXT,                -- desktop screenshot key in the SHOTS bucket; NULL => use sample asset
+  r2_key_mobile TEXT,               -- mobile screenshot key in the SHOTS bucket; NULL => no mobile capture
   width        INTEGER DEFAULT 1280,
   height       INTEGER DEFAULT 800,
   palette      TEXT DEFAULT '[]',   -- JSON array of hex strings
