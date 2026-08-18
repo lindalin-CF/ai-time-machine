@@ -183,23 +183,19 @@ function initLightbox() {
   el.hidden = true;
   el.innerHTML = `
     <div class="lb-backdrop" data-close></div>
+    <div class="lb-controls">
+      <a class="lb-icon lb-download" href="#" download aria-label="Download PNG" title="Download PNG">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1Z"/><path fill="currentColor" d="M5 19a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg>
+      </a>
+      <button class="lb-icon lb-close" type="button" aria-label="Close" title="Close" data-close>
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M6.4 5A1 1 0 0 0 5 6.4L10.6 12 5 17.6A1 1 0 1 0 6.4 19L12 13.4 17.6 19a1 1 0 0 0 1.4-1.4L13.4 12 19 6.4A1 1 0 1 0 17.6 5L12 10.6Z"/></svg>
+      </button>
+    </div>
     <figure class="lb-figure">
-      <div class="lb-controls">
-        <a class="lb-icon lb-download" href="#" download aria-label="Download PNG" title="Download PNG">
-          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1Z"/><path fill="currentColor" d="M5 19a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg>
-        </a>
-        <button class="lb-icon lb-close" type="button" aria-label="Close" title="Close" data-close>
-          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M6.4 5A1 1 0 0 0 5 6.4L10.6 12 5 17.6A1 1 0 1 0 6.4 19L12 13.4 17.6 19a1 1 0 0 0 1.4-1.4L13.4 12 19 6.4A1 1 0 1 0 17.6 5L12 10.6Z"/></svg>
-        </button>
-      </div>
       <img class="lb-img" alt="" />
-      <figcaption class="lb-bar">
-        <span class="lb-title"></span>
-      </figcaption>
     </figure>`;
   document.body.appendChild(el);
   const img = el.querySelector(".lb-img");
-  const title = el.querySelector(".lb-title");
   const dl = el.querySelector(".lb-download");
 
   const close = () => {
@@ -210,7 +206,6 @@ function initLightbox() {
   const open = (full, t, file) => {
     img.src = full;
     img.alt = t + " screenshot";
-    title.textContent = t;
     dl.href = full;
     dl.setAttribute("download", (file || "screenshot") + ".png");
     el.hidden = false;
