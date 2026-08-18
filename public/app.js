@@ -147,7 +147,6 @@ function card(c) {
     <div class="shot${zoom ? " zoomable" : ""}" style="--brand:${esc(c.brand)}"${zoom ? ` data-full="${esc(c.image)}" data-title="${esc(c.portal)}" data-file="${esc(c.slug)}-${esc(c.week)}"` : ""}>
       ${badge}
       <img loading="lazy" src="${esc(c.image)}" alt="${esc(c.portal)} landing page" />
-      ${zoom ? `<button class="zoom-hint" type="button" aria-label="Enlarge screenshot">Click to enlarge</button>` : ""}
     </div>
     <div class="card-body">
       <div class="card-head">
@@ -281,7 +280,6 @@ function renderCollection() {
     <figure class="col-item">
       <div class="shot zoomable" style="--brand:${esc(c.brand)}" data-full="${esc(c.image)}" data-title="${esc(c.portal)}" data-file="${esc(c.slug)}-${esc(c.week)}">
         <img loading="lazy" src="${esc(c.image)}" alt="${esc(c.portal)} landing page" />
-        <button class="zoom-hint" type="button" aria-label="Enlarge screenshot">Click to enlarge</button>
       </div>
       <figcaption class="col-cap">
         <span class="col-name"><span class="brand-dot" style="background:${esc(c.brand)}"></span>${esc(c.portal)}</span>

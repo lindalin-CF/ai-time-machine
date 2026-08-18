@@ -174,13 +174,6 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 
 /* ---------- screenshot lightbox (click a thumbnail to enlarge + download) ---------- */
 .shot.zoomable{cursor:zoom-in}
-.zoom-hint{
-  position:absolute;bottom:8px;right:8px;z-index:2;border:none;cursor:zoom-in;
-  font:600 10px/1 var(--font-sans);letter-spacing:.02em;
-  background:rgba(20,10,0,.62);color:#fff;padding:6px 9px;border-radius:7px;
-  opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s;
-}
-.shot.zoomable:hover .zoom-hint,.shot.zoomable:focus-within .zoom-hint{opacity:1;transform:none}
 
 .lb{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:24px}
 .lb[hidden]{display:none}
