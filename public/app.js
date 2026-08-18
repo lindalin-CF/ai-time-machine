@@ -184,13 +184,17 @@ function initLightbox() {
   el.innerHTML = `
     <div class="lb-backdrop" data-close></div>
     <figure class="lb-figure">
+      <div class="lb-controls">
+        <a class="lb-icon lb-download" href="#" download aria-label="Download PNG" title="Download PNG">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1Z"/><path fill="currentColor" d="M5 19a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg>
+        </a>
+        <button class="lb-icon lb-close" type="button" aria-label="Close" title="Close" data-close>
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M6.4 5A1 1 0 0 0 5 6.4L10.6 12 5 17.6A1 1 0 1 0 6.4 19L12 13.4 17.6 19a1 1 0 0 0 1.4-1.4L13.4 12 19 6.4A1 1 0 1 0 17.6 5L12 10.6Z"/></svg>
+        </button>
+      </div>
       <img class="lb-img" alt="" />
       <figcaption class="lb-bar">
         <span class="lb-title"></span>
-        <span class="lb-actions">
-          <a class="lb-download" href="#" download>Download PNG</a>
-          <button class="lb-close" type="button" aria-label="Close" data-close>&times;</button>
-        </span>
       </figcaption>
     </figure>`;
   document.body.appendChild(el);
@@ -213,7 +217,7 @@ function initLightbox() {
     document.body.style.overflow = "hidden";
   };
 
-  el.addEventListener("click", (e) => { if (e.target.hasAttribute("data-close")) close(); });
+  el.addEventListener("click", (e) => { if (e.target.closest("[data-close]")) close(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !el.hidden) close(); });
 
   // Force a real download (same-origin) instead of navigating to the image.
