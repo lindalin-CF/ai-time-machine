@@ -37,6 +37,7 @@ img{display:block;max-width:100%}
 .wordmark{display:inline-flex;align-items:center;gap:9px;font-weight:700;letter-spacing:.14em;font-size:14px}
 .wordmark-thin{color:var(--cf-text-soft);font-weight:500}
 .wordmark-dot{width:9px;height:9px;border-radius:50%;background:var(--cf-orange);box-shadow:0 0 0 4px rgba(255,102,51,.14)}
+.topnav{display:flex;align-items:center;gap:20px}
 .topnav-link{font-size:13px;color:var(--cf-text-soft);font-weight:500;transition:color .15s}
 .topnav-link:hover{color:var(--cf-orange-ink)}
 
