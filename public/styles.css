@@ -455,14 +455,14 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .hero-panel.is-snapping::after{
   content:"";position:absolute;inset:0;z-index:9;pointer-events:none;
   background:rgba(245,241,233,.52);
-  animation:hero-capture-flash .38s ease-out forwards;
+  animation:hero-capture-flash .76s ease-out forwards;
 }
 .hero-snapshot-card{
   position:absolute;z-index:12;margin:0;overflow:hidden;pointer-events:none;
   border-radius:18px;background:var(--cf-bg-100);border:1px solid rgba(66,50,23,.22);
   box-shadow:0 26px 48px -24px rgba(21,14,5,.72),0 0 0 1px rgba(245,241,233,.55) inset;
   transform-origin:top left;
-  animation:hero-snapshot-fly 1.08s cubic-bezier(.16,1,.3,1) forwards;
+  animation:hero-snapshot-fly 2.16s cubic-bezier(.16,1,.3,1) forwards;
 }
 .hero-snapshot-card *{pointer-events:none!important}
 .hero-snapshot-card .title-line{animation:none!important;transform:translateY(0)!important}
