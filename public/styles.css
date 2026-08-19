@@ -53,26 +53,28 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 
 /* ---------- hero / refined brutalism ---------- */
 .hero{
-  position:relative;margin-top:8px;margin-bottom:34px;padding:38px 0 20px;
+  position:relative;margin-top:8px;margin-bottom:28px;padding:38px 0 44px;
   isolation:isolate;
 }
 .hero::before,.hero::after{
   content:"";position:absolute;z-index:-2;pointer-events:none;
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 58%,rgba(0,0,0,.55) 78%,transparent 100%);
+  mask-image:linear-gradient(180deg,#000 0%,#000 58%,rgba(0,0,0,.55) 78%,transparent 100%);
 }
 .hero::before{
-  inset:-46px calc(50% - 50vw) -18px;
+  inset:-46px calc(50% - 50vw) -92px;
   background:
     radial-gradient(circle at 18% 18%,rgba(66,50,23,.18),transparent 34%),
     radial-gradient(circle at 82% 28%,rgba(235,98,44,.12),transparent 26%),
     linear-gradient(115deg,rgba(66,50,23,.15),transparent 32%,rgba(66,50,23,.10) 78%,rgba(66,50,23,.22));
-  opacity:.55;
+  opacity:.42;
 }
 .hero::after{
-  inset:-46px calc(50% - 50vw) -18px;
+  inset:-46px calc(50% - 50vw) -92px;
   background-image:
     repeating-linear-gradient(0deg,rgba(66,50,23,.08) 0 1px,transparent 1px 7px),
     repeating-linear-gradient(90deg,rgba(66,50,23,.06) 0 1px,transparent 1px 9px);
-  mix-blend-mode:multiply;opacity:.16;
+  mix-blend-mode:multiply;opacity:.10;
 }
 .hero-frame{
   position:relative;border-radius:34px;padding:20px;
