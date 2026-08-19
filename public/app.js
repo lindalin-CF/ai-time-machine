@@ -392,6 +392,51 @@ function initDeviceToggle() {
   });
 }
 
+// ---- desktop-only hero interaction: orb follows cursor ---------------------
+function initHeroOrbFollow() {
+  const panel = document.querySelector(".hero-panel");
+  const orb = document.querySelector(".hero-orb");
+  if (!panel || !orb) return;
+
+  const desktop = window.matchMedia("(pointer:fine) and (min-width:761px)");
+  const reduced = window.matchMedia("(prefers-reduced-motion:reduce)");
+  let raf = 0;
+  let target = null;
+  let current = null;
+
+  const reset = () => {
+    target = null;
+    current = null;
+    orb.style.left = "";
+    orb.style.top = "";
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+  };
+
+  const tick = () => {
+    if (!target) { raf = 0; return; }
+    if (!current) current = { ...target };
+    current.x += (target.x - current.x) * 0.18;
+    current.y += (target.y - current.y) * 0.18;
+    orb.style.left = current.x.toFixed(2) + "px";
+    orb.style.top = current.y.toFixed(2) + "px";
+    raf = requestAnimationFrame(tick);
+  };
+
+  panel.addEventListener("pointermove", (e) => {
+    if (!desktop.matches || reduced.matches) { reset(); return; }
+    const rect = panel.getBoundingClientRect();
+    target = {
+      x: e.clientX - rect.left - orb.offsetWidth / 2,
+      y: e.clientY - rect.top - orb.offsetHeight / 2,
+    };
+    if (!raf) raf = requestAnimationFrame(tick);
+  });
+  panel.addEventListener("pointerleave", reset);
+  desktop.addEventListener("change", reset);
+  reduced.addEventListener("change", reset);
+}
+
 // ---- hash routing: #collection <-> gallery --------------------------------
 function route() {
   const onCollection = location.hash === "#collection";
@@ -410,4 +455,5 @@ window.addEventListener("hashchange", route);
 initLightbox();
 initDownloadAll();
 initDeviceToggle();
+initHeroOrbFollow();
 boot().then(route);
