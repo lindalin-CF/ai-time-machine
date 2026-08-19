@@ -33,7 +33,21 @@ export default {
 
   // ---- Cron: weekly capture kickoff (Mondays 09:00 UTC) ----
   async scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
-    const week = isoMonday(new Date());
+    const now = new Date();
+
+    // Pause window: skip auto-capture while away so the cloud run (which can only
+    // produce logged-out screenshots) doesn't create empty new weeks. Auto-resumes
+    // after the end date — no redeploy needed. To cancel the pause early or change
+    // the dates, edit these two constants (or set both to the same day) and redeploy.
+    const PAUSE_FROM = Date.UTC(2026, 7, 28);            // Aug 28 2026 00:00 UTC (month is 0-indexed)
+    const PAUSE_UNTIL = Date.UTC(2026, 8, 28, 23, 59, 59); // Sep 28 2026 23:59 UTC (inclusive)
+    const t = now.getTime();
+    if (t >= PAUSE_FROM && t <= PAUSE_UNTIL) {
+      console.log(`[cron] auto-capture paused (away window) — skipped ${isoMonday(now)}`);
+      return;
+    }
+
+    const week = isoMonday(now);
     ctx.waitUntil(
       env.CAPTURE_WORKFLOW.create({ params: { week, label: weekLabel(week) } }).then(() => undefined)
     );
