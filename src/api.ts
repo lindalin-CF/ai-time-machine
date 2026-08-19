@@ -9,6 +9,21 @@ function json(data: unknown, status = 200, extra: Record<string, string> = {}) {
   return new Response(JSON.stringify(data), { status, headers: { ...JSON_HEADERS, ...extra } });
 }
 
+function requireUploadToken(request: Request, env: Env): Response | null {
+  const auth = request.headers.get("authorization") ?? "";
+  const token = auth.replace(/^Bearer\s+/i, "").trim();
+  const expected = (env as unknown as Record<string, unknown>).UPLOAD_TOKEN;
+  if (typeof expected !== "string" || !expected) return json({ error: "server missing UPLOAD_TOKEN secret" }, 500);
+  if (token !== expected) return json({ error: "unauthorized" }, 401);
+  return null;
+}
+
+function extFromType(type: string): string {
+  if (type.includes("jpeg") || type.includes("jpg")) return "jpg";
+  if (type.includes("webp")) return "webp";
+  return "png";
+}
+
 /** Public image URL for a capture: R2 object when present, else the seeded sample asset. */
 function imageUrl(row: CaptureRow): string {
   if (!row.r2_key) return `/samples/${row.slug}.svg`;
@@ -92,6 +107,59 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     return json(payload);
   }
 
+
+  // Manual snapshots uploaded from the UI: latest 6 per portal.
+  if (path === "/api/manual" && request.method === "GET") {
+    const slug = url.searchParams.get("slug") || "";
+    if (!slug) return json({ error: "slug required" }, 400);
+    const portal = await getPortal(env, slug);
+    if (!portal) return json({ error: "unknown slug: " + slug }, 404);
+    const rows = await env.DB.prepare(
+      `SELECT id, slug, portal, device, description, r2_key, created_at
+       FROM manual_shots WHERE slug=? ORDER BY created_at DESC LIMIT 6`
+    ).bind(slug).all<{ id: string; slug: string; portal: string; device: string; description: string; r2_key: string; created_at: string }>();
+    return json({
+      slug,
+      portal: portal.name,
+      shots: (rows.results || []).map((r) => ({
+        id: r.id,
+        slug: r.slug,
+        portal: r.portal,
+        device: r.device,
+        description: r.description || "",
+        image: `/img/${r.r2_key}?v=${Date.parse(r.created_at) || 0}`,
+        createdAt: r.created_at,
+      })),
+    });
+  }
+
+  // Admin upload for one-off observations (token-gated, form-data).
+  if (path === "/api/manual/upload" && request.method === "POST") {
+    const authError = requireUploadToken(request, env);
+    if (authError) return authError;
+
+    const form = await request.formData();
+    const slug = String(form.get("slug") || "");
+    const device = String(form.get("device") || "desktop") === "mobile" ? "mobile" : "desktop";
+    const description = String(form.get("description") || "").trim().slice(0, 220);
+    const file = form.get("image");
+    if (!slug || !(file instanceof File)) return json({ error: "slug and image file required" }, 400);
+    const portal = await getPortal(env, slug);
+    if (!portal) return json({ error: "unknown slug: " + slug }, 400);
+    if (!file.type.startsWith("image/")) return json({ error: "image file required" }, 400);
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    if (bytes.length < 100) return json({ error: "image too small" }, 400);
+    if (bytes.length > 12 * 1024 * 1024) return json({ error: "image too large (max 12MB)" }, 400);
+
+    const now = new Date().toISOString();
+    const id = `${slug}-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+    const r2Key = `manual/${slug}/${id}.${device}.${extFromType(file.type)}`;
+    await env.SHOTS.put(r2Key, bytes, { httpMetadata: { contentType: file.type || "image/png" } });
+    await env.DB.prepare(
+      `INSERT INTO manual_shots (id, slug, portal, device, description, r2_key, created_at) VALUES (?,?,?,?,?,?,?)`
+    ).bind(id, slug, portal.name, device, description, r2Key, now).run();
+    return json({ ok: true, id, slug, portal: portal.name, device, description, image: `/img/${r2Key}?v=${Date.parse(now)}`, createdAt: now });
+  }
   // Download every screenshot for a week as a single ZIP (the "download all" button).
   // ?device=mobile zips the mobile shots instead of desktop.
   if (path === "/api/collection.zip") {
@@ -142,13 +210,8 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
   // Local upload: a screenshot taken on YOUR machine (real login, residential IP) is stored
   // through the same R2 -> Workers AI -> D1 pipeline as cloud captures. Token-gated.
   if (path === "/api/upload" && request.method === "POST") {
-    const auth = request.headers.get("authorization") ?? "";
-    const token = auth.replace(/^Bearer\s+/i, "").trim();
-    const expected = (env as unknown as Record<string, unknown>).UPLOAD_TOKEN;
-    if (typeof expected !== "string" || !expected) {
-      return json({ error: "server missing UPLOAD_TOKEN secret" }, 500);
-    }
-    if (token !== expected) return json({ error: "unauthorized" }, 401);
+    const authError = requireUploadToken(request, env);
+    if (authError) return authError;
 
     const body = await request
       .json<{ slug?: string; week?: string; imageBase64?: string; variant?: string }>()

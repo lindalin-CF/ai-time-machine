@@ -270,6 +270,10 @@ function card(c) {
       <p class="analysis">${esc(c.analysis)}</p>
       <div class="card-foot">
         <div class="palette">${palette}</div>
+        <button class="manual-open" type="button" data-slug="${esc(c.slug)}" data-portal="${esc(c.portal)}" aria-label="View more snapshots for ${esc(c.portal)}">
+          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v14H6.5A2.5 2.5 0 0 0 4 19.5v-14Zm2.5-.5A.5.5 0 0 0 6 5.5v10.09c.17-.04.34-.07.5-.08H18V5H6.5ZM6.5 17A.5.5 0 0 0 6 17.5v1a.5.5 0 0 0 .5.5H20v-2H6.5Z"/></svg>
+          <span>View more</span>
+        </button>
       </div>
     </div>
   </article>`;
@@ -571,6 +575,131 @@ function initHeroScreenshotEffect() {
   });
 }
 
+// ---- manual snapshots: per-portal mini library + upload --------------------
+function initManualSnapshots() {
+  const modal = document.createElement("div");
+  modal.className = "manual-modal";
+  modal.hidden = true;
+  modal.innerHTML = `
+    <div class="manual-backdrop" data-manual-close></div>
+    <section class="manual-panel" role="dialog" aria-modal="true" aria-label="Manual snapshots">
+      <header class="manual-head">
+        <div>
+          <span class="manual-kicker">Manual observations</span>
+          <h2 id="manualTitle">View more</h2>
+        </div>
+        <button class="manual-close" type="button" data-manual-close aria-label="Close">&times;</button>
+      </header>
+      <div class="manual-grid" id="manualGrid"></div>
+    </section>`;
+  document.body.appendChild(modal);
+
+  const grid = modal.querySelector("#manualGrid");
+  const title = modal.querySelector("#manualTitle");
+  let current = { slug: "", portal: "" };
+
+  const close = () => {
+    modal.hidden = true;
+    document.body.style.overflow = "";
+  };
+
+  async function load() {
+    grid.innerHTML = `<div class="manual-loading">Loading…</div>`;
+    try {
+      const data = await getJSON(`/api/manual?slug=${encodeURIComponent(current.slug)}`);
+      render(data.shots || []);
+    } catch {
+      render([], "Manual library is not ready yet. Run the manual migration first.");
+    }
+  }
+
+  function render(shots, error = "") {
+    const cells = [uploadCell(error)];
+    for (const s of shots.slice(0, 5)) {
+      cells.push(`
+        <figure class="manual-cell filled">
+          <div class="manual-img" data-full="${esc(s.image)}" data-title="${esc(current.portal)} manual snapshot" data-file="${esc(current.slug)}-manual-${esc(s.device)}">
+            <img src="${esc(s.image)}" alt="${esc(current.portal)} manual snapshot" loading="lazy" />
+            <span class="manual-chip">${esc(s.device)}</span>
+          </div>
+          <figcaption>
+            <b>${esc(fmtDate(s.createdAt))}</b>
+            <span>${esc(s.description || "No description")}</span>
+          </figcaption>
+        </figure>`);
+    }
+    while (cells.length < 6) cells.push(`<div class="manual-cell empty">Empty slot</div>`);
+    grid.innerHTML = cells.join("");
+    wireUploadForm();
+  }
+
+  function uploadCell(error = "") {
+    const savedToken = sessionStorage.getItem("manualUploadToken") || "";
+    return `
+      <form class="manual-cell upload" id="manualUploadForm">
+        <label class="manual-file">
+          <input name="image" type="file" accept="image/*" required />
+          <span>Upload screenshot</span>
+        </label>
+        <div class="manual-row">
+          <label>Device
+            <select name="device">
+              <option value="desktop">Desktop</option>
+              <option value="mobile">Mobile</option>
+            </select>
+          </label>
+          <label>Token
+            <input name="token" type="password" autocomplete="off" value="${esc(savedToken)}" placeholder="Upload token" required />
+          </label>
+        </div>
+        <label>Description
+          <textarea name="description" rows="3" maxlength="220" placeholder="What changed? e.g. New hero layout, updated onboarding UI…"></textarea>
+        </label>
+        <button class="manual-submit" type="submit">Add to library</button>
+        <p class="manual-msg ${error ? "show" : ""}">${esc(error)}</p>
+      </form>`;
+  }
+
+  function wireUploadForm() {
+    const form = modal.querySelector("#manualUploadForm");
+    if (!form) return;
+    const msg = form.querySelector(".manual-msg");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const fd = new FormData(form);
+      const token = String(fd.get("token") || "").trim();
+      fd.set("slug", current.slug);
+      sessionStorage.setItem("manualUploadToken", token);
+      msg.textContent = "Uploading…";
+      msg.classList.add("show");
+      try {
+        const res = await fetch("/api/manual/upload", {
+          method: "POST",
+          headers: { authorization: `Bearer ${token}` },
+          body: fd,
+        });
+        const out = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(out.error || `Upload failed (${res.status})`);
+        await load();
+      } catch (err) {
+        msg.textContent = err.message || "Upload failed";
+      }
+    });
+  }
+
+  document.body.addEventListener("click", (e) => {
+    const btn = e.target.closest(".manual-open");
+    if (!btn) return;
+    current = { slug: btn.dataset.slug, portal: btn.dataset.portal };
+    title.textContent = current.portal;
+    modal.hidden = false;
+    document.body.style.overflow = "hidden";
+    load();
+  });
+  modal.addEventListener("click", (e) => { if (e.target.closest("[data-manual-close]")) close(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !modal.hidden) close(); });
+}
+
 // ---- hash routing: #collection <-> gallery --------------------------------
 function route() {
   const onCollection = location.hash === "#collection";
@@ -590,6 +719,7 @@ document.addEventListener("click", () => closeWeekMenus());
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeWeekMenus(); });
 
 initLightbox();
+initManualSnapshots();
 initDownloadAll();
 initDeviceToggle();
 initHeroOrbFollow();

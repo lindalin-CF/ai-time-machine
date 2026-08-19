@@ -1,6 +1,7 @@
 -- AI Portal Screenshot Library — D1 schema
 -- Run: npm run db:init:local   (or db:init:remote)
 
+DROP TABLE IF EXISTS manual_shots;
 DROP TABLE IF EXISTS captures;
 DROP TABLE IF EXISTS weeks;
 DROP TABLE IF EXISTS portals;
@@ -50,3 +51,16 @@ CREATE TABLE captures (
 
 CREATE INDEX idx_captures_week ON captures(week);
 CREATE INDEX idx_captures_slug ON captures(slug);
+
+-- Manual snapshots uploaded from the site UI (per portal, latest 6 shown).
+CREATE TABLE manual_shots (
+  id           TEXT PRIMARY KEY,
+  slug         TEXT NOT NULL,
+  portal       TEXT NOT NULL,
+  device       TEXT NOT NULL DEFAULT 'desktop', -- 'desktop' | 'mobile'
+  description  TEXT DEFAULT '',
+  r2_key       TEXT NOT NULL,
+  created_at   TEXT NOT NULL,
+  FOREIGN KEY (slug) REFERENCES portals(slug)
+);
+CREATE INDEX idx_manual_shots_slug_created ON manual_shots(slug, created_at DESC);

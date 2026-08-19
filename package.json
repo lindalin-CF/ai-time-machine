@@ -13,7 +13,9 @@
     "db:migrate:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0001_add_mobile.sql",
     "seed:gen": "node ./scripts/gen-seed.mjs",
     "seed:local": "wrangler d1 execute ai-portal-library --local --file=./seed.sql",
-    "seed:remote": "wrangler d1 execute ai-portal-library --remote --file=./seed.sql"
+    "seed:remote": "wrangler d1 execute ai-portal-library --remote --file=./seed.sql",
+    "db:migrate:manual:local": "wrangler d1 execute ai-portal-library --local --file=./migrations/0002_manual_shots.sql",
+    "db:migrate:manual:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0002_manual_shots.sql"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260804.1",
