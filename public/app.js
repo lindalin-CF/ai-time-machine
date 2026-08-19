@@ -331,7 +331,6 @@ function renderCollection() {
       </div>
       <figcaption class="col-cap">
         <span class="col-name"><span class="brand-dot" style="background:${esc(c.brand)}"></span>${esc(c.portal)}</span>
-        <span class="col-date">${esc(fmtDate(c.capturedAt))}</span>
       </figcaption>
     </figure>`;
     })
