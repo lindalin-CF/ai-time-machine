@@ -398,14 +398,15 @@ function initHeroOrbFollow() {
   const orb = document.querySelector(".hero-orb");
   if (!panel || !orb) return;
 
-  const desktop = window.matchMedia("(pointer:fine) and (min-width:761px)");
   const reduced = window.matchMedia("(prefers-reduced-motion:reduce)");
   let raf = 0;
   let target = null;
   let current = null;
+  let activeTouch = false;
 
   const stop = () => {
     target = null;
+    activeTouch = false;
     if (raf) cancelAnimationFrame(raf);
     raf = 0;
   };
@@ -427,20 +428,31 @@ function initHeroOrbFollow() {
     raf = requestAnimationFrame(tick);
   };
 
-  panel.addEventListener("pointermove", (e) => {
-    if (!desktop.matches || reduced.matches) { reset(); return; }
+  const follow = (e) => {
+    if (reduced.matches) { reset(); return; }
     const rect = panel.getBoundingClientRect();
     target = {
       x: e.clientX - rect.left - orb.offsetWidth / 2,
       y: e.clientY - rect.top - orb.offsetHeight / 2,
     };
     if (!raf) raf = requestAnimationFrame(tick);
+  };
+
+  panel.addEventListener("pointerdown", (e) => {
+    if (e.pointerType !== "mouse") activeTouch = true;
+    follow(e); // mobile tap moves the orb immediately
   });
-  // Keep the orb at its last cursor-following position when leaving the hero;
-  // don't snap/bounce back to the original CSS position.
+  panel.addEventListener("pointermove", (e) => {
+    // Desktop follows hover; touch follows only while the finger is down.
+    if (e.pointerType !== "mouse" && !activeTouch) return;
+    follow(e);
+  });
+  panel.addEventListener("pointerup", stop);
+  panel.addEventListener("pointercancel", stop);
+  // Keep the orb at its last position when leaving the hero; don't snap back.
   panel.addEventListener("pointerleave", stop);
-  desktop.addEventListener("change", reset);
   reduced.addEventListener("change", reset);
+  window.addEventListener("resize", reset);
 }
 
 // ---- playful hero screenshot effect ----------------------------------------
@@ -450,10 +462,11 @@ function initHeroScreenshotEffect() {
   if (!frame || !panel) return;
 
   const reduced = window.matchMedia("(prefers-reduced-motion:reduce)");
+  const clickFx = window.matchMedia("(pointer:fine) and (min-width:761px)");
   let busy = false;
 
   panel.addEventListener("click", (e) => {
-    if (reduced.matches || busy) return;
+    if (!clickFx.matches || reduced.matches || busy) return;
     if (e.target.closest("a,button,input,select,textarea")) return;
     busy = true;
 
