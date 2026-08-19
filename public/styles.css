@@ -100,7 +100,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 }
 .hero-orb{
   --orb-angle:210deg;
-  position:absolute;left:25%;top:38%;width:150px;height:150px;z-index:2;border-radius:50%;
+  position:absolute;left:calc(25% + 10px);top:calc(38% - 10px);width:150px;height:150px;z-index:2;border-radius:50%;
   background:
     radial-gradient(circle at 22% 31%,rgba(245,241,233,.36) 0 1px,transparent 1.7px),
     radial-gradient(circle at 68% 54%,rgba(66,50,23,.18) 0 .8px,transparent 1.5px),
