@@ -36,8 +36,10 @@ img{display:block;max-width:100%}
   display:flex;align-items:center;justify-content:space-between;
   width:100%;max-width:none;margin:0;
   padding:18px max(28px,calc((100vw - var(--maxw))/2 + 28px));
-  background:var(--cf-bg-page);
-  border-bottom:1px solid rgba(66,50,23,.10);
+  background:rgba(231,223,212,.5);
+  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(66,50,23,.08);
   box-shadow:0 8px 22px -24px rgba(66,50,23,.45);
 }
 .wordmark{display:inline-flex;align-items:center;gap:9px;font-weight:700;letter-spacing:.14em;font-size:14px}
