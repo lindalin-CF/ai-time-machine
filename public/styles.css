@@ -101,7 +101,13 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .hero-orb{
   --orb-angle:210deg;
   position:absolute;left:25%;top:38%;width:150px;height:150px;z-index:2;border-radius:50%;
-  background:conic-gradient(from var(--orb-angle),rgba(66,50,23,.20),rgba(235,98,44,.95),rgba(235,98,44,.78),rgba(66,50,23,.16),rgba(66,50,23,.20));
+  background:
+    radial-gradient(circle at 22% 31%,rgba(245,241,233,.36) 0 1px,transparent 1.7px),
+    radial-gradient(circle at 68% 54%,rgba(66,50,23,.18) 0 .8px,transparent 1.5px),
+    radial-gradient(circle at 42% 76%,rgba(245,241,233,.22) 0 .7px,transparent 1.4px),
+    conic-gradient(from var(--orb-angle),rgba(66,50,23,.20),rgba(235,98,44,.95),rgba(235,98,44,.78),rgba(66,50,23,.16),rgba(66,50,23,.20));
+  background-size:17px 19px,23px 29px,11px 13px,auto;
+  background-blend-mode:soft-light,multiply,overlay,normal;
   filter:blur(.15px);opacity:.78;transform-origin:center;
   animation:orb-flow 14s linear infinite;will-change:transform;
   -webkit-mask:radial-gradient(circle,transparent 0 35%,#000 36% 66%,transparent 67%);
