@@ -117,17 +117,12 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   0%{--orb-angle:210deg;transform:rotate(0deg)}
   100%{--orb-angle:570deg;transform:rotate(360deg)}
 }
-.hero-kicker{
-  position:absolute;z-index:3;font-family:var(--font-mono);font-size:11px;font-weight:600;line-height:1.05;
-  color:var(--cf-text-soft);text-transform:uppercase;letter-spacing:-.02em;
-}
-.hero-kicker-right{right:18px;top:39%}
 .hero-copy{position:absolute;z-index:3;left:18px;right:18px;bottom:22px;display:grid;grid-template-columns:1fr minmax(280px,48%);gap:40px;align-items:end}
 .hero-title{
   font-size:clamp(52px,8vw,92px);line-height:.9;font-weight:700;
-  letter-spacing:-.055em;margin:0;max-width:9ch;color:var(--cf-text);
+  letter-spacing:-.05em;margin:0;max-width:9ch;color:var(--cf-text);
 }
-.title-mask{display:block;overflow:hidden;padding-bottom:.04em}
+.title-mask{display:block;overflow:hidden;line-height:1;padding:.04em 0 .08em}
 .title-line{display:block;transform:translateY(110%);animation:title-rise 1.17s cubic-bezier(.16,1,.3,1) forwards;will-change:transform}
 .title-mask:nth-child(1) .title-line{animation-delay:.11s}
 .title-mask:nth-child(2) .title-line{animation-delay:.34s}
@@ -345,7 +340,6 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   .hero-frame{padding:9px;border-radius:22px}
   .hero-panel{min-height:590px;border-radius:14px}
   .hero-orb{left:calc(50% - 58px);top:38%;width:116px;height:116px}
-  .hero-kicker-right{right:14px;top:92px}
   .stats{
     left:14px;
     right:14px;
@@ -363,9 +357,10 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
     gap:18px;
   }
   .hero-title{
-    font-size:clamp(46px,18vw,76px);
-    max-width:8.4ch;
-    letter-spacing:-.045em;
+    font-size:clamp(38px,13vw,62px);
+    max-width:100%;
+    letter-spacing:-.04em;
+    line-height:1;
   }
   .hero-sub{
     max-width:none;
@@ -452,6 +447,6 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   .topnav{width:100%;justify-content:flex-start}
   .hero-panel{min-height:640px}
   .stats{gap:14px}
-  .hero-title{font-size:clamp(42px,20vw,68px)}
+  .hero-title{font-size:clamp(36px,12.5vw,54px)}
   .collection-grid{grid-template-columns:1fr}
 }
