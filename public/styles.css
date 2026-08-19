@@ -99,11 +99,17 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   background-size:19px 23px,31px 29px,17px 13px;
 }
 .hero-orb{
+  --orb-angle:210deg;
   position:absolute;left:25%;top:38%;width:150px;height:150px;z-index:2;border-radius:50%;
-  background:conic-gradient(from 210deg,rgba(66,50,23,.20),rgba(235,98,44,.95),rgba(235,98,44,.78),rgba(66,50,23,.16),rgba(66,50,23,.20));
-  filter:blur(.15px);opacity:.78;
+  background:conic-gradient(from var(--orb-angle),rgba(66,50,23,.20),rgba(235,98,44,.95),rgba(235,98,44,.78),rgba(66,50,23,.16),rgba(66,50,23,.20));
+  filter:blur(.15px);opacity:.78;transform-origin:center;
+  animation:orb-flow 14s linear infinite;will-change:transform;
   -webkit-mask:radial-gradient(circle,transparent 0 35%,#000 36% 66%,transparent 67%);
           mask:radial-gradient(circle,transparent 0 35%,#000 36% 66%,transparent 67%);
+}
+@keyframes orb-flow{
+  0%{--orb-angle:210deg;transform:rotate(0deg)}
+  100%{--orb-angle:570deg;transform:rotate(360deg)}
 }
 .hero-kicker{
   position:absolute;z-index:3;font-family:var(--font-mono);font-size:11px;font-weight:600;line-height:1.05;
@@ -121,7 +127,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .title-mask:nth-child(2) .title-line{animation-delay:.34s}
 .title-mask:nth-child(3) .title-line{animation-delay:.57s}
 @keyframes title-rise{to{transform:translateY(0)}}
-@media (prefers-reduced-motion:reduce){.title-line{animation:none;transform:none}}
+@media (prefers-reduced-motion:reduce){.title-line,.hero-orb{animation:none;transform:none}}
 .hero-sub{margin:0;max-width:42ch;color:var(--cf-text-soft);font-size:clamp(18px,2.2vw,28px);line-height:1.18;letter-spacing:-.035em}
 .hero-sub::first-line{color:var(--cf-text)}
 .stats{position:absolute;z-index:3;left:18px;right:18px;top:18px;display:flex;justify-content:flex-end;gap:42px;margin:0;padding:0}
