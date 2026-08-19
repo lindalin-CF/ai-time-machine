@@ -115,7 +115,6 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .card:hover{transform:translateY(-3px);border-color:var(--cf-border-strong);
   box-shadow:0 2px 4px rgba(82,16,0,.06),0 22px 40px -22px rgba(82,16,0,.4)}
 .shot{position:relative;aspect-ratio:16/10;background:var(--cf-bg-300);border-bottom:1px solid var(--cf-border)}
-.shot::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--brand,var(--cf-orange))}
 .shot img{width:100%;height:100%;object-fit:cover;object-position:top center}
 .badge{
   position:absolute;top:12px;left:12px;font-family:var(--font-mono);font-size:10px;
@@ -217,7 +216,6 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .col-item{margin:0;display:flex;flex-direction:column;gap:9px}
 .col-item .shot{aspect-ratio:16/10;border:1px solid var(--cf-border);border-radius:12px;overflow:hidden;
   background:var(--cf-bg-300);box-shadow:0 10px 24px -18px rgba(82,16,0,.5)}
-.col-item .shot::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--brand,var(--cf-orange));z-index:1}
 .col-cap{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px}
 .col-name{display:inline-flex;align-items:center;gap:7px;font-weight:600;color:var(--cf-text);min-width:0}
 .col-name .brand-dot{width:9px;height:9px;border-radius:50%;flex:none}
