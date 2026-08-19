@@ -467,17 +467,20 @@ function initHeroScreenshotEffect() {
     const endY = frameRect.height - startY - panelRect.height * scale - pad;
 
     const shot = panel.cloneNode(true);
-    shot.className = "hero-snapshot-card";
+    // Keep hero-panel styling so the fake screenshot visually matches the header.
+    shot.className = "hero-panel hero-snapshot-card";
     shot.querySelectorAll("[id]").forEach((el) => el.removeAttribute("id"));
     Object.assign(shot.style, {
       left: startX + "px",
       top: startY + "px",
       width: panelRect.width + "px",
       height: panelRect.height + "px",
-      "--snap-x": endX + "px",
-      "--snap-y": endY + "px",
-      "--snap-scale": String(scale),
     });
+    // CSS custom properties must be set with setProperty(); Object.assign()
+    // creates plain JS fields and the keyframe vars stay unset.
+    shot.style.setProperty("--snap-x", endX + "px");
+    shot.style.setProperty("--snap-y", endY + "px");
+    shot.style.setProperty("--snap-scale", String(scale));
 
     panel.classList.add("is-snapping");
     frame.appendChild(shot);
