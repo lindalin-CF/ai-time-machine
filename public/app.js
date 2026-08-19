@@ -384,4 +384,5 @@ window.addEventListener("hashchange", route);
 
 initLightbox();
 initDownloadAll();
+initDeviceToggle();
 boot().then(route);
