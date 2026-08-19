@@ -125,6 +125,59 @@ function shortWeekLabel(week) {
   }
 }
 
+function closeWeekMenus(except = null) {
+  document.querySelectorAll(".week-menu.open").forEach((m) => {
+    if (m === except) return;
+    m.classList.remove("open");
+    const b = m.querySelector(".week-menu-btn");
+    if (b) b.setAttribute("aria-expanded", "false");
+  });
+}
+
+function syncWeekMenus() {
+  document.querySelectorAll(".week-menu").forEach((menu) => {
+    const btn = menu.querySelector(".week-menu-btn");
+    const list = menu.querySelector(".week-menu-list");
+    const label = shortWeekLabel(state.week || state.weeks[0]?.week);
+    if (btn) btn.querySelector("span").textContent = label;
+    if (!list) return;
+    list.querySelectorAll(".week-option").forEach((opt) => {
+      opt.setAttribute("aria-selected", String(opt.dataset.week === state.week));
+    });
+  });
+}
+
+function ensureWeekMenu(sel) {
+  sel.classList.add("week-native");
+  let menu = sel.parentElement.querySelector(".week-menu");
+  if (!menu) {
+    menu = document.createElement("div");
+    menu.className = "week-menu";
+    menu.innerHTML = '<button class="week-menu-btn" type="button" aria-haspopup="listbox" aria-expanded="false"><span>Week</span></button><div class="week-menu-list" role="listbox"></div>';
+    sel.insertAdjacentElement("afterend", menu);
+    const btn = menu.querySelector(".week-menu-btn");
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const willOpen = !menu.classList.contains("open");
+      closeWeekMenus(menu);
+      menu.classList.toggle("open", willOpen);
+      btn.setAttribute("aria-expanded", String(willOpen));
+    });
+  }
+  const list = menu.querySelector(".week-menu-list");
+  list.innerHTML = state.weeks.length
+    ? state.weeks.map((w) => '<button class="week-option" type="button" role="option" data-week="' + esc(w.week) + '" aria-selected="' + String(w.week === state.week) + '">' + esc(shortWeekLabel(w.week)) + '</button>').join("")
+    : '<button class="week-option" type="button" disabled>No weeks yet</button>';
+  list.querySelectorAll(".week-option[data-week]").forEach((opt) => {
+    opt.addEventListener("click", (e) => {
+      e.stopPropagation();
+      closeWeekMenus();
+      loadWeek(opt.dataset.week);
+    });
+  });
+  syncWeekMenus();
+}
+
 function renderWeekSelect() {
   const opts = state.weeks.length
     ? state.weeks
@@ -137,6 +190,7 @@ function renderWeekSelect() {
     if (!sel) continue;
     sel.innerHTML = opts;
     if (state.weeks.length) sel.addEventListener("change", () => loadWeek(sel.value));
+    ensureWeekMenu(sel);
   }
 }
 
@@ -155,6 +209,7 @@ async function loadWeek(week) {
       const s = $(id);
       if (s) s.value = data.week;
     }
+    syncWeekMenus();
   }
   renderGrid();
   if (location.hash === "#collection") renderCollection();
@@ -530,6 +585,9 @@ function route() {
   window.scrollTo(0, 0);
 }
 window.addEventListener("hashchange", route);
+
+document.addEventListener("click", () => closeWeekMenus());
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeWeekMenus(); });
 
 initLightbox();
 initDownloadAll();
