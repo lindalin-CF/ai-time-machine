@@ -242,13 +242,13 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 /* ---------- screenshot lightbox (click a thumbnail to enlarge + download) ---------- */
 .shot.zoomable{cursor:zoom-in}
 
-.lb{position:fixed;inset:0;z-index:80;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px}
+.lb{position:fixed;inset:0;z-index:120;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px}
 .lb[hidden]{display:none}
 .lb-backdrop{position:absolute;inset:0;background:rgba(30,12,0,.68);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 /* control cluster sits ABOVE the image, outside the figure, aligned to its right edge */
-.lb-controls{position:relative;z-index:90;width:min(1100px,94vw);display:flex;justify-content:flex-end;gap:8px}
+.lb-controls{position:relative;z-index:130;width:min(1100px,94vw);display:flex;justify-content:flex-end;gap:8px}
 .lb-figure{
-  position:relative;z-index:85;margin:0;max-width:min(1100px,94vw);max-height:calc(92vh - 52px);
+  position:relative;z-index:125;margin:0;max-width:min(1100px,94vw);max-height:calc(92vh - 52px);
   display:flex;background:var(--cf-bg-100,#f5f1e9);
   border:1px solid var(--cf-border-strong,#c8bba4);border-radius:var(--radius,14px);
   overflow:hidden;box-shadow:0 30px 80px -30px rgba(66,50,23,.6);
