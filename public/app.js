@@ -443,6 +443,52 @@ function initHeroOrbFollow() {
   reduced.addEventListener("change", reset);
 }
 
+// ---- playful hero screenshot effect ----------------------------------------
+function initHeroScreenshotEffect() {
+  const frame = document.querySelector(".hero-frame");
+  const panel = document.querySelector(".hero-panel");
+  if (!frame || !panel) return;
+
+  const reduced = window.matchMedia("(prefers-reduced-motion:reduce)");
+  let busy = false;
+
+  panel.addEventListener("click", (e) => {
+    if (reduced.matches || busy) return;
+    if (e.target.closest("a,button,input,select,textarea")) return;
+    busy = true;
+
+    const frameRect = frame.getBoundingClientRect();
+    const panelRect = panel.getBoundingClientRect();
+    const scale = panelRect.width < 520 ? 0.26 : 0.18;
+    const pad = panelRect.width < 520 ? 12 : 18;
+    const startX = panelRect.left - frameRect.left;
+    const startY = panelRect.top - frameRect.top;
+    const endX = frameRect.width - startX - panelRect.width * scale - pad;
+    const endY = frameRect.height - startY - panelRect.height * scale - pad;
+
+    const shot = panel.cloneNode(true);
+    shot.className = "hero-snapshot-card";
+    shot.querySelectorAll("[id]").forEach((el) => el.removeAttribute("id"));
+    Object.assign(shot.style, {
+      left: startX + "px",
+      top: startY + "px",
+      width: panelRect.width + "px",
+      height: panelRect.height + "px",
+      "--snap-x": endX + "px",
+      "--snap-y": endY + "px",
+      "--snap-scale": String(scale),
+    });
+
+    panel.classList.add("is-snapping");
+    frame.appendChild(shot);
+    shot.addEventListener("animationend", () => {
+      shot.remove();
+      panel.classList.remove("is-snapping");
+      busy = false;
+    }, { once: true });
+  });
+}
+
 // ---- hash routing: #collection <-> gallery --------------------------------
 function route() {
   const onCollection = location.hash === "#collection";
@@ -462,4 +508,5 @@ initLightbox();
 initDownloadAll();
 initDeviceToggle();
 initHeroOrbFollow();
+initHeroScreenshotEffect();
 boot().then(route);
