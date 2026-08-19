@@ -114,10 +114,21 @@ function syncFilterChips() {
   });
 }
 
+function shortWeekLabel(week) {
+  if (!week) return "Latest week";
+  try {
+    return new Date(week + "T00:00:00Z").toLocaleDateString("en-US", {
+      month: "short", day: "numeric", year: "numeric", timeZone: "UTC",
+    });
+  } catch {
+    return week;
+  }
+}
+
 function renderWeekSelect() {
   const opts = state.weeks.length
     ? state.weeks
-        .map((w) => `<option value="${esc(w.week)}">${esc(w.label)} · ${w.portal_count}</option>`)
+        .map((w) => `<option value="${esc(w.week)}">${esc(shortWeekLabel(w.week))}</option>`)
         .join("")
     : `<option>No weeks yet</option>`;
   // Library and Collection each have their own week dropdown; keep both in sync.
