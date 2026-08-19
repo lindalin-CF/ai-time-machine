@@ -115,15 +115,18 @@ function syncFilterChips() {
 }
 
 function renderWeekSelect() {
-  const sel = $("#weekSelect");
-  if (!state.weeks.length) {
-    sel.innerHTML = `<option>No weeks yet</option>`;
-    return;
+  const opts = state.weeks.length
+    ? state.weeks
+        .map((w) => `<option value="${esc(w.week)}">${esc(w.label)} · ${w.portal_count}</option>`)
+        .join("")
+    : `<option>No weeks yet</option>`;
+  // Library and Collection each have their own week dropdown; keep both in sync.
+  for (const id of ["#weekSelect", "#collectionWeekSelect"]) {
+    const sel = $(id);
+    if (!sel) continue;
+    sel.innerHTML = opts;
+    if (state.weeks.length) sel.addEventListener("change", () => loadWeek(sel.value));
   }
-  sel.innerHTML = state.weeks
-    .map((w) => `<option value="${esc(w.week)}">${esc(w.label)} · ${w.portal_count}</option>`)
-    .join("");
-  sel.addEventListener("change", () => loadWeek(sel.value));
 }
 
 async function loadWeek(week) {
@@ -136,8 +139,12 @@ async function loadWeek(week) {
   $("#weekHeading").textContent = data.label
     ? `${data.label} · ${count} portals`
     : "No captures yet";
-  const sel = $("#weekSelect");
-  if (sel && data.week) sel.value = data.week;
+  if (data.week) {
+    for (const id of ["#weekSelect", "#collectionWeekSelect"]) {
+      const s = $(id);
+      if (s) s.value = data.week;
+    }
+  }
   renderGrid();
   if (location.hash === "#collection") renderCollection();
 }
