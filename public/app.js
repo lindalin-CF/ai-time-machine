@@ -404,13 +404,17 @@ function initHeroOrbFollow() {
   let target = null;
   let current = null;
 
-  const reset = () => {
+  const stop = () => {
     target = null;
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+  };
+
+  const reset = () => {
+    stop();
     current = null;
     orb.style.left = "";
     orb.style.top = "";
-    if (raf) cancelAnimationFrame(raf);
-    raf = 0;
   };
 
   const tick = () => {
@@ -432,7 +436,9 @@ function initHeroOrbFollow() {
     };
     if (!raf) raf = requestAnimationFrame(tick);
   });
-  panel.addEventListener("pointerleave", reset);
+  // Keep the orb at its last cursor-following position when leaving the hero;
+  // don't snap/bounce back to the original CSS position.
+  panel.addEventListener("pointerleave", stop);
   desktop.addEventListener("change", reset);
   reduced.addEventListener("change", reset);
 }
