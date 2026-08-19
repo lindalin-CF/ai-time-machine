@@ -5,7 +5,7 @@ const state = {
   portals: [],
   weeks: [],
   week: null,        // selected week (null => latest)
-  portalFilter: "all",
+  selected: new Set(), // selected portal slugs; empty => all portals
   captures: [],
   device: "desktop", // "desktop" | "mobile" — which screenshot variant to show
 };
@@ -87,12 +87,31 @@ function renderFilters() {
   wrap.innerHTML = chips.join("");
   wrap.querySelectorAll(".chip").forEach((btn) =>
     btn.addEventListener("click", () => {
-      state.portalFilter = btn.dataset.portal;
-      wrap.querySelectorAll(".chip").forEach((c) =>
-        c.setAttribute("aria-selected", String(c === btn)));
+      const slug = btn.dataset.portal;
+      if (slug === "all") {
+        state.selected.clear(); // "All portals" resets to showing everything
+      } else if (state.selected.has(slug)) {
+        state.selected.delete(slug); // toggle off
+      } else {
+        state.selected.add(slug); // toggle on (multi-select)
+      }
+      syncFilterChips();
       renderGrid();
     })
   );
+  syncFilterChips();
+}
+
+// Reflect state.selected on the chips. Empty selection => "All portals" is active.
+function syncFilterChips() {
+  const wrap = $("#filters");
+  if (!wrap) return;
+  const none = state.selected.size === 0;
+  wrap.querySelectorAll(".chip").forEach((c) => {
+    const slug = c.dataset.portal;
+    const on = slug === "all" ? none : state.selected.has(slug);
+    c.setAttribute("aria-selected", String(on));
+  });
 }
 
 function renderWeekSelect() {
@@ -125,9 +144,9 @@ async function loadWeek(week) {
 
 function renderGrid() {
   const list =
-    state.portalFilter === "all"
+    state.selected.size === 0
       ? state.captures
-      : state.captures.filter((c) => c.slug === state.portalFilter);
+      : state.captures.filter((c) => state.selected.has(c.slug));
   const grid = $("#grid");
   const empty = $("#empty");
   if (!list.length) {

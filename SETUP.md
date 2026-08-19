@@ -129,6 +129,33 @@ node capture.mjs --week=2026-08-10 # store under a specific week
 
 ---
 
+## Weekly auto-capture (cron) & the pause window
+
+The site auto-captures every **Monday 09:00 UTC** (cron in `wrangler.jsonc`). It
+only **adds a new week** of data — it never changes the code or the UI, and it
+never overwrites screenshots you uploaded yourself (`.local.png`).
+
+Important limitation: the cron runs in Cloudflare's cloud, which **can't log in
+and doesn't take mobile shots**. So automatic weeks are **logged-out desktop
+only**. To get signed-in + mobile shots for a week, run the local capture script
+yourself that week (`node capture.mjs --auto`).
+
+### Pause: Aug 28 – Sep 28, 2026 (already set)
+
+Because those weeks would otherwise fill up with empty logged-out screenshots
+while away, auto-capture is **paused** for that window. It skips these Mondays:
+Aug 31, Sep 7, Sep 14, Sep 21, Sep 28 — and **auto-resumes on Oct 5** with no
+redeploy needed.
+
+- The pause lives in `src/index.ts` → `scheduled()` as two constants:
+  `PAUSE_FROM` and `PAUSE_UNTIL`.
+- To change or cancel it: edit those dates (or set both to the same day to
+  effectively disable the pause), then `npm run deploy`.
+- Plan: run `node capture.mjs --auto` on Aug 28 before leaving, so the latest
+  week shows good signed-in + mobile shots the whole time you're away.
+
+---
+
 ## Handy commands
 
 ```bash
