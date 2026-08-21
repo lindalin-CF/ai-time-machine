@@ -210,7 +210,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .analysis-label::before{content:"";width:16px;height:1px;background:var(--cf-border-strong)}
 .analysis{font-size:13.5px;line-height:1.55;color:var(--cf-text);margin:0}
 .analysis.clamped{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
-.analysis-toggle{align-self:center;margin-top:-6px;border:none;background:none;cursor:pointer;padding:2px;
+.analysis-toggle{align-self:flex-start;margin-top:-6px;border:none;background:none;cursor:pointer;padding:2px;
   display:inline-flex;align-items:center;justify-content:center;color:var(--cf-text-soft);
   border-radius:6px;transition:color .15s,background .15s}
 .analysis-toggle svg{transition:transform .2s ease}
