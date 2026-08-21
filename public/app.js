@@ -597,6 +597,8 @@ function initManualSnapshots() {
   const grid = modal.querySelector("#manualGrid");
   const title = modal.querySelector("#manualTitle");
   let current = { slug: "", portal: "" };
+  let currentShots = [];
+  let uploadOpen = false;
 
   const close = () => {
     modal.hidden = true;
@@ -607,15 +609,18 @@ function initManualSnapshots() {
     grid.innerHTML = `<div class="manual-loading">Loading…</div>`;
     try {
       const data = await getJSON(`/api/manual?slug=${encodeURIComponent(current.slug)}`);
-      render(data.shots || []);
+      currentShots = data.shots || [];
+      uploadOpen = false;
+      render(currentShots);
     } catch {
       render([], "Manual library is not ready yet. Run the manual migration first.");
     }
   }
 
   function render(shots, error = "") {
-    const cells = [uploadCell(error)];
-    for (const s of shots.slice(0, 5)) {
+    const cells = [addCell()];
+    if (uploadOpen || error) cells.push(uploadCell(error));
+    for (const s of shots) {
       cells.push(`
         <figure class="manual-cell filled">
           <div class="manual-img" data-full="${esc(s.image)}" data-title="${esc(current.portal)} manual snapshot" data-file="${esc(current.slug)}-manual-${esc(s.device)}">
@@ -628,9 +633,17 @@ function initManualSnapshots() {
           </figcaption>
         </figure>`);
     }
-    while (cells.length < 6) cells.push(`<div class="manual-cell empty">Empty slot</div>`);
     grid.innerHTML = cells.join("");
+    wireAddCell();
     wireUploadForm();
+  }
+
+  function addCell() {
+    return `
+      <button class="manual-cell manual-add" type="button" aria-label="Add another manual snapshot">
+        <span class="manual-add-plus" aria-hidden="true">+</span>
+        <span>Add image</span>
+      </button>`;
   }
 
   function uploadCell(error = "") {
@@ -639,7 +652,6 @@ function initManualSnapshots() {
       <form class="manual-cell upload" id="manualUploadForm">
         <label class="manual-file">
           <input name="image" type="file" accept="image/*" required />
-          <span class="manual-plus" aria-hidden="true">+</span>
           <span>Upload screenshot</span>
         </label>
         <div class="manual-row">
@@ -659,6 +671,15 @@ function initManualSnapshots() {
         <button class="manual-submit" type="submit">Add to library</button>
         <p class="manual-msg ${error ? "show" : ""}">${esc(error)}</p>
       </form>`;
+  }
+
+  function wireAddCell() {
+    const add = modal.querySelector(".manual-add");
+    if (!add) return;
+    add.addEventListener("click", () => {
+      uploadOpen = true;
+      render(currentShots);
+    });
   }
 
   function wireUploadForm() {
@@ -681,6 +702,7 @@ function initManualSnapshots() {
         });
         const out = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(out.error || `Upload failed (${res.status})`);
+        uploadOpen = false;
         await load();
       } catch (err) {
         msg.textContent = err.message || "Upload failed";

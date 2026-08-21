@@ -116,7 +116,7 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     if (!portal) return json({ error: "unknown slug: " + slug }, 404);
     const rows = await env.DB.prepare(
       `SELECT id, slug, portal, device, description, r2_key, created_at
-       FROM manual_shots WHERE slug=? ORDER BY created_at DESC LIMIT 6`
+       FROM manual_shots WHERE slug=? ORDER BY created_at DESC LIMIT 60`
     ).bind(slug).all<{ id: string; slug: string; portal: string; device: string; description: string; r2_key: string; created_at: string }>();
     return json({
       slug,

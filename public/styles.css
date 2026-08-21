@@ -594,7 +594,6 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .manual-file{border:1px dashed var(--cf-border-strong);border-radius:11px;padding:16px 12px;text-align:center;cursor:pointer;background:var(--cf-bg-200);display:grid;place-items:center;gap:6px}
 .manual-file input{display:none}
 .manual-file span{font-family:var(--font-sans);font-size:13px;font-weight:600;color:var(--cf-text);text-transform:none;letter-spacing:0}
-.manual-file .manual-plus{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--cf-bg-100);border:1px solid var(--cf-border-strong);color:var(--cf-orange-ink);font-size:26px;line-height:1;font-weight:500}
 .manual-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .manual-submit{border:none;border-radius:10px;background:var(--cf-orange);color:#fff;cursor:pointer;font:700 13px/1 var(--font-sans);padding:11px 12px}
 .manual-submit:hover{background:var(--cf-orange-ink)}
@@ -638,3 +637,14 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   .controls-right .week-menu{min-width:122px}
   .controls-right .week-menu-btn{font-size:12px;padding:7px 26px 7px 9px}
 }
+
+
+/* manual snapshot add slot */
+.manual-add{display:grid;place-items:center;gap:10px;min-height:210px;border:1px dashed var(--cf-border-strong);
+  background:var(--cf-bg-100);color:var(--cf-text);cursor:pointer;text-align:center;
+  font-family:var(--font-sans);font-weight:700;font-size:13px}
+.manual-add:hover{border-color:var(--cf-orange);background:rgba(235,98,44,.08);color:var(--cf-orange-ink)}
+.manual-add-plus{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
+  background:var(--cf-bg-200);border:1px solid var(--cf-border-strong);color:var(--cf-orange-ink);
+  font-size:32px;line-height:1;font-weight:500}
+.manual-add:hover .manual-add-plus{border-color:var(--cf-orange);background:rgba(235,98,44,.12)}
