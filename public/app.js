@@ -231,6 +231,19 @@ function renderGrid() {
   empty.hidden = true;
   grid.innerHTML = list.map(card).join("");
   wireAnalysisToggles();
+  wireBrandLogos();
+}
+
+// Load each portal's favicon as its logo; fall back to the brand colour swatch
+// if it fails to load (or there's no usable domain).
+function wireBrandLogos() {
+  $("#grid").querySelectorAll(".brand-logo").forEach((box) => {
+    const domain = box.dataset.domain;
+    const img = box.querySelector("img");
+    if (!domain || !img) { box.classList.add("is-fallback"); return; }
+    img.addEventListener("error", () => box.classList.add("is-fallback"), { once: true });
+    img.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`;
+  });
 }
 
 // Collapse long design-analysis text to 5 lines; only show the toggle when it
@@ -280,7 +293,9 @@ function card(c) {
     <div class="card-body">
       <div class="card-head">
         <div class="portal-id">
-          <span class="brand-dot" style="background:${esc(c.brand)}"></span>
+          <span class="brand-logo" style="--brand:${esc(c.brand)}" data-domain="${esc(domainOf(c.url))}" title="${esc(c.company)}">
+            <img alt="" loading="lazy" />
+          </span>
           <div>
             <div class="portal-name">${esc(c.portal)}</div>
             <div class="portal-co">${esc(c.company)}</div>
