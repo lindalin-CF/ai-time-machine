@@ -59,7 +59,8 @@ CREATE TABLE manual_shots (
   portal       TEXT NOT NULL,
   device       TEXT NOT NULL DEFAULT 'desktop', -- 'desktop' | 'mobile'
   description  TEXT DEFAULT '',
-  r2_key       TEXT NOT NULL,
+  r2_key       TEXT NOT NULL,           -- cover image (first of images)
+  images       TEXT,                     -- JSON array of r2 keys (up to 5); NULL => [r2_key]
   created_at   TEXT NOT NULL,
   FOREIGN KEY (slug) REFERENCES portals(slug)
 );

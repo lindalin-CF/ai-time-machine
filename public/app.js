@@ -629,6 +629,25 @@ function initManualSnapshots() {
     wireAddCell();
     wireUploadForm();
     wireEditCells();
+    wireCarousels();
+  }
+
+  function wireCarousels() {
+    modal.querySelectorAll(".manual-carousel").forEach((car) => {
+      const track = car.querySelector(".manual-track");
+      const dots = [...car.querySelectorAll(".manual-dot")];
+      const count = track.children.length;
+      if (count <= 1) return;
+      const go = (i) => {
+        const idx = (i + count) % count;
+        car.dataset.index = String(idx);
+        track.style.transform = `translateX(${-idx * 100}%)`;
+        dots.forEach((d, di) => d.classList.toggle("active", di === idx));
+      };
+      car.querySelector(".manual-nav.prev")?.addEventListener("click", (e) => { e.stopPropagation(); go(+car.dataset.index - 1); });
+      car.querySelector(".manual-nav.next")?.addEventListener("click", (e) => { e.stopPropagation(); go(+car.dataset.index + 1); });
+      dots.forEach((d) => d.addEventListener("click", (e) => { e.stopPropagation(); go(+d.dataset.i); }));
+    });
   }
 
   function filledCell(s) {
@@ -651,11 +670,22 @@ function initManualSnapshots() {
           </form>
         </figure>`;
     }
+    const imgs = (s.images && s.images.length ? s.images : [s.image]).filter(Boolean);
+    const slides = imgs.map((src) => `
+          <div class="manual-img" data-full="${esc(src)}" data-title="${esc(current.portal)} manual snapshot" data-file="${esc(current.slug)}-manual-${esc(s.device)}">
+            <img src="${esc(src)}" alt="${esc(current.portal)} manual snapshot" loading="lazy" />
+          </div>`).join("");
+    const multi = imgs.length > 1;
+    const nav = multi ? `
+        <button type="button" class="manual-nav prev" aria-label="Previous image">&#8249;</button>
+        <button type="button" class="manual-nav next" aria-label="Next image">&#8250;</button>
+        <div class="manual-dots">${imgs.map((_, i) => `<button type="button" class="manual-dot${i === 0 ? " active" : ""}" data-i="${i}" aria-label="Image ${i + 1}"></button>`).join("")}</div>` : "";
     return `
       <figure class="manual-cell filled">
-        <div class="manual-img" data-full="${esc(s.image)}" data-title="${esc(current.portal)} manual snapshot" data-file="${esc(current.slug)}-manual-${esc(s.device)}">
-          <img src="${esc(s.image)}" alt="${esc(current.portal)} manual snapshot" loading="lazy" />
+        <div class="manual-carousel" data-index="0">
+          <div class="manual-track" style="transform:translateX(0)">${slides}</div>
           <span class="manual-chip">${esc(s.device)}</span>
+          ${nav}
         </div>
         <figcaption>
           <b>${esc(fmtDate(s.createdAt))}</b>
@@ -680,8 +710,9 @@ function initManualSnapshots() {
     return `
       <form class="manual-cell upload" id="manualUploadForm">
         <label class="manual-file">
-          <input name="image" type="file" accept="image/*" required />
-          <span>Upload screenshot</span>
+          <input name="image" type="file" accept="image/*" multiple required />
+          <span>Upload screenshots</span>
+          <small>Up to 5 images</small>
         </label>
         <div class="manual-row">
           <label>Device
@@ -717,6 +748,12 @@ function initManualSnapshots() {
     const msg = form.querySelector(".manual-msg");
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+      const fileInput = form.querySelector('input[name="image"]');
+      if (fileInput && fileInput.files.length > 5) {
+        msg.textContent = "Please choose at most 5 images.";
+        msg.classList.add("show");
+        return;
+      }
       const fd = new FormData(form);
       const token = String(fd.get("token") || "").trim();
       fd.set("slug", current.slug);

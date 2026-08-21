@@ -115,21 +115,29 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     const portal = await getPortal(env, slug);
     if (!portal) return json({ error: "unknown slug: " + slug }, 404);
     const rows = await env.DB.prepare(
-      `SELECT id, slug, portal, device, description, r2_key, created_at
+      `SELECT id, slug, portal, device, description, r2_key, images, created_at
        FROM manual_shots WHERE slug=? ORDER BY created_at DESC LIMIT 60`
-    ).bind(slug).all<{ id: string; slug: string; portal: string; device: string; description: string; r2_key: string; created_at: string }>();
+    ).bind(slug).all<{ id: string; slug: string; portal: string; device: string; description: string; r2_key: string; images: string | null; created_at: string }>();
     return json({
       slug,
       portal: portal.name,
-      shots: (rows.results || []).map((r) => ({
-        id: r.id,
-        slug: r.slug,
-        portal: r.portal,
-        device: r.device,
-        description: r.description || "",
-        image: `/img/${r.r2_key}?v=${Date.parse(r.created_at) || 0}`,
-        createdAt: r.created_at,
-      })),
+      shots: (rows.results || []).map((r) => {
+        const v = Date.parse(r.created_at) || 0;
+        let keys: string[] = [];
+        if (r.images) { try { const p = JSON.parse(r.images); if (Array.isArray(p)) keys = p.filter((k) => typeof k === "string"); } catch { /* ignore */ } }
+        if (!keys.length && r.r2_key) keys = [r.r2_key];
+        const images = keys.map((k) => `/img/${k}?v=${v}`);
+        return {
+          id: r.id,
+          slug: r.slug,
+          portal: r.portal,
+          device: r.device,
+          description: r.description || "",
+          image: images[0] || "",
+          images,
+          createdAt: r.created_at,
+        };
+      }),
     });
   }
 
@@ -142,23 +150,30 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     const slug = String(form.get("slug") || "");
     const device = String(form.get("device") || "desktop") === "mobile" ? "mobile" : "desktop";
     const description = String(form.get("description") || "").trim().slice(0, 220);
-    const file = form.get("image");
-    if (!slug || !(file instanceof File)) return json({ error: "slug and image file required" }, 400);
+    const files = form.getAll("image").filter((f): f is File => f instanceof File);
+    if (!slug || !files.length) return json({ error: "slug and image file required" }, 400);
+    if (files.length > 5) return json({ error: "up to 5 images per card" }, 400);
     const portal = await getPortal(env, slug);
     if (!portal) return json({ error: "unknown slug: " + slug }, 400);
-    if (!file.type.startsWith("image/")) return json({ error: "image file required" }, 400);
-    const bytes = new Uint8Array(await file.arrayBuffer());
-    if (bytes.length < 100) return json({ error: "image too small" }, 400);
-    if (bytes.length > 12 * 1024 * 1024) return json({ error: "image too large (max 12MB)" }, 400);
 
     const now = new Date().toISOString();
     const id = `${slug}-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
-    const r2Key = `manual/${slug}/${id}.${device}.${extFromType(file.type)}`;
-    await env.SHOTS.put(r2Key, bytes, { httpMetadata: { contentType: file.type || "image/png" } });
+    const keys: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!file.type.startsWith("image/")) return json({ error: "image file required" }, 400);
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      if (bytes.length < 100) return json({ error: "image too small" }, 400);
+      if (bytes.length > 12 * 1024 * 1024) return json({ error: "image too large (max 12MB)" }, 400);
+      const r2Key = `manual/${slug}/${id}-${i}.${device}.${extFromType(file.type)}`;
+      await env.SHOTS.put(r2Key, bytes, { httpMetadata: { contentType: file.type || "image/png" } });
+      keys.push(r2Key);
+    }
     await env.DB.prepare(
-      `INSERT INTO manual_shots (id, slug, portal, device, description, r2_key, created_at) VALUES (?,?,?,?,?,?,?)`
-    ).bind(id, slug, portal.name, device, description, r2Key, now).run();
-    return json({ ok: true, id, slug, portal: portal.name, device, description, image: `/img/${r2Key}?v=${Date.parse(now)}`, createdAt: now });
+      `INSERT INTO manual_shots (id, slug, portal, device, description, r2_key, images, created_at) VALUES (?,?,?,?,?,?,?,?)`
+    ).bind(id, slug, portal.name, device, description, keys[0], JSON.stringify(keys), now).run();
+    const v = Date.parse(now);
+    return json({ ok: true, id, slug, portal: portal.name, device, description, images: keys.map((k) => `/img/${k}?v=${v}`), createdAt: now });
   }
 
   // Admin edit of a manual snapshot's description (token-gated, JSON).

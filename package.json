@@ -15,7 +15,9 @@
     "seed:local": "wrangler d1 execute ai-portal-library --local --file=./seed.sql",
     "seed:remote": "wrangler d1 execute ai-portal-library --remote --file=./seed.sql",
     "db:migrate:manual:local": "wrangler d1 execute ai-portal-library --local --file=./migrations/0002_manual_shots.sql",
-    "db:migrate:manual:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0002_manual_shots.sql"
+    "db:migrate:manual:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0002_manual_shots.sql",
+    "db:migrate:manual-images:local": "wrangler d1 execute ai-portal-library --local --file=./migrations/0003_manual_images.sql",
+    "db:migrate:manual-images:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0003_manual_images.sql"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260804.1",
