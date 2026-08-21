@@ -1,4 +1,4 @@
-// Voice agent for the AI Portal Screenshot Library.
+// Voice agent for the AI Surface Library.
 //
 // Wraps the base `Agent` with the @cloudflare/voice pipeline: Workers AI does
 // speech-to-text (Flux) and text-to-speech (Aura-1). `onTurn()` now answers with
@@ -37,7 +37,7 @@ export class PortalVoiceAgent extends VoiceAgent<Env> {
     const grounding = await this.buildLibraryContext();
 
     const system = [
-      'You are the voice guide for the "AI Portal Screenshot Library" — a gallery that',
+      'You are the voice guide for the "AI Surface Library" — a gallery that',
       "captures the landing pages of major AI / LLM portals every week and records a short",
       "design note and colour palette for each one.",
       "",

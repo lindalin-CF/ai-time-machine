@@ -1,4 +1,4 @@
-// AI Portal Screenshot Library — front-end controller
+// AI Surface Library — front-end controller
 const $ = (sel, root = document) => root.querySelector(sel);
 
 const state = {

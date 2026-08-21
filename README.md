@@ -1,4 +1,4 @@
-# AI Portal Screenshot Library
+# AI Surface Library
 
 每週自動蒐集各家 AI / LLM portal 首頁截圖的 **UI 靈感庫**，用 KUMO 設計語言呈現，
 整套跑在 **Cloudflare Workers** 上。每個星期一，一台無頭瀏覽器會造訪清單上的每個 AI portal、
