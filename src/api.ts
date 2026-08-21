@@ -135,6 +135,7 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
           description: r.description || "",
           image: images[0] || "",
           images,
+          imageKeys: keys,
           createdAt: r.created_at,
         };
       }),
@@ -176,21 +177,62 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     return json({ ok: true, id, slug, portal: portal.name, device, description, images: keys.map((k) => `/img/${k}?v=${v}`), createdAt: now });
   }
 
-  // Admin edit of a manual snapshot's description (token-gated, JSON).
+  // Admin edit of a manual snapshot (token-gated, form-data): description,
+  // delete existing images (via the "keep" list), and/or add new images.
   if (path === "/api/manual/edit" && request.method === "POST") {
     const authError = requireUploadToken(request, env);
     if (authError) return authError;
 
-    const body = await request
-      .json<{ id?: string; description?: string }>()
-      .catch(() => ({} as { id?: string; description?: string }));
-    const id = String(body.id || "");
-    const description = String(body.description ?? "").trim().slice(0, 220);
+    const form = await request.formData();
+    const id = String(form.get("id") || "");
     if (!id) return json({ error: "id required" }, 400);
-    const existing = await env.DB.prepare(`SELECT id FROM manual_shots WHERE id=?`).bind(id).first<{ id: string }>();
+    const existing = await env.DB.prepare(
+      `SELECT id, slug, device, r2_key, images FROM manual_shots WHERE id=?`
+    ).bind(id).first<{ id: string; slug: string; device: string; r2_key: string; images: string | null }>();
     if (!existing) return json({ error: "unknown snapshot: " + id }, 404);
-    await env.DB.prepare(`UPDATE manual_shots SET description=? WHERE id=?`).bind(description, id).run();
-    return json({ ok: true, id, description });
+
+    const description = String(form.get("description") ?? "").trim().slice(0, 220);
+
+    // Current keys for this snapshot.
+    let currentKeys: string[] = [];
+    if (existing.images) { try { const p = JSON.parse(existing.images); if (Array.isArray(p)) currentKeys = p.filter((k) => typeof k === "string"); } catch { /* ignore */ } }
+    if (!currentKeys.length && existing.r2_key) currentKeys = [existing.r2_key];
+
+    // Keys the client wants to keep (default: all current).
+    let keep = currentKeys;
+    const keepRaw = form.get("keep");
+    if (typeof keepRaw === "string") {
+      try { const p = JSON.parse(keepRaw); if (Array.isArray(p)) keep = currentKeys.filter((k) => p.includes(k)); } catch { /* ignore */ }
+    }
+    const removed = currentKeys.filter((k) => !keep.includes(k));
+
+    // New images to add.
+    const files = form.getAll("image").filter((f): f is File => f instanceof File);
+    if (keep.length + files.length > 5) return json({ error: "up to 5 images per card" }, 400);
+    if (keep.length + files.length < 1) return json({ error: "a card needs at least one image" }, 400);
+
+    const addedKeys: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!file.type.startsWith("image/")) return json({ error: "image file required" }, 400);
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      if (bytes.length < 100) return json({ error: "image too small" }, 400);
+      if (bytes.length > 12 * 1024 * 1024) return json({ error: "image too large (max 12MB)" }, 400);
+      const r2Key = `manual/${existing.slug}/${id}-add${Date.now()}-${i}.${existing.device}.${extFromType(file.type)}`;
+      await env.SHOTS.put(r2Key, bytes, { httpMetadata: { contentType: file.type || "image/png" } });
+      addedKeys.push(r2Key);
+    }
+
+    const nextKeys = [...keep, ...addedKeys];
+    await env.DB.prepare(
+      `UPDATE manual_shots SET description=?, r2_key=?, images=? WHERE id=?`
+    ).bind(description, nextKeys[0], JSON.stringify(nextKeys), id).run();
+
+    // Delete removed images from R2 (best-effort).
+    for (const k of removed) { try { await env.SHOTS.delete(k); } catch { /* ignore */ } }
+
+    const v = Date.now();
+    return json({ ok: true, id, description, images: nextKeys.map((k) => `/img/${k}?v=${v}`) });
   }
   // Download every screenshot for a week as a single ZIP (the "download all" button).
   // ?device=mobile zips the mobile shots instead of desktop.

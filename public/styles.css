@@ -605,6 +605,15 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   box-shadow:0 10px 24px -12px rgba(21,14,5,.6)}
 .manual-toast.show{opacity:1;transform:translate(-50%,0)}
 .manual-edit{display:flex;flex-direction:column;gap:8px;padding:10px 11px}
+.manual-edit-thumbs{display:flex;flex-wrap:wrap;gap:6px}
+.manual-edit-thumb{position:relative;width:52px;height:40px;border-radius:7px;overflow:hidden;border:1px solid var(--cf-border)}
+.manual-edit-thumb img{width:100%;height:100%;object-fit:cover;object-position:top center}
+.manual-thumb-del{position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;border:none;cursor:pointer;
+  display:grid;place-items:center;background:rgba(20,10,0,.72);color:#fff;font-size:13px;line-height:1;padding:0}
+.manual-thumb-del:hover{background:var(--cf-orange-ink)}
+.manual-file.compact{padding:9px;gap:2px}
+.manual-file.compact .manual-plus{width:24px;height:24px;font-size:18px}
+.manual-file.compact span{font-size:12px}
 .manual-edit textarea,.manual-edit input{width:100%;font-family:var(--font-sans);font-size:12.5px;color:var(--cf-text);background:var(--cf-bg-100);border:1px solid var(--cf-border);border-radius:8px;padding:7px 9px}
 .manual-edit textarea{resize:vertical;min-height:58px}
 .manual-edit textarea:focus,.manual-edit input:focus{outline:none;border-color:var(--cf-orange);box-shadow:0 0 0 3px rgba(235,98,44,.16)}

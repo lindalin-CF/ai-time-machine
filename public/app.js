@@ -700,13 +700,23 @@ function initManualSnapshots() {
   function filledCell(s) {
     if (editingId === s.id) {
       const savedToken = sessionStorage.getItem("manualUploadToken") || "";
+      const keys = s.imageKeys && s.imageKeys.length ? s.imageKeys : [];
+      const imgsE = (s.images && s.images.length ? s.images : [s.image]).filter(Boolean);
+      const thumbs = imgsE.map((src, i) => `
+              <div class="manual-edit-thumb" data-key="${esc(keys[i] || "")}">
+                <img src="${esc(src)}" alt="image ${i + 1}" />
+                <button type="button" class="manual-thumb-del" aria-label="Delete image" title="Delete image">&times;</button>
+              </div>`).join("");
       return `
-        <figure class="manual-cell filled">
-          <div class="manual-img">
-            <img src="${esc(s.image)}" alt="${esc(current.portal)} manual snapshot" loading="lazy" />
-            <span class="manual-chip">${esc(s.device)}</span>
-          </div>
+        <figure class="manual-cell filled editing">
           <form class="manual-edit" data-id="${esc(s.id)}">
+            <div class="manual-edit-thumbs">${thumbs}</div>
+            <label class="manual-file compact">
+              <input name="image" type="file" accept="image/*" multiple />
+              <span class="manual-plus" aria-hidden="true">+</span>
+              <span>Add images</span>
+              <small>Max 5 total</small>
+            </label>
             <textarea name="description" rows="3" maxlength="220" placeholder="Description">${esc(s.description || "")}</textarea>
             <input name="token" type="password" autocomplete="off" value="${esc(savedToken)}" placeholder="Upload token" required />
             <div class="manual-edit-actions">
@@ -843,20 +853,52 @@ function initManualSnapshots() {
       editingId = null;
       render(currentShots);
     });
+    // Delete an existing image: remove its thumb from the form (applied on Save).
+    editForm.querySelectorAll(".manual-thumb-del").forEach((del) => {
+      del.addEventListener("click", () => {
+        const thumbs = editForm.querySelectorAll(".manual-edit-thumb");
+        const fileInput = editForm.querySelector('input[name="image"]');
+        if (thumbs.length <= 1 && (!fileInput || !fileInput.files.length)) {
+          const m = editForm.querySelector(".manual-msg");
+          m.textContent = "A card needs at least one image.";
+          m.classList.add("show");
+          return;
+        }
+        del.closest(".manual-edit-thumb").remove();
+      });
+    });
     const msg = editForm.querySelector(".manual-msg");
     editForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const id = editForm.dataset.id;
       const description = String(editForm.querySelector("textarea").value || "").trim();
       const token = String(editForm.querySelector('input[name="token"]').value || "").trim();
+      const keep = [...editForm.querySelectorAll(".manual-edit-thumb")].map((t) => t.dataset.key).filter(Boolean);
+      const fileInput = editForm.querySelector('input[name="image"]');
+      const added = fileInput ? fileInput.files.length : 0;
+      if (keep.length + added < 1) {
+        msg.textContent = "A card needs at least one image.";
+        msg.classList.add("show");
+        return;
+      }
+      if (keep.length + added > 5) {
+        msg.textContent = "Up to 5 images per card.";
+        msg.classList.add("show");
+        return;
+      }
       sessionStorage.setItem("manualUploadToken", token);
       msg.textContent = "Saving…";
       msg.classList.add("show");
+      const fd = new FormData();
+      fd.set("id", id);
+      fd.set("description", description);
+      fd.set("keep", JSON.stringify(keep));
+      if (fileInput) for (const f of fileInput.files) fd.append("image", f);
       try {
         const res = await fetch("/api/manual/edit", {
           method: "POST",
-          headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-          body: JSON.stringify({ id, description }),
+          headers: { authorization: `Bearer ${token}` },
+          body: fd,
         });
         const out = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(out.error || `Save failed (${res.status})`);
