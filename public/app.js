@@ -660,15 +660,20 @@ function initManualSnapshots() {
         const rel = (slides[idx] && slides[idx].dataset.full) || btn.dataset.cover;
         if (!rel) return;
         const absolute = new URL(rel, location.origin).href;
+        // Generate a shareable link to the image and copy it to the clipboard.
         try {
-          if (navigator.share) {
-            await navigator.share({ title: `${current.portal} — ${document.title}`, url: absolute });
-          } else {
-            await navigator.clipboard.writeText(absolute);
-            toast("Link copied");
-          }
+          await navigator.clipboard.writeText(absolute);
+          toast("Link copied");
         } catch {
-          /* user dismissed the share sheet — ignore */
+          const ta = document.createElement("textarea");
+          ta.value = absolute;
+          ta.style.position = "fixed";
+          ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand("copy"); toast("Link copied"); }
+          catch { toast("Copy failed"); }
+          ta.remove();
         }
       });
     });
@@ -730,11 +735,18 @@ function initManualSnapshots() {
           ${nav}
         </div>
         <figcaption>
-          <b>${esc(fmtDate(s.createdAt))}</b>
-          <span>${esc(s.description || "No description")}</span>
-          <button type="button" class="manual-edit-btn" data-id="${esc(s.id)}" aria-label="Edit description" title="Edit description">
-            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M14.06 4.94l3.75 3.75L7.5 19H3.75v-3.75L14.06 4.94Zm1.06-1.06l1.82-1.82a1.5 1.5 0 0 1 2.12 0l1.63 1.63a1.5 1.5 0 0 1 0 2.12l-1.82 1.82-3.75-3.75Z"/></svg>
-          </button>
+          <div class="manual-cap-text">
+            <b>${esc(fmtDate(s.createdAt))}</b>
+            <span>${esc(s.description || "No description")}</span>
+          </div>
+          <span class="manual-actions">
+            <button type="button" class="manual-edit-btn" data-id="${esc(s.id)}" aria-label="Edit description" title="Edit description">
+              <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M14.06 4.94l3.75 3.75L7.5 19H3.75v-3.75L14.06 4.94Zm1.06-1.06l1.82-1.82a1.5 1.5 0 0 1 2.12 0l1.63 1.63a1.5 1.5 0 0 1 0 2.12l-1.82 1.82-3.75-3.75Z"/></svg>
+            </button>
+            <button type="button" class="manual-share-btn" data-cover="${esc(s.image)}" aria-label="Copy share link" title="Copy share link">
+              <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M18 8a3 3 0 1 0-2.82-4H15a3 3 0 0 0 .18 1.06L8.9 8.6a3 3 0 1 0 0 6.8l6.28 3.54A3 3 0 1 0 18 16a3 3 0 0 0-1.82.62L9.9 13.08a3.02 3.02 0 0 0 0-2.16l6.28-3.54A2.99 2.99 0 0 0 18 8Z"/></svg>
+            </button>
+          </span>
         </figcaption>
       </figure>`;
   }
