@@ -639,6 +639,7 @@ function initManualSnapshots() {
       <form class="manual-cell upload" id="manualUploadForm">
         <label class="manual-file">
           <input name="image" type="file" accept="image/*" required />
+          <span class="manual-plus" aria-hidden="true">+</span>
           <span>Upload screenshot</span>
         </label>
         <div class="manual-row">

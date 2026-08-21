@@ -591,9 +591,10 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   background:var(--cf-bg-100);border:1px solid var(--cf-border);border-radius:9px;padding:8px 10px;text-transform:none;letter-spacing:0;
 }
 .manual-cell.upload input:focus,.manual-cell.upload select:focus,.manual-cell.upload textarea:focus{outline:none;border-color:var(--cf-orange);box-shadow:0 0 0 3px rgba(235,98,44,.16)}
-.manual-file{border:1px dashed var(--cf-border-strong);border-radius:11px;padding:12px;text-align:center;cursor:pointer;background:var(--cf-bg-200)}
+.manual-file{border:1px dashed var(--cf-border-strong);border-radius:11px;padding:16px 12px;text-align:center;cursor:pointer;background:var(--cf-bg-200);display:grid;place-items:center;gap:6px}
 .manual-file input{display:none}
 .manual-file span{font-family:var(--font-sans);font-size:13px;font-weight:600;color:var(--cf-text);text-transform:none;letter-spacing:0}
+.manual-file .manual-plus{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--cf-bg-100);border:1px solid var(--cf-border-strong);color:var(--cf-orange-ink);font-size:26px;line-height:1;font-weight:500}
 .manual-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .manual-submit{border:none;border-radius:10px;background:var(--cf-orange);color:#fff;cursor:pointer;font:700 13px/1 var(--font-sans);padding:11px 12px}
 .manual-submit:hover{background:var(--cf-orange-ink)}
