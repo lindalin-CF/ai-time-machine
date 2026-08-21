@@ -777,6 +777,10 @@ function initManualSnapshots() {
           <input name="image" type="file" accept="image/*" multiple required />
           <span>Upload screenshots</span>
           <small>Up to 5 images</small>
+          <div class="manual-progress" hidden>
+            <div class="manual-progress-track"><div class="manual-progress-bar"></div></div>
+            <span class="manual-progress-pct">0%</span>
+          </div>
         </label>
         <div class="manual-row">
           <label>Device
@@ -806,14 +810,44 @@ function initManualSnapshots() {
     });
   }
 
+  // POST form-data with real upload progress (fetch can't report it).
+  function uploadWithProgress(url, fd, token, onProgress) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", url);
+      xhr.setRequestHeader("authorization", `Bearer ${token}`);
+      xhr.upload.addEventListener("progress", (e) => {
+        if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+      });
+      xhr.addEventListener("load", () => {
+        let out = {};
+        try { out = JSON.parse(xhr.responseText); } catch { /* ignore */ }
+        if (xhr.status >= 200 && xhr.status < 300) resolve(out);
+        else reject(new Error(out.error || `Upload failed (${xhr.status})`));
+      });
+      xhr.addEventListener("error", () => reject(new Error("Network error")));
+      xhr.send(fd);
+    });
+  }
+
   function wireUploadForm() {
     const form = modal.querySelector("#manualUploadForm");
     if (!form) return;
     const msg = form.querySelector(".manual-msg");
+    const prog = form.querySelector(".manual-progress");
+    const bar = form.querySelector(".manual-progress-bar");
+    const pct = form.querySelector(".manual-progress-pct");
+    const submitBtn = form.querySelector(".manual-submit");
+    const setProgress = (p) => { if (bar) bar.style.width = p + "%"; if (pct) pct.textContent = p + "%"; };
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const fileInput = form.querySelector('input[name="image"]');
-      if (fileInput && fileInput.files.length > 5) {
+      if (!fileInput || !fileInput.files.length) {
+        msg.textContent = "Please choose at least one image.";
+        msg.classList.add("show");
+        return;
+      }
+      if (fileInput.files.length > 5) {
         msg.textContent = "Please choose at most 5 images.";
         msg.classList.add("show");
         return;
@@ -822,20 +856,21 @@ function initManualSnapshots() {
       const token = String(fd.get("token") || "").trim();
       fd.set("slug", current.slug);
       sessionStorage.setItem("manualUploadToken", token);
-      msg.textContent = "Uploading…";
-      msg.classList.add("show");
+      msg.classList.remove("show");
+      msg.textContent = "";
+      if (prog) prog.hidden = false;
+      setProgress(0);
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Uploading…"; }
       try {
-        const res = await fetch("/api/manual/upload", {
-          method: "POST",
-          headers: { authorization: `Bearer ${token}` },
-          body: fd,
-        });
-        const out = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(out.error || `Upload failed (${res.status})`);
+        await uploadWithProgress("/api/manual/upload", fd, token, setProgress);
+        setProgress(100);
         uploadOpen = false;
         await load();
       } catch (err) {
+        if (prog) prog.hidden = true;
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = "Add to library"; }
         msg.textContent = err.message || "Upload failed";
+        msg.classList.add("show");
       }
     });
   }
