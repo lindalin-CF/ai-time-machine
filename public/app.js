@@ -247,8 +247,9 @@ function wireAnalysisToggles() {
     toggle.addEventListener("click", () => {
       const expanded = p.classList.toggle("expanded");
       p.classList.toggle("clamped", !expanded);
-      toggle.textContent = expanded ? "Show less" : "Show more";
+      toggle.classList.toggle("open", expanded);
       toggle.setAttribute("aria-expanded", String(expanded));
+      toggle.setAttribute("aria-label", expanded ? "Show less" : "Show more");
     });
   });
 }
@@ -289,7 +290,9 @@ function card(c) {
       </div>
       <div class="analysis-label">Design analysis</div>
       <p class="analysis clamped">${esc(c.analysis)}</p>
-      <button type="button" class="analysis-toggle" aria-expanded="false">Show more</button>
+      <button type="button" class="analysis-toggle" aria-expanded="false" aria-label="Show more">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
+      </button>
       <div class="card-foot">
         <div class="palette">${palette}</div>
         <button class="manual-open" type="button" data-slug="${esc(c.slug)}" data-portal="${esc(c.portal)}" aria-label="View more snapshots for ${esc(c.portal)}">

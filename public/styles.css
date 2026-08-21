@@ -210,10 +210,12 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .analysis-label::before{content:"";width:16px;height:1px;background:var(--cf-border-strong)}
 .analysis{font-size:13.5px;line-height:1.55;color:var(--cf-text);margin:0}
 .analysis.clamped{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
-.analysis-toggle{align-self:flex-start;margin-top:-8px;border:none;background:none;cursor:pointer;padding:2px 0;
-  font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
-  color:var(--cf-orange-ink);border-bottom:1px solid transparent;transition:border-color .15s}
-.analysis-toggle:hover{border-bottom-color:var(--cf-orange)}
+.analysis-toggle{align-self:center;margin-top:-6px;border:none;background:none;cursor:pointer;padding:2px;
+  display:inline-flex;align-items:center;justify-content:center;color:var(--cf-text-soft);
+  border-radius:6px;transition:color .15s,background .15s}
+.analysis-toggle svg{transition:transform .2s ease}
+.analysis-toggle.open svg{transform:rotate(180deg)}
+.analysis-toggle:hover{color:var(--cf-text);background:var(--cf-bg-300)}
 .analysis-toggle[hidden]{display:none}
 .card-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:6px}
 .palette{display:flex;gap:0}
