@@ -42,8 +42,8 @@ img{display:block;max-width:100%}
   border-bottom:1px solid rgba(66,50,23,.08);
   box-shadow:0 8px 22px -24px rgba(66,50,23,.45);
 }
-.wordmark{display:inline-flex;align-items:center;gap:9px;font-weight:700;letter-spacing:.14em;font-size:14px}
-.wordmark-thin{color:var(--cf-text-soft);font-weight:500}
+.wordmark{display:inline-flex;align-items:center;gap:9px;font-weight:700;letter-spacing:.02em;font-size:14px;min-width:0}
+.wordmark-text{display:inline-block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wordmark-dot{width:9px;height:9px;border-radius:50%;background:var(--cf-orange);box-shadow:0 0 0 4px rgba(255,102,51,.14)}
 .topnav{display:flex;align-items:center;gap:20px}
 .topnav-link{font-size:13px;color:var(--cf-text-soft);font-weight:500;transition:color .15s}
@@ -595,3 +595,33 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   .manual-row{grid-template-columns:1fr}
 }
 @media(max-width:520px){.manual-grid{grid-template-columns:1fr}.manual-cell{min-height:190px}}
+
+
+/* ---------- mobile fixes: compact week filter + one-line top menu ---------- */
+@media(max-width:760px){
+  .topbar{align-items:center;gap:10px;flex-wrap:nowrap;padding:14px 16px}
+  .wordmark{flex:1 1 auto;font-size:12px;letter-spacing:.01em;white-space:nowrap;overflow:hidden}
+  .wordmark-dot{flex:0 0 auto}
+  .wordmark-text{max-width:100%}
+  .topnav{margin-left:auto;flex:0 0 auto;display:flex;gap:14px;flex-wrap:nowrap;justify-content:flex-end;white-space:nowrap}
+  .topnav-link{font-size:12px;white-space:nowrap}
+
+  .controls-right{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:nowrap}
+  .controls-right .viewtoggle{flex:0 0 auto}
+  .controls-right .weekpick{flex:0 0 auto;margin-left:auto;justify-content:flex-end;gap:0}
+  .controls-right .weekpick label{display:none}
+  .controls-right .week-menu{min-width:132px}
+  .controls-right .week-menu-btn{font-size:12.5px;padding:7px 28px 7px 10px;border-radius:9px}
+  .controls-right .week-menu-btn::after{right:9px}
+  .controls-right .week-menu-list{right:0;min-width:145px}
+}
+@media(max-width:420px){
+  .topbar{flex-direction:row;align-items:center;gap:8px;padding:12px 14px}
+  .wordmark{font-size:11px;max-width:54vw;letter-spacing:0}
+  .topnav{width:auto;margin-left:auto;justify-content:flex-end;gap:11px}
+  .topnav-link{font-size:12px}
+  .controls-right{gap:8px}
+  .controls-right .vt-btn{font-size:11.5px;padding:6px 8px}
+  .controls-right .week-menu{min-width:122px}
+  .controls-right .week-menu-btn{font-size:12px;padding:7px 26px 7px 9px}
+}
