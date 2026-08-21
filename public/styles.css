@@ -102,7 +102,11 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 }
 .hero-orb{
   --orb-angle:210deg;
-  position:absolute;left:calc(25% + 10px);top:calc(38% - 10px);width:150px;height:150px;z-index:2;border-radius:50%;
+  position:absolute;left:calc(25% + 10px);top:calc(38% - 10px);width:150px;height:150px;z-index:2;
+  border-radius:50%;transform-origin:center;pointer-events:none;will-change:left,top;
+}
+.hero-orb::before{
+  content:"";position:absolute;inset:0;border-radius:50%;
   background:
     radial-gradient(circle at 22% 31%,rgba(245,241,233,.36) 0 1px,transparent 1.7px),
     radial-gradient(circle at 68% 54%,rgba(66,50,23,.18) 0 .8px,transparent 1.5px),
@@ -110,10 +114,18 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
     conic-gradient(from var(--orb-angle),rgba(66,50,23,.20),rgba(235,98,44,.95),rgba(235,98,44,.78),rgba(66,50,23,.16),rgba(66,50,23,.20));
   background-size:17px 19px,23px 29px,11px 13px,auto;
   background-blend-mode:soft-light,multiply,overlay,normal;
-  filter:blur(.15px);opacity:.78;transform-origin:center;pointer-events:none;
-  animation:orb-flow 14s linear infinite;will-change:transform;
+  filter:blur(.15px);opacity:.78;transform-origin:center;
+  animation:orb-flow 14s linear infinite;
   -webkit-mask:radial-gradient(circle,transparent 0 35%,#000 36% 66%,transparent 67%);
           mask:radial-gradient(circle,transparent 0 35%,#000 36% 66%,transparent 67%);
+}
+.hero-orb::after{
+  content:"";position:absolute;left:50%;top:50%;width:40%;height:40%;z-index:2;
+  transform:translate(-50%,-50%);
+  background:
+    linear-gradient(#bdb2aa,#bdb2aa) center/2px 100% no-repeat,
+    linear-gradient(#bdb2aa,#bdb2aa) center/100% 2px no-repeat;
+  opacity:.92;
 }
 @keyframes orb-flow{
   0%{--orb-angle:210deg;transform:rotate(0deg)}
@@ -130,7 +142,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .title-mask:nth-child(2) .title-line{animation-delay:.34s}
 .title-mask:nth-child(3) .title-line{animation-delay:.57s}
 @keyframes title-rise{to{transform:translateY(0)}}
-@media (prefers-reduced-motion:reduce){.title-line,.hero-orb{animation:none;transform:none}}
+@media (prefers-reduced-motion:reduce){.title-line,.hero-orb::before{animation:none;transform:none}}
 .hero-sub{margin:0;max-width:42ch;color:var(--cf-text-soft);font-size:clamp(18px,2.2vw,28px);line-height:1.18;letter-spacing:-.035em}
 .hero-sub::first-line{color:var(--cf-text)}
 .stats{position:absolute;z-index:3;left:18px;right:18px;top:18px;display:flex;justify-content:flex-end;gap:42px;margin:0;padding:0}
