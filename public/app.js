@@ -230,6 +230,27 @@ function renderGrid() {
   }
   empty.hidden = true;
   grid.innerHTML = list.map(card).join("");
+  wireAnalysisToggles();
+}
+
+// Collapse long design-analysis text to 5 lines; only show the toggle when it
+// actually overflows.
+function wireAnalysisToggles() {
+  $("#grid").querySelectorAll(".card").forEach((cardEl) => {
+    const p = cardEl.querySelector(".analysis");
+    const toggle = cardEl.querySelector(".analysis-toggle");
+    if (!p || !toggle) return;
+    // If the clamped text isn't taller than its visible box, no toggle needed.
+    const overflows = p.scrollHeight - p.clientHeight > 2;
+    if (!overflows) { toggle.hidden = true; return; }
+    toggle.hidden = false;
+    toggle.addEventListener("click", () => {
+      const expanded = p.classList.toggle("expanded");
+      p.classList.toggle("clamped", !expanded);
+      toggle.textContent = expanded ? "Show less" : "Show more";
+      toggle.setAttribute("aria-expanded", String(expanded));
+    });
+  });
 }
 
 function card(c) {
@@ -267,7 +288,8 @@ function card(c) {
         <a class="visit" href="${esc(c.url)}" target="_blank" rel="noopener">Visit &#8599;</a>
       </div>
       <div class="analysis-label">Design analysis</div>
-      <p class="analysis">${esc(c.analysis)}</p>
+      <p class="analysis clamped">${esc(c.analysis)}</p>
+      <button type="button" class="analysis-toggle" aria-expanded="false">Show more</button>
       <div class="card-foot">
         <div class="palette">${palette}</div>
         <button class="manual-open" type="button" data-slug="${esc(c.slug)}" data-portal="${esc(c.portal)}" aria-label="View more snapshots for ${esc(c.portal)}">
