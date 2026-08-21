@@ -120,7 +120,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
           mask:radial-gradient(circle,transparent 0 35%,#000 36% 66%,transparent 67%);
 }
 .hero-orb::after{
-  content:"";position:absolute;left:50%;top:50%;width:40%;height:40%;z-index:2;
+  content:"";position:absolute;left:50%;top:50%;width:10%;height:10%;z-index:2;
   transform:translate(-50%,-50%);
   background:
     linear-gradient(#bdb2aa,#bdb2aa) center/2px 100% no-repeat,
