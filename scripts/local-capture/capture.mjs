@@ -60,7 +60,6 @@ const APP_URL = {
   mistral: "https://chat.mistral.ai/chat",
   "meta-ai": "https://www.meta.ai/",
   poe: "https://poe.com/",
-  "character-ai": "https://character.ai/",
   huggingchat: "https://huggingface.co/chat/",
   qwen: "https://chat.qwen.ai/",
   kimi: "https://www.kimi.com/",

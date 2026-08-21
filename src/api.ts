@@ -4,6 +4,7 @@ import { listPortals, listWeeks, latestWeek, capturesForWeek, getPortal } from "
 import { hasCookieSecret, storeCapture } from "./capture";
 
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8" };
+const CACHE_VERSION = "v2-no-character";
 
 function json(data: unknown, status = 200, extra: Record<string, string> = {}) {
   return new Response(JSON.stringify(data), { status, headers: { ...JSON_HEADERS, ...extra } });
@@ -56,10 +57,11 @@ function shapeCapture(row: CaptureRow) {
 
 /** Cache-through a JSON payload in KV for `ttl` seconds. */
 async function cached<T>(env: Env, key: string, ttl: number, build: () => Promise<T>): Promise<T> {
-  const hit = await env.CACHE.get(key, "json");
+  const scopedKey = `${CACHE_VERSION}:${key}`;
+  const hit = await env.CACHE.get(scopedKey, "json");
   if (hit) return hit as T;
   const fresh = await build();
-  await env.CACHE.put(key, JSON.stringify(fresh), { expirationTtl: ttl });
+  await env.CACHE.put(scopedKey, JSON.stringify(fresh), { expirationTtl: ttl });
   return fresh;
 }
 
@@ -85,7 +87,7 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
   if (path === "/api/stats") {
     const data = await cached(env, "cache:stats", 300, async () => {
       const [shots, portals, weeks] = await Promise.all([
-        env.DB.prepare(`SELECT COUNT(*) AS n FROM captures WHERE status='ok'`).first<{ n: number }>(),
+        env.DB.prepare(`SELECT COUNT(*) AS n FROM captures c JOIN portals p ON p.slug = c.slug WHERE c.status='ok' AND p.active=1`).first<{ n: number }>(),
         env.DB.prepare(`SELECT COUNT(*) AS n FROM portals WHERE active=1`).first<{ n: number }>(),
         env.DB.prepare(`SELECT COUNT(*) AS n FROM weeks`).first<{ n: number }>(),
       ]);

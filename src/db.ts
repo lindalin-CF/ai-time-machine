@@ -30,7 +30,7 @@ export async function capturesForWeek(env: Env, week: string): Promise<CaptureRo
   const { results } = await env.DB.prepare(
     `SELECT c.* FROM captures c
      JOIN portals p ON p.slug = c.slug
-     WHERE c.week = ?
+     WHERE c.week = ? AND p.active = 1
      ORDER BY p.sort_order ASC, c.portal ASC`
   ).bind(week).all<CaptureRow>();
   return results ?? [];
@@ -46,7 +46,7 @@ export async function upsertWeek(env: Env, week: string, label: string): Promise
 
 export async function refreshWeekCount(env: Env, week: string): Promise<void> {
   await env.DB.prepare(
-    `UPDATE weeks SET portal_count = (SELECT COUNT(*) FROM captures WHERE week = ? AND status = 'ok') WHERE week = ?`
+    `UPDATE weeks SET portal_count = (SELECT COUNT(*) FROM captures c JOIN portals p ON p.slug = c.slug WHERE c.week = ? AND c.status = 'ok' AND p.active = 1) WHERE week = ?`
   ).bind(week, week).run();
 }
 

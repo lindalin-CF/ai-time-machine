@@ -268,30 +268,6 @@
       "sample": true
     },
     {
-      "id": "character-ai-2026-07-20",
-      "slug": "character-ai",
-      "portal": "Character.AI",
-      "company": "Character.AI",
-      "url": "https://character.ai/",
-      "brand": "#5b7cfa",
-      "week": "2026-07-20",
-      "capturedAt": "2026-07-20T09:00:00.000Z",
-      "image": "shots/sample-character-ai.svg",
-      "width": 1280,
-      "height": 800,
-      "palette": [
-        "#1a1830",
-        "#2d2b55",
-        "#5b7cfa",
-        "#c7d0ff",
-        "#f0f2ff"
-      ],
-      "analysis": "Character.AI is entertainment-first — the home is a grid of avatar cards for user-created characters, with playful imagery and a discovery feed. Chat is secondary to browsing personalities, and the visual language (rounded avatars, vibrant cards) signals roleplay and companionship over productivity.",
-      "analysisBy": "sample",
-      "status": "ok",
-      "sample": true
-    },
-    {
       "id": "huggingchat-2026-07-20",
       "slug": "huggingchat",
       "portal": "HuggingChat",
