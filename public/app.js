@@ -629,7 +629,49 @@ function initManualSnapshots() {
     wireAddCell();
     wireUploadForm();
     wireEditCells();
+    wireShareCells();
     wireCarousels();
+  }
+
+  function toast(text) {
+    const panel = modal.querySelector(".manual-panel");
+    if (!panel) return;
+    let t = panel.querySelector(".manual-toast");
+    if (!t) {
+      t = document.createElement("div");
+      t.className = "manual-toast";
+      panel.appendChild(t);
+    }
+    t.textContent = text;
+    t.classList.add("show");
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove("show"), 1800);
+  }
+
+  function wireShareCells() {
+    modal.querySelectorAll(".manual-share-btn").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        // Share the image currently shown in this card's carousel (fall back to cover).
+        const cell = btn.closest(".manual-cell");
+        const car = cell && cell.querySelector(".manual-carousel");
+        const slides = car ? car.querySelectorAll(".manual-img") : [];
+        const idx = car ? Number(car.dataset.index) || 0 : 0;
+        const rel = (slides[idx] && slides[idx].dataset.full) || btn.dataset.cover;
+        if (!rel) return;
+        const absolute = new URL(rel, location.origin).href;
+        try {
+          if (navigator.share) {
+            await navigator.share({ title: `${current.portal} — ${document.title}`, url: absolute });
+          } else {
+            await navigator.clipboard.writeText(absolute);
+            toast("Link copied");
+          }
+        } catch {
+          /* user dismissed the share sheet — ignore */
+        }
+      });
+    });
   }
 
   function wireCarousels() {
