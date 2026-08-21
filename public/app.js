@@ -599,6 +599,7 @@ function initManualSnapshots() {
   let current = { slug: "", portal: "" };
   let currentShots = [];
   let uploadOpen = false;
+  let editingId = null;
 
   const close = () => {
     modal.hidden = true;
@@ -611,6 +612,7 @@ function initManualSnapshots() {
       const data = await getJSON(`/api/manual?slug=${encodeURIComponent(current.slug)}`);
       currentShots = data.shots || [];
       uploadOpen = false;
+      editingId = null;
       render(currentShots);
     } catch {
       render([], "Manual library is not ready yet. Run the manual migration first.");
@@ -621,21 +623,48 @@ function initManualSnapshots() {
     const cells = [addCell()];
     if (uploadOpen || error) cells.push(uploadCell(error));
     for (const s of shots) {
-      cells.push(`
-        <figure class="manual-cell filled">
-          <div class="manual-img" data-full="${esc(s.image)}" data-title="${esc(current.portal)} manual snapshot" data-file="${esc(current.slug)}-manual-${esc(s.device)}">
-            <img src="${esc(s.image)}" alt="${esc(current.portal)} manual snapshot" loading="lazy" />
-            <span class="manual-chip">${esc(s.device)}</span>
-          </div>
-          <figcaption>
-            <b>${esc(fmtDate(s.createdAt))}</b>
-            <span>${esc(s.description || "No description")}</span>
-          </figcaption>
-        </figure>`);
+      cells.push(filledCell(s));
     }
     grid.innerHTML = cells.join("");
     wireAddCell();
     wireUploadForm();
+    wireEditCells();
+  }
+
+  function filledCell(s) {
+    if (editingId === s.id) {
+      const savedToken = sessionStorage.getItem("manualUploadToken") || "";
+      return `
+        <figure class="manual-cell filled">
+          <div class="manual-img">
+            <img src="${esc(s.image)}" alt="${esc(current.portal)} manual snapshot" loading="lazy" />
+            <span class="manual-chip">${esc(s.device)}</span>
+          </div>
+          <form class="manual-edit" data-id="${esc(s.id)}">
+            <textarea name="description" rows="3" maxlength="220" placeholder="Description">${esc(s.description || "")}</textarea>
+            <input name="token" type="password" autocomplete="off" value="${esc(savedToken)}" placeholder="Upload token" required />
+            <div class="manual-edit-actions">
+              <button type="button" class="manual-edit-cancel">Cancel</button>
+              <button type="submit" class="manual-edit-save">Save</button>
+            </div>
+            <p class="manual-msg"></p>
+          </form>
+        </figure>`;
+    }
+    return `
+      <figure class="manual-cell filled">
+        <div class="manual-img" data-full="${esc(s.image)}" data-title="${esc(current.portal)} manual snapshot" data-file="${esc(current.slug)}-manual-${esc(s.device)}">
+          <img src="${esc(s.image)}" alt="${esc(current.portal)} manual snapshot" loading="lazy" />
+          <span class="manual-chip">${esc(s.device)}</span>
+        </div>
+        <figcaption>
+          <b>${esc(fmtDate(s.createdAt))}</b>
+          <span>${esc(s.description || "No description")}</span>
+          <button type="button" class="manual-edit-btn" data-id="${esc(s.id)}" aria-label="Edit description" title="Edit description">
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M14.06 4.94l3.75 3.75L7.5 19H3.75v-3.75L14.06 4.94Zm1.06-1.06l1.82-1.82a1.5 1.5 0 0 1 2.12 0l1.63 1.63a1.5 1.5 0 0 1 0 2.12l-1.82 1.82-3.75-3.75Z"/></svg>
+          </button>
+        </figcaption>
+      </figure>`;
   }
 
   function addCell() {
@@ -706,6 +735,44 @@ function initManualSnapshots() {
         await load();
       } catch (err) {
         msg.textContent = err.message || "Upload failed";
+      }
+    });
+  }
+
+  function wireEditCells() {
+    modal.querySelectorAll(".manual-edit-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        editingId = btn.dataset.id;
+        render(currentShots);
+      });
+    });
+    const editForm = modal.querySelector(".manual-edit");
+    if (!editForm) return;
+    editForm.querySelector(".manual-edit-cancel").addEventListener("click", () => {
+      editingId = null;
+      render(currentShots);
+    });
+    const msg = editForm.querySelector(".manual-msg");
+    editForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = editForm.dataset.id;
+      const description = String(editForm.querySelector("textarea").value || "").trim();
+      const token = String(editForm.querySelector('input[name="token"]').value || "").trim();
+      sessionStorage.setItem("manualUploadToken", token);
+      msg.textContent = "Saving…";
+      msg.classList.add("show");
+      try {
+        const res = await fetch("/api/manual/edit", {
+          method: "POST",
+          headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+          body: JSON.stringify({ id, description }),
+        });
+        const out = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(out.error || `Save failed (${res.status})`);
+        editingId = null;
+        await load();
+      } catch (err) {
+        msg.textContent = err.message || "Save failed";
       }
     });
   }

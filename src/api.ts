@@ -160,6 +160,23 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     ).bind(id, slug, portal.name, device, description, r2Key, now).run();
     return json({ ok: true, id, slug, portal: portal.name, device, description, image: `/img/${r2Key}?v=${Date.parse(now)}`, createdAt: now });
   }
+
+  // Admin edit of a manual snapshot's description (token-gated, JSON).
+  if (path === "/api/manual/edit" && request.method === "POST") {
+    const authError = requireUploadToken(request, env);
+    if (authError) return authError;
+
+    const body = await request
+      .json<{ id?: string; description?: string }>()
+      .catch(() => ({} as { id?: string; description?: string }));
+    const id = String(body.id || "");
+    const description = String(body.description ?? "").trim().slice(0, 220);
+    if (!id) return json({ error: "id required" }, 400);
+    const existing = await env.DB.prepare(`SELECT id FROM manual_shots WHERE id=?`).bind(id).first<{ id: string }>();
+    if (!existing) return json({ error: "unknown snapshot: " + id }, 404);
+    await env.DB.prepare(`UPDATE manual_shots SET description=? WHERE id=?`).bind(description, id).run();
+    return json({ ok: true, id, description });
+  }
   // Download every screenshot for a week as a single ZIP (the "download all" button).
   // ?device=mobile zips the mobile shots instead of desktop.
   if (path === "/api/collection.zip") {

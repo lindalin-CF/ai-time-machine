@@ -582,7 +582,19 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .manual-img{position:relative;aspect-ratio:16/10;background:var(--cf-bg-300);cursor:zoom-in;overflow:hidden}
 .manual-img img{width:100%;height:100%;object-fit:cover;object-position:top center}
 .manual-chip{position:absolute;left:9px;top:9px;background:rgba(20,10,0,.62);color:#fff;border-radius:999px;padding:4px 8px;font:600 10px/1 var(--font-mono);text-transform:uppercase;letter-spacing:.05em}
-.manual-cell figcaption{display:flex;flex-direction:column;gap:4px;padding:10px 11px;font-size:12.5px;color:var(--cf-text-soft);line-height:1.35}
+.manual-cell figcaption{position:relative;display:flex;flex-direction:column;gap:4px;padding:10px 34px 10px 11px;font-size:12.5px;color:var(--cf-text-soft);line-height:1.35}
+.manual-edit-btn{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:7px;display:grid;place-items:center;cursor:pointer;background:var(--cf-bg-100);border:1px solid var(--cf-border);color:var(--cf-text-soft);transition:color .15s,border-color .15s,background .15s}
+.manual-edit-btn:hover{color:var(--cf-orange-ink);border-color:var(--cf-orange);background:rgba(235,98,44,.08)}
+.manual-edit{display:flex;flex-direction:column;gap:8px;padding:10px 11px}
+.manual-edit textarea,.manual-edit input{width:100%;font-family:var(--font-sans);font-size:12.5px;color:var(--cf-text);background:var(--cf-bg-100);border:1px solid var(--cf-border);border-radius:8px;padding:7px 9px}
+.manual-edit textarea{resize:vertical;min-height:58px}
+.manual-edit textarea:focus,.manual-edit input:focus{outline:none;border-color:var(--cf-orange);box-shadow:0 0 0 3px rgba(235,98,44,.16)}
+.manual-edit-actions{display:flex;gap:8px;justify-content:flex-end}
+.manual-edit-actions button{border-radius:8px;padding:7px 13px;font:700 12px/1 var(--font-sans);cursor:pointer;border:1px solid var(--cf-border-strong)}
+.manual-edit-cancel{background:var(--cf-bg-100);color:var(--cf-text)}
+.manual-edit-cancel:hover{border-color:var(--cf-orange)}
+.manual-edit-save{background:var(--cf-orange);color:#fff;border-color:var(--cf-orange)}
+.manual-edit-save:hover{background:var(--cf-orange-ink)}
 .manual-cell figcaption b{color:var(--cf-text);font-weight:600}
 .manual-cell.upload{padding:13px;display:flex;flex-direction:column;gap:10px;background:var(--cf-bg-100)}
 .manual-cell.upload label{display:flex;flex-direction:column;gap:5px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--cf-text-soft);font-family:var(--font-mono)}
