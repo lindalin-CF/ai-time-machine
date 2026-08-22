@@ -36,6 +36,7 @@
     <nav class="topnav">
       <a href="#" class="topnav-link" data-nav="gallery">Library</a>
       <a href="#collection" class="topnav-link" data-nav="collection">Collection</a>
+      <a href="#analytics" class="topnav-link" data-nav="analytics">Analytics</a>
     </nav>
   </header>
 
@@ -130,6 +131,41 @@
         </div><!-- /collection-actions -->
       </div>
       <div class="collection-grid" id="collectionGrid" aria-live="polite"></div>
+    </section>
+
+    <!-- analytics: compare AI surface UIs side by side -->
+    <section id="analyticsView" class="analytics" hidden>
+      <div class="analytics-head">
+        <h1 class="analytics-title">Analytics</h1>
+        <p class="analytics-sub">Compare AI surface UIs side by side — brand colour, palette, tone and design notes. Compare different portals in one week, or track how a single portal changes across weeks.</p>
+      </div>
+      <div class="analytics-controls">
+        <div class="an-row">
+          <span class="an-label">Mode</span>
+          <div class="viewtoggle an-mode" role="group" aria-label="Comparison mode">
+            <button class="vt-btn active" type="button" data-mode="portals" aria-pressed="true">Compare portals</button>
+            <button class="vt-btn" type="button" data-mode="weeks" aria-pressed="false">Across weeks</button>
+          </div>
+        </div>
+        <div class="an-row">
+          <span class="an-label" id="anContextLabel">Week</span>
+          <div class="an-chiprow" id="anContext"></div>
+        </div>
+        <div class="an-row">
+          <span class="an-label" id="anPickLabel">Portals</span>
+          <div class="an-chiprow" id="anPicker"></div>
+        </div>
+        <div class="an-row">
+          <span class="an-label">Device</span>
+          <div class="viewtoggle an-device" role="group" aria-label="Screenshot device">
+            <button class="vt-btn active" type="button" data-andevice="desktop" aria-pressed="true">Desktop</button>
+            <button class="vt-btn" type="button" data-andevice="mobile" aria-pressed="false">Mobile</button>
+          </div>
+        </div>
+      </div>
+      <div class="analytics-table-wrap">
+        <div class="an-table-scroll" id="anTableWrap"></div>
+      </div>
     </section>
   </main>
 

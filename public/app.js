@@ -1004,16 +1004,213 @@ function initManualSnapshots() {
 }
 
 // ---- hash routing: #collection <-> gallery --------------------------------
-function route() {
-  const onCollection = location.hash === "#collection";
-  const gv = $("#galleryView");
-  const cv = $("#collectionView");
-  if (gv) gv.hidden = onCollection;
-  if (cv) cv.hidden = !onCollection;
-  document.querySelectorAll(".topnav-link[data-nav]").forEach((a) =>
-    a.classList.toggle("active", a.dataset.nav === (onCollection ? "collection" : "gallery"))
+// ---- analytics: compare AI surface UIs side by side ------------------------
+const an = {
+  mode: "portals",      // "portals" (one week, many portals) | "weeks" (one portal, many weeks)
+  week: null,           // context week for portals mode
+  portal: null,         // context portal for weeks mode
+  device: "desktop",
+  portals: new Set(),   // selected slugs to compare (portals mode)
+  weeks: new Set(),     // selected weeks to compare (weeks mode)
+  inited: false,
+};
+const AN_MAX = 4;       // cap columns for readability
+const anWeekCache = new Map();
+
+async function anCapturesFor(week) {
+  if (anWeekCache.has(week)) return anWeekCache.get(week);
+  const d = await getJSON(`/api/captures?week=${encodeURIComponent(week)}`);
+  const list = d.captures || [];
+  anWeekCache.set(week, list);
+  return list;
+}
+
+// --- grounded colour signals derived from real palette/brand hex ---
+function anHexToRgb(hex) {
+  const h = String(hex || "").replace(/^#/, "");
+  if (h.length !== 6 || /[^0-9a-f]/i.test(h)) return null;
+  const n = parseInt(h, 16);
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+function anRelLum({ r, g, b }) {
+  const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+}
+function anHue({ r, g, b }) {
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  if (!d) return null;
+  let h;
+  if (mx === r) h = ((g - b) / d) % 6;
+  else if (mx === g) h = (b - r) / d + 2;
+  else h = (r - g) / d + 4;
+  h *= 60; if (h < 0) h += 360;
+  return h;
+}
+function anTone(colors) {
+  const rgbs = colors.map(anHexToRgb).filter(Boolean);
+  if (!rgbs.length) return null;
+  const L = rgbs.reduce((s, c) => s + anRelLum(c), 0) / rgbs.length;
+  return L > 0.62 ? "Light" : L < 0.3 ? "Dark" : "Balanced";
+}
+function anTemp(colors) {
+  const hues = colors.map(anHexToRgb).filter(Boolean).map(anHue).filter((h) => h != null);
+  if (!hues.length) return null;
+  let warm = 0, cool = 0;
+  for (const h of hues) { if (h < 90 || h >= 300) warm++; else cool++; }
+  if (warm > cool * 1.4) return "Warm";
+  if (cool > warm * 1.4) return "Cool";
+  return "Neutral";
+}
+
+function anShot(c) {
+  if (!c) return null;
+  if (an.device === "mobile") return c.hasMobile ? c.imageMobile : null;
+  return c.image;
+}
+
+function enterAnalytics() {
+  if (!an.inited) {
+    an.week = state.weeks[0]?.week || null;
+    an.portal = state.portals[0]?.slug || null;
+    an.portals = new Set(state.portals.slice(0, 2).map((p) => p.slug));
+    an.weeks = new Set(state.weeks.slice(0, Math.min(3, AN_MAX)).map((w) => w.week));
+    an.inited = true;
+    // Static mode/device toggles bind once.
+    const view = $("#analyticsView");
+    view.querySelectorAll(".an-mode .vt-btn").forEach((b) =>
+      b.addEventListener("click", () => {
+        an.mode = b.dataset.mode;
+        view.querySelectorAll(".an-mode .vt-btn").forEach((x) => {
+          const on = x === b; x.classList.toggle("active", on); x.setAttribute("aria-pressed", String(on));
+        });
+        renderAnalytics();
+      })
+    );
+    view.querySelectorAll(".an-device .vt-btn").forEach((b) =>
+      b.addEventListener("click", () => {
+        an.device = b.dataset.andevice;
+        view.querySelectorAll(".an-device .vt-btn").forEach((x) => {
+          const on = x === b; x.classList.toggle("active", on); x.setAttribute("aria-pressed", String(on));
+        });
+        renderAnalytics();
+      })
+    );
+  }
+  renderAnalytics();
+}
+
+function anChip(v, label, on, brand) {
+  const sw = brand ? `<span class="swatch" style="background:${esc(brand)}"></span>` : "";
+  return `<button class="chip" type="button" data-v="${esc(v)}" aria-selected="${on ? "true" : "false"}">${sw}${esc(label)}</button>`;
+}
+
+function renderAnalytics() {
+  const ctxLabel = $("#anContextLabel"), ctx = $("#anContext");
+  const pickLabel = $("#anPickLabel"), pick = $("#anPicker");
+  if (an.mode === "portals") {
+    ctxLabel.textContent = "Week";
+    ctx.innerHTML = state.weeks.map((w) => anChip(w.week, shortWeekLabel(w.week), w.week === an.week)).join("");
+    pickLabel.textContent = "Portals";
+    pick.innerHTML = state.portals.map((p) => anChip(p.slug, p.name, an.portals.has(p.slug), p.brand)).join("");
+  } else {
+    ctxLabel.textContent = "Portal";
+    ctx.innerHTML = state.portals.map((p) => anChip(p.slug, p.name, p.slug === an.portal, p.brand)).join("");
+    pickLabel.textContent = "Weeks";
+    pick.innerHTML = state.weeks.map((w) => anChip(w.week, shortWeekLabel(w.week), an.weeks.has(w.week))).join("");
+  }
+  ctx.querySelectorAll(".chip").forEach((c) =>
+    c.addEventListener("click", () => {
+      if (an.mode === "portals") an.week = c.dataset.v; else an.portal = c.dataset.v;
+      renderAnalytics();
+    })
   );
-  if (onCollection) renderCollection();
+  pick.querySelectorAll(".chip").forEach((c) =>
+    c.addEventListener("click", () => {
+      const set = an.mode === "portals" ? an.portals : an.weeks;
+      const v = c.dataset.v;
+      if (set.has(v)) set.delete(v);
+      else if (set.size < AN_MAX) set.add(v);
+      renderAnalytics();
+    })
+  );
+  renderAnTable();
+}
+
+function anEmpty(msg) { return `<div class="an-empty">${esc(msg)}</div>`; }
+
+async function renderAnTable() {
+  const wrap = $("#anTableWrap");
+  wrap.innerHTML = `<div class="an-loading">Loading…</div>`;
+  let columns = [];
+  try {
+    if (an.mode === "portals") {
+      if (!an.week || an.portals.size === 0) { wrap.innerHTML = anEmpty("Pick a week and at least one portal to compare."); return; }
+      const caps = await anCapturesFor(an.week);
+      columns = state.portals
+        .filter((p) => an.portals.has(p.slug))
+        .map((p) => ({ label: p.name, domain: domainOf(p.url), cap: caps.find((c) => c.slug === p.slug) }));
+    } else {
+      if (!an.portal || an.weeks.size === 0) { wrap.innerHTML = anEmpty("Pick a portal and at least one week to compare."); return; }
+      const weeks = state.weeks.map((w) => w.week).filter((w) => an.weeks.has(w));
+      const capsByWeek = await Promise.all(weeks.map((w) => anCapturesFor(w)));
+      const p = state.portals.find((pp) => pp.slug === an.portal);
+      columns = weeks.map((w, i) => ({ label: shortWeekLabel(w), domain: i === 0 ? domainOf(p?.url || "") : "", cap: capsByWeek[i].find((c) => c.slug === an.portal) }));
+    }
+  } catch {
+    wrap.innerHTML = anEmpty("Could not load comparison data.");
+    return;
+  }
+  wrap.innerHTML = anTableHTML(columns);
+}
+
+function anTableHTML(cols) {
+  const head = `<tr><th class="an-rowhead"></th>${cols.map((c) =>
+    `<th class="an-colhead">${c.domain ? `<span class="an-logo"><img alt="" loading="lazy" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(c.domain)}&sz=64" /></span>` : ""}<span>${esc(c.label)}</span></th>`
+  ).join("")}</tr>`;
+
+  const rows = [];
+  rows.push(anRow("Snapshot", cols.map((c) => {
+    const src = anShot(c.cap);
+    if (!src) return `<td><div class="an-noshot">${c.cap ? (an.device === "mobile" ? "No mobile shot" : "—") : "No capture"}</div></td>`;
+    return `<td><div class="an-shot" data-full="${esc(src)}" data-title="${esc(c.label)}" data-file="${esc((c.cap.slug || "shot") + "-" + (c.cap.week || "") + (an.device === "mobile" ? "-mobile" : ""))}"><img loading="lazy" src="${esc(src)}" alt="${esc(c.label)}" /></div></td>`;
+  })));
+  rows.push(anRow("Brand colour", cols.map((c) =>
+    c.cap && c.cap.brand ? `<td><span class="an-swatch" style="background:${esc(c.cap.brand)}"></span><code>${esc(String(c.cap.brand).toUpperCase())}</code></td>` : `<td>—</td>`
+  )));
+  rows.push(anRow("Palette", cols.map((c) => {
+    const pal = (c.cap && c.cap.palette) || [];
+    if (!pal.length) return `<td>—</td>`;
+    return `<td><span class="an-palette">${pal.slice(0, 6).map((h) => `<i style="background:${esc(h)}" title="${esc(h)}"></i>`).join("")}</span></td>`;
+  })));
+  rows.push(anRow("Tone", cols.map((c) => {
+    const t = c.cap ? anTone([c.cap.brand, ...((c.cap.palette) || [])]) : null;
+    return `<td>${t ? `<span class="an-tag">${t}</span>` : "—"}</td>`;
+  })));
+  rows.push(anRow("Colour temp.", cols.map((c) => {
+    const t = c.cap ? anTemp([c.cap.brand, ...((c.cap.palette) || [])]) : null;
+    return `<td>${t ? `<span class="an-tag">${t}</span>` : "—"}</td>`;
+  })));
+  rows.push(anRow("Captured", cols.map((c) => `<td>${c.cap ? esc(fmtDate(c.cap.capturedAt)) : "—"}</td>`)));
+  rows.push(anRow("Design notes", cols.map((c) => `<td class="an-notes">${c.cap && c.cap.analysis ? esc(c.cap.analysis) : "—"}</td>`)));
+
+  return `<table class="an-table"><thead>${head}</thead><tbody>${rows.join("")}</tbody></table>`;
+}
+function anRow(label, tds) { return `<tr><th class="an-rowhead">${esc(label)}</th>${tds.join("")}</tr>`; }
+
+// ---- hash routing: gallery / collection / analytics -----------------------
+function route() {
+  const hash = location.hash;
+  const view = hash === "#collection" ? "collection" : hash === "#analytics" ? "analytics" : "gallery";
+  const views = { gallery: "#galleryView", collection: "#collectionView", analytics: "#analyticsView" };
+  for (const [v, sel] of Object.entries(views)) {
+    const el = $(sel);
+    if (el) el.hidden = v !== view;
+  }
+  document.querySelectorAll(".topnav-link[data-nav]").forEach((a) =>
+    a.classList.toggle("active", a.dataset.nav === view)
+  );
+  if (view === "collection") renderCollection();
+  if (view === "analytics") enterAnalytics();
   window.scrollTo(0, 0);
 }
 window.addEventListener("hashchange", route);
