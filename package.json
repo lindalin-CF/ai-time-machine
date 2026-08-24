@@ -19,11 +19,17 @@
     "db:migrate:manual-images:local": "wrangler d1 execute ai-portal-library --local --file=./migrations/0003_manual_images.sql",
     "db:migrate:manual-images:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0003_manual_images.sql",
     "db:migrate:remove-character:local": "wrangler d1 execute ai-portal-library --local --file=./migrations/0004_remove_character_ai.sql",
-    "db:migrate:remove-character:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0004_remove_character_ai.sql"
+    "db:migrate:remove-character:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0004_remove_character_ai.sql",
+    "test:visual": "vitest run tests/visual"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260804.1",
+    "@vitest/browser": "^4.1.11",
+    "@vitest/browser-playwright": "^4.1.11",
+    "playwright": "^1.62.1",
     "typescript": "^5.6.3",
+    "vitest": "^4.1.11",
+    "vitest-visual-diff": "github:acoyfellow/vitest-visual-diff",
     "wrangler": "^4.119.0"
   },
   "dependencies": {
