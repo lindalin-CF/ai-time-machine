@@ -1197,11 +1197,96 @@ function anTableHTML(cols) {
 }
 function anRow(label, tds) { return `<tr><th class="an-rowhead">${esc(label)}</th>${tds.join("")}</tr>`; }
 
-// ---- hash routing: gallery / collection / analytics -----------------------
+// ---- insights: manual memo feed -------------------------------------------
+let insightsInited = false;
+
+function renderInsightsList(items) {
+  const list = $("#insightsList");
+  if (!list) return;
+  if (!items.length) {
+    list.innerHTML = `<div class="insight-empty">No updates yet. Post the first memo above.</div>`;
+    return;
+  }
+  list.innerHTML = items.map((it) => {
+    const imgs = it.images || [];
+    const media = imgs.length ? `
+      <div class="insight-media">
+        ${imgs.map((src, i) => `
+          <button class="insight-thumb" type="button" data-full="${esc(src)}" data-title="${esc(it.title)}" data-file="insight-${esc(it.id)}-${i}">
+            <img src="${esc(src)}" alt="${esc(it.title)} image ${i + 1}" loading="lazy" />
+          </button>`).join("")}
+      </div>` : "";
+    return `
+      <article class="insight-card">
+        <div class="insight-meta">${esc(fmtDate(it.createdAt))}</div>
+        <h2>${esc(it.title)}</h2>
+        <p>${esc(it.description || "No description")}</p>
+        ${media}
+      </article>`;
+  }).join("");
+}
+
+async function loadInsights() {
+  const list = $("#insightsList");
+  if (!list) return;
+  list.innerHTML = `<div class="insight-empty">Loading updates…</div>`;
+  try {
+    const data = await getJSON('/api/insights');
+    renderInsightsList(data.insights || []);
+  } catch {
+    list.innerHTML = `<div class="insight-empty">Insights are not ready yet. Run the insights migration first.</div>`;
+  }
+}
+
+function initInsights() {
+  if (insightsInited) return;
+  insightsInited = true;
+  const form = $("#insightForm");
+  if (!form) return;
+  const msg = $("#insightMsg");
+  const tokenInput = form.querySelector('input[name="token"]');
+  if (tokenInput) tokenInput.value = sessionStorage.getItem('manualUploadToken') || '';
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(form);
+    const files = form.querySelector('input[name="image"]')?.files;
+    if (files && files.length > 5) {
+      msg.textContent = 'Please choose at most 5 images.';
+      msg.classList.add('show');
+      return;
+    }
+    const token = String(fd.get('token') || '').trim();
+    sessionStorage.setItem('manualUploadToken', token);
+    msg.textContent = 'Posting…';
+    msg.classList.add('show');
+    const btn = form.querySelector('.insight-submit');
+    if (btn) { btn.disabled = true; btn.textContent = 'Posting…'; }
+    try {
+      const res = await fetch('/api/insights/upload', {
+        method: 'POST',
+        headers: { authorization: `Bearer ${token}` },
+        body: fd,
+      });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(out.error || `Post failed (${res.status})`);
+      form.reset();
+      if (tokenInput) tokenInput.value = token;
+      msg.textContent = 'Posted';
+      await loadInsights();
+      setTimeout(() => msg.classList.remove('show'), 1600);
+    } catch (err) {
+      msg.textContent = err.message || 'Post failed';
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = 'Post update'; }
+    }
+  });
+}
+
+// ---- hash routing: gallery / collection / analytics / insights --------------
 function route() {
   const hash = location.hash;
-  const view = hash === "#collection" ? "collection" : hash === "#analytics" ? "analytics" : "gallery";
-  const views = { gallery: "#galleryView", collection: "#collectionView", analytics: "#analyticsView" };
+  const view = hash === "#collection" ? "collection" : hash === "#analytics" ? "analytics" : hash === "#insights" ? "insights" : "gallery";
+  const views = { gallery: "#galleryView", collection: "#collectionView", analytics: "#analyticsView", insights: "#insightsView" };
   for (const [v, sel] of Object.entries(views)) {
     const el = $(sel);
     if (el) el.hidden = v !== view;
@@ -1211,6 +1296,7 @@ function route() {
   );
   if (view === "collection") renderCollection();
   if (view === "analytics") enterAnalytics();
+  if (view === "insights") { initInsights(); loadInsights(); }
   window.scrollTo(0, 0);
 }
 window.addEventListener("hashchange", route);

@@ -37,6 +37,7 @@
       <a href="#" class="topnav-link" data-nav="gallery">Library</a>
       <a href="#collection" class="topnav-link" data-nav="collection">Collection</a>
       <a href="#analytics" class="topnav-link" data-nav="analytics">Analytics</a>
+      <a href="#insights" class="topnav-link" data-nav="insights">Insights</a>
     </nav>
   </header>
 
@@ -167,6 +168,37 @@
         <div class="an-table-scroll" id="anTableWrap"></div>
       </div>
     </section>
+    <!-- insights: manual memo feed for colleagues -->
+    <section id="insightsView" class="insights" hidden>
+      <div class="insights-head">
+        <h1 class="insights-title">Insights</h1>
+        <p class="insights-sub">A lightweight memo feed for manual UI observations, quick updates and screenshot notes to share with colleagues while away from the office.</p>
+      </div>
+
+      <form class="insight-form" id="insightForm">
+        <div class="insight-fields">
+          <label>Title
+            <input name="title" maxlength="120" placeholder="e.g. Claude shipped a new project picker" required />
+          </label>
+          <label>One-line description
+            <input name="description" maxlength="260" placeholder="Short memo for teammates…" />
+          </label>
+          <label>Upload token
+            <input name="token" type="password" autocomplete="off" placeholder="Upload token" required />
+          </label>
+        </div>
+        <label class="insight-file">
+          <input name="image" type="file" accept="image/*" multiple />
+          <span>Attach images</span>
+          <small>Optional · up to 5</small>
+        </label>
+        <button class="insight-submit" type="submit">Post update</button>
+        <p class="insight-msg" id="insightMsg"></p>
+      </form>
+
+      <div class="insights-list" id="insightsList" aria-live="polite"></div>
+    </section>
+
   </main>
 
   <footer class="sitefoot">

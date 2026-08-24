@@ -65,3 +65,14 @@ CREATE TABLE manual_shots (
   FOREIGN KEY (slug) REFERENCES portals(slug)
 );
 CREATE INDEX idx_manual_shots_slug_created ON manual_shots(slug, created_at DESC);
+
+
+-- Manual memo/update posts for colleagues.
+CREATE TABLE insights (
+  id           TEXT PRIMARY KEY,
+  title        TEXT NOT NULL,
+  description  TEXT DEFAULT '',
+  images       TEXT,                -- JSON array of R2 keys
+  created_at   TEXT NOT NULL
+);
+CREATE INDEX idx_insights_created ON insights(created_at DESC);

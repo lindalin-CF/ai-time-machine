@@ -236,6 +236,57 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     const v = Date.now();
     return json({ ok: true, id, description, images: nextKeys.map((k) => `/img/${k}?v=${v}`) });
   }
+  // Insights memo/update feed for colleagues.
+  if (path === "/api/insights" && request.method === "GET") {
+    const rows = await env.DB.prepare(
+      `SELECT id, title, description, images, created_at FROM insights ORDER BY created_at DESC LIMIT 80`
+    ).all<{ id: string; title: string; description: string; images: string | null; created_at: string }>();
+    return json({
+      insights: (rows.results || []).map((r) => {
+        let keys: string[] = [];
+        if (r.images) { try { const p = JSON.parse(r.images); if (Array.isArray(p)) keys = p.filter((k) => typeof k === "string"); } catch { /* ignore */ } }
+        const v = Date.parse(r.created_at) || 0;
+        return {
+          id: r.id,
+          title: r.title,
+          description: r.description || "",
+          images: keys.map((k) => `/img/${k}?v=${v}`),
+          createdAt: r.created_at,
+        };
+      }),
+    });
+  }
+
+  if (path === "/api/insights/upload" && request.method === "POST") {
+    const authError = requireUploadToken(request, env);
+    if (authError) return authError;
+
+    const form = await request.formData();
+    const title = String(form.get("title") || "").trim().slice(0, 120);
+    const description = String(form.get("description") || "").trim().slice(0, 260);
+    const files = form.getAll("image").filter((f): f is File => f instanceof File);
+    if (!title) return json({ error: "title required" }, 400);
+    if (files.length > 5) return json({ error: "up to 5 images" }, 400);
+
+    const now = new Date().toISOString();
+    const id = `insight-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+    const keys: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!file.type.startsWith("image/")) return json({ error: "image file required" }, 400);
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      if (bytes.length < 100) return json({ error: "image too small" }, 400);
+      if (bytes.length > 12 * 1024 * 1024) return json({ error: "image too large (max 12MB)" }, 400);
+      const r2Key = `insights/${id}-${i}.${extFromType(file.type)}`;
+      await env.SHOTS.put(r2Key, bytes, { httpMetadata: { contentType: file.type || "image/png" } });
+      keys.push(r2Key);
+    }
+    await env.DB.prepare(
+      `INSERT INTO insights (id, title, description, images, created_at) VALUES (?,?,?,?,?)`
+    ).bind(id, title, description, JSON.stringify(keys), now).run();
+    return json({ ok: true, id, title, description, images: keys.map((k) => `/img/${k}?v=${Date.parse(now)}`), createdAt: now });
+  }
+
   // Download every screenshot for a week as a single ZIP (the "download all" button).
   // ?device=mobile zips the mobile shots instead of desktop.
   if (path === "/api/collection.zip") {

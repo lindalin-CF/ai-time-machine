@@ -20,7 +20,9 @@
     "db:migrate:manual-images:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0003_manual_images.sql",
     "db:migrate:remove-character:local": "wrangler d1 execute ai-portal-library --local --file=./migrations/0004_remove_character_ai.sql",
     "db:migrate:remove-character:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0004_remove_character_ai.sql",
-    "test:visual": "vitest run tests/visual"
+    "test:visual": "vitest run tests/visual",
+    "db:migrate:insights:local": "wrangler d1 execute ai-portal-library --local --file=./migrations/0005_insights.sql",
+    "db:migrate:insights:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0005_insights.sql"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260804.1",
