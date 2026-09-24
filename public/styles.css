@@ -175,6 +175,21 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   background-repeat:no-repeat;background-position:right 12px center;
 }
 
+/* ---------- search ---------- */
+.searchbar{
+  display:flex;align-items:center;gap:9px;margin:0 0 22px;
+  background:var(--cf-bg-100);border:1px solid var(--cf-border);
+  border-radius:999px;padding:8px 16px;transition:border-color .15s;
+}
+.searchbar:focus-within{border-color:var(--cf-border-strong)}
+.searchbar svg{flex:none;color:var(--cf-text-soft)}
+.search-input{
+  flex:1 1 auto;min-width:0;border:0;outline:0;background:transparent;
+  font-family:var(--font-sans);font-size:13px;font-weight:500;color:var(--cf-text);
+}
+.search-input::placeholder{color:var(--cf-text-soft)}
+.search-input::-webkit-search-cancel-button{cursor:pointer}
+
 /* ---------- section head ---------- */
 .section-head{display:flex;align-items:center;gap:18px;margin-bottom:22px}
 .section-head h2{font-size:16px;font-weight:600;letter-spacing:-.01em;margin:0;white-space:nowrap}

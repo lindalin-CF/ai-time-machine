@@ -8,6 +8,8 @@ const state = {
   selected: new Set(), // selected portal slugs; empty => all portals
   captures: [],
   device: "desktop", // "desktop" | "mobile" — which screenshot variant to show
+  search: "",        // free-text query; filters cards by portal, company & analysis
+  label: null,       // current week's display label (for the section heading)
 };
 
 // Pick the screenshot to show for the current device.
@@ -205,10 +207,7 @@ async function loadWeek(week) {
   const data = await getJSON(`/api/captures${q}`);
   state.week = data.week;
   state.captures = data.captures || [];
-  const count = state.captures.filter((c) => c.status === "ok").length;
-  $("#weekHeading").textContent = data.label
-    ? `${data.label} · ${count} portals`
-    : "No captures yet";
+  state.label = data.label || null;
   if (data.week) {
     for (const id of ["#weekSelect", "#collectionWeekSelect"]) {
       const s = $(id);
@@ -220,17 +219,43 @@ async function loadWeek(week) {
   if (location.hash === "#collection") renderCollection();
 }
 
+// Case-insensitive match across portal name, company and AI analysis text.
+function matchesSearch(c, q) {
+  if (!q) return true;
+  return `${c.portal ?? ""} ${c.company ?? ""} ${c.analysis ?? ""}`
+    .toLowerCase()
+    .includes(q);
+}
+
+// Keep the section heading's "N portals" count in sync with what's on screen.
+function updateWeekHeading(list) {
+  const heading = $("#weekHeading");
+  if (!heading) return;
+  if (!state.label) {
+    heading.textContent = "No captures yet";
+    return;
+  }
+  const count = list.filter((c) => c.status === "ok").length;
+  heading.textContent = `${state.label} · ${count} portals`;
+}
+
 function renderGrid() {
-  const list =
-    state.selected.size === 0
-      ? state.captures
-      : state.captures.filter((c) => state.selected.has(c.slug));
+  const q = state.search.trim().toLowerCase();
+  // Portal chips + week (via state.captures) + search all compose here.
+  const list = state.captures.filter(
+    (c) =>
+      (state.selected.size === 0 || state.selected.has(c.slug)) &&
+      matchesSearch(c, q)
+  );
+  updateWeekHeading(list);
   const grid = $("#grid");
   const empty = $("#empty");
   if (!list.length) {
     grid.innerHTML = "";
     empty.hidden = false;
-    empty.textContent = "No captures for this filter yet.";
+    empty.textContent = q
+      ? "No captures match your search."
+      : "No captures for this filter yet.";
     return;
   }
   empty.hidden = true;
@@ -504,6 +529,16 @@ function initDeviceToggle() {
     syncToggles();
     renderGrid();
     if (location.hash === "#collection") renderCollection();
+  });
+}
+
+// ---- search: filter visible cards as the user types ------------------------
+function initSearch() {
+  const input = $("#searchInput");
+  if (!input) return;
+  input.addEventListener("input", () => {
+    state.search = input.value;
+    renderGrid();
   });
 }
 
@@ -1308,6 +1343,7 @@ initLightbox();
 initManualSnapshots();
 initDownloadAll();
 initDeviceToggle();
+initSearch();
 initHeroOrbFollow();
 initHeroScreenshotEffect();
 boot().then(route);
