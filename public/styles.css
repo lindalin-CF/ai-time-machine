@@ -193,7 +193,11 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 /* ---------- manual-observation search results ---------- */
 .manual-results{margin-top:42px}
 .manual-results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
-.manual-results .manual-cell{display:flex;flex-direction:column}
+.manual-results .manual-cell{display:flex;flex-direction:column;min-height:0}
+/* .manual-img has flex:0 0 100% for the modal; in this column-flex card that made
+   the thumbnail fill the whole cell and push the caption out of view (overflow:hidden). */
+.manual-results .manual-img{flex:0 0 auto}
+.manual-results .manual-cell figcaption{flex:0 0 auto}
 
 /* ---------- section head ---------- */
 .section-head{display:flex;align-items:center;gap:18px;margin-bottom:22px}
