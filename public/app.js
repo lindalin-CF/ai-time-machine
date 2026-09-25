@@ -546,6 +546,15 @@ function initSearch() {
   });
 }
 
+// Date for manual result captions, incl. year, e.g. "Sep 24, 2026".
+function fmtDateYear(iso) {
+  try {
+    return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  } catch {
+    return "";
+  }
+}
+
 // One result card, reusing the "Manual observations" modal card style.
 function manualResultCard(s) {
   const src = s.image || (s.images && s.images[0]) || "";
@@ -563,7 +572,7 @@ function manualResultCard(s) {
       </div>
       <figcaption>
         <div class="manual-cap-text">
-          <b>${esc(s.portal)} · ${esc(fmtDate(s.createdAt))}</b>
+          <b>${esc(s.portal)} · ${esc(fmtDateYear(s.createdAt))}</b>
           <span>${esc(s.description || "No description")}</span>
         </div>
       </figcaption>
