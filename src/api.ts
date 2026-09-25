@@ -144,6 +144,37 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     });
   }
 
+  // All manual snapshots across every portal — read-only, powers homepage search.
+  if (path === "/api/manual/all" && request.method === "GET") {
+    const rows = await env.DB.prepare(
+      `SELECT m.id, m.slug, m.portal, p.company AS company, m.device, m.description, m.r2_key, m.images, m.created_at
+       FROM manual_shots m
+       LEFT JOIN portals p ON p.slug = m.slug
+       ORDER BY m.created_at DESC LIMIT 1000`
+    ).all<{ id: string; slug: string; portal: string; company: string | null; device: string; description: string; r2_key: string; images: string | null; created_at: string }>();
+    return json({
+      shots: (rows.results || []).map((r) => {
+        const v = Date.parse(r.created_at) || 0;
+        let keys: string[] = [];
+        if (r.images) { try { const p = JSON.parse(r.images); if (Array.isArray(p)) keys = p.filter((k) => typeof k === "string"); } catch { /* ignore */ } }
+        if (!keys.length && r.r2_key) keys = [r.r2_key];
+        const images = keys.map((k) => `/img/${k}?v=${v}`);
+        return {
+          id: r.id,
+          slug: r.slug,
+          portal: r.portal,
+          company: r.company || "",
+          device: r.device,
+          description: r.description || "",
+          image: images[0] || "",
+          images,
+          imageKeys: keys,
+          createdAt: r.created_at,
+        };
+      }),
+    });
+  }
+
   // Admin upload for one-off observations (token-gated, form-data).
   if (path === "/api/manual/upload" && request.method === "POST") {
     const authError = requireUploadToken(request, env);

@@ -10,6 +10,8 @@ const state = {
   device: "desktop", // "desktop" | "mobile" — which screenshot variant to show
   search: "",        // free-text query; filters cards by portal, company & analysis
   label: null,       // current week's display label (for the section heading)
+  manualShots: null, // all manual observations, lazily loaded on first search (null => not loaded)
+  manualLoading: false,
 };
 
 // Pick the screenshot to show for the current device.
@@ -104,6 +106,7 @@ function renderFilters() {
       }
       syncFilterChips();
       renderGrid();
+      updateManualResults();
     })
   );
   syncFilterChips();
@@ -539,7 +542,82 @@ function initSearch() {
   input.addEventListener("input", () => {
     state.search = input.value;
     renderGrid();
+    updateManualResults();
   });
+}
+
+// One result card, reusing the "Manual observations" modal card style.
+function manualResultCard(s) {
+  const src = s.image || (s.images && s.images[0]) || "";
+  const zoom = src
+    ? ` data-full="${esc(src)}" data-title="${esc(s.portal)} manual snapshot" data-file="${esc(s.slug)}-manual-${esc(s.device)}"`
+    : "";
+  const inner = src
+    ? `<img src="${esc(src)}" alt="${esc(s.portal)} manual snapshot" loading="lazy" />`
+    : "";
+  return `
+    <figure class="manual-cell filled">
+      <div class="manual-img"${zoom}>
+        ${inner}
+        <span class="manual-chip">${esc(s.device)}</span>
+      </div>
+      <figcaption>
+        <div class="manual-cap-text">
+          <b>${esc(s.portal)} · ${esc(fmtDate(s.createdAt))}</b>
+          <span>${esc(s.description || "No description")}</span>
+        </div>
+      </figcaption>
+    </figure>`;
+}
+
+// Render matching manual observations below the weekly grid. The section only
+// appears while a query is active AND at least one shot matches; it respects the
+// portal chip filter and searches note/caption, portal name and company.
+function renderManualResults() {
+  const section = $("#manualResults");
+  const grid = $("#manualResultsGrid");
+  if (!section || !grid) return;
+  const q = state.search.trim().toLowerCase();
+  if (!q || state.manualShots === null) {
+    section.hidden = true;
+    grid.innerHTML = "";
+    return;
+  }
+  const shots = state.manualShots.filter((s) => {
+    const portalOk = state.selected.size === 0 || state.selected.has(s.slug);
+    if (!portalOk) return false;
+    return `${s.portal ?? ""} ${s.company ?? ""} ${s.description ?? ""}`
+      .toLowerCase()
+      .includes(q);
+  });
+  if (!shots.length) {
+    section.hidden = true;
+    grid.innerHTML = "";
+    return;
+  }
+  grid.innerHTML = shots.map(manualResultCard).join("");
+  section.hidden = false;
+}
+
+// Lazily fetch every manual shot the first time the user searches, then render.
+function updateManualResults() {
+  const q = state.search.trim().toLowerCase();
+  if (!q) {
+    const section = $("#manualResults");
+    if (section) { section.hidden = true; }
+    return;
+  }
+  if (state.manualShots === null) {
+    if (!state.manualLoading) {
+      state.manualLoading = true;
+      getJSON("/api/manual/all")
+        .then((data) => { state.manualShots = data.shots || []; })
+        .catch(() => { state.manualShots = []; })
+        .finally(() => { state.manualLoading = false; renderManualResults(); });
+    }
+    return; // renders once the fetch resolves (using the latest query)
+  }
+  renderManualResults();
 }
 
 // ---- desktop-only hero interaction: orb follows cursor ---------------------
