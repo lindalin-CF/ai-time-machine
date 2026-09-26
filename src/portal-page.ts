@@ -1,5 +1,5 @@
 import type { Env, CaptureRow } from "./types";
-import { getPortal, listPortals, latestCaptureForPortal } from "./db";
+import { getPortal, latestCaptureForPortal, captureForPortalWeek, captureWeeksForPortal, sitemapCaptures } from "./db";
 
 const ORIGIN = "https://ai-portal-library.dev";
 const HTML_HEADERS = { "content-type": "text/html; charset=utf-8" };
@@ -44,6 +44,7 @@ ${opts.noindex ? '  <meta name="robots" content="noindex" />\n' : ""}${opts.cano
     .shots{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
     .shots figure{margin:0}
     .shots img{max-width:100%;height:auto;border:1px solid #d8cfc2;border-radius:8px;background:#fff}
+    .weeknav{display:flex;flex-wrap:wrap;gap:16px;margin:0 0 24px;font-size:.95rem}
     .desktop{flex:1 1 560px}.mobile{flex:0 1 240px}
     figcaption{font-size:.85rem;color:#6b6257;margin-top:6px}
     .analysis{white-space:pre-line;margin:32px 0}
@@ -70,22 +71,48 @@ function notFound(): Response {
   return new Response(html, { status: 404, headers: HTML_HEADERS });
 }
 
+/** True for a real calendar date written YYYY-MM-DD. */
+function isValidWeek(w: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(w)) return false;
+  const d = new Date(w + "T00:00:00Z");
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === w;
+}
+
 export async function handlePortalPage(request: Request, env: Env): Promise<Response> {
   if (request.method !== "GET" && request.method !== "HEAD") return new Response("method not allowed", { status: 405 });
   const url = new URL(request.url);
-  let slug = "";
-  try { slug = decodeURIComponent(url.pathname.replace(/^\/portals\//, "").replace(/\/$/, "")); } catch { return notFound(); }
+  let parts: string[];
+  try { parts = url.pathname.replace(/^\/portals\//, "").replace(/\/$/, "").split("/").map(decodeURIComponent); } catch { return notFound(); }
+  if (parts.length < 1 || parts.length > 2) return notFound();
+  const slug = parts[0];
+  const weekParam = parts.length === 2 ? parts[1] : null;
   if (!/^[a-z0-9-]+$/.test(slug)) return notFound();
+  if (weekParam !== null && !isValidWeek(weekParam)) return notFound();
 
   const portal = await getPortal(env, slug);
   if (!portal || !portal.active) return notFound();
-  const cap: CaptureRow | null = await latestCaptureForPortal(env, slug);
+
+  const cap: CaptureRow | null = weekParam === null
+    ? await latestCaptureForPortal(env, slug)
+    : await captureForPortalWeek(env, slug, weekParam);
+  // A weekly URL must have a successful capture; the bare portal URL still renders an empty state.
+  if (weekParam !== null && !cap) return notFound();
+
+  const weeks = await captureWeeksForPortal(env, slug); // newest first
+  const latestWeek = weeks[0] ?? null;
+  const curWeek = cap?.week ?? null;
+  const prevWeek = curWeek ? weeks.find((w) => w < curWeek) ?? null : null; // nearest older
+  const nextWeek = curWeek ? [...weeks].reverse().find((w) => w > curWeek) ?? null : null; // nearest newer
+  const isLatest = !!curWeek && curWeek === latestWeek;
+  // The newest week's weekly page duplicates /portals/<slug>, so it canonicalises there.
+  const canonical = weekParam !== null && !isLatest ? `${ORIGIN}/portals/${slug}/${weekParam}` : `${ORIGIN}/portals/${slug}`;
 
   const name = portal.name;
   const analysis = cap?.analysis?.trim() ?? "";
-  const dateNote = cap ? ` Latest capture: week of ${cap.week}.` : "";
   const description = shortText(
-    `${name} by ${portal.company}: screenshots of the logged-in interface, desktop and mobile, with design analysis.${dateNote} ${analysis}`,
+    weekParam !== null
+      ? `${name} by ${portal.company}: logged-in interface screenshots, desktop and mobile, captured the week of ${weekParam}, with design analysis. ${analysis}`
+      : `${name} by ${portal.company}: screenshots of the logged-in interface, desktop and mobile, with design analysis.${cap ? ` Latest capture: week of ${cap.week}.` : ""} ${analysis}`,
     300
   );
 
@@ -99,17 +126,27 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
     }
   }
 
+  const navLinks: string[] = [];
+  if (prevWeek) navLinks.push(`<a href="/portals/${esc(slug)}/${esc(prevWeek)}" rel="prev">&larr; Previous week (${esc(prevWeek)})</a>`);
+  if (nextWeek) navLinks.push(nextWeek === latestWeek
+    ? `<a href="/portals/${esc(slug)}" rel="next">Next week (${esc(nextWeek)}) &rarr;</a>`
+    : `<a href="/portals/${esc(slug)}/${esc(nextWeek)}" rel="next">Next week (${esc(nextWeek)}) &rarr;</a>`);
+  if (latestWeek && !isLatest) navLinks.push(`<a href="/portals/${esc(slug)}">Latest (${esc(latestWeek)})</a>`);
+  const weekNav = navLinks.length ? `      <nav class="weeknav" aria-label="${esc(name)} weekly captures">${navLinks.join(" ")}</nav>\n` : "";
+
   const body = `    <main>
       <h1>${esc(name)}</h1>
       <p class="meta">${esc(portal.company)}${cap ? ` &middot; captured week of ${esc(cap.week)}` : ""}</p>
-${cap ? `      <section class="shots" aria-label="${esc(name)} screenshots">\n${shots}      </section>
+${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screenshots">\n${shots}      </section>
       <section class="analysis"><h2>Design analysis</h2><p>${esc(analysis || "No analysis available yet.")}</p></section>` : `      <p>No captures yet for ${esc(name)}.</p>`}
     </main>`;
 
   const html = page({
-    title: `${name} — logged-in UI screenshots | AI Surface Library`,
+    title: weekParam !== null
+      ? `${name} — logged-in UI screenshots, week of ${weekParam} | AI Surface Library`
+      : `${name} — logged-in UI screenshots | AI Surface Library`,
     description,
-    canonical: `${ORIGIN}/portals/${slug}`,
+    canonical,
     body,
   });
   return new Response(request.method === "HEAD" ? null : html, {
@@ -117,9 +154,15 @@ ${cap ? `      <section class="shots" aria-label="${esc(name)} screenshots">\n${
   });
 }
 
+/** Sitemap: home, every active portal's page, and its weekly pages older than its newest week. */
 export async function handleSitemap(env: Env): Promise<Response> {
-  const portals = await listPortals(env);
-  const urls = [`${ORIGIN}/`, ...portals.map((p) => `${ORIGIN}/portals/${p.slug}`)];
+  const rows = await sitemapCaptures(env); // portal order, newest week first within a portal
+  const urls = [`${ORIGIN}/`];
+  const seen = new Set<string>();
+  for (const r of rows) {
+    if (!seen.has(r.slug)) { seen.add(r.slug); urls.push(`${ORIGIN}/portals/${r.slug}`); } // first row = newest week
+    else urls.push(`${ORIGIN}/portals/${r.slug}/${r.week}`);
+  }
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map((u) => `  <url>\n    <loc>${esc(u)}</loc>\n  </url>`).join("\n")}

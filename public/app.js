@@ -300,6 +300,15 @@ function wireAnalysisToggles() {
   });
 }
 
+// Portal page for a card: the latest week links to /portals/<slug>, older weeks to /portals/<slug>/<week>.
+function portalHref(c) {
+  const latest = state.weeks[0]?.week;
+  const week = c.week || state.week;
+  return !week || !latest || week === latest
+    ? `/portals/${c.slug}`
+    : `/portals/${c.slug}/${week}`;
+}
+
 function card(c) {
   const palette = (c.palette || [])
     .map((hex) => `<i style="background:${esc(hex)}" title="${esc(hex)}"></i>`)
@@ -329,7 +338,7 @@ function card(c) {
             <img alt="" loading="lazy" />
           </span>
           <div>
-            <div class="portal-name"><a class="card-link" href="/portals/${esc(c.slug)}">${esc(c.portal)}</a></div>
+            <div class="portal-name"><a class="card-link" href="${esc(portalHref(c))}">${esc(c.portal)}</a></div>
             <div class="portal-co">${esc(c.company)}</div>
           </div>
         </div>
@@ -469,7 +478,7 @@ function renderCollection() {
         ${inner}
       </div>
       <figcaption class="col-cap">
-        <span class="col-name"><span class="brand-dot" style="background:${esc(c.brand)}"></span><a class="card-link" href="/portals/${esc(c.slug)}">${esc(c.portal)}</a></span>
+        <span class="col-name"><span class="brand-dot" style="background:${esc(c.brand)}"></span><a class="card-link" href="${esc(portalHref(c))}">${esc(c.portal)}</a></span>
       </figcaption>
     </figure>`;
     })

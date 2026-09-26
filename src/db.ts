@@ -126,3 +126,27 @@ export async function latestCaptureForPortal(env: Env, slug: string): Promise<Ca
     `SELECT * FROM captures WHERE slug = ? AND status = 'ok' ORDER BY week DESC LIMIT 1`
   ).bind(slug).first<CaptureRow>();
 }
+
+/** Successful capture for one portal in one week (read-only). */
+export async function captureForPortalWeek(env: Env, slug: string, week: string): Promise<CaptureRow | null> {
+  return await env.DB.prepare(
+    `SELECT * FROM captures WHERE slug = ? AND week = ? AND status = 'ok' LIMIT 1`
+  ).bind(slug, week).first<CaptureRow>();
+}
+
+/** Every week with a successful capture for one portal, newest first (read-only). */
+export async function captureWeeksForPortal(env: Env, slug: string): Promise<string[]> {
+  const { results } = await env.DB.prepare(
+    `SELECT week FROM captures WHERE slug = ? AND status = 'ok' ORDER BY week DESC`
+  ).bind(slug).all<{ week: string }>();
+  return (results ?? []).map((r) => r.week);
+}
+
+/** slug + week of every successful capture on an active portal (sitemap; read-only). */
+export async function sitemapCaptures(env: Env): Promise<{ slug: string; week: string }[]> {
+  const { results } = await env.DB.prepare(
+    `SELECT c.slug AS slug, c.week AS week FROM captures c JOIN portals p ON p.slug = c.slug
+     WHERE c.status = 'ok' AND p.active = 1 ORDER BY p.sort_order ASC, c.week DESC`
+  ).all<{ slug: string; week: string }>();
+  return results ?? [];
+}
