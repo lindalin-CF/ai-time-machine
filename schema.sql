@@ -42,7 +42,9 @@ CREATE TABLE captures (
   height       INTEGER DEFAULT 800,
   palette      TEXT DEFAULT '[]',   -- JSON array of hex strings
   analysis     TEXT DEFAULT '',     -- design commentary
-  analysis_by  TEXT DEFAULT 'sample', -- 'workers-ai' | 'sample'
+  analysis_by  TEXT DEFAULT 'sample', -- 'guideline-v<version>' | 'pending' | 'not_analyzable' | legacy 'workers-ai' / 'sample'
+  analysis_json    TEXT,            -- full guideline analysis JSON (never shown publicly)
+  analysis_version TEXT,            -- guideline_version of analysis_json
   status       TEXT DEFAULT 'ok',   -- 'ok' | 'error' | 'pending'
   captured_at  TEXT NOT NULL,
   FOREIGN KEY (week) REFERENCES weeks(week),

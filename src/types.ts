@@ -54,6 +54,8 @@ export interface CaptureRow {
   palette: string;      // JSON string
   analysis: string;
   analysis_by: string;
+  analysis_json: string | null;     // full guideline JSON; never exposed publicly
+  analysis_version: string | null;
   status: string;
   captured_at: string;
 }

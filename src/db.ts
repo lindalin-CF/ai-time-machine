@@ -1,5 +1,8 @@
 import type { Env, PortalRow, CaptureRow } from "./types";
 
+/** Prefix for every KV-cached API payload (bump to orphan all cached responses). */
+export const CACHE_VERSION = "v2-no-character";
+
 /** All active portals, capture order. */
 export async function listPortals(env: Env): Promise<PortalRow[]> {
   const { results } = await env.DB.prepare(
@@ -53,17 +56,29 @@ export async function refreshWeekCount(env: Env, week: string): Promise<void> {
 export async function upsertCapture(env: Env, row: CaptureRow): Promise<void> {
   await env.DB.prepare(
     `INSERT INTO captures
-      (id, week, slug, portal, company, url, brand, r2_key, width, height, palette, analysis, analysis_by, status, captured_at)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      (id, week, slug, portal, company, url, brand, r2_key, width, height, palette, analysis, analysis_by, analysis_json, analysis_version, status, captured_at)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
      ON CONFLICT(id) DO UPDATE SET
       r2_key=excluded.r2_key, width=excluded.width, height=excluded.height,
       palette=excluded.palette, analysis=excluded.analysis, analysis_by=excluded.analysis_by,
+      analysis_json=excluded.analysis_json, analysis_version=excluded.analysis_version,
       status=excluded.status, captured_at=excluded.captured_at`
   ).bind(
     row.id, row.week, row.slug, row.portal, row.company, row.url, row.brand,
     row.r2_key, row.width, row.height, row.palette, row.analysis, row.analysis_by,
-    row.status, row.captured_at
+    row.analysis_json, row.analysis_version, row.status, row.captured_at
   ).run();
+}
+
+/** Store a guideline analysis on an existing capture row (desktop fields untouched). */
+export async function updateCaptureAnalysis(
+  env: Env,
+  id: string,
+  a: { analysis: string; analysis_by: string; analysis_json: string; analysis_version: string }
+): Promise<void> {
+  await env.DB.prepare(
+    `UPDATE captures SET analysis=?, analysis_by=?, analysis_json=?, analysis_version=? WHERE id=?`
+  ).bind(a.analysis, a.analysis_by, a.analysis_json, a.analysis_version, id).run();
 }
 
 /**

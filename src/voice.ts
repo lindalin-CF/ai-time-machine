@@ -22,6 +22,7 @@ import { streamText } from "ai";
 import { createWorkersAI } from "workers-ai-provider";
 import type { Env } from "./types";
 import { listWeeks, latestWeek, capturesForWeek } from "./db";
+import { isPublishedAnalysis } from "./analysis";
 
 const VoiceAgent = withVoice(Agent);
 
@@ -89,7 +90,8 @@ export class PortalVoiceAgent extends VoiceAgent<Env> {
 
     const lines = ok.map((c) => {
       const palette = this.palette(c.palette);
-      const analysis = this.trim(c.analysis, 600);
+      // Only guideline analyses are grounding material; legacy/pending text is skipped.
+      const analysis = isPublishedAnalysis(c) ? this.trim(c.analysis, 600) : "";
       return `- ${c.portal} (${c.company}) — brand colour ${c.brand}${
         palette ? `; palette ${palette}` : ""
       }.${analysis ? ` Design note: ${analysis}` : ""}`;

@@ -1,12 +1,12 @@
 import puppeteer from "@cloudflare/puppeteer";
 import type { Env, PortalRow, CaptureRow } from "./types";
-import { getPortal, paletteFromBrand, upsertCapture, refreshWeekCount, upsertWeek, upsertMobileCapture } from "./db";
+import { getPortal, paletteFromBrand, upsertCapture, refreshWeekCount, upsertWeek, upsertMobileCapture, CACHE_VERSION } from "./db";
 
 const VIEWPORT = { width: 1280, height: 800 };
 
 /**
  * Capture a single portal for a given week:
- *  Browser Rendering -> PNG -> R2 -> Workers AI vision analysis -> D1.
+ *  Browser Rendering -> PNG -> R2 -> D1 (analysis pending).
  * Throws on hard failure so the Queue can retry.
  */
 export async function capturePortal(env: Env, week: string, slug: string): Promise<void> {
@@ -42,9 +42,9 @@ export async function capturePortal(env: Env, week: string, slug: string): Promi
 }
 
 /**
- * Store a captured PNG: ensure the week row exists -> R2 -> Workers AI analysis -> D1 -> cache bust.
+ * Store a captured PNG: ensure the week row exists -> R2 -> D1 (analysis reset to pending) -> cache bust.
  * Shared by the cloud Browser Rendering path (capturePortal) and the local-upload endpoint (/api/upload),
- * so a screenshot taken on your own machine flows through the exact same storage + analysis pipeline.
+ * so a screenshot taken on your own machine flows through the exact same storage pipeline.
  */
 export async function storeCapture(
   env: Env,
@@ -78,15 +78,17 @@ export async function storeCapture(
   await upsertWeek(env, week, weekLabelLocal(week));
   await env.SHOTS.put(r2Key, png, { httpMetadata: { contentType: "image/png" } });
 
-  const analysis = await analyse(env, png, portal);
-
+  // A new desktop screenshot invalidates any earlier analysis. The guideline analysis is
+  // produced locally and attached later via POST /api/analysis.
   const row: CaptureRow = {
     ...baseRow(portal, week, id, r2Key, "ok"),
     width: VIEWPORT.width,
     height: VIEWPORT.height,
     palette: JSON.stringify(paletteFromBrand(portal.brand)),
-    analysis: analysis.text,
-    analysis_by: analysis.by,
+    analysis: "",
+    analysis_by: "pending",
+    analysis_json: null,
+    analysis_version: null,
   };
   await upsertCapture(env, row);
   await refreshWeekCount(env, week);
@@ -104,7 +106,7 @@ function baseRow(p: PortalRow, week: string, id: string, r2Key: string | null, s
     id, week, slug: p.slug, portal: p.name, company: p.company, url: p.url, brand: p.brand,
     r2_key: r2Key, r2_key_mobile: null, width: VIEWPORT.width, height: VIEWPORT.height,
     palette: JSON.stringify(paletteFromBrand(p.brand)),
-    analysis: "", analysis_by: "sample", status,
+    analysis: "", analysis_by: "sample", analysis_json: null, analysis_version: null, status,
     captured_at: new Date().toISOString(),
   };
 }
@@ -213,49 +215,11 @@ function loadCookies(env: Env, slug: string): NormalizedCookie[] {
   return out;
 }
 
-// Meta vision models require a one-time license acceptance per account.
-// Send a single { prompt: "agree" } request, guarded by a KV flag so it only happens once.
-const VISION_MODEL = "@cf/meta/llama-3.2-11b-vision-instruct";
-
-async function ensureAgreed(env: Env): Promise<void> {
-  try {
-    if (await env.CACHE.get("ai:agreed")) return;
-    await env.AI.run(VISION_MODEL, { prompt: "agree" });
-    await env.CACHE.put("ai:agreed", "1", { expirationTtl: 60 * 60 * 24 * 365 });
-  } catch (err) {
-    console.error("Workers AI license agreement failed:", err);
-  }
-}
-
-async function analyse(env: Env, png: Uint8Array, portal: PortalRow): Promise<{ text: string; by: string }> {
-  const prompt =
-    `You are a senior product designer writing one tight paragraph (3-4 sentences) of design analysis ` +
-    `for a UI reference library. Describe the landing page of ${portal.name} by ${portal.company}: its layout, ` +
-    `visual hierarchy, use of colour and typography, and how it guides the user to the primary action. ` +
-    `Be specific and critical. Do not mention that this is a screenshot.`;
-  await ensureAgreed(env);
-  try {
-    const res: any = await env.AI.run(VISION_MODEL, {
-      prompt,
-      image: [...png],
-      max_tokens: 320,
-    });
-    const text = (res?.response ?? "").toString().trim();
-    if (text.length > 20) return { text, by: "workers-ai" };
-  } catch (err) {
-    console.error(`vision analysis failed for ${portal.slug}:`, err);
-  }
-  return {
-    text: `${portal.name} by ${portal.company}. Automated design analysis was unavailable for this capture; ` +
-      `the screenshot is stored and can be re-analysed on the next weekly run.`,
-    by: "sample",
-  };
-}
-
-async function invalidate(env: Env, week: string): Promise<void> {
+/** Bust the KV API caches a capture change affects. Keys carry the same prefix `cached()` in api.ts adds. */
+export async function invalidate(env: Env, week: string): Promise<void> {
   await Promise.all([
-    env.CACHE.delete(`cache:captures:${week}`),
-    env.CACHE.delete(`cache:weeks`),
-    env.CACHE.delete(`cache:stats`),
+    env.CACHE.delete(`${CACHE_VERSION}:cache:captures:${week}`),
+    env.CACHE.delete(`${CACHE_VERSION}:cache:weeks`),
+    env.CACHE.delete(`${CACHE_VERSION}:cache:stats`),
   ]);
 }

@@ -4,6 +4,11 @@
   "private": true,
   "type": "module",
   "description": "Runs on your machine to screenshot logged-in AI portals and upload them to the Worker.",
-  "scripts": { "capture": "node capture.mjs" },
-  "dependencies": { "puppeteer": "^23.0.0" }
+  "scripts": {
+    "capture": "node capture.mjs"
+  },
+  "dependencies": {
+    "pngjs": "^7.0.0",
+    "puppeteer": "^23.0.0"
+  }
 }

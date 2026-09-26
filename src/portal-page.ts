@@ -1,5 +1,6 @@
 import type { Env, CaptureRow } from "./types";
 import { getPortal, latestCaptureForPortal, captureForPortalWeek, captureWeeksForPortal, sitemapCaptures } from "./db";
+import { isPublishedAnalysis, displayedAnalysis } from "./analysis";
 
 const ORIGIN = "https://ai-portal-library.dev";
 const HTML_HEADERS = { "content-type": "text/html; charset=utf-8" };
@@ -117,7 +118,8 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
   const canonical = weekParam !== null && !isLatest ? `${ORIGIN}/portals/${slug}/${weekParam}` : `${ORIGIN}/portals/${slug}`;
 
   const name = portal.name;
-  const analysis = cap?.analysis?.trim() ?? "";
+  // Meta description: guideline analyses only. The section text also shows the system-test note.
+  const analysis = cap && isPublishedAnalysis(cap) ? cap.analysis.trim() : "";
   const description = shortText(
     weekParam !== null
       ? `${name} by ${portal.company}: logged-in interface screenshots, desktop and mobile, captured the week of ${weekParam}, with design analysis. ${analysis}`
@@ -147,7 +149,7 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
       <h1>${esc(name)}</h1>
       <p class="meta">${esc(portal.company)}${cap ? ` &middot; captured week of ${esc(cap.week)}` : ""}</p>
 ${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screenshots">\n${shots}      </section>
-      <section class="analysis"><h2>Design analysis</h2><p>${esc(analysis || "No analysis available yet.")}</p></section>` : `      <p>No captures yet for ${esc(name)}.</p>`}
+      <section class="analysis"><h2>Design analysis</h2><p>${esc(displayedAnalysis(cap))}</p></section>` : `      <p>No captures yet for ${esc(name)}.</p>`}
     </main>`;
 
   const html = page({

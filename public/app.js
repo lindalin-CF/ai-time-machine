@@ -222,10 +222,26 @@ async function loadWeek(week) {
   if (location.hash === "#collection") renderCollection();
 }
 
-// Case-insensitive match across portal name, company and AI analysis text.
+// Display rule, mirroring src/analysis.ts:
+//  - guideline-v*: shown, and searchable (publishedAnalysis)
+//  - system-test: its note is shown on the card and compare table only (displayedAnalysis)
+//  - anything else (legacy, pending, not_analyzable): "coming soon"
+const ANALYSIS_SOON = "Design analysis coming soon.";
+function publishedAnalysis(c) {
+  const by = c && typeof c.analysisBy === "string" ? c.analysisBy : "";
+  const text = c && typeof c.analysis === "string" ? c.analysis.trim() : "";
+  return by.startsWith("guideline-v") && text ? text : "";
+}
+function displayedAnalysis(c) {
+  const text = c && typeof c.analysis === "string" ? c.analysis.trim() : "";
+  if (c && c.analysisBy === "system-test" && text) return text;
+  return publishedAnalysis(c) || ANALYSIS_SOON;
+}
+
+// Case-insensitive match across portal name, company and published analysis text.
 function matchesSearch(c, q) {
   if (!q) return true;
-  return `${c.portal ?? ""} ${c.company ?? ""} ${c.analysis ?? ""}`
+  return `${c.portal ?? ""} ${c.company ?? ""} ${publishedAnalysis(c)}`
     .toLowerCase()
     .includes(q);
 }
@@ -345,7 +361,7 @@ function card(c) {
         <a class="visit" href="${esc(c.url)}" target="_blank" rel="noopener">Visit &#8599;</a>
       </div>
       <div class="analysis-label">Design analysis</div>
-      <p class="analysis clamped">${esc(c.analysis)}</p>
+      <p class="analysis clamped">${esc(displayedAnalysis(c))}</p>
       <button type="button" class="analysis-toggle" aria-expanded="false" aria-label="Show more">
         <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
       </button>
@@ -1318,7 +1334,7 @@ function anTableHTML(cols) {
     return `<td>${t ? `<span class="an-tag">${t}</span>` : "—"}</td>`;
   })));
   rows.push(anRow("Captured", cols.map((c) => `<td>${c.cap ? esc(fmtDate(c.cap.capturedAt)) : "—"}</td>`)));
-  rows.push(anRow("Design notes", cols.map((c) => `<td class="an-notes">${c.cap && c.cap.analysis ? esc(c.cap.analysis) : "—"}</td>`)));
+  rows.push(anRow("Design notes", cols.map((c) => `<td class="an-notes">${c.cap ? esc(displayedAnalysis(c.cap)) : "—"}</td>`)));
 
   return `<table class="an-table"><thead>${head}</thead><tbody>${rows.join("")}</tbody></table>`;
 }

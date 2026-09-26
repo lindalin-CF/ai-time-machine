@@ -5,3 +5,5 @@ dist/
 *.log
 .DS_Store
 worker-configuration.d.ts
+scripts/local-capture/analysis/work/
+scripts/local-capture/analysis/private-terms.txt

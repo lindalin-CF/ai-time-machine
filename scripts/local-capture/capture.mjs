@@ -31,10 +31,9 @@ import readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { WORKER_URL, UPLOAD_TOKEN } from "./config.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const WORKER_URL = (process.env.WORKER_URL || "https://ai-portal-library.monthtest970509.workers.dev").replace(/\/$/, "");
-const UPLOAD_TOKEN = process.env.UPLOAD_TOKEN;
 const PROFILE_DIR = join(__dirname, ".capture-profile");
 const VIEWPORT = { width: 1280, height: 800 };
 const MOBILE_VIEWPORT = { width: 390, height: 844, deviceScaleFactor: 2, isMobile: true, hasTouch: true };

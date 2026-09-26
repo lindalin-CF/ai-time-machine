@@ -22,7 +22,12 @@
     "db:migrate:remove-character:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0004_remove_character_ai.sql",
     "test:visual": "vitest run tests/visual",
     "db:migrate:insights:local": "wrangler d1 execute ai-portal-library --local --file=./migrations/0005_insights.sql",
-    "db:migrate:insights:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0005_insights.sql"
+    "db:migrate:insights:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0005_insights.sql",
+    "db:migrate:analysis:local": "wrangler d1 execute ai-portal-library --local --file=./migrations/0006_analysis_json.sql",
+    "db:migrate:analysis:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0006_analysis_json.sql",
+    "db:migrate:system-test:local": "wrangler d1 execute ai-portal-library --local --file=./migrations/0007_mark_system_test_weeks.sql",
+    "db:migrate:system-test:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0007_mark_system_test_weeks.sql",
+    "test": "vitest run --config vitest.unit.config.mts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260804.1",

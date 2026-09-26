@@ -1,10 +1,10 @@
 import { zipSync } from "fflate";
 import type { Env, CaptureRow } from "./types";
-import { listPortals, listWeeks, latestWeek, capturesForWeek, getPortal } from "./db";
-import { hasCookieSecret, storeCapture } from "./capture";
+import { listPortals, listWeeks, latestWeek, capturesForWeek, getPortal, updateCaptureAnalysis, CACHE_VERSION } from "./db";
+import { hasCookieSecret, storeCapture, invalidate } from "./capture";
+import { validateAnalysis } from "./analysis";
 
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8" };
-const CACHE_VERSION = "v2-no-character";
 
 function json(data: unknown, status = 200, extra: Record<string, string> = {}) {
   return new Response(JSON.stringify(data), { status, headers: { ...JSON_HEADERS, ...extra } });
@@ -366,7 +366,7 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
 
   // Admin: re-run capture for specific portal(s) only (e.g. ones that failed).
   // Local upload: a screenshot taken on YOUR machine (real login, residential IP) is stored
-  // through the same R2 -> Workers AI -> D1 pipeline as cloud captures. Token-gated.
+  // through the same R2 -> D1 pipeline as cloud captures. Token-gated.
   if (path === "/api/upload" && request.method === "POST") {
     const authError = requireUploadToken(request, env);
     if (authError) return authError;
@@ -396,6 +396,53 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     return json({ ok: true, slug: body.slug, week, variant, bytes: png.length });
   }
 
+  // Guideline analysis produced locally (scripts/local-capture/analysis/publish.mjs). Token-gated.
+  // Stores the plain-English summary publicly and the full JSON privately.
+  if (path === "/api/analysis" && request.method === "POST") {
+    const authError = requireUploadToken(request, env);
+    if (authError) return authError;
+
+    const body = await request
+      .json<{ slug?: string; week?: string; analysis?: unknown }>()
+      .catch(() => ({} as { slug?: string; week?: string; analysis?: unknown }));
+    if (!body.slug || !body.week || body.analysis === undefined) return json({ error: "slug, week and analysis required" }, 400);
+
+    const id = `${body.slug}-${body.week}`;
+    const row = await env.DB.prepare(`SELECT id FROM captures WHERE id = ?`).bind(id).first<{ id: string }>();
+    if (!row) return json({ error: `no capture for ${body.slug} week ${body.week}` }, 404);
+
+    const reason = validateAnalysis(body.analysis, body.slug, body.week);
+    if (reason) return json({ error: reason }, 400);
+
+    const a = body.analysis as { status: string; summary?: string; guideline_version: string };
+    const ok = a.status === "ok";
+    await updateCaptureAnalysis(env, id, {
+      analysis: ok ? (a.summary as string) : "",
+      analysis_by: ok ? `guideline-v${a.guideline_version}` : "not_analyzable",
+      analysis_json: JSON.stringify(body.analysis),
+      analysis_version: a.guideline_version,
+    });
+    await invalidate(env, body.week);
+    return json({ ok: true, slug: body.slug, week: body.week, status: a.status });
+  }
+
+  // Stored guideline JSON for one capture, for local comparison with the previous week. Token-gated.
+  if (path === "/api/analysis" && request.method === "GET") {
+    const authError = requireUploadToken(request, env);
+    if (authError) return authError;
+
+    const slug = url.searchParams.get("slug") || "";
+    const week = url.searchParams.get("week") || "";
+    if (!slug || !week) return json({ error: "slug and week required" }, 400);
+    const row = await env.DB.prepare(
+      `SELECT analysis_json, analysis_version FROM captures WHERE id = ?`
+    ).bind(`${slug}-${week}`).first<{ analysis_json: string | null; analysis_version: string | null }>();
+    if (!row) return json({ error: `no capture for ${slug} week ${week}` }, 404);
+    let analysis: unknown = null;
+    if (row.analysis_json) { try { analysis = JSON.parse(row.analysis_json); } catch { analysis = null; } }
+    return json({ slug, week, analysis_version: row.analysis_version, analysis });
+  }
+
   // Which portals have a COOKIES_<SLUG> secret configured (booleans only; never leaks values).
   if (path === "/api/auth/status") {
     const portals = await listPortals(env);
@@ -416,7 +463,7 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     const slugs = requested.filter((s) => valid.has(s));
     const unknown = requested.filter((s) => !valid.has(s));
     if (!slugs.length) return json({ error: "no valid slugs", unknown }, 400);
-    // Reuse the Queue consumer -> Browser Rendering + R2 + Workers AI + D1 + retries.
+    // Reuse the Queue consumer -> Browser Rendering + R2 + D1 + retries.
     await env.CAPTURE_QUEUE.sendBatch(slugs.map((slug) => ({ body: { week, slug } })));
     return json({ enqueued: true, week, slugs, unknown });
   }
