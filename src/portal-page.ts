@@ -23,6 +23,15 @@ function page(opts: { title: string; description: string; canonical?: string; no
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DSFGB7W27J"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-DSFGB7W27J');
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${esc(opts.title)}</title>
   <meta name="description" content="${esc(opts.description)}" />
