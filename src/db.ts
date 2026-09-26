@@ -119,3 +119,10 @@ export function paletteFromBrand(brand: string): string[] {
     mix(brand, "#ffffff", 0.4),
   ];
 }
+
+/** Newest successful capture for one portal (read-only). */
+export async function latestCaptureForPortal(env: Env, slug: string): Promise<CaptureRow | null> {
+  return await env.DB.prepare(
+    `SELECT * FROM captures WHERE slug = ? AND status = 'ok' ORDER BY week DESC LIMIT 1`
+  ).bind(slug).first<CaptureRow>();
+}

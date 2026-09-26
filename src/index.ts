@@ -2,6 +2,7 @@ import { routeAgentRequest } from "agents";
 import type { Env, CaptureJob } from "./types";
 import { handleApi, handleImage, isoMonday, weekLabel } from "./api";
 import { capturePortal } from "./capture";
+import { handlePortalPage, handleSitemap } from "./portal-page";
 
 // Export the Workflow class so the runtime can find it (class_name in wrangler.jsonc).
 export { CaptureWorkflow } from "./workflow";
@@ -20,6 +21,8 @@ export default {
       }
       if (url.pathname.startsWith("/api/")) return await handleApi(request, env, ctx);
       if (url.pathname.startsWith("/img/")) return await handleImage(request, env);
+      if (url.pathname.startsWith("/portals/")) return await handlePortalPage(request, env);
+      if (url.pathname === "/sitemap.xml") return await handleSitemap(env);
     } catch (err) {
       return new Response(JSON.stringify({ error: String(err) }), {
         status: 500,
