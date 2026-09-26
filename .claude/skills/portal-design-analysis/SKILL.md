@@ -1,7 +1,7 @@
 ---
 name: portal-design-analysis
 description: 依 AI Surface Library 規範分析 AI portal 的桌面截圖，產出可追溯到指標、證據等級與位置的 Design analysis。使用者提供 portal 桌面截圖並要求 design analysis、跑規範、或比較不同週次截圖時使用。
-version: 1.3
+version: 1.4
 ---
 
 # AI Portal 桌面截圖 Design Analysis 規範
@@ -29,8 +29,18 @@ version: 1.3
 範圍限制：
 
 - 只分析桌面截圖（1280×800 viewport、縮放比 1、僅首屏、不捲動）。mobile 截圖不分析，也不從桌面版推論行動版。
+- 預設分析登入後介面。例外見第 1.1 節。
 - 只使用兩種證據：**E1**（對截圖做像素取樣或計算）與 **E2**（看圖觀察）。
 - 不做任何需要網頁結構（E3：DOM、computed style、accessibility tree）或使用行為資料（E4：分析數據、易用性測試、眼動追蹤）才能成立的結論。
+
+### 1.1 特殊收錄方式的 portal
+
+有些 portal 無法用一般方式截到登入後的空白首頁。下表列出已知情況，執行時以此為準；表外的 portal 若出現同類畫面，照第 5 節一般規則處理（通常為 `not_analyzable`），並回報給截圖者決定是否加入此表。
+
+| 收錄方式 | 目前適用 | 處理方式 |
+|---|---|---|
+| 訪客身分（沒有帳號，刻意不登入） | Kimi | 未登入首頁視為可分析。`scope` 寫 `"first screen only, logged-out guest view"`；`context.account_type` 寫 `"none"`；`context.notes` 寫 `"Captured logged out by design; no account exists for this portal."`；摘要第 2 句固定為 `This is the view for visitors who are not signed in.`（sources: `["context"]`） |
+| 沒有空白首頁（一定會開著某段對話） | Muse | 開著的對話串、對話標題列、以及無法確定是否帳號專屬的側邊面板，整塊列為排除區，只分析外框元素（導覽列、輸入框及其控制項）。`context.conversation_open` 設為 `true`。主要內文都在排除區內時，C2 填 `not_measured` 並說明原因。摘要不得提到對話內容或主題 |
 
 ## 2. 隱私：排除區（最高優先，任何其他規則都不能覆蓋）
 
@@ -41,6 +51,7 @@ version: 1.3
 - **帳號資訊**：姓名、大頭照（照片或縮寫字母）、email、使用者名稱、組織或公司名稱、租戶名稱。
 - **帳號專屬清單**：對話或聊天標題、專案、資料夾、自訂 GPT／Gem／agent、釘選項目、組織建立或共用的 agent、共用空間、最近檔案。
 - **主內容區中的個人資訊**：例如問候語裡的名字、個人化推薦中出現的人名或文件名。
+- **依使用紀錄產生的內容**：「繼續上次的對話」卡片、對話預覽、最近使用的 bot／agent／工具列、標示為「為你推薦」（Suggested for you 等）的建議。這類內容即使不含名字，也可能透露使用者最近在做什麼。
 
 判別原則：所有帳號都會看到的產品固定導覽（例如 New chat、Search、Library）**不屬於**排除區；無法確定某項是產品內建還是帳號專屬時，**一律視為排除區**。
 
@@ -49,6 +60,8 @@ version: 1.3
 | 情況 | 處理方式 |
 |---|---|
 | 排除區整塊（例如帳號區、agent 清單） | 只能在 L1 記錄它存在與 bbox，名稱固定寫 `account-specific area (excluded)`。不描述內容、外觀、圖示、顏色或項目數 |
+| 繼續上次對話的卡片、對話預覽、最近使用的 bot／agent 列 | 整塊列為排除區，同第一列處理 |
+| 標示為個人化的建議 prompt | 只在 D5 記錄**數量**，不記文字（`value`、`original_text`、`note` 都不寫內容），`note` 寫 `"Suggestions are labeled as personalized; texts not recorded."`。無法判斷建議是否個人化時，一律視為個人化 |
 | 主內容區文字裡混有個人資訊 | 以 `[name]`、`[file]` 等代稱取代後再翻譯記錄，例如 `"Good morning, [name] (translated from Chinese)"`；`original_text` 也同樣以代稱取代 |
 | 各指標的取樣與計數（C1–C4、H1、L4、D3、D5 等） | 一律跳過排除區，不從排除區取樣、不把排除區元素列入名次或計數 |
 | 跨週像素比對發現排除區有變動 | 只設 `excluded_region_changed: true`，不列位置、不描述 |
@@ -83,7 +96,7 @@ version: 1.3
 依序檢查，任一項不通過就停止分析，輸出 `status: "not_analyzable"` 與原因：
 
 1. 圖片尺寸：預期 1280×800。若為 2560×1600 等整數倍，換算 `scale = width / 1280`，所有像素量測除以 scale 後再報。若比例不是 16:10 或無法判斷 scale，所有尺寸類指標（L2、H2、H3、C5 字高、D4）填 `not_measured`，其餘照做。
-2. 是否為登入後介面：畫面主體是 landing page、登入表單或錯誤頁 → 不可分析。
+2. 是否為登入後介面：畫面主體是 landing page、登入表單或錯誤頁 → 不可分析。第 1.1 節表列的訪客收錄 portal 例外；開著對話的畫面，只有第 1.1 節表列的 portal 可分析，其他 portal 回報截圖者重截。
 3. 是否有遮擋主內容的彈窗、onboarding 或 cookie banner：遮擋主輸入區 → 不可分析；只遮擋邊角 → 可分析，但在 context 記錄。
 4. 標出排除區（第 2 節），後續所有步驟都跳過這些區域。
 
@@ -100,6 +113,8 @@ version: 1.3
 | `personalized_content` | `true` / `false` | 主內容區是否有個人化內容（排除區以外）。只寫類型，例如 "greeting includes [name]" |
 | `time_dependent_content` | `true` / `false` + 簡述 | 例如早安／晚安問候。問候語是否會輪換無法從單張截圖判斷，不在此猜測 |
 | `hover_or_focus_visible` | `true` / `false` + 元件類型 | 某元件呈現亮起、底色或外框，而且不像是「目前選取」的狀態（例如游標停在某個圖示上）。只寫元件類型，例如 "sidebar toggle icon"；信心通常為 `low` |
+| `promotional_content` | `true` / `false` + 類型 | 宣傳卡片、升級橫幅、下載 app 提示等短期行銷元素。浮在畫面上的同時記 `modal_present: "partial"`；把頁面推開的橫幅只記這裡 |
+| `conversation_open` | `true` / `false` | 見第 1.1 節 |
 | `ui_language` | 語言代碼 | 依介面文字判斷 |
 | `privacy_flag` | `true` / `false` | 見第 2.3 節 |
 | `notes` | 截圖者補充情境 | 輸入第 5 項，翻成英文；含個人資訊時依第 2 節以代稱取代 |
@@ -108,7 +123,7 @@ version: 1.3
 
 每個指標輸出一筆紀錄，欄位見第 10 節。`evidence` 必須是 `E1` 或 `E2`。座標一律用 `[x, y, w, h]`，以 CSS 像素計、取整到 10。所有指標都跳過第 2 節排除區。
 
-**無文字標籤的圖示**：只描述形狀與位置（例如 "shield-shaped icon, top right"），不推測功能或意義。
+**無文字標籤的圖示與按鈕**：只描述形狀、顏色與位置（例如 "shield-shaped icon, top right"、"green arrow-shaped button at the right end of the message box"），不推測功能或意義。這條也適用於看起來很明顯的送出、麥克風、語音按鈕：沒有文字標籤就不寫 send button、microphone button，改寫 arrow-shaped button、microphone-shaped button。
 
 ### 7.1 版面（Layout）
 
@@ -133,9 +148,9 @@ version: 1.3
 | ID | 觀察項目 | 做法 | 判讀 | 證據 |
 |---|---|---|---|---|
 | C1 | 主色盤 | 取樣主背景、主要文字、次要文字、強調色（如送出按鈕填色）的 hex，附取樣座標 | 只描述 | E1 |
-| C2 | 主要內文對比 | 主內容區最大量的內文文字 vs 其背景，用 7.5 節公式 | 一般文字 ≥ 4.5 → `approx_pass`；大字（估算字級 ≥ 24px，或 ≥ 18.66px 粗體）≥ 3 → `approx_pass`；否則 `approx_fail` | E1 |
+| C2 | 主要內文對比 | 主內容區最大量的內文文字 vs 其背景，用 7.5 節公式。主內容區幾乎沒有內文時，改量最大量的可讀標籤（例如建議 chip 文字）並在 `note` 說明；所有內文都在排除區內時填 `not_measured` | 一般文字 ≥ 4.5 → `approx_pass`；大字（估算字級 ≥ 24px，或 ≥ 18.66px 粗體）≥ 3 → `approx_pass`；否則 `approx_fail` | E1 |
 | C3 | 最低對比文字 | 在 placeholder、次要文字、區段標籤、聲明文字中找對比最低者並計算。logo、純裝飾文字、排除區文字不列入 | 同 C2 | E1 |
-| C4 | 非文字對比 | 對主輸入框與送出按鈕（若可見）分別量：(1) 邊框或填色 vs 相鄰背景；(2) 是否有其他可辨識線索：元件內文字（例如 placeholder）對比 ≥ 4.5，或填色與背景對比 ≥ 3 | (1) ≥ 3 → `approx_pass`；(1) < 3 但 (2) 成立 → `approx_unclear`，`note` 寫明「邊界本身不足 3:1，但可由某線索辨識；是否符合需看實際樣式判定」；(1)(2) 都不成立 → `approx_fail`。`note` 另註明「反鋸齒可能使取樣色偏淡」 | E1 |
+| C4 | 非文字對比 | 對主輸入框與送出按鈕（若可見）分別量：(1) 邊框或填色 vs 相鄰背景；(2) 是否有其他可辨識線索：元件內文字（例如 placeholder）對比 ≥ 4.5，或填色與背景對比 ≥ 3 | (1) ≥ 3 → `approx_pass`；(1) < 3 但 (2) 成立 → `approx_unclear`，`note` 寫明「邊界本身不足 3:1，但可由某線索辨識；是否符合需看實際樣式判定」；(1)(2) 都不成立 → `approx_fail`。`note` 另註明「反鋸齒可能使取樣色偏淡」。送出按鈕在輸入框為空時可能是停用狀態，停用元件不受此標準約束，此時 `note` 寫明 "The button may be inactive because the message box is empty; inactive components are exempt."，但仍照數值給結果 | E1 |
 | C5 | 字體分類與字級 | 無襯線／襯線／等寬；內文與最大標題的估算字級（px） | 字體名稱除非畫面上有文字明示，否則填 `cannot_determine` | E2 |
 
 ### 7.4 主要動作引導（Primary action，含 Human-AI Interaction G1／G2）
@@ -147,7 +162,7 @@ version: 1.3
 | D3 | 競爭元素數 | 主內容區中**可互動**、且視覺權重與 D1 相當或更高的元素數（實心填色按鈕、大型卡片、橫幅）。非互動元素不算，交由 H1、D2 處理 | 只描述 | E2 |
 | D4 | 輸入區控制項可見尺寸 | 量輸入框內部及緊鄰的所有控制項（新增、附件、麥克風、語音、送出等）的可見 w×h（px） | 任一邊 < 24px 的控制項，`note` 寫「可見尺寸小於 24px，實際點擊區未知」；送出按鈕不可見時寫 "No send button visible in this state; it may appear after typing, which a screenshot cannot show." 不判定通過與否 | E1（程式量邊界）或 E2 |
 | D5 | 能力提示（G1：讓使用者知道系統能做什麼） | 記錄：placeholder、建議 prompt／chip 數量與短文字、工具或模式切換、模型選擇器、上傳入口。排除區清單（自訂 agent、釘選項目等）不列入 | 記錄有無、數量、短文字（每則 ≤ 10 字，非英文依第 0 節翻譯）；不評價內容好壞 | E2 |
-| D6 | 限制聲明（G2：讓使用者知道系統多常出錯） | 是否可見「可能出錯」類文字；位置（輸入框下方／頁尾／無） | 記錄有無、位置、短文字（非英文依第 0 節翻譯）；對比引用 C3（若 C3 就是它） | E2 |
+| D6 | 限制聲明（G2：讓使用者知道系統多常出錯） | 是否可見與 AI 限制相關的聲明；位置（輸入框下方／頁尾／無）；類型：`mistakes`（可能出錯）、`ai_generated`（內容由 AI 生成）、`other` | 記錄有無、位置、類型、短文字（非英文依第 0 節翻譯）；對比引用 C3（若 C3 就是它）。摘要照實描述聲明內容，不要把 `ai_generated` 寫成「可能出錯」 | E2 |
 | D7 | 主標題／問候語 | 記錄主內容區最大標題或問候語的文字（英文翻譯，個人資訊以代稱取代），以及它是否提示一個具體任務（例如「試著要我回顧會議」） | `value` 寫翻譯文字；`suggests_task` 為 `true` / `false` | E2 |
 
 ### 7.5 對比計算（C2–C4 共用）
@@ -191,7 +206,7 @@ version: 1.3
 
 ### 9.1 可比較前提與干擾判定
 
-**前提**：兩週的 viewport、scale、`color_scheme`、`account_type` 相同，且 `modal_present` 皆非遮擋主內容。前提不成立 → 所有變動標 `confounded`，只列出不做解讀。
+**前提**：兩週的 viewport、scale、`scope`、`color_scheme`、`account_type` 相同，且 `modal_present` 皆非遮擋主內容。前提不成立 → 所有變動標 `confounded`，只列出不做解讀。
 
 **干擾判定**：下列 context 欄位若與前一週不同，對應指標的變動標 `possibly_confounded`：
 
@@ -202,6 +217,8 @@ version: 1.3
 | `time_dependent_content` | H1、H3、D7 |
 | `ui_language` | H3、C5、D5、D6、D7 |
 | `hover_or_focus_visible` | C1，以及與該元件重疊的所有指標 |
+| `promotional_content` | L1、L4、H1、H2、D3 |
+| `conversation_open` | 所有指標標 `confounded`（兩週畫面性質不同，無法比較） |
 
 **問候語輪換**：D7 文字改變一律標 `possibly_confounded`，`note` 寫 "Greetings may rotate between visits; a single screenshot cannot rule this out."
 
@@ -243,7 +260,7 @@ version: 1.3
 
 ```json
 {
-  "guideline_version": "1.3",
+  "guideline_version": "1.4",
   "portal": "example",
   "week": "2026-09-21",
   "variant": "desktop",
@@ -260,6 +277,8 @@ version: 1.3
     "personalized_content": { "value": false, "note": "" },
     "time_dependent_content": { "value": false, "note": "" },
     "hover_or_focus_visible": { "value": false, "note": "" },
+    "promotional_content": { "value": false, "note": "" },
+    "conversation_open": false,
     "ui_language": "en",
     "privacy_flag": true,
     "notes": ""
@@ -305,7 +324,8 @@ version: 1.3
 
 **寫作規則**
 
-- 英文，5 到 8 句短句；有跨週比較時可再加 1 句比較句。每句不超過 20 個字，一句只講一件事。
+- 英文，5 到 8 句短句；有跨週比較時可再加 1 句比較句。每句不超過 20 個字。
+- **一句只講一件事**：不要用 and、but、with 把兩個不同指標的觀察接在同一句（例如「建議提示」和「沒有錯誤聲明」要分成兩句）。唯一例外是 C4 為 `approx_unclear` 時的固定句型。句數不夠放時，優先刪掉較不重要的觀察，而不是合併句子。
 - 用日常用字，目標是一般國中生讀得懂。不用分號、不用括號裡再塞說明。
 - 第一句固定：`This shows the desktop version of {portal name} for the week of {week}, before scrolling.`
 - 之後依序涵蓋：整體版面、畫面上最顯眼的東西、文字與顏色、使用者從哪裡開始（含問候語、建議提示與「可能出錯」聲明）；有比較結果時最後一句寫變動。
@@ -331,7 +351,9 @@ version: 1.3
 | sans-serif typeface、type scale with 4 levels | a plain, modern font in four sizes |
 | suggestion chips、capability hints | suggested prompts, buttons that show what it can do |
 | error disclaimer | a note that it can make mistakes |
-| visible target size 20×20px | the send button is small (about 20 pixels wide) |
+| visible target size 20×20px | the arrow-shaped button is small (about 20 pixels wide) |
+| send button（無文字標籤） | the arrow-shaped button（依實際形狀） |
+| microphone button（無文字標籤） | the microphone-shaped button |
 
 **追溯欄位**：JSON 另外輸出 `summary_sentences`，每句一筆，記錄它依據哪些指標：
 
@@ -346,14 +368,15 @@ version: 1.3
 
 ## 11. 自我檢查（輸出前逐項確認）
 
-0. **排除區**：分析與摘要中沒有姓名、大頭照描述、email、組織名稱、對話標題、自訂或組織內部 agent 名稱、釘選項目名稱；`original_text` 也沒有。摘要沒有提到排除區。
+0. **排除區**：分析與摘要中沒有姓名、大頭照描述、email、組織名稱、對話標題或預覽、自訂或組織內部 agent 名稱、釘選項目名稱、個人化建議的文字；`original_text` 也沒有。摘要沒有提到排除區。
 1. 所有輸出內容都是英文（`original_text` 除外），即使對話語言、portal 介面語言或補充情境不是英文。
 2. 每個指標都有紀錄，且 `evidence` 只有 E1 或 E2。
 3. 沒有程式能力時，E1 指標全部是 `not_measured`，沒有任何估計的 hex 或比值。
 4. H1 三個名次的依據數值都並列寫出，或標 `low`。
 5. `summary_sentences` 每句都有 `sources`，且句中數值與 JSON 一致；頁面摘要中沒有指標 ID、E1／E2、欄位值、hex、座標或 10.2 對照表左欄的術語，每句不超過 20 字。
-6. 摘要與 note 中沒有第 8 節的禁止類型，無標籤圖示沒有被賦予意義。
+6. 摘要與 note 中沒有第 8 節的禁止類型；無標籤圖示與按鈕（包括送出、麥克風）只描述形狀；每句只講一件事。
 7. 有前一週資料時，每筆變動都達第 9.3 節門檻，干擾判定與問候語輪換規則已套用。
+8. 第 1.1 節表列的 portal 已套用對應的收錄方式。
 
 ## Repo integration
 
