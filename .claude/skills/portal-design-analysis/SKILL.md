@@ -360,6 +360,7 @@ version: 1.3
 本節只說明在 ai-time-machine repo 中的執行方式，不改變上述任何規則。
 
 - E1 量測改用 `scripts/local-capture/analysis/measure.mjs`（`size`、`color`、`contrast`、`pair`、`diff`），取代第 4 節的 Python；方法與第 7.5、9.2 節相同。
+- 需要元素範圍或多點顏色時，優先用 `extent <png> <x> <y> <w> <h> [--bg <hex>] [--threshold 30]` 與 `colors <png> <x1>,<y1> <x2>,<y2> ...`（單一程序一次完成），不要逐像素迴圈呼叫 `color`。
 - 流程：
   1. `node analysis/prepare.mjs <slug> [week]`：下載本週與前一週桌面截圖、前一週分析 JSON 到 `analysis/work/<slug>/<week>/`。
   2. 依本規範分析，把 JSON 寫成同一資料夾的 `analysis.json`。

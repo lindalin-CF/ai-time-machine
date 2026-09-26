@@ -9,6 +9,8 @@
  * USAGE:
  *   node analysis/measure.mjs size <png>
  *   node analysis/measure.mjs color <png> <x> <y>
+ *   node analysis/measure.mjs colors <png> <x1>,<y1> <x2>,<y2> ...   # many points, one process
+ *   node analysis/measure.mjs extent <png> <x> <y> <w> <h> [--bg <hex>] [--threshold 30]
  *   node analysis/measure.mjs contrast <png> <x> <y> <w> <h>    # section 7.5
  *   node analysis/measure.mjs pair <hexA> <hexB>
  *   node analysis/measure.mjs diff <current.png> <previous.png>  # section 9.2
@@ -87,6 +89,60 @@ function cmdColor(file, x, y) {
   const img = load(file);
   const { x0, y0 } = toImageRect(img, x, y, 1, 1);
   return { x, y, hex: hex(rgbAt(img, x0, y0)) };
+}
+
+function cmdColors(file, points) {
+  if (!points.length) throw new Error("colors needs at least one <x>,<y> point");
+  const img = load(file);
+  return points.map(([x, y]) => {
+    const { x0, y0 } = toImageRect(img, x, y, 1, 1);
+    return { x, y, hex: hex(rgbAt(img, x0, y0)) };
+  });
+}
+
+/**
+ * Bounding box of every pixel in the box whose RGB difference sum from the background exceeds
+ * `threshold` (same rule as section 9.2). Background defaults to the median of the box's own
+ * outermost 1px ring. One pass over the box.
+ */
+function cmdExtent(file, x, y, w, h, { bg, threshold = 30 } = {}) {
+  const img = load(file);
+  const s = img.scale ?? 1;
+  const r = toImageRect(img, x, y, w, h);
+
+  let background;
+  if (bg != null) {
+    background = parseHex(bg);
+  } else {
+    const ring = [];
+    for (let py = r.y0; py < r.y1; py++) {
+      for (let px = r.x0; px < r.x1; px++) {
+        if (py === r.y0 || py === r.y1 - 1 || px === r.x0 || px === r.x1 - 1) ring.push(rgbAt(img, px, py));
+      }
+    }
+    background = medianRgb(ring);
+  }
+
+  const [br, bgG, bb] = background;
+  let minX = Infinity, minY = Infinity, maxX = -1, maxY = -1, count = 0;
+  for (let py = r.y0; py < r.y1; py++) {
+    for (let px = r.x0; px < r.x1; px++) {
+      const i = (py * img.width + px) * 4;
+      const d = Math.abs(img.data[i] - br) + Math.abs(img.data[i + 1] - bgG) + Math.abs(img.data[i + 2] - bb);
+      if (d > threshold) {
+        count++;
+        if (px < minX) minX = px; if (px > maxX) maxX = px;
+        if (py < minY) minY = py; if (py > maxY) maxY = py;
+      }
+    }
+  }
+  return {
+    box: [x, y, w, h],
+    background: hex(background),
+    threshold,
+    pixel_count: count,
+    bbox_css_px: count ? [minX / s, minY / s, (maxX - minX + 1) / s, (maxY - minY + 1) / s] : null,
+  };
 }
 
 /** Section 7.5: background = median of a 4px outer ring; text = median of the top 5% luminance-difference pixels. */
@@ -220,15 +276,35 @@ function main() {
     if (!Number.isFinite(n)) throw new Error(`${name} must be a number (got "${v}")`);
     return n;
   };
+  // Split --flag value pairs from positional args.
+  const pos = [], flags = {};
+  for (let i = 0; i < args.length; i++) {
+    if (args[i].startsWith("--")) {
+      if (i + 1 >= args.length) throw new Error(`${args[i]} needs a value`);
+      flags[args[i].slice(2)] = args[++i];
+    } else pos.push(args[i]);
+  }
+  const point = (v) => {
+    const m = /^(-?[\d.]+),(-?[\d.]+)$/.exec(v);
+    if (!m) throw new Error(`point must be <x>,<y> (got "${v}")`);
+    return [num(m[1], "x"), num(m[2], "y")];
+  };
   let out;
   switch (cmd) {
     case "size": out = cmdSize(args[0]); break;
     case "color": out = cmdColor(args[0], num(args[1], "x"), num(args[2], "y")); break;
+    case "colors": out = cmdColors(args[0], args.slice(1).map(point)); break;
+    case "extent":
+      out = cmdExtent(pos[0], num(pos[1], "x"), num(pos[2], "y"), num(pos[3], "w"), num(pos[4], "h"), {
+        bg: flags.bg,
+        threshold: flags.threshold != null ? num(flags.threshold, "threshold") : undefined,
+      });
+      break;
     case "contrast": out = cmdContrast(args[0], num(args[1], "x"), num(args[2], "y"), num(args[3], "w"), num(args[4], "h")); break;
     case "pair": out = cmdPair(args[0], args[1]); break;
     case "diff": out = cmdDiff(args[0], args[1]); break;
     default:
-      console.error("usage: measure.mjs size|color|contrast|pair|diff ... (see header comment)");
+      console.error("usage: measure.mjs size|color|colors|extent|contrast|pair|diff ... (see header comment)");
       process.exit(1);
   }
   console.log(JSON.stringify(out, null, 2));
