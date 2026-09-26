@@ -24,13 +24,13 @@ function page(opts: { title: string; description: string; canonical?: string; no
 <head>
   <meta charset="utf-8" />
   <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DSFGB7W27J"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-X9PB6Q8VT6"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
 
-    gtag('config', 'G-DSFGB7W27J');
+    gtag('config', 'G-X9PB6Q8VT6');
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${esc(opts.title)}</title>
