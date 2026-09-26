@@ -289,7 +289,13 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 
 
 /* ---------- screenshot lightbox (click a thumbnail to enlarge + download) ---------- */
-.shot.zoomable{cursor:zoom-in}
+/* Whole-card link: the portal name <a> stretches over its card (real anchor, Cmd+click works). */
+.card,.col-item{position:relative}
+.card-link{color:inherit;text-decoration:none}
+.card-link::after{content:"";position:absolute;inset:0;z-index:0}
+.card-link:focus-visible{outline:none}
+.card-link:focus-visible::after{outline:2px solid var(--cf-orange);outline-offset:-2px;border-radius:inherit}
+.card .visit,.card .analysis-toggle,.card .manual-open{position:relative;z-index:1}
 
 .lb{position:fixed;inset:0;z-index:120;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px}
 .lb[hidden]{display:none}

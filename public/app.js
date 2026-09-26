@@ -313,13 +313,12 @@ function card(c) {
       : "";
   const mobile = state.device === "mobile";
   const shot = shotFor(c);
-  const zoom = !c.sample && c.status !== "error" && !!shot.src;
   const inner = shot.missing
     ? `<div class="shot-missing">No mobile capture yet</div>`
     : `<img loading="lazy" src="${esc(shot.src)}" alt="${esc(c.portal)} ${mobile ? "mobile" : "landing"} page" />`;
   return `
   <article class="card">
-    <div class="shot${mobile ? " mobile" : ""}${zoom ? " zoomable" : ""}" style="--brand:${esc(c.brand)}"${zoom ? ` data-full="${esc(shot.src)}" data-title="${esc(c.portal)}" data-file="${esc(c.slug)}-${esc(c.week)}${mobile ? "-mobile" : ""}"` : ""}>
+    <div class="shot${mobile ? " mobile" : ""}" style="--brand:${esc(c.brand)}">
       ${badge}
       ${inner}
     </div>
@@ -330,7 +329,7 @@ function card(c) {
             <img alt="" loading="lazy" />
           </span>
           <div>
-            <div class="portal-name">${esc(c.portal)}</div>
+            <div class="portal-name"><a class="card-link" href="/portals/${esc(c.slug)}">${esc(c.portal)}</a></div>
             <div class="portal-co">${esc(c.company)}</div>
           </div>
         </div>
@@ -464,16 +463,13 @@ function renderCollection() {
       const inner = shot.missing
         ? `<div class="shot-missing">No mobile capture yet</div>`
         : `<img loading="lazy" src="${esc(shot.src)}" alt="${esc(c.portal)} ${mobile ? "mobile" : "landing"} page" />`;
-      const zoomAttrs = shot.src
-        ? ` zoomable" data-full="${esc(shot.src)}" data-title="${esc(c.portal)}" data-file="${esc(c.slug)}-${esc(c.week)}${mobile ? "-mobile" : ""}`
-        : `"`;
       return `
     <figure class="col-item">
-      <div class="shot${mobile ? " mobile" : ""}${zoomAttrs} style="--brand:${esc(c.brand)}">
+      <div class="shot${mobile ? " mobile" : ""}" style="--brand:${esc(c.brand)}">
         ${inner}
       </div>
       <figcaption class="col-cap">
-        <span class="col-name"><span class="brand-dot" style="background:${esc(c.brand)}"></span>${esc(c.portal)}</span>
+        <span class="col-name"><span class="brand-dot" style="background:${esc(c.brand)}"></span><a class="card-link" href="/portals/${esc(c.slug)}">${esc(c.portal)}</a></span>
       </figcaption>
     </figure>`;
     })
