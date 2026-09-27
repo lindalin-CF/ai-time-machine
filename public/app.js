@@ -27,11 +27,6 @@ const esc = (s) =>
   String(s ?? "").replace(/[&<>"']/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-function domainOf(url) {
-  try { return new URL(url).hostname.replace(/^www\./, ""); }
-  catch { return ""; }
-}
-
 async function getJSON(url) {
   const r = await fetch(url, { headers: { accept: "application/json" } });
   if (!r.ok) throw new Error(`${url} -> ${r.status}`);
@@ -285,16 +280,21 @@ function renderGrid() {
   wireBrandLogos();
 }
 
-// Load each portal's favicon as its logo; fall back to the brand colour swatch
-// if it fails to load (or there's no usable domain).
+// Load each portal's icon (self-hosted, saved by scripts/fetch-icons.mjs) as its logo; fall back
+// to the brand colour swatch if it fails to load.
 function wireBrandLogos() {
   $("#grid").querySelectorAll(".brand-logo").forEach((box) => {
-    const domain = box.dataset.domain;
+    const icon = box.dataset.icon;
     const img = box.querySelector("img");
-    if (!domain || !img) { box.classList.add("is-fallback"); return; }
+    if (!icon || !img) { box.classList.add("is-fallback"); return; }
     img.addEventListener("error", () => box.classList.add("is-fallback"), { once: true });
-    img.src = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`;
+    img.src = icon;
   });
+}
+
+/** Self-hosted portal icon (public/icons/<slug>.png). */
+function iconUrl(slug) {
+  return `/icons/${encodeURIComponent(slug)}.png`;
 }
 
 // Collapse long design-analysis text to 5 lines; only show the toggle when it
@@ -361,7 +361,7 @@ function card(c) {
     <div class="card-body">
       <div class="card-head">
         <div class="portal-id">
-          <span class="brand-logo" style="--brand:${esc(c.brand)}" data-domain="${esc(domainOf(c.url))}" title="${esc(c.company)}">
+          <span class="brand-logo" style="--brand:${esc(c.brand)}" data-icon="${esc(iconUrl(c.slug))}" title="${esc(c.company)}">
             <img alt="" loading="lazy" />
           </span>
           <div>
@@ -1302,13 +1302,13 @@ async function renderAnTable() {
       const caps = await anCapturesFor(an.week);
       columns = state.portals
         .filter((p) => an.portals.has(p.slug))
-        .map((p) => ({ label: p.name, domain: domainOf(p.url), cap: caps.find((c) => c.slug === p.slug) }));
+        .map((p) => ({ label: p.name, icon: p.slug, cap: caps.find((c) => c.slug === p.slug) }));
     } else {
       if (!an.portal || an.weeks.size === 0) { wrap.innerHTML = anEmpty("Pick a portal and at least one week to compare."); return; }
       const weeks = state.weeks.map((w) => w.week).filter((w) => an.weeks.has(w));
       const capsByWeek = await Promise.all(weeks.map((w) => anCapturesFor(w)));
       const p = state.portals.find((pp) => pp.slug === an.portal);
-      columns = weeks.map((w, i) => ({ label: shortWeekLabel(w), domain: i === 0 ? domainOf(p?.url || "") : "", cap: capsByWeek[i].find((c) => c.slug === an.portal) }));
+      columns = weeks.map((w, i) => ({ label: shortWeekLabel(w), icon: i === 0 && p ? p.slug : "", cap: capsByWeek[i].find((c) => c.slug === an.portal) }));
     }
   } catch {
     wrap.innerHTML = anEmpty("Could not load comparison data.");
@@ -1319,7 +1319,7 @@ async function renderAnTable() {
 
 function anTableHTML(cols) {
   const head = `<tr><th class="an-rowhead"></th>${cols.map((c) =>
-    `<th class="an-colhead">${c.domain ? `<span class="an-logo"><img alt="" loading="lazy" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(c.domain)}&sz=64" /></span>` : ""}<span>${esc(c.label)}</span></th>`
+    `<th class="an-colhead">${c.icon ? `<span class="an-logo"><img alt="" loading="lazy" src="${esc(iconUrl(c.icon))}" onerror="this.parentNode.remove()" /></span>` : ""}<span>${esc(c.label)}</span></th>`
   ).join("")}</tr>`;
 
   const rows = [];
