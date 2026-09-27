@@ -2,6 +2,7 @@ import type { Env } from "./types";
 import { statsPayload, capturesPayload } from "./api";
 import { latestWeek } from "./db";
 import { esc } from "./portal-page";
+import { consentMode, withConsentAttr } from "./consent";
 
 type Stats = Awaited<ReturnType<typeof statsPayload>>;
 type Captures = { label: string; captures: { slug: string; portal: string; company: string; status: string }[] } | null;
@@ -33,6 +34,8 @@ export async function handleHomepage(request: Request, env: Env): Promise<Respon
   const headers = new Headers(asset.headers);
   headers.delete("content-length");
   headers.delete("etag");
+  // The page carries this visitor's consent region, so no shared cache may store it.
+  headers.set("cache-control", "private, no-cache");
 
   let body = html;
   try {
@@ -42,5 +45,6 @@ export async function handleHomepage(request: Request, env: Env): Promise<Respon
   } catch (err) {
     console.error("homepage render failed; serving the static page:", err);
   }
+  body = withConsentAttr(body, consentMode(request));
   return new Response(request.method === "HEAD" ? null : body, { status: asset.status, headers });
 }

@@ -18,7 +18,9 @@
       "/portals/*",
       "/sitemap.xml",
       "/how-we-analyze",
-      "/how-we-analyze/"
+      "/how-we-analyze/",
+      "/privacy",
+      "/privacy/"
     ]
   },
   "observability": {

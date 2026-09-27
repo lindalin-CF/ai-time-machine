@@ -2,6 +2,7 @@ import type { Env, CaptureRow } from "./types";
 import { getPortal, latestCaptureForPortal, captureForPortalWeek, captureWeeksForPortal, sitemapCaptures } from "./db";
 import { isPublishedAnalysis, displayedAnalysis, SYSTEM_TEST_WEEKS } from "./analysis";
 import { cached } from "./api";
+import { consentMode, PRIVATE_HTML_CACHE, type ConsentMode } from "./consent";
 
 export const ORIGIN = "https://ai-portal-library.dev";
 const HTML_HEADERS = { "content-type": "text/html; charset=utf-8" };
@@ -20,8 +21,8 @@ function shortText(s: string, max: number): string {
   return t.length <= max ? t : t.slice(0, max - 1).replace(/\s+\S*$/, "") + "…";
 }
 
-/** Footer copyright line + Disclaimer and Contact dialogs. The homepage (public/index.html) carries the same markup; both use /footer-dialogs.js. */
-const FOOTER_LEGAL = `      <div class="legal">&copy; 2026 AI Interface Library. All rights reserved. &middot; <button type="button" class="linkbtn" data-dialog="disclaimer" aria-haspopup="dialog">Disclaimer</button> &middot; <button type="button" class="linkbtn" data-dialog="contact" aria-haspopup="dialog">Contact</button></div>
+/** Footer copyright line (with Privacy and Cookie preferences) + Disclaimer and Contact dialogs. The homepage (public/index.html) carries the same markup; both use /footer-dialogs.js. */
+const FOOTER_LEGAL = `      <div class="legal">&copy; 2026 AI Interface Library. All rights reserved. &middot; <button type="button" class="linkbtn" data-dialog="disclaimer" aria-haspopup="dialog">Disclaimer</button> &middot; <button type="button" class="linkbtn" data-dialog="contact" aria-haspopup="dialog">Contact</button> &middot; <a href="/privacy">Privacy</a> &middot; <button type="button" class="linkbtn" data-consent-open>Cookie preferences</button></div>
       <dialog id="disclaimer" class="site-dialog" aria-labelledby="disclaimer-title">
         <form method="dialog">
           <button type="submit" class="site-dialog-x" aria-label="Close">&times;</button>
@@ -42,20 +43,13 @@ const FOOTER_LEGAL = `      <div class="legal">&copy; 2026 AI Interface Library.
         </form>
       </dialog>`;
 
-function page(opts: { title: string; description: string; canonical?: string; noindex?: boolean; body: string }): string {
+function page(opts: { title: string; description: string; canonical?: string; noindex?: boolean; consent: ConsentMode; body: string }): string {
   return `<!doctype html>
-<html lang="en">
+<html lang="en" data-consent="${opts.consent}">
 <head>
   <meta charset="utf-8" />
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-X9PB6Q8VT6"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-X9PB6Q8VT6');
-  </script>
+  <!-- Analytics load only as public/consent.js allows (region, stored choice, Global Privacy Control). -->
+  <script src="/consent.js" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${esc(opts.title)}</title>
   <meta name="description" content="${esc(opts.description)}" />
@@ -120,14 +114,15 @@ ${FOOTER_LEGAL}
 </html>`;
 }
 
-function notFound(): Response {
+function notFound(request: Request): Response {
   const html = page({
+    consent: consentMode(request),
     title: "Portal not found | AI Interface Library",
     description: "This portal page does not exist.",
     noindex: true,
     body: `    <main><h1>Portal not found</h1><p><a href="/">Browse the AI Interface Library</a></p></main>`,
   });
-  return new Response(html, { status: 404, headers: HTML_HEADERS });
+  return new Response(html, { status: 404, headers: { ...HTML_HEADERS, "cache-control": PRIVATE_HTML_CACHE } });
 }
 
 /** True for a real calendar date written YYYY-MM-DD. */
@@ -141,21 +136,21 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
   if (request.method !== "GET" && request.method !== "HEAD") return new Response("method not allowed", { status: 405 });
   const url = new URL(request.url);
   let parts: string[];
-  try { parts = url.pathname.replace(/^\/portals\//, "").replace(/\/$/, "").split("/").map(decodeURIComponent); } catch { return notFound(); }
-  if (parts.length < 1 || parts.length > 2) return notFound();
+  try { parts = url.pathname.replace(/^\/portals\//, "").replace(/\/$/, "").split("/").map(decodeURIComponent); } catch { return notFound(request); }
+  if (parts.length < 1 || parts.length > 2) return notFound(request);
   const slug = parts[0];
   const weekParam = parts.length === 2 ? parts[1] : null;
-  if (!/^[a-z0-9-]+$/.test(slug)) return notFound();
-  if (weekParam !== null && !isValidWeek(weekParam)) return notFound();
+  if (!/^[a-z0-9-]+$/.test(slug)) return notFound(request);
+  if (weekParam !== null && !isValidWeek(weekParam)) return notFound(request);
 
   const portal = await getPortal(env, slug);
-  if (!portal || !portal.active) return notFound();
+  if (!portal || !portal.active) return notFound(request);
 
   const cap: CaptureRow | null = weekParam === null
     ? await latestCaptureForPortal(env, slug)
     : await captureForPortalWeek(env, slug, weekParam);
   // A weekly URL must have a successful capture; the bare portal URL still renders an empty state.
-  if (weekParam !== null && !cap) return notFound();
+  if (weekParam !== null && !cap) return notFound(request);
 
   const weeks = await captureWeeksForPortal(env, slug); // newest first
   const latestWeek = weeks[0] ?? null;
@@ -202,6 +197,7 @@ ${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screens
     </main>`;
 
   const html = page({
+    consent: consentMode(request),
     title: weekParam !== null
       ? `${name} — logged-in UI screenshots, week of ${weekParam} | AI Interface Library`
       : `${name} — logged-in UI screenshots | AI Interface Library`,
@@ -211,7 +207,7 @@ ${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screens
     body,
   });
   return new Response(request.method === "HEAD" ? null : html, {
-    headers: { ...HTML_HEADERS, "cache-control": "public, max-age=300" },
+    headers: { ...HTML_HEADERS, "cache-control": PRIVATE_HTML_CACHE },
   });
 }
 
@@ -247,13 +243,83 @@ const HOW_WE_ANALYZE = `    <main class="howto">
 export function handleHowWeAnalyze(request: Request): Response {
   if (request.method !== "GET" && request.method !== "HEAD") return new Response("method not allowed", { status: 405 });
   const html = page({
+    consent: consentMode(request),
     title: "How we analyze | AI Interface Library",
     description: "How AI Interface Library captures AI product screens each week and analyzes their layout, visual hierarchy, text contrast and starting points, and what the analysis does not claim.",
     canonical: `${ORIGIN}/how-we-analyze`,
     body: HOW_WE_ANALYZE,
   });
   return new Response(request.method === "HEAD" ? null : html, {
-    headers: { ...HTML_HEADERS, "cache-control": "public, max-age=300" },
+    headers: { ...HTML_HEADERS, "cache-control": PRIVATE_HTML_CACHE },
+  });
+}
+
+export const PRIVACY_UPDATED = "September 27, 2026";
+
+const PRIVACY = `    <main class="howto">
+      <h1>Privacy</h1>
+      <p class="meta">Last updated: ${PRIVACY_UPDATED}</p>
+      <h2>Who runs this site</h2>
+      <p>AI Interface Library (ai-portal-library.dev) is an independent personal project run by one person. It is not a company and is not affiliated with any of the products it shows.</p>
+      <h2>The short version</h2>
+      <ul>
+        <li>There are no accounts and no sign-ups.</li>
+        <li>There are no ads, and your data is never sold.</li>
+        <li>Google Analytics and Microsoft Clarity show how the site is used. You can turn them off at any time.</li>
+        <li>Cloudflare Web Analytics also counts page views, without cookies.</li>
+      </ul>
+      <h2>Google Analytics</h2>
+      <p>When analytics are allowed, the site loads Google Analytics. It records the pages you view, the site you came from, your browser, device type, screen size and language, your approximate location based on your IP address, and simple actions such as scrolling and clicks on links to other sites. It sets cookies whose names start with _ga to recognize return visits. Advertising features are turned off.</p>
+      <h2>Microsoft Clarity</h2>
+      <p>When analytics are allowed, the site also loads Microsoft Clarity. Clarity records how pages are used, such as clicks, taps, mouse movement and scrolling, so the visit can be replayed as a session recording and summarized as heatmaps. It also records your browser, device, screen size and approximate location based on your IP address. It sets cookies named _clck and _clsk to connect the pages of one visit, and Microsoft may set its own cookies on its domains.</p>
+      <p>Clarity masks anything you type into a text box on this site, such as the search box or the voice guide&#39;s question box, so it is never sent to Microsoft. The voice guide&#39;s conversation panel is masked in full.</p>
+      <h2>When Google Analytics and Clarity load</h2>
+      <ul>
+        <li>Visitors in the European Economic Area, the UK and Switzerland are asked first. Nothing loads until you choose Accept.</li>
+        <li>Visitors elsewhere get analytics by default and can decline at any time with Cookie preferences at the bottom of every page.</li>
+        <li>If your country can&#39;t be determined, you are asked first.</li>
+        <li>If your browser sends a Global Privacy Control signal, analytics never load and you are not asked.</li>
+        <li>Your choice is saved in your browser&#39;s local storage so the site remembers it. If you decline after accepting, analytics stop loading from the next page you open, and the site removes the Google Analytics and Clarity cookies it can reach. Clearing your browser&#39;s data for this site resets your choice.</li>
+      </ul>
+      <h2>The voice guide</h2>
+      <p>The &quot;Talk to the library&quot; guide answers questions about the screenshots in the library. It connects only when you open it.</p>
+      <ul>
+        <li>Each browser tab has its own conversation, identified by a random code that is kept only in that tab. Other visitors can&#39;t see your questions or the answers, and your conversation is never used to answer anyone else.</li>
+        <li>Questions you type are sent as text to this site&#39;s server, which runs on Cloudflare.</li>
+        <li>If you start a call, your browser asks for microphone access first. While the call is on, your voice is streamed to this site&#39;s server, turned into text, answered, and read back to you. All three steps run on Cloudflare Workers AI, using Deepgram Flux for speech to text, OpenAI gpt-oss-120b for the answer and Deepgram Aura-1 for speech. This site does not save the audio.</li>
+        <li>The text of your questions and the answers is saved with your conversation on Cloudflare, so the guide can follow up on what you asked before. It is deleted 24 hours after your last message.</li>
+        <li>Nothing from the voice guide is sent to Google or Microsoft.</li>
+      </ul>
+      <h2>Hosting</h2>
+      <p>The site is hosted on Cloudflare. Like any web host, Cloudflare processes your IP address and request details to deliver pages and protect the site from abuse, and keeps request logs for a short time. Fonts and product icons are served from this site, not from other companies.</p>
+      <h2>Cloudflare Web Analytics</h2>
+      <p>Cloudflare adds its Web Analytics script to every page, for every visitor. It counts page views and measures how quickly pages load, using the page address, the site you came from, your browser and device type, page load timings, and your country, which Cloudflare works out from your IP address. According to Cloudflare, it uses no cookies or local storage, does not fingerprint visitors or track them across sites, and does not collect or use visitors&#39; personal data.</p>
+      <h2>Your choices</h2>
+      <p>You can change your choice at any time with Cookie preferences at the bottom of every page. You can also block cookies in your browser or turn on Global Privacy Control. For questions or requests about your data, email <a href="mailto:contact@ai-portal-library.dev">contact@ai-portal-library.dev</a>.</p>
+      <h2>Privacy statements from these services</h2>
+      <ul>
+        <li><a href="https://policies.google.com/privacy">Google Privacy Policy</a></li>
+        <li><a href="https://policies.google.com/technologies/partner-sites">How Google uses information from sites that use its services</a></li>
+        <li><a href="https://www.microsoft.com/privacy/privacystatement">Microsoft Privacy Statement</a></li>
+        <li><a href="https://www.cloudflare.com/privacypolicy/">Cloudflare Privacy Policy</a></li>
+        <li><a href="https://blog.cloudflare.com/privacy-first-web-analytics/">Cloudflare, privacy-first Web Analytics</a></li>
+      </ul>
+      <h2>Changes</h2>
+      <p>When this page changes, the date at the top is updated.</p>
+    </main>`;
+
+/** /privacy: what the site and its analytics collect, and how to decline. */
+export function handlePrivacy(request: Request): Response {
+  if (request.method !== "GET" && request.method !== "HEAD") return new Response("method not allowed", { status: 405 });
+  const html = page({
+    consent: consentMode(request),
+    title: "Privacy | AI Interface Library",
+    description: "What AI Interface Library collects: Google Analytics and Microsoft Clarity only with your permission where required, what the voice guide sends, and how to decline at any time.",
+    canonical: `${ORIGIN}/privacy`,
+    body: PRIVACY,
+  });
+  return new Response(request.method === "HEAD" ? null : html, {
+    headers: { ...HTML_HEADERS, "cache-control": PRIVATE_HTML_CACHE },
   });
 }
 
@@ -261,7 +327,7 @@ export function handleHowWeAnalyze(request: Request): Response {
 export async function handleSitemap(env: Env): Promise<Response> {
   const xml = await cached(env, "cache:sitemap", 300, async () => {
     const rows = (await sitemapCaptures(env)).filter((r) => !SYSTEM_TEST_WEEKS.includes(r.week)); // portal order, newest week first
-    const urls = [`${ORIGIN}/`, `${ORIGIN}/how-we-analyze`];
+    const urls = [`${ORIGIN}/`, `${ORIGIN}/how-we-analyze`, `${ORIGIN}/privacy`];
     const seen = new Set<string>();
     for (const r of rows) {
       if (!seen.has(r.slug)) { seen.add(r.slug); urls.push(`${ORIGIN}/portals/${r.slug}`); }

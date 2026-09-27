@@ -2,15 +2,8 @@
 <html lang="en" data-theme="kumo">
 <head>
   <meta charset="utf-8" />
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-X9PB6Q8VT6"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-X9PB6Q8VT6');
-  </script>
+  <!-- Analytics load only as /consent.js allows. The Worker adds data-consent to <html> per request (src/consent.ts); never put it in this file. -->
+  <script src="/consent.js" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script>document.documentElement.classList.add("js")</script>
   <title>AI Interface Library</title>
@@ -210,7 +203,7 @@
       <strong>AI Interface Library</strong>
       <span>Weekly UI reference for AI products</span>
       <span>Independent personal project. Not affiliated with any of the companies featured.</span>
-      <span class="foot-legal">&copy; 2026 AI Interface Library. All rights reserved. &middot; <button type="button" class="linkbtn" data-dialog="disclaimer" aria-haspopup="dialog">Disclaimer</button> &middot; <button type="button" class="linkbtn" data-dialog="contact" aria-haspopup="dialog">Contact</button></span>
+      <span class="foot-legal">&copy; 2026 AI Interface Library. All rights reserved. &middot; <button type="button" class="linkbtn" data-dialog="disclaimer" aria-haspopup="dialog">Disclaimer</button> &middot; <button type="button" class="linkbtn" data-dialog="contact" aria-haspopup="dialog">Contact</button> &middot; <a href="/privacy">Privacy</a> &middot; <button type="button" class="linkbtn" data-consent-open>Cookie preferences</button></span>
     </div>
     <!-- Same markup as FOOTER_LEGAL in src/portal-page.ts; behaviour in /footer-dialogs.js. -->
     <dialog id="disclaimer" class="site-dialog" aria-labelledby="disclaimer-title">

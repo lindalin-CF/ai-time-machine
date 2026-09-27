@@ -115,6 +115,8 @@ const panel = document.createElement("section");
 panel.className = "voice-panel";
 panel.setAttribute("role", "dialog");
 panel.setAttribute("aria-label", "Voice assistant");
+// Clarity (public/consent.js) never records what is asked or answered here.
+panel.setAttribute("data-clarity-mask", "True");
 panel.innerHTML = `
   <div class="vp-head">
     <div class="vp-title"><span class="vp-orb" id="vpOrb"></span> Library voice guide <span class="vp-beta">beta</span></div>
