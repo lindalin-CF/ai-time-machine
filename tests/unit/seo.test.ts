@@ -99,6 +99,7 @@ describe('/sitemap.xml', () => {
   it('lists the homepage, each portal and each captured week, without system-test weeks', async () => {
     expect(await locs()).toEqual([
       `${ORIGIN}/`,
+      `${ORIGIN}/how-we-analyze`,
       `${ORIGIN}/portals/claude`,
       `${ORIGIN}/portals/claude/2026-09-21`,
       `${ORIGIN}/portals/claude/2026-09-14`,

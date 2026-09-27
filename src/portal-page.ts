@@ -28,6 +28,7 @@ const FOOTER_LEGAL = `      <div class="legal">&copy; 2026 AI Interface Library.
           <h2 id="disclaimer-title">Disclaimer</h2>
           <p>Product screenshots, logos, and trademarks belong to their respective owners. AI Interface Library is an independent project, unaffiliated with the brands featured.</p>
           <p>Content is for reference and research. Screenshots may differ from current interfaces.</p>
+          <p><a href="/how-we-analyze">Learn how the design analysis is made.</a></p>
           <div class="site-dialog-actions"><button type="submit" class="site-dialog-close">Close</button></div>
         </form>
       </dialog>
@@ -80,6 +81,10 @@ ${opts.noindex ? '  <meta name="robots" content="noindex" />\n' : ""}${opts.cano
     .desktop{flex:1 1 560px}.mobile{flex:0 1 240px}
     figcaption{font-size:.85rem;color:#6b6257;margin-top:6px}
     .analysis{white-space:pre-line;margin:32px 0}
+    .method{font-size:.85rem;color:#6b6257}
+    .howto h2{font-size:1.25rem;margin:32px 0 8px}
+    .howto ul{padding-left:1.25em}
+    .howto li{margin:0 0 6px}
     footer{border-top:1px solid #d8cfc2;margin-top:48px;padding-top:16px;font-size:.85rem;color:#6b6257}
     .legal{margin-top:4px}
     .linkbtn{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer}
@@ -193,7 +198,7 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
       <h1>${esc(name)}</h1>
       <p class="meta">${esc(portal.company)}${cap ? ` &middot; captured week of ${esc(cap.week)}` : ""}</p>
 ${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screenshots">\n${shots}      </section>
-      <section class="analysis"><h2>Design analysis</h2><p>${esc(displayedAnalysis(cap))}</p></section>` : `      <p>No captures yet for ${esc(name)}.</p>`}
+      <section class="analysis"><h2>Design analysis</h2><p>${esc(displayedAnalysis(cap))}</p><p class="method"><a href="/how-we-analyze">How this analysis is made</a></p></section>` : `      <p>No captures yet for ${esc(name)}.</p>`}
     </main>`;
 
   const html = page({
@@ -210,11 +215,53 @@ ${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screens
   });
 }
 
+const HOW_WE_ANALYZE = `    <main class="howto">
+      <h1>How we analyze</h1>
+      <p>Each week, this site captures the screen of each AI product right after signing in, on a desktop screen 1280 by 800 pixels, before scrolling. Each screenshot then gets a short design analysis.</p>
+      <h2>What we look at</h2>
+      <ul>
+        <li>Layout: where the main areas sit, such as the sidebar and the message box, and how much of the screen they take.</li>
+        <li>What stands out most: which items carry the most visual weight, based on their size and contrast.</li>
+        <li>Text and color: whether text is light or dark enough against its background to meet common accessibility guidelines.</li>
+        <li>Where you start: the message box, suggested prompts, and whether the product says it can make mistakes.</li>
+      </ul>
+      <h2>How we measure</h2>
+      <p>Colors, contrast and sizes are measured from the screenshot pixels with a script, using the contrast formula from the Web Content Accessibility Guidelines (WCAG 2.2). Other observations, such as what stands out most, are made by an AI model following a fixed checklist. A person reviews every analysis before it is published.</p>
+      <h2>What we don&#39;t claim</h2>
+      <p>An analysis only describes what is visible in one screenshot. It does not judge whether a product is easy to use, predict what people will do, or certify that a product meets accessibility standards. Measurements taken from a screenshot are close estimates, not official test results. Mobile screenshots are shown but not analyzed.</p>
+      <h2>Week-to-week changes</h2>
+      <p>When the previous week&#39;s analysis exists, the two weeks are compared. Differences that could come from the account, the time of day or a rotating greeting are not reported as redesigns.</p>
+      <h2>Special cases</h2>
+      <p>Kimi is captured while signed out, because no account is used for it. Muse always opens on a conversation, so only the interface around it is analyzed.</p>
+      <h2>Privacy</h2>
+      <p>Screenshots come from real accounts. Names, conversation titles and other account details are left out of every analysis, and are covered in the screenshots where possible.</p>
+      <h2>Sources</h2>
+      <ul>
+        <li><a href="https://www.w3.org/TR/WCAG22/">W3C, Web Content Accessibility Guidelines (WCAG) 2.2</a></li>
+        <li><a href="https://www.nngroup.com/articles/visual-hierarchy-ux-definition/">Nielsen Norman Group, visual hierarchy in UX</a></li>
+        <li><a href="https://doi.org/10.1145/3290605.3300233">Amershi et al., Guidelines for Human-AI Interaction (CHI 2019)</a></li>
+      </ul>
+    </main>`;
+
+/** /how-we-analyze: how the weekly screenshots and design analyses are made. */
+export function handleHowWeAnalyze(request: Request): Response {
+  if (request.method !== "GET" && request.method !== "HEAD") return new Response("method not allowed", { status: 405 });
+  const html = page({
+    title: "How we analyze | AI Interface Library",
+    description: "How AI Interface Library captures AI product screens each week and analyzes their layout, visual hierarchy, text contrast and starting points, and what the analysis does not claim.",
+    canonical: `${ORIGIN}/how-we-analyze`,
+    body: HOW_WE_ANALYZE,
+  });
+  return new Response(request.method === "HEAD" ? null : html, {
+    headers: { ...HTML_HEADERS, "cache-control": "public, max-age=300" },
+  });
+}
+
 /** Sitemap: home, then every active portal's page and its weekly pages, leaving out the system-test weeks. */
 export async function handleSitemap(env: Env): Promise<Response> {
   const xml = await cached(env, "cache:sitemap", 300, async () => {
     const rows = (await sitemapCaptures(env)).filter((r) => !SYSTEM_TEST_WEEKS.includes(r.week)); // portal order, newest week first
-    const urls = [`${ORIGIN}/`];
+    const urls = [`${ORIGIN}/`, `${ORIGIN}/how-we-analyze`];
     const seen = new Set<string>();
     for (const r of rows) {
       if (!seen.has(r.slug)) { seen.add(r.slug); urls.push(`${ORIGIN}/portals/${r.slug}`); }

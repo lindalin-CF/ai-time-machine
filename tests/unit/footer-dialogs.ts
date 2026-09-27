@@ -35,6 +35,9 @@ export function expectFooterDialogs(html: string): void {
   const disclaimer = expectClosedDialog(html, 'disclaimer', 'Disclaimer');
   expect(disclaimer).toContain('<p>Product screenshots, logos, and trademarks belong to their respective owners. AI Interface Library is an independent project, unaffiliated with the brands featured.</p>');
   expect(disclaimer).toContain('<p>Content is for reference and research. Screenshots may differ from current interfaces.</p>');
+  // The last line of the dialog links to the How we analyze page.
+  const paragraphs = disclaimer.match(/<p>[\s\S]*?<\/p>/g)!;
+  expect(paragraphs.at(-1)).toBe('<p><a href="/how-we-analyze">Learn how the design analysis is made.</a></p>');
 
   const contact = expectClosedDialog(html, 'contact', 'Contact');
   expect(contact).toContain('<p>For removal requests, corrections or questions, email:</p>');
