@@ -300,9 +300,6 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   background:var(--cf-text);color:var(--cf-bg-100);text-decoration:none}
 .contact-mail:hover{background:var(--cf-orange-ink)}
 @media(max-width:480px){.site-dialog form{padding:22px 18px 18px}}
-.foot-stack{list-style:none;display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0}
-.foot-stack li{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;color:var(--cf-text-soft);
-  border:1px solid var(--cf-border);padding:4px 9px;border-radius:999px}
 
 @media(max-width:640px){
   .hero{padding-top:16px}

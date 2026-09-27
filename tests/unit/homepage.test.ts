@@ -28,6 +28,8 @@ describe('homepage (public/index.html)', () => {
     const footer = html.match(/<footer class="sitefoot">[\s\S]*?<\/footer>/)![0];
     expect(footer).toContain('<span>Weekly UI reference for AI products</span>');
     expect(footer).not.toContain('served on Cloudflare');
+    expect(footer).not.toContain('foot-stack'); // technology tag row removed
+    expect(footer).not.toMatch(/<li>/);
     const sentence = footer.indexOf('Independent personal project. Not affiliated with any of the companies featured.');
     const legal = footer.indexOf(LEGAL_LINE);
     expect(sentence).toBeGreaterThan(-1);
