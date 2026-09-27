@@ -1,11 +1,12 @@
 import type { Env, CaptureRow } from "./types";
 import { getPortal, latestCaptureForPortal, captureForPortalWeek, captureWeeksForPortal, sitemapCaptures } from "./db";
-import { isPublishedAnalysis, displayedAnalysis } from "./analysis";
+import { isPublishedAnalysis, displayedAnalysis, SYSTEM_TEST_WEEKS } from "./analysis";
+import { cached } from "./api";
 
-const ORIGIN = "https://ai-portal-library.dev";
+export const ORIGIN = "https://ai-portal-library.dev";
 const HTML_HEADERS = { "content-type": "text/html; charset=utf-8" };
 
-function esc(s: unknown): string {
+export function esc(s: unknown): string {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 }
 
@@ -157,8 +158,8 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
   const prevWeek = curWeek ? weeks.find((w) => w < curWeek) ?? null : null; // nearest older
   const nextWeek = curWeek ? [...weeks].reverse().find((w) => w > curWeek) ?? null : null; // nearest newer
   const isLatest = !!curWeek && curWeek === latestWeek;
-  // The newest week's weekly page duplicates /portals/<slug>, so it canonicalises there.
-  const canonical = weekParam !== null && !isLatest ? `${ORIGIN}/portals/${slug}/${weekParam}` : `${ORIGIN}/portals/${slug}`;
+  // Every weekly page is its own canonical (and sitemap) URL, so it stays stable when a newer week arrives.
+  const canonical = weekParam !== null ? `${ORIGIN}/portals/${slug}/${weekParam}` : `${ORIGIN}/portals/${slug}`;
 
   const name = portal.name;
   // Meta description: guideline analyses only. The section text also shows the system-test note.
@@ -201,6 +202,7 @@ ${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screens
       : `${name} — logged-in UI screenshots | AI Interface Library`,
     description,
     canonical,
+    noindex: !!cap && SYSTEM_TEST_WEEKS.includes(cap.week),
     body,
   });
   return new Response(request.method === "HEAD" ? null : html, {
@@ -208,19 +210,21 @@ ${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screens
   });
 }
 
-/** Sitemap: home, every active portal's page, and its weekly pages older than its newest week. */
+/** Sitemap: home, then every active portal's page and its weekly pages, leaving out the system-test weeks. */
 export async function handleSitemap(env: Env): Promise<Response> {
-  const rows = await sitemapCaptures(env); // portal order, newest week first within a portal
-  const urls = [`${ORIGIN}/`];
-  const seen = new Set<string>();
-  for (const r of rows) {
-    if (!seen.has(r.slug)) { seen.add(r.slug); urls.push(`${ORIGIN}/portals/${r.slug}`); } // first row = newest week
-    else urls.push(`${ORIGIN}/portals/${r.slug}/${r.week}`);
-  }
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+  const xml = await cached(env, "cache:sitemap", 300, async () => {
+    const rows = (await sitemapCaptures(env)).filter((r) => !SYSTEM_TEST_WEEKS.includes(r.week)); // portal order, newest week first
+    const urls = [`${ORIGIN}/`];
+    const seen = new Set<string>();
+    for (const r of rows) {
+      if (!seen.has(r.slug)) { seen.add(r.slug); urls.push(`${ORIGIN}/portals/${r.slug}`); }
+      urls.push(`${ORIGIN}/portals/${r.slug}/${r.week}`);
+    }
+    return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map((u) => `  <url>\n    <loc>${esc(u)}</loc>\n  </url>`).join("\n")}
 </urlset>
 `;
+  });
   return new Response(xml, { headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" } });
 }

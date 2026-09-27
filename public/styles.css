@@ -206,6 +206,10 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 
 /* ---------- gallery ---------- */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:22px}
+.portal-index{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px 22px}
+.portal-index a{font-weight:600;color:var(--cf-text)}
+.portal-index span{color:var(--cf-text-soft);font-size:13.5px}
+.js .portal-index{display:none}
 .card{
   background:var(--cf-bg-100);border:1px solid var(--cf-border);border-radius:var(--radius);
   overflow:hidden;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;

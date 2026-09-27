@@ -12,6 +12,9 @@ const FORBIDDEN_SUMMARY: [RegExp, string][] = [
   [/WCAG/i, "WCAG reference"],
 ];
 
+/** Early system-test weeks (migration 0007): kept on the site, but noindex and left out of the sitemap. */
+export const SYSTEM_TEST_WEEKS: readonly string[] = ["2026-07-20", "2026-08-03", "2026-08-10"];
+
 export const ANALYSIS_SOON = "Design analysis coming soon.";
 
 type AnalysisFields = { analysis?: string | null; analysis_by?: string | null };

@@ -56,13 +56,35 @@ function shapeCapture(row: CaptureRow) {
 }
 
 /** Cache-through a JSON payload in KV for `ttl` seconds. */
-async function cached<T>(env: Env, key: string, ttl: number, build: () => Promise<T>): Promise<T> {
+export async function cached<T>(env: Env, key: string, ttl: number, build: () => Promise<T>): Promise<T> {
   const scopedKey = `${CACHE_VERSION}:${key}`;
   const hit = await env.CACHE.get(scopedKey, "json");
   if (hit) return hit as T;
   const fresh = await build();
   await env.CACHE.put(scopedKey, JSON.stringify(fresh), { expirationTtl: ttl });
   return fresh;
+}
+
+/** Screenshot, portal and week counts (GET /api/stats and the server-rendered homepage). */
+export async function statsPayload(env: Env): Promise<{ screenshots: number; portals: number; weeks: number }> {
+  return await cached(env, "cache:stats", 300, async () => {
+    const [shots, portals, weeks] = await Promise.all([
+      env.DB.prepare(`SELECT COUNT(*) AS n FROM captures c JOIN portals p ON p.slug = c.slug WHERE c.status='ok' AND p.active=1`).first<{ n: number }>(),
+      env.DB.prepare(`SELECT COUNT(*) AS n FROM portals WHERE active=1`).first<{ n: number }>(),
+      env.DB.prepare(`SELECT COUNT(*) AS n FROM weeks`).first<{ n: number }>(),
+    ]);
+    return { screenshots: shots?.n ?? 0, portals: portals?.n ?? 0, weeks: weeks?.n ?? 0 };
+  });
+}
+
+/** One week's captures (GET /api/captures and the server-rendered homepage). */
+export async function capturesPayload(env: Env, week: string) {
+  return await cached(env, `cache:captures:${week}`, 300, async () => {
+    const rows = await capturesForWeek(env, week);
+    const weeks = await listWeeks(env);
+    const label = weeks.find((w) => w.week === week)?.label ?? week;
+    return { week, label, captures: rows.map(shapeCapture) };
+  });
 }
 
 export async function handleApi(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -84,31 +106,14 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     return json({ weeks: data });
   }
 
-  if (path === "/api/stats") {
-    const data = await cached(env, "cache:stats", 300, async () => {
-      const [shots, portals, weeks] = await Promise.all([
-        env.DB.prepare(`SELECT COUNT(*) AS n FROM captures c JOIN portals p ON p.slug = c.slug WHERE c.status='ok' AND p.active=1`).first<{ n: number }>(),
-        env.DB.prepare(`SELECT COUNT(*) AS n FROM portals WHERE active=1`).first<{ n: number }>(),
-        env.DB.prepare(`SELECT COUNT(*) AS n FROM weeks`).first<{ n: number }>(),
-      ]);
-      return { screenshots: shots?.n ?? 0, portals: portals?.n ?? 0, weeks: weeks?.n ?? 0 };
-    });
-    return json(data);
-  }
+  if (path === "/api/stats") return json(await statsPayload(env));
 
   if (path === "/api/captures") {
     const requested = url.searchParams.get("week");
     const week = requested ?? (await latestWeek(env));
     if (!week) return json({ week: null, label: null, captures: [] });
-    const payload = await cached(env, `cache:captures:${week}`, 300, async () => {
-      const rows = await capturesForWeek(env, week);
-      const weeks = await listWeeks(env);
-      const label = weeks.find((w) => w.week === week)?.label ?? week;
-      return { week, label, captures: rows.map(shapeCapture) };
-    });
-    return json(payload);
+    return json(await capturesPayload(env, week));
   }
-
 
   // Manual snapshots uploaded from the UI: latest 6 per portal.
   if (path === "/api/manual" && request.method === "GET") {

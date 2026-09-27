@@ -69,7 +69,9 @@ async function boot() {
 function renderStats(s) {
   for (const key of ["screenshots", "portals", "weeks"]) {
     const el = document.querySelector(`[data-stat="${key}"]`);
-    if (el) countUp(el, Number(s[key] || 0));
+    const target = Number(s[key] || 0);
+    // The Worker already rendered the numbers into the page; only animate when they changed.
+    if (el && el.textContent !== String(target)) countUp(el, target);
   }
 }
 

@@ -10,8 +10,8 @@
     "directory": "./public",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    // API + image streaming run the Worker script first; everything else is a static file.
-    "run_worker_first": ["/agents/*", "/api/*", "/img/*", "/portals/*", "/sitemap.xml"]
+    // API, image streaming and the server-rendered pages (homepage, portals, sitemap) run the Worker first; everything else is a static file.
+    "run_worker_first": ["/", "/agents/*", "/api/*", "/img/*", "/portals/*", "/sitemap.xml"]
   },
 
   "observability": { "enabled": true },

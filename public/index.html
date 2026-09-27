@@ -12,8 +12,9 @@
     gtag('config', 'G-X9PB6Q8VT6');
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script>document.documentElement.classList.add("js")</script>
   <title>AI Interface Library</title>
-  <meta name="description" content="A weekly-captured reference library of the logged-in interfaces of major AI / LLM portals (not landing pages) — screenshots, design analysis and colour palettes." />
+  <meta name="description" content="A weekly archive of AI product interfaces, analysed for layout, hierarchy and colour as a UI/UX design system." />
   <link rel="canonical" href="https://ai-portal-library.dev/" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
@@ -116,6 +117,8 @@
     <!-- gallery -->
     <section class="grid" id="grid" aria-live="polite"></section>
     <div class="empty" id="empty" hidden>No captures for this filter yet.</div>
+    <!-- Filled by the Worker (src/homepage.ts) for crawlers and visitors without JavaScript; hidden when JS runs, since the cards link to the same pages. -->
+    <ul class="portal-index" id="portalIndex" aria-label="Portals this week"></ul>
 
     <!-- manual-observation search results (only while a search query is active) -->
     <section class="manual-results" id="manualResults" aria-live="polite" hidden>
