@@ -1344,13 +1344,11 @@ function anTableHTML(cols) {
 function anRow(label, tds) { return `<tr><th class="an-rowhead">${esc(label)}</th>${tds.join("")}</tr>`; }
 
 // ---- insights: manual memo feed -------------------------------------------
-let insightsInited = false;
-
 function renderInsightsList(items) {
   const list = $("#insightsList");
   if (!list) return;
   if (!items.length) {
-    list.innerHTML = `<div class="insight-empty">No updates yet. Post the first memo above.</div>`;
+    list.innerHTML = `<div class="insight-empty">No notes yet.</div>`;
     return;
   }
   list.innerHTML = items.map((it) => {
@@ -1384,50 +1382,6 @@ async function loadInsights() {
   }
 }
 
-function initInsights() {
-  if (insightsInited) return;
-  insightsInited = true;
-  const form = $("#insightForm");
-  if (!form) return;
-  const msg = $("#insightMsg");
-  const tokenInput = form.querySelector('input[name="token"]');
-  if (tokenInput) tokenInput.value = sessionStorage.getItem('manualUploadToken') || '';
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const fd = new FormData(form);
-    const files = form.querySelector('input[name="image"]')?.files;
-    if (files && files.length > 5) {
-      msg.textContent = 'Please choose at most 5 images.';
-      msg.classList.add('show');
-      return;
-    }
-    const token = String(fd.get('token') || '').trim();
-    sessionStorage.setItem('manualUploadToken', token);
-    msg.textContent = 'Posting…';
-    msg.classList.add('show');
-    const btn = form.querySelector('.insight-submit');
-    if (btn) { btn.disabled = true; btn.textContent = 'Posting…'; }
-    try {
-      const res = await fetch('/api/insights/upload', {
-        method: 'POST',
-        headers: { authorization: `Bearer ${token}` },
-        body: fd,
-      });
-      const out = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(out.error || `Post failed (${res.status})`);
-      form.reset();
-      if (tokenInput) tokenInput.value = token;
-      msg.textContent = 'Posted';
-      await loadInsights();
-      setTimeout(() => msg.classList.remove('show'), 1600);
-    } catch (err) {
-      msg.textContent = err.message || 'Post failed';
-    } finally {
-      if (btn) { btn.disabled = false; btn.textContent = 'Post update'; }
-    }
-  });
-}
-
 // ---- hash routing: gallery / collection / analytics / notes -----------------
 // The notes view is shown at #notes; #insights (its old name) still opens it so old links keep working.
 function route() {
@@ -1443,7 +1397,7 @@ function route() {
   );
   if (view === "collection") renderCollection();
   if (view === "analytics") enterAnalytics();
-  if (view === "insights") { initInsights(); loadInsights(); }
+  if (view === "insights") loadInsights();
   window.scrollTo(0, 0);
 }
 window.addEventListener("hashchange", route);

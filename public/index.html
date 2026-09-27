@@ -202,27 +202,6 @@
         <p class="insights-sub">Short notes on what changed across AI product interfaces, written by hand.</p>
       </div>
 
-      <form class="insight-form" id="insightForm">
-        <div class="insight-fields">
-          <label>Title
-            <input name="title" maxlength="120" placeholder="e.g. Claude shipped a new project picker" required />
-          </label>
-          <label>One-line description
-            <input name="description" maxlength="260" placeholder="Short memo for teammates…" />
-          </label>
-          <label>Upload token
-            <input name="token" type="password" autocomplete="off" placeholder="Upload token" required />
-          </label>
-        </div>
-        <label class="insight-file">
-          <input name="image" type="file" accept="image/*" multiple />
-          <span>Attach images</span>
-          <small>Optional · up to 5</small>
-        </label>
-        <button class="insight-submit" type="submit">Post update</button>
-        <p class="insight-msg" id="insightMsg"></p>
-      </form>
-
       <div class="insights-list" id="insightsList" aria-live="polite"></div>
     </section>
 
