@@ -28,9 +28,10 @@ describe('homepage (public/index.html)', () => {
     expect(footer).toContain('<span>Weekly UI reference for AI products</span>');
     expect(footer).not.toContain('served on Cloudflare');
     const sentence = footer.indexOf('Independent personal project. Not affiliated with any of the companies featured.');
-    const legal = footer.indexOf('&copy; 2026 AI Interface Library. All rights reserved. &middot; <button type="button" class="linkbtn" data-open-disclaimer aria-haspopup="dialog">Disclaimer</button>');
+    const legal = footer.indexOf('&copy; 2026 AI Interface Library. All rights reserved. &middot; <button type="button" class="linkbtn" data-open-disclaimer aria-haspopup="dialog">Disclaimer</button> &middot; <a class="linkbtn" href="mailto:contact@ai-portal-library.dev">Contact</a>');
     expect(sentence).toBeGreaterThan(-1);
     expect(legal).toBeGreaterThan(sentence);
+    expect(footer.match(/<a [^>]*>Contact<\/a>/g)).toEqual(['<a class="linkbtn" href="mailto:contact@ai-portal-library.dev">Contact</a>']);
   });
 
   it('includes the Disclaimer dialog, closed by default', () => {

@@ -31,7 +31,11 @@ describe.each(PAGES)('portal page %s', (path) => {
 
   it('keeps the footer sentence and adds the copyright line', () => {
     expect(html).toContain('Independent personal project. Not affiliated with any of the companies featured.');
-    expect(html).toContain('&copy; 2026 AI Interface Library. All rights reserved. &middot; <button type="button" class="linkbtn" data-open-disclaimer aria-haspopup="dialog">Disclaimer</button>');
+    expect(html).toContain('&copy; 2026 AI Interface Library. All rights reserved. &middot; <button type="button" class="linkbtn" data-open-disclaimer aria-haspopup="dialog">Disclaimer</button> &middot; <a class="linkbtn" href="mailto:contact@ai-portal-library.dev">Contact</a>');
+  });
+
+  it('has one Contact mailto link styled like the Disclaimer button', () => {
+    expect(html.match(/<a [^>]*>Contact<\/a>/g)).toEqual(['<a class="linkbtn" href="mailto:contact@ai-portal-library.dev">Contact</a>']);
   });
 
   it('includes the Disclaimer dialog, closed by default', () => {

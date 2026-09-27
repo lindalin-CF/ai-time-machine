@@ -20,7 +20,7 @@ function shortText(s: string, max: number): string {
 }
 
 /** Footer copyright line + Disclaimer dialog. The homepage (public/index.html) carries the same markup; both use /disclaimer.js. */
-const FOOTER_LEGAL = `      <div class="legal">&copy; 2026 AI Interface Library. All rights reserved. &middot; <button type="button" class="linkbtn" data-open-disclaimer aria-haspopup="dialog">Disclaimer</button></div>
+const FOOTER_LEGAL = `      <div class="legal">&copy; 2026 AI Interface Library. All rights reserved. &middot; <button type="button" class="linkbtn" data-open-disclaimer aria-haspopup="dialog">Disclaimer</button> &middot; <a class="linkbtn" href="mailto:contact@ai-portal-library.dev">Contact</a></div>
       <dialog id="disclaimer" class="disclaimer" aria-labelledby="disclaimer-title">
         <form method="dialog">
           <button type="submit" class="disclaimer-x" aria-label="Close">&times;</button>
