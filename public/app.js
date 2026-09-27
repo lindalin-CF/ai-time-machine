@@ -1375,12 +1375,12 @@ function renderInsightsList(items) {
 async function loadInsights() {
   const list = $("#insightsList");
   if (!list) return;
-  list.innerHTML = `<div class="insight-empty">Loading updates…</div>`;
+  list.innerHTML = `<div class="insight-empty">Loading notes…</div>`;
   try {
     const data = await getJSON('/api/insights');
     renderInsightsList(data.insights || []);
   } catch {
-    list.innerHTML = `<div class="insight-empty">Insights are not ready yet. Run the insights migration first.</div>`;
+    list.innerHTML = `<div class="insight-empty">Notes are not ready yet.</div>`;
   }
 }
 
@@ -1428,10 +1428,11 @@ function initInsights() {
   });
 }
 
-// ---- hash routing: gallery / collection / analytics / insights --------------
+// ---- hash routing: gallery / collection / analytics / notes -----------------
+// The notes view is shown at #notes; #insights (its old name) still opens it so old links keep working.
 function route() {
   const hash = location.hash;
-  const view = hash === "#collection" ? "collection" : hash === "#analytics" ? "analytics" : hash === "#insights" ? "insights" : "gallery";
+  const view = hash === "#collection" ? "collection" : hash === "#analytics" ? "analytics" : hash === "#notes" || hash === "#insights" ? "insights" : "gallery";
   const views = { gallery: "#galleryView", collection: "#collectionView", analytics: "#analyticsView", insights: "#insightsView" };
   for (const [v, sel] of Object.entries(views)) {
     const el = $(sel);
