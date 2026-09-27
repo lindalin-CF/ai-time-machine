@@ -11,9 +11,16 @@ describe('homepage (public/index.html)', () => {
     expect(html).not.toContain('AI Surface');
   });
 
-  it('describes the archive as a UI/UX design system', () => {
-    expect(html.match(/archived as a UI\/UX design system for fast inspiration/g)).toHaveLength(3); // og, twitter, hero
+  it('uses the same subtitle in the hero and the og/twitter descriptions', () => {
+    const SUBTITLE = 'A weekly archive of AI product interfaces, analysed for layout, hierarchy and colour as a UI/UX design system.';
+    expect(html).toContain(`<meta property="og:description" content="${SUBTITLE}" />`);
+    expect(html).toContain(`<meta name="twitter:description" content="${SUBTITLE}" />`);
+    // The hero joins the last two words with &nbsp; so they never wrap apart (::first-line stops text-wrap:pretty working).
+    const hero = html.match(/<p class="hero-sub">\s*([\s\S]*?)\s*<\/p>/)![1];
+    expect(hero).toContain('design&nbsp;system.');
+    expect(hero.replace(/&nbsp;/g, ' ')).toBe(SUBTITLE);
     expect(html).not.toMatch(/visual\s+design\s+system/i);
+    expect(html).not.toContain('A living reference');
   });
 
   it('has the footer sentence first and the copyright line below it', () => {
