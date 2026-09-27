@@ -52,7 +52,7 @@ describe('/how-we-analyze', () => {
       'Sources',
       'W3C, Web Content Accessibility Guidelines (WCAG) 2.2',
       'Nielsen Norman Group, visual hierarchy in UX',
-      'Amershi et al., Guidelines for Human-AI Interaction (CHI 2019)',
+      'Microsoft Research, Guidelines for Human-AI Interaction (Amershi et al., CHI 2019)',
     ]);
     const main = html.match(/<main class="howto">[\s\S]*?<\/main>/)![0];
     expect(main.match(/<h1>/g)).toHaveLength(1);
@@ -62,7 +62,7 @@ describe('/how-we-analyze', () => {
   it('links each source to its official page', () => {
     expect(html).toContain('<li><a href="https://www.w3.org/TR/WCAG22/">W3C, Web Content Accessibility Guidelines (WCAG) 2.2</a></li>');
     expect(html).toContain('<li><a href="https://www.nngroup.com/articles/visual-hierarchy-ux-definition/">Nielsen Norman Group, visual hierarchy in UX</a></li>');
-    expect(html).toContain('<li><a href="https://doi.org/10.1145/3290605.3300233">Amershi et al., Guidelines for Human-AI Interaction (CHI 2019)</a></li>');
+    expect(html).toContain('<li><a href="https://www.microsoft.com/en-us/research/project/guidelines-for-human-ai-interaction/">Microsoft Research, Guidelines for Human-AI Interaction (Amershi et al., CHI 2019)</a></li>');
   });
 
   it('answers HEAD without a body and rejects other methods', async () => {
