@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(wrangler r2 object delete *)",
+      "Bash(* wrangler r2 object delete *)",
+      "Bash(wrangler r2 bucket delete *)",
+      "Bash(* wrangler r2 bucket delete *)"
+    ]
+  }
+}
