@@ -1,6 +1,7 @@
 -- AI Portal Screenshot Library — D1 schema
 -- Run: npm run db:init:local   (or db:init:remote)
 
+DROP TABLE IF EXISTS question_log;
 DROP TABLE IF EXISTS manual_shots;
 DROP TABLE IF EXISTS captures;
 DROP TABLE IF EXISTS weeks;
@@ -78,3 +79,12 @@ CREATE TABLE insights (
   created_at   TEXT NOT NULL
 );
 CREATE INDEX idx_insights_created ON insights(created_at DESC);
+
+-- Anonymous voice-guide question log (migrations/0008_question_log.sql, src/question-log.ts).
+CREATE TABLE question_log (
+  id        TEXT PRIMARY KEY,                                  -- random UUID
+  day       TEXT NOT NULL,                                     -- YYYY-MM-DD (UTC)
+  input     TEXT NOT NULL CHECK (input IN ('typed', 'voice')),
+  question  TEXT NOT NULL                                      -- scrubbed, at most 1,000 characters
+);
+CREATE INDEX idx_question_log_day ON question_log(day);

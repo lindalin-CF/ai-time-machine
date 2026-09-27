@@ -42,3 +42,28 @@ export function withConsentAttr(html: string, mode: ConsentMode): string {
  * from storing it, so one visitor's region can never be served to another.
  */
 export const PRIVATE_HTML_CACHE = "private, max-age=300";
+
+/**
+ * What the browser reports when it opens the voice connection (public/voice.js, ?analytics=...),
+ * from public/consent.js: the visitor's stored choice ("accepted" / "declined"), "default" when
+ * there is none, or "off" when Global Privacy Control is on.
+ */
+export type AnalyticsChoice = "accepted" | "declined" | "default" | "off";
+
+/**
+ * Whether analytics are allowed for this request, under the same rules public/consent.js applies to
+ * Google Analytics and Clarity. The stored choice lives in the browser's localStorage, so the browser
+ * reports it; the server adds what it can check itself:
+ * - a Sec-GPC: 1 header means no, whatever the browser reports;
+ * - "accepted" (a stored Accept) means yes;
+ * - "default" (no stored choice) means yes only outside the consent region, the same default the
+ *   Worker writes into data-consent, so a client can't claim a default in a consent region;
+ * - anything else, including "declined", "off" and a missing value, means no.
+ */
+export function analyticsAllowed(request: Request): boolean {
+  if (request.headers.get("sec-gpc")?.trim() === "1") return false;
+  const choice = new URL(request.url).searchParams.get("analytics");
+  if (choice === "accepted") return true;
+  if (choice === "default") return !consentRequired(request);
+  return false;
+}

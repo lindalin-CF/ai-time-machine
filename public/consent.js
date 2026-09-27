@@ -9,6 +9,10 @@
 // 3. <html data-consent="not-required">, set per request by the Worker (src/consent.ts): load.
 // 4. Otherwise ("required", or no attribute at all, e.g. a static fallback page): show the bar
 //    and load nothing until Accept.
+//
+// The same answer goes on <html data-analytics="accepted|declined|default|off"> (and an
+// "analytics-choice" event when it changes), so public/voice.js can pass it to the server, which
+// logs voice-guide questions only when analytics are allowed (src/consent.ts, analyticsAllowed).
 (() => {
   const GA_ID = "G-X9PB6Q8VT6";
   const CLARITY_ID = "yoxz5c38mi";
@@ -26,9 +30,20 @@
       return null;
     }
   }
+  // pageChoice keeps a choice made on this page even when localStorage is unavailable.
+  let pageChoice = null;
   function saveChoice(v) {
+    pageChoice = v;
     try { localStorage.setItem(KEY, v); } catch {}
   }
+  // What the voice guide reports to the server: the stored choice, "default" without one, "off" with GPC.
+  function publishChoice() {
+    const v = gpc ? "off" : pageChoice || storedChoice() || "default";
+    if (root.dataset.analytics === v) return;
+    root.dataset.analytics = v;
+    document.dispatchEvent(new CustomEvent("analytics-choice", { detail: v }));
+  }
+  publishChoice();
 
   // ---- analytics ------------------------------------------------------------
   let loaded = false;
@@ -159,6 +174,7 @@ html.consent-bar-open .voice-panel{bottom:calc(var(--consent-bar-h,0px) + 68px)}
     const choice = btn.dataset.consentChoice;
     if (choice) {
       saveChoice(choice);
+      publishChoice();
       if (choice === "accepted") loadAnalytics();
       else stopAnalytics();
     }

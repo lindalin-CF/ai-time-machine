@@ -288,6 +288,8 @@ const PRIVACY = `    <main class="howto">
         <li>Questions you type are sent as text to this site&#39;s server, which runs on Cloudflare.</li>
         <li>If you start a call, your browser asks for microphone access first. While the call is on, your voice is streamed to this site&#39;s server, turned into text, answered, and read back to you. All three steps run on Cloudflare Workers AI, using Deepgram Flux for speech to text, OpenAI gpt-oss-120b for the answer and Deepgram Aura-1 for speech. This site does not save the audio.</li>
         <li>The text of your questions and the answers is saved with your conversation on Cloudflare, so the guide can follow up on what you asked before. It is deleted 24 hours after your last message.</li>
+        <li>If analytics are allowed for you (see &quot;When Google Analytics and Clarity load&quot; above), the text of your questions, not the answers and not your voice, is also saved in a separate log that has no link to you or your conversation. Email addresses, phone numbers and long numbers are removed first. Only the date is kept, not the time. Entries are deleted after 360 days. The log is used only to improve the library.</li>
+        <li>Please don&#39;t include personal information, such as your name, email address or phone number, in your questions.</li>
         <li>Nothing from the voice guide is sent to Google or Microsoft.</li>
       </ul>
       <h2>Hosting</h2>

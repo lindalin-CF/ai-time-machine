@@ -16,8 +16,9 @@
 
   "observability": { "enabled": true },
 
-  // ---- Cron: every Monday 09:00 UTC kicks off the weekly capture ----
-  "triggers": { "crons": ["0 9 * * 1"] },
+  // ---- Cron: every Monday 09:00 UTC kicks off the weekly capture; every day 03:30 UTC deletes
+  // voice-guide questions older than 360 days (QUESTION_LOG_CRON in src/question-log.ts) ----
+  "triggers": { "crons": ["0 9 * * 1", "30 3 * * *"] },
 
   // ---- D1: capture + portal + week metadata ----
   "d1_databases": [

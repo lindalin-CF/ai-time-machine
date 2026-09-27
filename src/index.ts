@@ -6,6 +6,7 @@ import { handlePortalPage, handleSitemap, handleHowWeAnalyze, handlePrivacy } fr
 import { handleHomepage } from "./homepage";
 import { isVoiceRoomPath } from "./voice-room";
 import { expireLegacyRoom } from "./voice";
+import { QUESTION_LOG_CRON, purgeOldQuestions, withQuestionLogPermission } from "./question-log";
 
 // Export the Workflow class so the runtime can find it (class_name in wrangler.jsonc).
 export { CaptureWorkflow } from "./workflow";
@@ -22,7 +23,8 @@ export default {
         // Only per-tab rooms (src/voice-room.ts); a shared room name would mix visitors' conversations.
         if (!isVoiceRoomPath(url.pathname)) return new Response("not found", { status: 404 });
         ctx.waitUntil(expireLegacyRoom(env).catch((err) => console.error("[voice] legacy room expiry failed:", err)));
-        const routed = await routeAgentRequest(request, env);
+        // The Durable Object logs questions only when the Worker says analytics are allowed (src/question-log.ts).
+        const routed = await routeAgentRequest(withQuestionLogPermission(request), env);
         if (routed) return routed;
       }
       if (url.pathname.startsWith("/api/")) return await handleApi(request, env, ctx);
@@ -43,8 +45,12 @@ export default {
     return env.ASSETS.fetch(request);
   },
 
-  // ---- Cron: weekly capture kickoff (Mondays 09:00 UTC) ----
-  async scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+  // ---- Cron: daily question-log retention (03:30 UTC) + weekly capture kickoff (Mondays 09:00 UTC) ----
+  async scheduled(event: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+    if (event.cron === QUESTION_LOG_CRON) {
+      ctx.waitUntil(purgeOldQuestions(env));
+      return;
+    }
     const now = new Date();
 
     // Pause window: skip auto-capture while away so the cloud run (which can only

@@ -39,6 +39,16 @@ const STATUS_LABEL = {
 
 let client = null;
 let inCall = false;
+// Messages shown by earlier connections of this panel (see reconnectForChoice).
+let earlier = [];
+
+// The analytics choice public/consent.js puts on <html data-analytics>, sent when the connection
+// opens. The server logs the text of questions (never answers or audio) only when this, the region
+// and Global Privacy Control allow analytics (src/consent.ts, analyticsAllowed). No attribute: "off".
+function analyticsChoice() {
+  const v = document.documentElement.dataset.analytics;
+  return v === "accepted" || v === "declined" || v === "default" ? v : "off";
+}
 
 // ---- styles (self-contained, themed) -------------------------------------
 const style = document.createElement("style");
@@ -174,6 +184,7 @@ function renderTranscript(messages) {
   // Clear old messages (keep the hint only when empty).
   body.querySelectorAll(".vp-msg,.vp-interim").forEach((n) => n.remove());
   interimEl = null;
+  messages = [...earlier, ...(messages || [])];
   if (messages && messages.length) {
     const hint = body.querySelector(".vp-hint");
     if (hint) hint.remove();
@@ -200,9 +211,10 @@ function renderInterim(text) {
 // ---- call control ---------------------------------------------------------
 function ensureClient() {
   if (client) return client;
-  client = new VoiceClient({ agent: AGENT, name: roomName() });
-  client.addEventListener("statuschange", setStatus);
-  client.addEventListener("transcriptchange", renderTranscript);
+  const c = new VoiceClient({ agent: AGENT, name: roomName(), query: { analytics: analyticsChoice() } });
+  client = c;
+  client.addEventListener("statuschange", (s) => { if (client === c) setStatus(s); });
+  client.addEventListener("transcriptchange", (m) => { if (client === c) renderTranscript(m); });
   client.addEventListener("interimtranscript", renderInterim);
   client.addEventListener("error", (e) => showError(e || null));
   client.addEventListener("mutechange", (m) => { muteBtn.textContent = m ? "Unmute" : "Mute"; });
@@ -244,7 +256,23 @@ function endCall() {
   muteBtn.disabled = true;
   muteBtn.textContent = "Mute";
   setStatus("idle");
+  if (choicePending) reconnectForChoice();
 }
+
+// The permission is fixed for a connection, so when the choice changes (Cookie preferences), open a
+// new connection to the same room: right away when idle, or as soon as a call ends.
+let choicePending = false;
+function reconnectForChoice() {
+  if (!client) return;
+  if (inCall) { choicePending = true; return; }
+  choicePending = false;
+  earlier = [...earlier, ...client.transcript];
+  const old = client;
+  client = null;
+  try { old.disconnect(); } catch {}
+  ensureClient();
+}
+document.addEventListener("analytics-choice", reconnectForChoice);
 
 // ---- events ---------------------------------------------------------------
 fab.addEventListener("click", () => { openPanel(true); ensureClient(); });

@@ -29,7 +29,7 @@ describe('voice room names (Worker)', () => {
     const index = readFileSync(new URL('../../src/index.ts', import.meta.url), 'utf8');
     const gate = index.indexOf('if (!isVoiceRoomPath(url.pathname)) return new Response("not found", { status: 404 });');
     expect(gate).toBeGreaterThan(-1);
-    expect(gate).toBeLessThan(index.indexOf('await routeAgentRequest(request, env)'));
+    expect(gate).toBeLessThan(index.indexOf('await routeAgentRequest(withQuestionLogPermission(request), env)'));
   });
 
   it('keeps messages for 24 hours after the last one, including the old shared room', () => {

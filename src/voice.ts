@@ -11,7 +11,7 @@
 // library dataset is small, so we stuff it into the prompt (one streaming call,
 // no tool round-trips) for the fastest possible time-to-first-audio.
 
-import { Agent, getAgentByName } from "agents";
+import { Agent, getAgentByName, type Connection, type ConnectionContext } from "agents";
 import {
   withVoice,
   WorkersAIFluxSTT,
@@ -24,6 +24,7 @@ import type { Env } from "./types";
 import { listWeeks, latestWeek, capturesForWeek } from "./db";
 import { isPublishedAnalysis } from "./analysis";
 import { VOICE_RETENTION_MS } from "./voice-room";
+import { QUESTION_LOG_HEADER, logQuestion } from "./question-log";
 
 const VoiceAgent = withVoice(Agent);
 
@@ -34,8 +35,32 @@ export class PortalVoiceAgent extends VoiceAgent<Env> {
   transcriber = new WorkersAIFluxSTT(this.env.AI);
   tts = new WorkersAITTS(this.env.AI);
 
+  /** Spoken questions waiting for their onTurn(), by connection; anything else reaching onTurn() was typed. */
+  private spokenTurns = new Map<string, string>();
+
+  /**
+   * The Worker sets x-question-log: 1 on the WebSocket request only when analytics are allowed for
+   * this visitor (src/question-log.ts). Kept on the connection, so it survives hibernation.
+   */
+  onConnect(connection: Connection, ctx: ConnectionContext) {
+    connection.setState({ logQuestions: ctx.request.headers.get(QUESTION_LOG_HEADER) === "1" });
+  }
+
+  afterTranscribe(transcript: string, connection: Connection): string | null {
+    this.spokenTurns.set(connection.id, transcript);
+    return transcript;
+  }
+
   async onTurn(transcript: string, context: VoiceTurnContext) {
     await this.scheduleExpiry();
+    const spoken = this.spokenTurns.get(context.connection.id) === transcript;
+    this.spokenTurns.delete(context.connection.id);
+    // The question only (never the answer or audio), scrubbed; see src/question-log.ts.
+    const allowed = (context.connection.state as { logQuestions?: boolean } | null)?.logQuestions === true;
+    this.ctx.waitUntil(
+      logQuestion(this.env, allowed, transcript, spoken ? "voice" : "typed")
+        .catch((err) => console.error("[PortalVoiceAgent] question log failed:", err)),
+    );
     const workersai = createWorkersAI({ binding: this.env.AI });
     const grounding = await this.buildLibraryContext();
 
