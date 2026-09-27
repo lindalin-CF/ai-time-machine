@@ -19,15 +19,24 @@ function shortText(s: string, max: number): string {
   return t.length <= max ? t : t.slice(0, max - 1).replace(/\s+\S*$/, "") + "…";
 }
 
-/** Footer copyright line + Disclaimer dialog. The homepage (public/index.html) carries the same markup; both use /disclaimer.js. */
-const FOOTER_LEGAL = `      <div class="legal">&copy; 2026 AI Interface Library. All rights reserved. &middot; <button type="button" class="linkbtn" data-open-disclaimer aria-haspopup="dialog">Disclaimer</button> &middot; <a class="linkbtn" href="mailto:contact@ai-portal-library.dev">Contact</a></div>
-      <dialog id="disclaimer" class="disclaimer" aria-labelledby="disclaimer-title">
+/** Footer copyright line + Disclaimer and Contact dialogs. The homepage (public/index.html) carries the same markup; both use /footer-dialogs.js. */
+const FOOTER_LEGAL = `      <div class="legal">&copy; 2026 AI Interface Library. All rights reserved. &middot; <button type="button" class="linkbtn" data-dialog="disclaimer" aria-haspopup="dialog">Disclaimer</button> &middot; <button type="button" class="linkbtn" data-dialog="contact" aria-haspopup="dialog">Contact</button></div>
+      <dialog id="disclaimer" class="site-dialog" aria-labelledby="disclaimer-title">
         <form method="dialog">
-          <button type="submit" class="disclaimer-x" aria-label="Close">&times;</button>
+          <button type="submit" class="site-dialog-x" aria-label="Close">&times;</button>
           <h2 id="disclaimer-title">Disclaimer</h2>
           <p>Product screenshots, logos, and trademarks belong to their respective owners. AI Interface Library is an independent project, unaffiliated with the brands featured.</p>
           <p>Content is for reference and research. Screenshots may differ from current interfaces.</p>
-          <div class="disclaimer-actions"><button type="submit" class="disclaimer-close">Close</button></div>
+          <div class="site-dialog-actions"><button type="submit" class="site-dialog-close">Close</button></div>
+        </form>
+      </dialog>
+      <dialog id="contact" class="site-dialog" aria-labelledby="contact-title">
+        <form method="dialog">
+          <button type="submit" class="site-dialog-x" aria-label="Close">&times;</button>
+          <h2 id="contact-title">Contact</h2>
+          <p>For removal requests, corrections or questions, email:</p>
+          <p class="contact-row"><span class="contact-address" data-copy-source>contact@ai-portal-library.dev</span> <button type="button" class="contact-copy" data-copy="contact@ai-portal-library.dev" aria-live="polite">Copy</button></p>
+          <div class="site-dialog-actions"><a class="contact-mail" href="mailto:contact@ai-portal-library.dev">Open email app</a><button type="submit" class="site-dialog-close">Close</button></div>
         </form>
       </dialog>`;
 
@@ -74,16 +83,22 @@ ${opts.noindex ? '  <meta name="robots" content="noindex" />\n' : ""}${opts.cano
     .legal{margin-top:4px}
     .linkbtn{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer}
     .linkbtn:hover{color:#231f1a}
-    .disclaimer{width:min(480px,calc(100vw - 32px));max-width:none;padding:0;border:1px solid #d8cfc2;border-radius:12px;background:#fffdf9;color:#231f1a;font-size:1rem;box-shadow:0 16px 48px -16px rgba(35,31,26,.35)}
-    .disclaimer::backdrop{background:rgba(35,31,26,.45)}
-    .disclaimer form{position:relative;padding:24px 20px 20px}
-    .disclaimer h2{font-size:1.25rem;margin:0 40px 12px 0}
-    .disclaimer p{margin:0 0 12px}
-    .disclaimer-x{position:absolute;top:10px;right:10px;width:32px;height:32px;border:0;border-radius:8px;background:none;color:#6b6257;font-size:1.5rem;line-height:1;cursor:pointer}
-    .disclaimer-x:hover{background:#f4efe8;color:#231f1a}
-    .disclaimer-actions{display:flex;justify-content:flex-end;margin-top:16px}
-    .disclaimer-close{font:inherit;padding:8px 16px;border:1px solid #d8cfc2;border-radius:8px;background:#f4efe8;color:#231f1a;cursor:pointer}
-    .disclaimer-close:hover{border-color:#6b6257}
+    .site-dialog{width:min(480px,calc(100vw - 32px));max-width:none;padding:0;border:1px solid #d8cfc2;border-radius:12px;background:#fffdf9;color:#231f1a;font-size:1rem;box-shadow:0 16px 48px -16px rgba(35,31,26,.35)}
+    .site-dialog::backdrop{background:rgba(35,31,26,.45)}
+    .site-dialog form{position:relative;padding:24px 20px 20px}
+    .site-dialog h2{font-size:1.25rem;margin:0 40px 12px 0}
+    .site-dialog p{margin:0 0 12px}
+    .site-dialog-x{position:absolute;top:10px;right:10px;width:32px;height:32px;border:0;border-radius:8px;background:none;color:#6b6257;font-size:1.5rem;line-height:1;cursor:pointer}
+    .site-dialog-x:hover{background:#f4efe8;color:#231f1a}
+    .site-dialog-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px;margin-top:16px}
+    .site-dialog-close{font:inherit;padding:8px 16px;border:1px solid #d8cfc2;border-radius:8px;background:#f4efe8;color:#231f1a;cursor:pointer}
+    .site-dialog-close:hover{border-color:#6b6257}
+    .contact-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+    .contact-address{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.95rem;padding:6px 10px;border:1px solid #d8cfc2;border-radius:8px;background:#f4efe8;user-select:all;overflow-wrap:anywhere}
+    .contact-copy{font:inherit;font-size:.9rem;min-width:5.5em;padding:6px 12px;border:1px solid #d8cfc2;border-radius:8px;background:#fffdf9;color:#231f1a;cursor:pointer}
+    .contact-copy:hover{border-color:#6b6257}
+    .contact-mail{display:inline-flex;align-items:center;padding:8px 16px;border-radius:8px;background:#231f1a;color:#fffdf9;text-decoration:none}
+    .contact-mail:hover{background:#3a332b}
   </style>
 </head>
 <body>
@@ -94,7 +109,7 @@ ${opts.body}
 ${FOOTER_LEGAL}
     </footer>
   </div>
-  <script src="/disclaimer.js" defer></script>
+  <script src="/footer-dialogs.js" defer></script>
 </body>
 </html>`;
 }

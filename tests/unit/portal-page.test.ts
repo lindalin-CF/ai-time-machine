@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { handlePortalPage } from '../../src/portal-page';
 import { makeEnv } from './fake-env';
+import { expectFooterDialogs, LEGAL_LINE } from './footer-dialogs';
 
 const SLUG = 'claude';
 const WEEK = '2026-09-21';
@@ -30,29 +31,13 @@ describe.each(PAGES)('portal page %s', (path) => {
   });
 
   it('keeps the footer sentence and adds the copyright line', () => {
-    expect(html).toContain('Independent personal project. Not affiliated with any of the companies featured.');
-    expect(html).toContain('&copy; 2026 AI Interface Library. All rights reserved. &middot; <button type="button" class="linkbtn" data-open-disclaimer aria-haspopup="dialog">Disclaimer</button> &middot; <a class="linkbtn" href="mailto:contact@ai-portal-library.dev">Contact</a>');
+    const sentence = html.indexOf('Independent personal project. Not affiliated with any of the companies featured.');
+    expect(sentence).toBeGreaterThan(-1);
+    expect(html.indexOf(LEGAL_LINE)).toBeGreaterThan(sentence);
   });
 
-  it('has one Contact mailto link styled like the Disclaimer button', () => {
-    expect(html.match(/<a [^>]*>Contact<\/a>/g)).toEqual(['<a class="linkbtn" href="mailto:contact@ai-portal-library.dev">Contact</a>']);
-  });
-
-  it('includes the Disclaimer dialog, closed by default', () => {
-    const dialog = html.match(/<dialog\b[^>]*>[\s\S]*?<\/dialog>/)?.[0];
-    expect(dialog).toBeDefined();
-    const openTag = dialog!.match(/<dialog\b[^>]*>/)![0];
-    expect(openTag).toContain('id="disclaimer"');
-    expect(openTag).toContain('aria-labelledby="disclaimer-title"');
-    expect(openTag).not.toMatch(/\sopen\b/);
-    expect(dialog).toContain('<h2 id="disclaimer-title">Disclaimer</h2>');
-    expect(dialog).toContain('<p>Product screenshots, logos, and trademarks belong to their respective owners. AI Interface Library is an independent project, unaffiliated with the brands featured.</p>');
-    expect(dialog).toContain('<p>Content is for reference and research. Screenshots may differ from current interfaces.</p>');
-    expect(dialog).toContain('<form method="dialog">');
-    expect(dialog).toContain('aria-label="Close">&times;</button>');
-    expect(dialog).toContain('>Close</button>');
-    expect(html).toContain('<script src="/disclaimer.js" defer></script>');
-    expect(html).not.toMatch(/showModal\(|\.show\(/); // nothing opens it on load
+  it('has the Disclaimer and Contact dialogs, closed by default', () => {
+    expectFooterDialogs(html);
   });
 });
 

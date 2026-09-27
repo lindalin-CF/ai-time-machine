@@ -230,26 +230,35 @@
       <strong>AI Interface Library</strong>
       <span>Weekly UI reference for AI products</span>
       <span>Independent personal project. Not affiliated with any of the companies featured.</span>
-      <span class="foot-legal">&copy; 2026 AI Interface Library. All rights reserved. &middot; <button type="button" class="linkbtn" data-open-disclaimer aria-haspopup="dialog">Disclaimer</button> &middot; <a class="linkbtn" href="mailto:contact@ai-portal-library.dev">Contact</a></span>
+      <span class="foot-legal">&copy; 2026 AI Interface Library. All rights reserved. &middot; <button type="button" class="linkbtn" data-dialog="disclaimer" aria-haspopup="dialog">Disclaimer</button> &middot; <button type="button" class="linkbtn" data-dialog="contact" aria-haspopup="dialog">Contact</button></span>
     </div>
     <ul class="foot-stack" aria-label="Cloudflare products used">
       <li>Workers</li><li>Static Assets</li><li>D1</li><li>R2</li><li>KV</li>
       <li>Workers AI</li><li>Browser Rendering</li><li>Workflows</li><li>Queues</li><li>Cron</li>
     </ul>
-    <!-- Same markup as FOOTER_LEGAL in src/portal-page.ts; behaviour in /disclaimer.js. -->
-    <dialog id="disclaimer" class="disclaimer" aria-labelledby="disclaimer-title">
+    <!-- Same markup as FOOTER_LEGAL in src/portal-page.ts; behaviour in /footer-dialogs.js. -->
+    <dialog id="disclaimer" class="site-dialog" aria-labelledby="disclaimer-title">
       <form method="dialog">
-        <button type="submit" class="disclaimer-x" aria-label="Close">&times;</button>
+        <button type="submit" class="site-dialog-x" aria-label="Close">&times;</button>
         <h2 id="disclaimer-title">Disclaimer</h2>
         <p>Product screenshots, logos, and trademarks belong to their respective owners. AI Interface Library is an independent project, unaffiliated with the brands featured.</p>
         <p>Content is for reference and research. Screenshots may differ from current interfaces.</p>
-        <div class="disclaimer-actions"><button type="submit" class="disclaimer-close">Close</button></div>
+        <div class="site-dialog-actions"><button type="submit" class="site-dialog-close">Close</button></div>
+      </form>
+    </dialog>
+    <dialog id="contact" class="site-dialog" aria-labelledby="contact-title">
+      <form method="dialog">
+        <button type="submit" class="site-dialog-x" aria-label="Close">&times;</button>
+        <h2 id="contact-title">Contact</h2>
+        <p>For removal requests, corrections or questions, email:</p>
+        <p class="contact-row"><span class="contact-address" data-copy-source>contact@ai-portal-library.dev</span> <button type="button" class="contact-copy" data-copy="contact@ai-portal-library.dev" aria-live="polite">Copy</button></p>
+        <div class="site-dialog-actions"><a class="contact-mail" href="mailto:contact@ai-portal-library.dev">Open email app</a><button type="submit" class="site-dialog-close">Close</button></div>
       </form>
     </dialog>
   </footer>
 
   <script src="/app.js" type="module"></script>
   <script src="/voice.js" type="module"></script>
-  <script src="/disclaimer.js" defer></script>
+  <script src="/footer-dialogs.js" defer></script>
 </body>
 </html>
