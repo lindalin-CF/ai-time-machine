@@ -272,7 +272,7 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     const v = Date.now();
     return json({ ok: true, id, description, images: nextKeys.map((k) => `/img/${k}?v=${v}`) });
   }
-  // Insights memo/update feed for colleagues.
+  // Notes feed (stored in the insights table), posted with scripts/local-capture/post-note.mjs.
   if (path === "/api/insights" && request.method === "GET") {
     const rows = await env.DB.prepare(
       `SELECT id, title, description, images, created_at FROM insights ORDER BY created_at DESC LIMIT 80`

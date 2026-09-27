@@ -17,4 +17,8 @@ describe('Notes section', () => {
   it('opens the notes view for both #notes and the old #insights links', () => {
     expect(appJs).toContain('hash === "#notes" || hash === "#insights" ? "insights"');
   });
+
+  it('reads as a personal project, with no colleague, teammate or team wording', () => {
+    for (const text of [html, appJs]) expect(text).not.toMatch(/colleague|teammate|\bteams?\b/i);
+  });
 });
