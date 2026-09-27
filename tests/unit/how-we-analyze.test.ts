@@ -94,11 +94,23 @@ describe('links to /how-we-analyze', () => {
     }
   });
 
-  it('sits under the Design analysis text on every homepage card', () => {
+  it('ends the collapsible Design analysis text on every homepage card, hidden until expanded', () => {
     const app = readFileSync(new URL('../../public/app.js', import.meta.url), 'utf8');
     const card = app.match(/function card\(c\) \{[\s\S]*?\n\}/)![0];
-    expect(card).toContain(`<a class="analysis-method" href="/how-we-analyze">How this analysis is made</a>`);
+    expect(card).toContain(
+      `<p class="analysis clamped">\${esc(displayedAnalysis(c))}<a class="analysis-method" href="/how-we-analyze" hidden>How this analysis is made</a></p>`,
+    );
+    expect(card.match(/analysis-method/g)).toHaveLength(1);
     expect(card.indexOf('analysis-method')).toBeGreaterThan(card.indexOf('<div class="analysis-label">Design analysis</div>'));
+
+    // The toggle shows the link only when expanded; uncollapsible text shows it right away.
+    const wire = app.match(/function wireAnalysisToggles\(\) \{[\s\S]*?\n\}/)![0];
+    expect(wire).toContain('method.hidden = !expanded;');
+    expect(wire).toMatch(/if \(!overflows\) \{[^}]*p\.classList\.remove\("clamped"\);[^}]*method\.hidden = false;/);
+
+    // hidden must win over the link's display:block, so it can't be seen or tabbed to.
+    const css = readFileSync(new URL('../../public/styles.css', import.meta.url), 'utf8');
+    expect(css).toContain('.analysis-method[hidden]{display:none}');
   });
 
   it('ends the Disclaimer dialog on the homepage', () => {

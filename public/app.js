@@ -298,19 +298,28 @@ function wireBrandLogos() {
 }
 
 // Collapse long design-analysis text to 5 lines; only show the toggle when it
-// actually overflows.
+// actually overflows. The method link is the last line of the text and stays
+// hidden (so not focusable) while the text is collapsed.
 function wireAnalysisToggles() {
   $("#grid").querySelectorAll(".card").forEach((cardEl) => {
     const p = cardEl.querySelector(".analysis");
     const toggle = cardEl.querySelector(".analysis-toggle");
-    if (!p || !toggle) return;
-    // If the clamped text isn't taller than its visible box, no toggle needed.
+    const method = cardEl.querySelector(".analysis-method");
+    if (!p || !toggle || !method) return;
+    // If the clamped text isn't taller than its visible box, nothing is
+    // collapsed: drop the clamp so the link fits, and skip the toggle.
     const overflows = p.scrollHeight - p.clientHeight > 2;
-    if (!overflows) { toggle.hidden = true; return; }
+    if (!overflows) {
+      toggle.hidden = true;
+      p.classList.remove("clamped");
+      method.hidden = false;
+      return;
+    }
     toggle.hidden = false;
     toggle.addEventListener("click", () => {
       const expanded = p.classList.toggle("expanded");
       p.classList.toggle("clamped", !expanded);
+      method.hidden = !expanded;
       toggle.classList.toggle("open", expanded);
       toggle.setAttribute("aria-expanded", String(expanded));
       toggle.setAttribute("aria-label", expanded ? "Show less" : "Show more");
@@ -363,11 +372,10 @@ function card(c) {
         <a class="visit" href="${esc(c.url)}" target="_blank" rel="noopener">Visit &#8599;</a>
       </div>
       <div class="analysis-label">Design analysis</div>
-      <p class="analysis clamped">${esc(displayedAnalysis(c))}</p>
+      <p class="analysis clamped">${esc(displayedAnalysis(c))}<a class="analysis-method" href="/how-we-analyze" hidden>How this analysis is made</a></p>
       <button type="button" class="analysis-toggle" aria-expanded="false" aria-label="Show more">
         <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
       </button>
-      <a class="analysis-method" href="/how-we-analyze">How this analysis is made</a>
       <div class="card-foot">
         <div class="palette">${palette}</div>
         <button class="manual-open" type="button" data-slug="${esc(c.slug)}" data-portal="${esc(c.portal)}" aria-label="View more snapshots for ${esc(c.portal)}">

@@ -250,8 +250,9 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .analysis-toggle.open svg{transform:rotate(180deg)}
 .analysis-toggle:hover{color:var(--cf-text);background:var(--cf-bg-300)}
 .analysis-toggle[hidden]{display:none}
-.analysis-method{align-self:flex-start;margin-top:-6px;font-size:12px;color:var(--cf-text-soft);text-decoration:underline}
+.analysis-method{display:block;width:fit-content;margin-top:6px;font-size:12px;color:var(--cf-text-soft);text-decoration:underline}
 .analysis-method:hover{color:var(--cf-text)}
+.analysis-method[hidden]{display:none}
 .card-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:6px}
 .palette{display:flex;gap:0}
 .palette i{width:20px;height:20px;display:block}
