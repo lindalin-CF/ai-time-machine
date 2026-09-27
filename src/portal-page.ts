@@ -19,6 +19,18 @@ function shortText(s: string, max: number): string {
   return t.length <= max ? t : t.slice(0, max - 1).replace(/\s+\S*$/, "") + "…";
 }
 
+/** Footer copyright line + Disclaimer dialog. The homepage (public/index.html) carries the same markup; both use /disclaimer.js. */
+const FOOTER_LEGAL = `      <div class="legal">&copy; 2026 AI Interface Library. All rights reserved. &middot; <button type="button" class="linkbtn" data-open-disclaimer aria-haspopup="dialog">Disclaimer</button></div>
+      <dialog id="disclaimer" class="disclaimer" aria-labelledby="disclaimer-title">
+        <form method="dialog">
+          <button type="submit" class="disclaimer-x" aria-label="Close">&times;</button>
+          <h2 id="disclaimer-title">Disclaimer</h2>
+          <p>Product screenshots, logos, and trademarks belong to their respective owners. AI Interface Library is an independent project, unaffiliated with the brands featured.</p>
+          <p>Content is for reference and research. Screenshots may differ from current interfaces.</p>
+          <div class="disclaimer-actions"><button type="submit" class="disclaimer-close">Close</button></div>
+        </form>
+      </dialog>`;
+
 function page(opts: { title: string; description: string; canonical?: string; noindex?: boolean; body: string }): string {
   return `<!doctype html>
 <html lang="en">
@@ -38,7 +50,7 @@ function page(opts: { title: string; description: string; canonical?: string; no
   <meta name="description" content="${esc(opts.description)}" />
 ${opts.noindex ? '  <meta name="robots" content="noindex" />\n' : ""}${opts.canonical ? `  <link rel="canonical" href="${esc(opts.canonical)}" />
   <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="AI Surface Library" />
+  <meta property="og:site_name" content="AI Interface Library" />
   <meta property="og:title" content="${esc(opts.title)}" />
   <meta property="og:description" content="${esc(opts.description)}" />
   <meta property="og:url" content="${esc(opts.canonical)}" />
@@ -59,24 +71,40 @@ ${opts.noindex ? '  <meta name="robots" content="noindex" />\n' : ""}${opts.cano
     figcaption{font-size:.85rem;color:#6b6257;margin-top:6px}
     .analysis{white-space:pre-line;margin:32px 0}
     footer{border-top:1px solid #d8cfc2;margin-top:48px;padding-top:16px;font-size:.85rem;color:#6b6257}
+    .legal{margin-top:4px}
+    .linkbtn{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer}
+    .linkbtn:hover{color:#231f1a}
+    .disclaimer{width:min(480px,calc(100vw - 32px));max-width:none;padding:0;border:1px solid #d8cfc2;border-radius:12px;background:#fffdf9;color:#231f1a;font-size:1rem;box-shadow:0 16px 48px -16px rgba(35,31,26,.35)}
+    .disclaimer::backdrop{background:rgba(35,31,26,.45)}
+    .disclaimer form{position:relative;padding:24px 20px 20px}
+    .disclaimer h2{font-size:1.25rem;margin:0 40px 12px 0}
+    .disclaimer p{margin:0 0 12px}
+    .disclaimer-x{position:absolute;top:10px;right:10px;width:32px;height:32px;border:0;border-radius:8px;background:none;color:#6b6257;font-size:1.5rem;line-height:1;cursor:pointer}
+    .disclaimer-x:hover{background:#f4efe8;color:#231f1a}
+    .disclaimer-actions{display:flex;justify-content:flex-end;margin-top:16px}
+    .disclaimer-close{font:inherit;padding:8px 16px;border:1px solid #d8cfc2;border-radius:8px;background:#f4efe8;color:#231f1a;cursor:pointer}
+    .disclaimer-close:hover{border-color:#6b6257}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <header><a href="/">&larr; AI Surface Library</a></header>
+    <header><a href="/">&larr; AI Interface Library</a></header>
 ${opts.body}
-    <footer>Independent personal project. Not affiliated with any of the companies featured.</footer>
+    <footer>Independent personal project. Not affiliated with any of the companies featured.
+${FOOTER_LEGAL}
+    </footer>
   </div>
+  <script src="/disclaimer.js" defer></script>
 </body>
 </html>`;
 }
 
 function notFound(): Response {
   const html = page({
-    title: "Portal not found | AI Surface Library",
+    title: "Portal not found | AI Interface Library",
     description: "This portal page does not exist.",
     noindex: true,
-    body: `    <main><h1>Portal not found</h1><p><a href="/">Browse the AI Surface Library</a></p></main>`,
+    body: `    <main><h1>Portal not found</h1><p><a href="/">Browse the AI Interface Library</a></p></main>`,
   });
   return new Response(html, { status: 404, headers: HTML_HEADERS });
 }
@@ -154,8 +182,8 @@ ${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screens
 
   const html = page({
     title: weekParam !== null
-      ? `${name} — logged-in UI screenshots, week of ${weekParam} | AI Surface Library`
-      : `${name} — logged-in UI screenshots | AI Surface Library`,
+      ? `${name} — logged-in UI screenshots, week of ${weekParam} | AI Interface Library`
+      : `${name} — logged-in UI screenshots | AI Interface Library`,
     description,
     canonical,
     body,
