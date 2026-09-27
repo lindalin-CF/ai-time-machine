@@ -11,11 +11,15 @@
  *   previous.png   desktop screenshot for the nearest older week (if any)
  *   previous.json  that week's stored analysis JSON (if any)
  *   input.json     { portal, company, slug, week, previous_week }
+ *
+ * Screenshot safety (CLAUDE.md): an existing current.png / previous.png is never deleted or
+ * overwritten; it is renamed to current.<UTC timestamp>.png / previous.<UTC timestamp>.png first.
  */
 import { mkdir, writeFile, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { WORKER_URL, UPLOAD_TOKEN } from "../config.mjs";
+import { keepExisting, writeKeepingOld } from "./keep-existing.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -37,7 +41,8 @@ async function desktopCapture(slug, week) {
 async function download(path, file) {
   const res = await fetch(`${WORKER_URL}${path}`);
   if (!res.ok) throw new Error(`GET ${path} -> ${res.status}`);
-  await writeFile(file, Buffer.from(await res.arrayBuffer()));
+  const kept = await writeKeepingOld(file, Buffer.from(await res.arrayBuffer()));
+  if (kept) console.log(`· kept earlier file as ${kept}`);
 }
 
 async function main() {
@@ -72,8 +77,11 @@ async function main() {
 
   const dir = join(__dirname, "work", slug, week);
   await mkdir(dir, { recursive: true });
-  // Clear inputs from an earlier run so stale previous-week files are never reused.
-  await Promise.all(["previous.png", "previous.json"].map((f) => rm(join(dir, f), { force: true })));
+  // Move inputs from an earlier run out of the way so stale previous-week files are never reused.
+  // The image is kept under a timestamped name (never deleted); the JSON is re-fetchable, so it is removed.
+  const keptPrevious = await keepExisting(join(dir, "previous.png"));
+  if (keptPrevious) console.log(`· kept earlier file as ${keptPrevious}`);
+  await rm(join(dir, "previous.json"), { force: true });
 
   await download(current.image, join(dir, "current.png"));
   console.log(`✓ current.png   ${slug} ${week}`);
