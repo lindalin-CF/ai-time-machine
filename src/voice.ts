@@ -11,7 +11,7 @@
 // library dataset is small, so we stuff it into the prompt (one streaming call,
 // no tool round-trips) for the fastest possible time-to-first-audio.
 
-import { Agent } from "agents";
+import { Agent, getAgentByName } from "agents";
 import {
   withVoice,
   WorkersAIFluxSTT,
@@ -23,6 +23,7 @@ import { createWorkersAI } from "workers-ai-provider";
 import type { Env } from "./types";
 import { listWeeks, latestWeek, capturesForWeek } from "./db";
 import { isPublishedAnalysis } from "./analysis";
+import { VOICE_RETENTION_MS } from "./voice-room";
 
 const VoiceAgent = withVoice(Agent);
 
@@ -34,6 +35,7 @@ export class PortalVoiceAgent extends VoiceAgent<Env> {
   tts = new WorkersAITTS(this.env.AI);
 
   async onTurn(transcript: string, context: VoiceTurnContext) {
+    await this.scheduleExpiry();
     const workersai = createWorkersAI({ binding: this.env.AI });
     const grounding = await this.buildLibraryContext();
 
@@ -74,6 +76,30 @@ export class PortalVoiceAgent extends VoiceAgent<Env> {
     // the typed parts and speaks ONLY `text-delta` chunks, so GPT-OSS's reasoning
     // tokens are never sent to TTS. It also avoids the textStream chunk-joining bug.
     return result.fullStream;
+  }
+
+  /**
+   * Retention: a room's messages are deleted 24 hours after its last message. One pending
+   * expireMessages schedule per room; when it fires early (newer messages arrived) it re-arms.
+   */
+  private async scheduleExpiry(): Promise<void> {
+    const pending = await this.listSchedules();
+    if (pending.some((s) => s.callback === "expireMessages")) return;
+    await this.schedule(new Date(Date.now() + VOICE_RETENTION_MS), "expireMessages");
+  }
+
+  async expireMessages(): Promise<void> {
+    const table = this.sql<{ n: number }>`SELECT COUNT(*) AS n FROM sqlite_master WHERE type = 'table' AND name = 'cf_voice_messages'`;
+    if (!table[0]?.n) return;
+    const newest = this.sql<{ t: number | null }>`SELECT MAX(timestamp) AS t FROM cf_voice_messages`[0]?.t;
+    if (newest == null) return;
+    const due = newest + VOICE_RETENTION_MS;
+    // A minute of slack: the answer is saved a few seconds after the question that armed the schedule.
+    if (Date.now() >= due - 60_000) {
+      this.sql`DELETE FROM cf_voice_messages`;
+      return;
+    }
+    await this.schedule(new Date(due), "expireMessages");
   }
 
   /** Compact, grounded snapshot of the latest capture week for the prompt. */
@@ -118,4 +144,18 @@ export class PortalVoiceAgent extends VoiceAgent<Env> {
     const clean = (text || "").replace(/\s+/g, " ").trim();
     return clean.length > max ? clean.slice(0, max - 1) + "…" : clean;
   }
+}
+
+const LEGACY_ROOM_FLAG = "voice:legacy-room-expired";
+
+/**
+ * Before per-tab rooms, every visitor shared the room "default". The Worker no longer routes to it,
+ * so apply the same 24-hour retention to it once: its messages are deleted now, or 24 hours after
+ * its last message if that is sooner than a day ago.
+ */
+export async function expireLegacyRoom(env: Env): Promise<void> {
+  if (await env.CACHE.get(LEGACY_ROOM_FLAG)) return;
+  const stub = await getAgentByName(env.PortalVoiceAgent, "default");
+  await stub.expireMessages();
+  await env.CACHE.put(LEGACY_ROOM_FLAG, "1");
 }

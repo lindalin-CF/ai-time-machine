@@ -23,6 +23,8 @@ export interface Env {
   CAPTURE_QUEUE: Queue<CaptureJob>;
   // Workflow — durable weekly orchestration
   CAPTURE_WORKFLOW: Workflow;
+  // Durable Object — voice agent, one instance per browser-tab room (src/voice-room.ts)
+  PortalVoiceAgent: DurableObjectNamespace<import("./voice").PortalVoiceAgent>;
   // Secret: bearer token that authorizes POST /api/upload (local screenshot uploads)
   UPLOAD_TOKEN?: string;
 }

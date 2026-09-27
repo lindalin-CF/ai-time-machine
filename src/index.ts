@@ -4,6 +4,8 @@ import { handleApi, handleImage, isoMonday, weekLabel } from "./api";
 import { capturePortal } from "./capture";
 import { handlePortalPage, handleSitemap, handleHowWeAnalyze } from "./portal-page";
 import { handleHomepage } from "./homepage";
+import { isVoiceRoomPath } from "./voice-room";
+import { expireLegacyRoom } from "./voice";
 
 // Export the Workflow class so the runtime can find it (class_name in wrangler.jsonc).
 export { CaptureWorkflow } from "./workflow";
@@ -17,6 +19,9 @@ export default {
     try {
       // Voice agent WebSocket + control routes (/agents/portal-voice-agent/<name>).
       if (url.pathname.startsWith("/agents/")) {
+        // Only per-tab rooms (src/voice-room.ts); a shared room name would mix visitors' conversations.
+        if (!isVoiceRoomPath(url.pathname)) return new Response("not found", { status: 404 });
+        ctx.waitUntil(expireLegacyRoom(env).catch((err) => console.error("[voice] legacy room expiry failed:", err)));
         const routed = await routeAgentRequest(request, env);
         if (routed) return routed;
       }

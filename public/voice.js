@@ -13,6 +13,23 @@ import { VoiceClient } from "/vendor/voice-client.js";
 
 const AGENT = "portal-voice-agent";
 
+// Each tab gets its own conversation: a random room name kept in sessionStorage, so a reload
+// keeps the conversation and another tab or visitor never shares it. The Worker only accepts
+// UUID room names (src/voice-room.ts).
+const ROOM_KEY = "voice-room";
+function roomName() {
+  try {
+    let room = sessionStorage.getItem(ROOM_KEY);
+    if (!room) {
+      room = crypto.randomUUID();
+      sessionStorage.setItem(ROOM_KEY, room);
+    }
+    return room;
+  } catch {
+    return crypto.randomUUID(); // no sessionStorage: a new conversation per page
+  }
+}
+
 const STATUS_LABEL = {
   idle: "Idle",
   listening: "Listening…",
@@ -181,7 +198,7 @@ function renderInterim(text) {
 // ---- call control ---------------------------------------------------------
 function ensureClient() {
   if (client) return client;
-  client = new VoiceClient({ agent: AGENT });
+  client = new VoiceClient({ agent: AGENT, name: roomName() });
   client.addEventListener("statuschange", setStatus);
   client.addEventListener("transcriptchange", renderTranscript);
   client.addEventListener("interimtranscript", renderInterim);
