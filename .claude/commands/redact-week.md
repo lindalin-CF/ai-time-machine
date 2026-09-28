@@ -113,13 +113,21 @@ Then **stop**. Give the user the full path of `review.html`, a one-line tally (r
 
 Upload list = every image whose ledger row is `pending review` for this week, minus exclusions (`chatgpt/mobile`, or `chatgpt` for both variants). Images still flagged `needs_decision` are included only if the user's reply covers them; if unclear, ask. If the user names a slug/variant that isn't in the list, say so and don't guess.
 
-For each image, one at a time; stop that image (not the whole run) on any failed check, and mark its ledger row `failed: <reason>`:
+Run the reusable upload script from `scripts/local-capture/` (don't write a new one):
 
-1. Archive the live object: `TS=$(date -u +%Y%m%dT%H%M%SZ)`, `set -o noclobber`, `npx wrangler r2 object get ai-portal-shots/<key> --remote --pipe > ~/AI-Surface-Archive/<key>.$TS.png`. Check it's non-empty, and that its SHA-1 equals a second fresh `--pipe | shasum` of the live object. Check the live SHA-1 still equals the ledger's `original_sha1`; if not, stop this image (someone changed it).
-2. Upload: `npx wrangler r2 object put ai-portal-shots/<key> --file <redacted_file> --content-type image/png --remote`.
-3. Verify: `curl -s "$SITE/img/<key>?cb=$(date +%s%N)$RANDOM" | shasum` and `npx wrangler r2 object get … --pipe | shasum` both equal the redacted SHA-1.
-4. Ledger (snapshot first): `upload_status: "uploaded"`, `uploaded_at`, append the archive path to `archived_before_upload`.
-5. Bump `captured_at` by 1 ms: read it with `npx wrangler d1 execute ai-portal-library --remote --json --command "SELECT captured_at FROM captures WHERE id='<slug>-<week>'"`, compute `new Date(Date.parse(old) + 1).toISOString()` in node, then `UPDATE captures SET captured_at='<new>' WHERE id='<slug>-<week>' AND captured_at='<old>'` and check `changes == 1`.
-6. Clear the KV keys `invalidate()` in `src/capture.ts` clears: `<CACHE_VERSION>:cache:captures:<week>`, `…:cache:weeks`, `…:cache:stats`, `…:cache:sitemap`, each with `npx wrangler kv key delete --namespace-id 5c7252cb79964f8cab90d2171096c386 --remote "<key>"`.
+```
+node analysis/upload-redacted.mjs $ARGUMENTS [--except slug/variant,slug,...] [--dry-run]
+```
 
-Report each image: ✓ (archive path, new SHA-1, new captured_at) or ✗ with the reason. Then list images not uploaded and why. Add an "Upload results" section to `review.html`.
+Pass the user's exclusions with `--except` (a bare slug excludes both variants). Run `--dry-run` first if anything looks off; it touches nothing. The script handles each image one at a time and stops only that image on a failed check, marking its ledger row `failed: <reason>`. For each image it:
+
+1. Archives the live R2 object to `~/AI-Surface-Archive/<key>.<UTC ts>.png` (never overwriting; a taken name gets `-2`, `-3`, …), checks it is non-empty and byte-identical to a second fresh read, and checks the live SHA-1 equals the row's `expected_live_sha1` if set, otherwise `original_sha1`. Set `expected_live_sha1` (and move the old `redacted_sha1` into `previous_redacted_sha1`) when replacing an earlier redaction.
+2. Uploads `redacted_file` with `wrangler r2 object put`.
+3. Verifies a cache-busted site download and a fresh R2 read both equal `redacted_sha1`.
+4. Updates the ledger (snapshotting it first): `upload_status: "uploaded"`, `uploaded_at`, archive path appended to `archived_before_upload`.
+5. Bumps `captured_at` by 1 ms with a guarded `UPDATE` (`changes` must be 1).
+6. Deletes the KV keys `invalidate()` in `src/capture.ts` deletes (`CACHE_VERSION` and the KV id are read from `src/db.ts` and `wrangler.jsonc`).
+
+It never deletes an image, an R2 object or an archive file (the KV cache keys are the only thing it deletes). If you need a step it doesn't cover, stop and ask rather than improvising a replacement.
+
+Report each image from the script's output: ✓ (archive path, new SHA-1, new captured_at) or ✗ with the reason. Also confirm the site's API image URLs (`GET /api/captures?week=…`) serve the new SHA-1s. Then list images not uploaded and why. Add an "Upload results" section to `review.html`.
