@@ -237,6 +237,7 @@ const HOW_WE_ANALYZE = `    <main class="howto">
         <li><a href="https://www.nngroup.com/articles/visual-hierarchy-ux-definition/">Nielsen Norman Group, visual hierarchy in UX</a></li>
         <li><a href="https://www.microsoft.com/en-us/research/project/guidelines-for-human-ai-interaction/">Microsoft Research, Guidelines for Human-AI Interaction (Amershi et al., CHI 2019)</a></li>
       </ul>
+      <p>Made by <a href="https://www.linkedin.com/in/linda-lin-design/" target="_blank" rel="me noopener noreferrer">Linda Lin</a>, an AI product designer based in the US.</p>
     </main>`;
 
 /** /how-we-analyze: how the weekly screenshots and design analyses are made. */

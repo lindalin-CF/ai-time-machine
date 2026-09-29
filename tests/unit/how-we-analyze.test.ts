@@ -53,6 +53,9 @@ describe('/how-we-analyze', () => {
       'W3C, Web Content Accessibility Guidelines (WCAG) 2.2',
       'Nielsen Norman Group, visual hierarchy in UX',
       'Microsoft Research, Guidelines for Human-AI Interaction (Amershi et al., CHI 2019)',
+      'Made by',
+      'Linda Lin',
+      ', an AI product designer based in the US.',
     ]);
     const main = html.match(/<main class="howto">[\s\S]*?<\/main>/)![0];
     expect(main.match(/<h1>/g)).toHaveLength(1);
@@ -63,6 +66,29 @@ describe('/how-we-analyze', () => {
     expect(html).toContain('<li><a href="https://www.w3.org/TR/WCAG22/">W3C, Web Content Accessibility Guidelines (WCAG) 2.2</a></li>');
     expect(html).toContain('<li><a href="https://www.nngroup.com/articles/visual-hierarchy-ux-definition/">Nielsen Norman Group, visual hierarchy in UX</a></li>');
     expect(html).toContain('<li><a href="https://www.microsoft.com/en-us/research/project/guidelines-for-human-ai-interaction/">Microsoft Research, Guidelines for Human-AI Interaction (Amershi et al., CHI 2019)</a></li>');
+  });
+
+  it('ends with the author line, a plain paragraph after Sources with only the name linked', () => {
+    const AUTHOR = '<p>Made by <a href="https://www.linkedin.com/in/linda-lin-design/" target="_blank" rel="me noopener noreferrer">Linda Lin</a>, an AI product designer based in the US.</p>';
+    const main = html.match(/<main class="howto">[\s\S]*?<\/main>/)![0];
+    expect(main).toMatch(new RegExp(`</ul>\\s*${AUTHOR.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}\\s*</main>$`));
+    expect(main.indexOf(AUTHOR)).toBeGreaterThan(main.indexOf('<h2>Sources</h2>'));
+    // Only on this page, and only once.
+    expect(html.split('linkedin.com').length - 1).toBe(1);
+  });
+
+  it('does not add the author line anywhere else', async () => {
+    const t = makeEnv();
+    t.db.exec(`INSERT INTO weeks (week, label, created_at) VALUES ('2026-09-21', 'Week of Sep 21, 2026', '2026-09-21T00:00:00Z')`);
+    t.db.exec(`INSERT INTO captures (id, week, slug, portal, company, url, brand, r2_key, analysis, analysis_by, captured_at)
+               VALUES ('claude-2026-09-21', '2026-09-21', 'claude', 'Claude', 'Anthropic', 'https://claude.ai/', '#d97757',
+                       'shots/2026-09-21/claude.local.png', '', 'pending', '2026-09-21T09:00:00Z')`);
+    const portal = await (await handlePortalPage(new Request('https://x/portals/claude'), t.env)).text();
+    expect(portal).not.toContain('linkedin.com');
+    expect(portal).not.toContain('Made by');
+    for (const f of ['../../public/index.html', '../../public/app.js']) {
+      expect(readFileSync(new URL(f, import.meta.url), 'utf8')).not.toContain('linkedin.com');
+    }
   });
 
   it('answers HEAD without a body and rejects other methods', async () => {
