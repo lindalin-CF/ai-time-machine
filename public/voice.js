@@ -53,15 +53,22 @@ function analyticsChoice() {
 // ---- styles (self-contained, themed) -------------------------------------
 const style = document.createElement("style");
 style.textContent = `
-.voice-fab{position:fixed;right:22px;bottom:22px;z-index:60;display:inline-flex;align-items:center;
-  gap:9px;padding:13px 18px;border:none;border-radius:999px;cursor:pointer;
-  font-family:var(--font-sans);font-weight:600;font-size:14px;color:#fff;
+.voice-fab{position:fixed;right:22px;bottom:22px;z-index:60;display:grid;place-items:center;
+  width:52px;height:52px;padding:0;border:none;border-radius:50%;cursor:pointer;color:#fff;
   background:var(--cf-orange,#ff6633);
   box-shadow:0 6px 22px -8px rgba(217,79,34,.7),0 2px 6px rgba(82,16,0,.18);
   transition:transform .15s ease,box-shadow .15s ease}
 .voice-fab:hover{transform:translateY(-1px);box-shadow:0 10px 26px -8px rgba(217,79,34,.8)}
 .voice-fab:active{transform:translateY(0)}
-.voice-fab .vf-dot{width:9px;height:9px;border-radius:50%;background:#fff;opacity:.9}
+.voice-fab:focus-visible{outline:3px solid var(--cf-text,#521000);outline-offset:3px}
+.voice-fab svg{display:block;width:24px;height:24px}
+.voice-fab .vf-tip{position:absolute;right:calc(100% + 10px);top:50%;transform:translateY(-50%);
+  padding:6px 10px;border-radius:8px;white-space:nowrap;pointer-events:none;
+  font-family:var(--font-sans);font-weight:600;font-size:13px;line-height:1.2;
+  background:var(--cf-text,#521000);color:var(--cf-bg-100,#fffdfa);
+  opacity:0;visibility:hidden;transition:opacity .12s ease,visibility .12s}
+.voice-fab:hover .vf-tip,.voice-fab:focus-visible .vf-tip{opacity:1;visibility:visible}
+.voice-fab.tip-dismissed .vf-tip{opacity:0;visibility:hidden}
 
 .voice-panel{position:fixed;right:22px;bottom:78px;z-index:61;width:340px;max-width:calc(100vw - 44px);
   background:var(--cf-bg-100,#fffdfa);border:1px solid var(--cf-border-strong,#e0c3a8);
@@ -119,7 +126,11 @@ const fab = document.createElement("button");
 fab.className = "voice-fab";
 fab.type = "button";
 fab.setAttribute("aria-label", "Talk to the library");
-fab.innerHTML = `<span class="vf-dot"></span> Talk to the library`;
+// Icon-only: the aria-label names it; the tooltip shows the same text on hover and keyboard focus.
+fab.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 11.5c0 4.14-3.58 7.5-8 7.5-1.05 0-2.05-.19-2.97-.53L4 20l1.4-3.74A7.07 7.07 0 0 1 4 11.5C4 7.36 7.58 4 12 4s8 3.36 8 7.5Z"/></svg><span class="vf-tip" aria-hidden="true">Talk to the library</span>`;
+// Escape hides the tooltip without moving focus (WCAG 1.4.13); it comes back on the next hover or focus.
+fab.addEventListener("keydown", (e) => { if (e.key === "Escape") fab.classList.add("tip-dismissed"); });
+for (const ev of ["blur", "mouseleave"]) fab.addEventListener(ev, () => fab.classList.remove("tip-dismissed"));
 
 const panel = document.createElement("section");
 panel.className = "voice-panel";

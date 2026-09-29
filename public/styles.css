@@ -528,7 +528,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   .lb-img{max-height:calc(90vh - 58px)}
   .lb-icon{width:36px;height:36px}
 
-  .voice-fab{right:14px;bottom:14px;padding:12px 15px;font-size:13px}
+  .voice-fab{right:14px;bottom:14px}
   .voice-panel{right:14px;bottom:72px;width:calc(100vw - 28px)}
 }
 
