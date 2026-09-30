@@ -71,7 +71,12 @@ function socialMeta(title: string, description: string, canonical: string, image
 `;
 }
 
-function page(opts: { title: string; description: string; canonical?: string; noindex?: boolean; image?: PreviewImage; consent: ConsentMode; body: string }): string {
+/** A JSON-LD <script>; "<" is escaped so the data can never close the script element. */
+export function jsonLdScript(data: unknown): string {
+  return `  <script type="application/ld+json">${JSON.stringify(data).replace(/</g, "\\u003c")}</script>\n`;
+}
+
+function page(opts: { title: string; description: string; canonical?: string; noindex?: boolean; image?: PreviewImage; jsonLd?: unknown; consent: ConsentMode; body: string }): string {
   return `<!doctype html>
 <html lang="en" data-consent="${opts.consent}">
 <head>
@@ -82,7 +87,7 @@ function page(opts: { title: string; description: string; canonical?: string; no
   <title>${esc(opts.title)}</title>
   <meta name="description" content="${esc(opts.description)}" />
   <meta name="robots" content="${opts.noindex ? "noindex" : "max-image-preview:large"}" />
-${opts.canonical ? socialMeta(opts.title, opts.description, opts.canonical, opts.image ?? SITE_PREVIEW) : ""}  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+${opts.canonical ? socialMeta(opts.title, opts.description, opts.canonical, opts.image ?? SITE_PREVIEW) : ""}${opts.jsonLd ? jsonLdScript(opts.jsonLd) : ""}  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <style>
     body{margin:0;font:16px/1.6 system-ui,-apple-system,Segoe UI,sans-serif;background:#f4efe8;color:#231f1a}
     .wrap{max-width:1000px;margin:0 auto;padding:24px 16px}
@@ -196,14 +201,19 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
   );
 
   let shots = "";
+  const shotImages: { url: string; alt: string; width: number; height: number }[] = []; // also described in JSON-LD
   if (cap) {
     const desktop = shotUrl(cap.r2_key, slug, cap.captured_at);
     const d = desktopSize(cap);
-    shots += `      <figure class="desktop"><img src="${esc(desktop)}" alt="${esc(shotAlt(name, "desktop", cap.week))}" width="${d.width}" height="${d.height}" loading="eager" /><figcaption>Desktop &middot; week of ${esc(cap.week)}</figcaption></figure>\n`;
+    const dAlt = shotAlt(name, "desktop", cap.week);
+    shotImages.push({ url: desktop, alt: dAlt, ...d });
+    shots += `      <figure class="desktop"><img src="${esc(desktop)}" alt="${esc(dAlt)}" width="${d.width}" height="${d.height}" loading="eager" /><figcaption>Desktop &middot; week of ${esc(weekInWords(cap.week))}</figcaption></figure>\n`;
     if (cap.r2_key_mobile) {
       const mobile = shotUrl(cap.r2_key_mobile, slug, cap.captured_at);
       const m = (await mobileSize(env, cap)) ?? MOBILE_CAPTURE_SIZE;
-      shots += `      <figure class="mobile"><img src="${esc(mobile)}" alt="${esc(shotAlt(name, "mobile", cap.week))}" width="${m.width}" height="${m.height}" loading="lazy" /><figcaption>Mobile &middot; week of ${esc(cap.week)}</figcaption></figure>\n`;
+      const mAlt = shotAlt(name, "mobile", cap.week);
+      shotImages.push({ url: mobile, alt: mAlt, ...m });
+      shots += `      <figure class="mobile"><img src="${esc(mobile)}" alt="${esc(mAlt)}" width="${m.width}" height="${m.height}" loading="lazy" /><figcaption>Mobile &middot; week of ${esc(weekInWords(cap.week))}</figcaption></figure>\n`;
     }
   }
 
@@ -217,7 +227,7 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
 
   const body = `    <main>
       <h1>${esc(name)}</h1>
-      <p class="meta">${esc(portal.company)}${cap ? ` &middot; captured week of ${esc(cap.week)}` : ""}</p>
+      <p class="meta">${esc(portal.company)}${cap ? ` &middot; captured week of ${esc(weekInWords(cap.week))}` : ""}</p>
 ${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screenshots">\n${shots}      </section>
       <section class="analysis"><h2>Design analysis</h2><p>${esc(displayedAnalysis(cap))}</p><p class="method"><a href="/how-we-analyze">How this analysis is made</a></p></section>` : `      <p>No captures yet for ${esc(name)}.</p>`}
     </main>`;
@@ -227,9 +237,34 @@ ${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screens
     ? { url: `${ORIGIN}${shotUrl(cap.r2_key, slug, cap.captured_at)}`, ...desktopSize(cap), alt: shotAlt(name, "desktop", cap.week) }
     : undefined;
 
+  // Structured data: the breadcrumb trail (names as shown on the page) and each screenshot shown.
+  const hubUrl = `${ORIGIN}/portals/${slug}`;
+  const crumbs = [
+    { name: "AI Interface Library", item: `${ORIGIN}/` }, // the header link back to the homepage
+    { name, item: hubUrl },
+    ...(weekParam !== null ? [{ name: `Week of ${weekInWords(weekParam)}`, item: canonical }] : []),
+  ];
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: crumbs.map((c, i) => ({ "@type": "ListItem", position: i + 1, name: c.name, item: c.item })),
+      },
+      ...shotImages.map((img) => ({
+        "@type": "ImageObject",
+        contentUrl: img.url.startsWith("/") ? `${ORIGIN}${img.url}` : img.url,
+        caption: img.alt,
+        width: img.width,
+        height: img.height,
+      })),
+    ],
+  };
+
   const html = page({
     consent: consentMode(request),
     image,
+    jsonLd,
     title: weekParam !== null
       ? `${name} interface — week of ${weekInWords(weekParam)} | AI Interface Library`
       : `${name} interface screenshots — weekly UI history | AI Interface Library`,

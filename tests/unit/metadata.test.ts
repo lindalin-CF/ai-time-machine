@@ -198,3 +198,87 @@ describe('weekly page descriptions', () => {
     expect(meta(await portal('/portals/chatgpt'), 'description')).toMatch(/^Weekly screenshots of the ChatGPT interface by OpenAI/);
   });
 });
+
+// ---- JSON-LD -----------------------------------------------------------------------
+const FORBIDDEN = /"(author|creator|license|acquireLicensePage|copyright\w*|publisher|creditText)"/i;
+/** Every JSON-LD block on the page, parsed (a block that doesn't parse fails the test). */
+function jsonLd(html: string): Record<string, any>[] {
+  return [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]));
+}
+/** The page's visible text: body without scripts and tags, entities decoded, whitespace collapsed. */
+function visibleText(html: string): string {
+  return html.match(/<body>([\s\S]*)<\/body>/)![1].replace(/<script[\s\S]*?<\/script>/g, ' ').replace(/<[^>]+>/g, ' ')
+    .replace(/&middot;/g, '·').replace(/&larr;/g, '←').replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/\s+/g, ' ');
+}
+/** Every <img> on the page as {src (absolute), alt, width, height}. */
+function pageImages(html: string) {
+  return [...html.matchAll(/<img ([^>]*)\/?>/g)].map((m) => {
+    const a = (k: string) => m[1].match(new RegExp(`${k}="([^"]*)"`))?.[1];
+    const src = a('src')!;
+    return { src: src.startsWith('/') ? ORIGIN + src : src, alt: a('alt'), width: Number(a('width')), height: Number(a('height')) };
+  });
+}
+
+describe('JSON-LD', () => {
+  let t: ReturnType<typeof seed>;
+  beforeEach(() => { t = seed(); });
+  const portal = async (path: string) => (await handlePortalPage(new Request(`https://x${path}`), t.env)).text();
+
+  it('homepage: a WebSite with the site name and URL, and nothing else', () => {
+    expect(jsonLd(INDEX_HTML)).toEqual([{ '@context': 'https://schema.org', '@type': 'WebSite', name: 'AI Interface Library', url: `${ORIGIN}/` }]);
+    expect(INDEX_HTML).toContain('<link rel="canonical" href="https://ai-portal-library.dev/" />');
+    expect(INDEX_HTML).toContain('aria-label="AI Interface Library"'); // the visible site title
+  });
+
+  it('portal hub: breadcrumb Home › Portal, and an ImageObject per screenshot shown', async () => {
+    const html = await portal('/portals/chatgpt');
+    const [block] = jsonLd(html);
+    expect(block['@context']).toBe('https://schema.org');
+    const [crumbs, ...images] = block['@graph'];
+    expect(crumbs).toEqual({ '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'AI Interface Library', item: `${ORIGIN}/` },
+      { '@type': 'ListItem', position: 2, name: 'ChatGPT', item: `${ORIGIN}/portals/chatgpt` },
+    ] });
+    expect(images.map((i: any) => i['@type'])).toEqual(['ImageObject', 'ImageObject']);
+  });
+
+  it('weekly page: breadcrumb Home › Portal › Week of Month D, YYYY', async () => {
+    const [block] = jsonLd(await portal('/portals/chatgpt/2026-09-07'));
+    expect(block['@graph'][0].itemListElement.map((c: any) => [c.position, c.name, c.item])).toEqual([
+      [1, 'AI Interface Library', `${ORIGIN}/`],
+      [2, 'ChatGPT', `${ORIGIN}/portals/chatgpt`],
+      [3, 'Week of September 7, 2026', `${ORIGIN}/portals/chatgpt/2026-09-07`],
+    ]);
+    expect(block['@graph'].slice(1)).toHaveLength(1); // desktop only that week
+  });
+
+  it.each([['/portals/chatgpt'], ['/portals/chatgpt/2026-09-21'], ['/portals/chatgpt/2026-09-07'], ['/portals/claude']])(
+    '%s: every block parses and matches the visible page', async (path) => {
+      const html = await portal(path);
+      const blocks = jsonLd(html);
+      expect(blocks).toHaveLength(1);
+      expect(html.match(/<script type="application\/ld\+json">[\s\S]*?<\/script>/)![0]).not.toMatch(FORBIDDEN);
+      const text = visibleText(html).toLowerCase();
+      const graph = blocks[0]['@graph'];
+
+      // Breadcrumbs: each name is on the page, the portal is the <h1>, links are this site's pages.
+      const crumbs = graph[0].itemListElement;
+      for (const c of crumbs) expect(text, c.name).toContain(c.name.toLowerCase());
+      expect(html).toContain(`<h1>${crumbs[1].name}</h1>`);
+      expect(html).toContain(`<a href="/">&larr; ${crumbs[0].name}</a>`);
+      expect(crumbs.at(-1).item).toBe(html.match(/<link rel="canonical" href="([^"]+)" \/>/)![1]);
+
+      // ImageObjects: exactly the screenshots on the page, same URL, caption = alt, same size.
+      const images = graph.slice(1).map((i: any) => ({ src: i.contentUrl, alt: i.caption, width: i.width, height: i.height }));
+      expect(images).toEqual(pageImages(html));
+      for (const i of graph.slice(1)) expect(Object.keys(i).sort()).toEqual(['@type', 'caption', 'contentUrl', 'height', 'width']);
+    });
+
+  it('escapes "<" so data can never close the script element', async () => {
+    t.db.exec(`UPDATE portals SET name = 'Chat</script><b>GPT' WHERE slug = 'chatgpt'`);
+    const html = await portal('/portals/chatgpt');
+    const script = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)![1];
+    expect(script).not.toContain('<');
+    expect(JSON.parse(script)['@graph'][0].itemListElement[1].name).toBe('Chat</script><b>GPT');
+  });
+});
