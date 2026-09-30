@@ -10,8 +10,8 @@
     "directory": "./public",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    // API, image streaming and the server-rendered pages (homepage, portals, sitemap, how-we-analyze, privacy) run the Worker first; everything else is a static file.
-    "run_worker_first": ["/", "/agents/*", "/api/*", "/img/*", "/portals/*", "/sitemap.xml", "/how-we-analyze", "/how-we-analyze/", "/privacy", "/privacy/"]
+    // API, image streaming and the server-rendered pages (homepage, portals, sitemap, feed, how-we-analyze, privacy) run the Worker first; everything else is a static file.
+    "run_worker_first": ["/", "/agents/*", "/api/*", "/img/*", "/portals/*", "/sitemap.xml", "/feed.xml", "/how-we-analyze", "/how-we-analyze/", "/privacy", "/privacy/"]
   },
 
   "observability": { "enabled": true },

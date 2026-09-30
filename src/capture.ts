@@ -225,5 +225,6 @@ export async function invalidate(env: Env, week: string): Promise<void> {
     env.CACHE.delete(`${CACHE_VERSION}:cache:weeks`),
     env.CACHE.delete(`${CACHE_VERSION}:cache:stats`),
     env.CACHE.delete(`${CACHE_VERSION}:cache:sitemap`),
+    env.CACHE.delete(`${CACHE_VERSION}:cache:feed`),
   ]);
 }

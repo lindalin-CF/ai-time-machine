@@ -2,7 +2,7 @@ import { routeAgentRequest } from "agents";
 import type { Env, CaptureJob } from "./types";
 import { handleApi, handleImage, isoMonday, weekLabel } from "./api";
 import { capturePortal } from "./capture";
-import { handlePortalPage, handleSitemap, handleHowWeAnalyze, handlePrivacy } from "./portal-page";
+import { handlePortalPage, handleSitemap, handleFeed, handleHowWeAnalyze, handlePrivacy } from "./portal-page";
 import { handleHomepage } from "./homepage";
 import { isVoiceRoomPath } from "./voice-room";
 import { expireLegacyRoom } from "./voice";
@@ -31,6 +31,7 @@ export default {
       if (url.pathname.startsWith("/img/")) return await handleImage(request, env);
       if (url.pathname.startsWith("/portals/")) return await handlePortalPage(request, env);
       if (url.pathname === "/sitemap.xml") return await handleSitemap(env);
+      if (url.pathname === "/feed.xml") return await handleFeed(env);
       if (url.pathname === "/how-we-analyze" || url.pathname === "/how-we-analyze/") return handleHowWeAnalyze(request);
       if (url.pathname === "/privacy" || url.pathname === "/privacy/") return handlePrivacy(request);
       if (url.pathname === "/" && (request.method === "GET" || request.method === "HEAD")) return await handleHomepage(request, env);

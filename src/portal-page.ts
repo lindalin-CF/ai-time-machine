@@ -1,5 +1,5 @@
 import type { Env, CaptureRow } from "./types";
-import { getPortal, latestCaptureForPortal, captureForPortalWeek, captureWeeksForPortal, sitemapCaptures, type SitemapCapture } from "./db";
+import { getPortal, latestCaptureForPortal, captureForPortalWeek, captureWeeksForPortal, sitemapCaptures, feedCaptures, type SitemapCapture } from "./db";
 import { isPublishedAnalysis, displayedAnalysis, summaryDescription, SYSTEM_TEST_WEEKS } from "./analysis";
 import { cached } from "./api";
 import { consentMode, PRIVATE_HTML_CACHE, type ConsentMode } from "./consent";
@@ -48,6 +48,10 @@ const FOOTER_LEGAL = `      <div class="legal">&copy; 2026 AI Interface Library.
 
 export type PreviewImage = { url: string; width: number; height: number; alt: string };
 
+export const FEED_URL = `${ORIGIN}/feed.xml`;
+/** Channel description: the same as the homepage's meta description. */
+export const FEED_DESCRIPTION = "A weekly archive of AI product interfaces, analysed for layout, hierarchy and colour as a UI/UX design system.";
+
 /** The site-wide link preview (public/og-image.png), used where a page has no screenshot of its own. */
 export const SITE_PREVIEW: PreviewImage = { url: `${ORIGIN}/og-image.png`, width: 1200, height: 630, alt: "AI Interface Library" };
 
@@ -87,7 +91,8 @@ function page(opts: { title: string; description: string; canonical?: string; no
   <title>${esc(opts.title)}</title>
   <meta name="description" content="${esc(opts.description)}" />
   <meta name="robots" content="${opts.noindex ? "noindex" : "max-image-preview:large"}" />
-${opts.canonical ? socialMeta(opts.title, opts.description, opts.canonical, opts.image ?? SITE_PREVIEW) : ""}${opts.jsonLd ? jsonLdScript(opts.jsonLd) : ""}  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+${opts.canonical ? socialMeta(opts.title, opts.description, opts.canonical, opts.image ?? SITE_PREVIEW) : ""}${opts.jsonLd ? jsonLdScript(opts.jsonLd) : ""}  <link rel="alternate" type="application/rss+xml" title="AI Interface Library" href="${FEED_URL}" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <style>
     body{margin:0;font:16px/1.6 system-ui,-apple-system,Segoe UI,sans-serif;background:#f4efe8;color:#231f1a}
     .wrap{max-width:1000px;margin:0 auto;padding:24px 16px}
@@ -429,4 +434,36 @@ ${entries.map(entry).join("\n")}
 `;
   });
   return new Response(xml, { headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" } });
+}
+
+/** /feed.xml: one item per portal per week with a published analysis, newest first. */
+export async function handleFeed(env: Env): Promise<Response> {
+  const xml = await cached(env, "cache:feed", 300, async () => {
+    const rows = (await feedCaptures(env)).filter((r) => !SYSTEM_TEST_WEEKS.includes(r.week) && isPublishedAnalysis(r));
+    const when = (r: { captured_at: string; analysis_published_at: string | null }) =>
+      Math.max(...[r.captured_at, r.analysis_published_at].map((t) => Date.parse(t ?? "")).filter((n) => !Number.isNaN(n)));
+    const items = rows.map((r) => {
+      const link = `${ORIGIN}/portals/${r.slug}/${r.week}`;
+      return `    <item>
+      <title>${esc(`${r.name} interface — week of ${weekInWords(r.week)}`)}</title>
+      <link>${esc(link)}</link>
+      <guid isPermaLink="true">${esc(link)}</guid>
+      <pubDate>${new Date(when(r)).toUTCString()}</pubDate>
+      <description>${esc(r.analysis.trim())}</description>
+    </item>`;
+    });
+    const built = rows.length ? new Date(Math.max(...rows.map(when))).toUTCString() : null;
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>AI Interface Library</title>
+    <link>${ORIGIN}/</link>
+    <description>${esc(FEED_DESCRIPTION)}</description>
+    <language>en</language>
+    <atom:link href="${FEED_URL}" rel="self" type="application/rss+xml" />
+${built ? `    <lastBuildDate>${built}</lastBuildDate>\n` : ""}${items.join("\n")}${items.length ? "\n" : ""}  </channel>
+</rss>
+`;
+  });
+  return new Response(xml, { headers: { "content-type": "application/rss+xml; charset=utf-8", "cache-control": "public, max-age=3600" } });
 }

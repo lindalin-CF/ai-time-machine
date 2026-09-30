@@ -1,8 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { chromium, type Browser } from 'playwright';
 import { readFileSync } from 'node:fs';
-import { handleSitemap, handlePortalPage, handleHowWeAnalyze, handlePrivacy, ORIGIN, HOW_WE_ANALYZE_UPDATED, PRIVACY_UPDATED_DATE, PRIVACY_UPDATED, SITE_PREVIEW } from '../../src/portal-page';
+import { handleSitemap, handleFeed, handlePortalPage, handleHowWeAnalyze, handlePrivacy, ORIGIN, FEED_URL, FEED_DESCRIPTION, HOW_WE_ANALYZE_UPDATED, PRIVACY_UPDATED_DATE, PRIVACY_UPDATED, SITE_PREVIEW } from '../../src/portal-page';
 import { handleApi } from '../../src/api';
 import { makeEnv } from './fake-env';
+import { invalidate } from '../../src/capture';
+import { CACHE_VERSION } from '../../src/db';
 
 // SEO metadata: sitemap <lastmod>, robots, link previews, descriptions, JSON-LD and the RSS feed.
 
@@ -280,5 +283,101 @@ describe('JSON-LD', () => {
     const script = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)![1];
     expect(script).not.toContain('<');
     expect(JSON.parse(script)['@graph'][0].itemListElement[1].name).toBe('Chat</script><b>GPT');
+  });
+});
+
+// ---- RSS feed --------------------------------------------------------------------------
+describe('/feed.xml', () => {
+  let t: ReturnType<typeof seed>;
+  let xml: string;
+  beforeEach(async () => { t = seed(); xml = await (await handleFeed(t.env)).text(); });
+  const items = (x: string) => [...x.matchAll(/<item>([\s\S]*?)<\/item>/g)].map((m) => {
+    const f = (k: string) => m[1].match(new RegExp(`<${k}[^>]*>([\\s\\S]*?)</${k}>`))?.[1];
+    return { title: f('title'), link: f('link'), guid: f('guid'), pubDate: f('pubDate'), description: f('description') };
+  });
+
+  it('has one item per portal per week with a published analysis, newest first, without system-test weeks', () => {
+    expect(items(xml).map((i) => i.link)).toEqual([`${ORIGIN}/portals/chatgpt/2026-09-21`, `${ORIGIN}/portals/claude/2026-09-21`]);
+  });
+
+  it('titles, links and describes each item from its weekly page and summary', () => {
+    expect(items(xml)[0]).toEqual({
+      title: 'ChatGPT interface — week of September 21, 2026',
+      link: `${ORIGIN}/portals/chatgpt/2026-09-21`,
+      guid: `${ORIGIN}/portals/chatgpt/2026-09-21`,
+      pubDate: 'Sat, 26 Sep 2026 08:00:00 GMT', // the analysis was published after the capture
+      description: SUMMARY_SENTENCES.join(' '),
+    });
+    expect(xml).toContain(`<guid isPermaLink="true">${ORIGIN}/portals/chatgpt/2026-09-21</guid>`);
+    expect(items(xml)[1].pubDate).toBe('Sat, 26 Sep 2026 00:52:33 GMT'); // no publish time recorded: capture time
+  });
+
+  it('describes the channel and links to itself', () => {
+    expect(xml).toMatch(/^<\?xml version="1.0" encoding="UTF-8"\?>\n<rss version="2.0" xmlns:atom="http:\/\/www.w3.org\/2005\/Atom">/);
+    expect(xml).toContain('<title>AI Interface Library</title>');
+    expect(xml).toContain(`<link>${ORIGIN}/</link>`);
+    expect(xml).toContain(`<description>${FEED_DESCRIPTION}</description>`);
+    expect(xml).toContain(`<atom:link href="${FEED_URL}" rel="self" type="application/rss+xml" />`);
+    expect(xml).toContain('<lastBuildDate>Sat, 26 Sep 2026 08:00:00 GMT</lastBuildDate>');
+    expect(INDEX_HTML).toContain(`<meta name="description" content="${FEED_DESCRIPTION}" />`);
+  });
+
+  it('leaves out unpublished analyses and escapes text', async () => {
+    t.db.exec(`UPDATE captures SET analysis_by = 'pending' WHERE id = 'claude-2026-09-21'`);
+    t.db.exec(`UPDATE captures SET analysis = 'Tabs <b> & "quotes"' WHERE id = 'chatgpt-2026-09-21'`);
+    t.kv.clear();
+    const x = await (await handleFeed(t.env)).text();
+    expect(items(x).map((i) => i.link)).toEqual([`${ORIGIN}/portals/chatgpt/2026-09-21`]);
+    expect(items(x)[0].description).toBe('Tabs &lt;b&gt; &amp; &quot;quotes&quot;');
+  });
+
+  it('is RSS, cached in KV, and cleared by invalidate()', async () => {
+    const res = await handleFeed(t.env);
+    expect(res.headers.get('content-type')).toBe('application/rss+xml; charset=utf-8');
+    expect(t.kv.has(`${CACHE_VERSION}:cache:feed`)).toBe(true);
+    await invalidate(t.env, '2026-09-21');
+    expect(t.kv.has(`${CACHE_VERSION}:cache:feed`)).toBe(false);
+  });
+
+  it('is routed to the Worker in both configs', () => {
+    for (const f of ['wrangler.jsonc', 'wrangler.dev.jsonc']) {
+      const w = readFileSync(new URL(`../../${f}`, import.meta.url), 'utf8');
+      expect(w.match(/"run_worker_first": \[([^\]]*)\]/)![1], f).toContain('"/feed.xml"');
+    }
+    expect(readFileSync(new URL('../../src/index.ts', import.meta.url), 'utf8')).toContain('if (url.pathname === "/feed.xml") return await handleFeed(env);');
+  });
+
+  it('is linked from every page', async () => {
+    const LINK = `<link rel="alternate" type="application/rss+xml" title="AI Interface Library" href="${FEED_URL}" />`;
+    for (const html of [INDEX_HTML, await (await handlePortalPage(new Request('https://x/portals/chatgpt'), t.env)).text(),
+      await (await handlePortalPage(new Request('https://x/portals/chatgpt/2026-09-21'), t.env)).text(),
+      await (await handlePortalPage(new Request('https://x/portals/chatgpt/2026-08-03'), t.env)).text(),
+      await (await handleHowWeAnalyze(new Request('https://x/how-we-analyze'))).text(),
+      await (await handlePrivacy(new Request('https://x/privacy'))).text()]) {
+      expect(head(html).split(LINK).length - 1).toBe(1);
+    }
+  });
+
+  it('is not listed in robots.txt, which has no directive for feeds', () => {
+    const robots = readFileSync(new URL('../../public/robots.txt', import.meta.url), 'utf8');
+    expect(robots).not.toContain('feed.xml');
+  });
+});
+
+describe('XML is well formed', () => {
+  let browser: Browser;
+  beforeAll(async () => { browser = await chromium.launch(); });
+  afterAll(async () => { await browser?.close(); });
+  it.each([['sitemap.xml'], ['feed.xml']])('%s parses with no errors', async (name) => {
+    const t = seed();
+    t.db.exec(`UPDATE captures SET analysis = 'Tabs <b> & "quotes" — ok' WHERE id = 'chatgpt-2026-09-21'`);
+    const xml = await (await (name === 'feed.xml' ? handleFeed(t.env) : handleSitemap(t.env))).text();
+    const page = await browser.newPage();
+    const errors = await page.evaluate((x) => {
+      const doc = new DOMParser().parseFromString(x, 'application/xml');
+      return doc.getElementsByTagName('parsererror').length;
+    }, xml);
+    expect(errors).toBe(0);
+    await page.close();
   });
 });

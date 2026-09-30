@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, exist
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 // @ts-expect-error -- plain .mjs script, no type declarations
-import { uploadWeek, selectRows, writeNew, sha1 } from '../../scripts/local-capture/analysis/upload-redacted.mjs';
+import { uploadWeek, selectRows, writeNew, sha1, readProjectConfig } from '../../scripts/local-capture/analysis/upload-redacted.mjs';
 
 // Temp dirs are left in place on purpose: CLAUDE.md forbids deleting image files, even test ones.
 const WEEK = '2026-08-24';
@@ -57,7 +57,7 @@ function writeLedger(extra: Record<string, unknown> = {}) {
 const ledgerRow = () => JSON.parse(readFileSync(join(archive, 'redaction-ledger.json'), 'utf8')).images[0];
 const run = (cloud: ReturnType<typeof fakeCloud>, opts = {}) => uploadWeek(WEEK, {
   root, archiveDir: archive, site: 'https://site.test', exec: cloud.exec, log: () => {},
-  now: () => new Date('2026-09-28T03:18:40.123Z'), config: { cacheVersion: 'v2-test', kvId: 'abc123' }, ...opts,
+  now: () => new Date('2026-09-28T03:18:40.123Z'), config: { cacheVersion: 'v2-test', kvId: 'abc123', cacheKeys: ['captures:{week}', 'weeks', 'stats', 'sitemap', 'feed'] }, ...opts,
 });
 
 beforeEach(() => {
@@ -78,7 +78,7 @@ describe('upload-redacted.mjs', () => {
     expect(readFileSync(archived).equals(ORIGINAL)).toBe(true);
     expect(cloud.putBeforeArchive).toBe(false);
     expect(cloud.capturedAt).toBe('2026-08-28T19:43:15.571Z');
-    expect(cloud.kvDeleted).toEqual([`v2-test:cache:captures:${WEEK}`, 'v2-test:cache:weeks', 'v2-test:cache:stats', 'v2-test:cache:sitemap']);
+    expect(cloud.kvDeleted).toEqual([`v2-test:cache:captures:${WEEK}`, 'v2-test:cache:weeks', 'v2-test:cache:stats', 'v2-test:cache:sitemap', 'v2-test:cache:feed']);
     expect(cloud.calls.some((c) => c.startsWith('curl -sf https://site.test/img/') && c.includes('?cb='))).toBe(true);
     const row = ledgerRow();
     expect(row.upload_status).toBe('uploaded');
@@ -140,6 +140,12 @@ describe('upload-redacted.mjs', () => {
     expect(res.ok).toBe(true);
     expect(cloud.calls).toHaveLength(0);
     expect(existsSync(join(archive, 'shots'))).toBe(false);
+  });
+});
+
+describe('readProjectConfig', () => {
+  it('reads the cache keys invalidate() in src/capture.ts deletes', () => {
+    expect(readProjectConfig().cacheKeys).toEqual(['captures:{week}', 'weeks', 'stats', 'sitemap', 'feed']);
   });
 });
 

@@ -18,7 +18,7 @@
  *   3. Verify a cache-busted site download and a fresh R2 read both equal redacted_sha1.
  *   4. Ledger: upload_status "uploaded", uploaded_at, archive path appended (ledger snapshotted first).
  *   5. Bump captures.captured_at by 1 ms (guarded UPDATE, changes must be 1).
- *   6. Delete the KV keys invalidate() in src/capture.ts deletes.
+ *   6. Delete the KV keys invalidate() in src/capture.ts deletes (read from that file).
  *
  * Env: WORKER_URL (site), ARCHIVE_DIR (default ~/AI-Surface-Archive).
  */
@@ -39,14 +39,20 @@ export const sha1 = (buf) => createHash("sha1").update(buf).digest("hex");
 const utcStamp = (d) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
 const tilde = (p) => (p.startsWith(homedir()) ? "~" + p.slice(homedir().length) : p);
 
-/** CACHE_VERSION from src/db.ts and the CACHE KV namespace id from wrangler.jsonc, so they can't drift. */
+/**
+ * CACHE_VERSION from src/db.ts, the CACHE KV namespace id from wrangler.jsonc, and the cache keys
+ * invalidate() in src/capture.ts deletes (with {week} for the week), so none of them can drift.
+ */
 export function readProjectConfig(root = REPO_ROOT) {
   const db = readFileSync(join(root, "src/db.ts"), "utf8");
   const cacheVersion = /export const CACHE_VERSION = "([^"]+)"/.exec(db)?.[1];
   const wr = readFileSync(join(root, "wrangler.jsonc"), "utf8");
   const kvId = /"binding":\s*"CACHE",\s*"id":\s*"([0-9a-f]+)"/.exec(wr)?.[1];
-  if (!cacheVersion || !kvId) throw new Error("could not read CACHE_VERSION or the CACHE KV id");
-  return { cacheVersion, kvId };
+  const capture = readFileSync(join(root, "src/capture.ts"), "utf8");
+  const body = /export async function invalidate\([^)]*\)[^{]*\{([\s\S]*?)\n\}/.exec(capture)?.[1] ?? "";
+  const cacheKeys = [...body.matchAll(/env\.CACHE\.delete\(`\$\{CACHE_VERSION\}:cache:([^`]+)`\)/g)].map((m) => m[1].replace("${week}", "{week}"));
+  if (!cacheVersion || !kvId || !cacheKeys.length) throw new Error("could not read CACHE_VERSION, the CACHE KV id or the invalidate() keys");
+  return { cacheVersion, kvId, cacheKeys };
 }
 
 /** Default command runner: binary-safe stdout, stderr as text. */
@@ -96,7 +102,7 @@ export function uploadWeek(week, opts = {}) {
     only = [],
     dryRun = false,
   } = opts;
-  const { cacheVersion, kvId } = opts.config ?? readProjectConfig(root);
+  const { cacheVersion, kvId, cacheKeys } = opts.config ?? readProjectConfig(root);
   const ledgerPath = join(archiveDir, "redaction-ledger.json");
 
   const run = (cmd, args, what) => {
@@ -174,7 +180,7 @@ export function uploadWeek(week, opts = {}) {
       if (changes !== 1) throw new Error(`captured_at update changed ${changes} rows`);
 
       // 6. KV keys invalidate() clears.
-      for (const k of [`captures:${week}`, "weeks", "stats", "sitemap"]) {
+      for (const k of cacheKeys.map((c) => c.replace("{week}", week))) {
         run("npx", ["wrangler", "kv", "key", "delete", "--namespace-id", kvId, "--remote", `${cacheVersion}:cache:${k}`], `KV delete ${k}`);
       }
       results.push({ label, ok: true, archive: tilde(written), sha1: row.redacted_sha1, captured_at: [old, bumped] });

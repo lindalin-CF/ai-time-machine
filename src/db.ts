@@ -157,6 +157,20 @@ export async function captureWeeksForPortal(env: Env, slug: string): Promise<str
   return (results ?? []).map((r) => r.week);
 }
 
+export type FeedCapture = { slug: string; week: string; name: string; analysis: string; analysis_by: string; captured_at: string; analysis_published_at: string | null };
+
+/** Published guideline analyses on active portals, newest first (RSS feed; read-only). */
+export async function feedCaptures(env: Env, limit = 200): Promise<FeedCapture[]> {
+  const { results } = await env.DB.prepare(
+    `SELECT c.slug AS slug, c.week AS week, p.name AS name, c.analysis AS analysis, c.analysis_by AS analysis_by,
+            c.captured_at AS captured_at, c.analysis_published_at AS analysis_published_at
+     FROM captures c JOIN portals p ON p.slug = c.slug
+     WHERE c.status = 'ok' AND p.active = 1 AND c.analysis_by LIKE 'guideline-v%' AND TRIM(COALESCE(c.analysis, '')) != ''
+     ORDER BY COALESCE(c.analysis_published_at, c.captured_at) DESC, p.sort_order ASC LIMIT ?`
+  ).bind(limit).all<FeedCapture>();
+  return results ?? [];
+}
+
 export type SitemapCapture = { slug: string; week: string; r2_key: string | null; r2_key_mobile: string | null; captured_at: string; analysis_published_at: string | null };
 
 /** Every successful capture on an active portal, with its screenshot keys (sitemap; read-only). */
