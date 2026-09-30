@@ -149,3 +149,52 @@ describe('robots and link previews', () => {
     }
   });
 });
+
+// ---- weekly descriptions from the analysis summary -----------------------------------
+describe('weekly page descriptions', () => {
+  let t: ReturnType<typeof seed>;
+  beforeEach(() => { t = seed(); });
+  const portal = async (path: string) => (await handlePortalPage(new Request(`https://x${path}`), t.env)).text();
+  const descriptions = (html: string) => ['description', 'og:description', 'twitter:description'].map((k) => meta(html, k));
+
+  it('uses the first two summary sentences when they fit under 160 characters', async () => {
+    const d = `${SUMMARY_SENTENCES[0]} ${SUMMARY_SENTENCES[1]}`;
+    expect(d.length).toBeLessThan(160);
+    expect(descriptions(await portal('/portals/chatgpt/2026-09-21'))).toEqual([d, d, d]);
+  });
+
+  it('uses one sentence when two would be too long, and ends at a sentence end', async () => {
+    const long = 'The message box sits in the middle of the screen, under a large greeting, with suggested prompts below it.';
+    t.db.prepare(`UPDATE captures SET analysis_json = ? WHERE id = 'chatgpt-2026-09-21'`).run(JSON.stringify({ summary_sentences: [{ text: SUMMARY_SENTENCES[0] }, { text: long }] }));
+    const [d] = descriptions(await portal('/portals/chatgpt/2026-09-21'));
+    expect(d).toBe(SUMMARY_SENTENCES[0]);
+    expect(d!.endsWith('.')).toBe(true);
+  });
+
+  it('keeps the current description when the first sentence alone is 160 characters or more', async () => {
+    const first = `This shows the desktop version of ChatGPT ${'with a very long description '.repeat(5)}for the week.`;
+    expect(first.length).toBeGreaterThanOrEqual(160);
+    t.db.prepare(`UPDATE captures SET analysis_json = ? WHERE id = 'chatgpt-2026-09-21'`).run(JSON.stringify({ summary_sentences: [{ text: first }] }));
+    expect(meta(await portal('/portals/chatgpt/2026-09-21'), 'description')).toMatch(/^Screenshots of the ChatGPT interface by OpenAI from the week of September 21, 2026/);
+  });
+
+  it('a first sentence of exactly 160 characters is too long', async () => {
+    const first = `${'x'.repeat(159)}.`;
+    expect(first.length).toBe(160);
+    t.db.prepare(`UPDATE captures SET analysis_json = ? WHERE id = 'chatgpt-2026-09-21'`).run(JSON.stringify({ summary_sentences: [{ text: first }] }));
+    expect(meta(await portal('/portals/chatgpt/2026-09-21'), 'description')).toMatch(/^Screenshots of the ChatGPT/);
+  });
+
+  it('falls back to splitting the summary text when summary_sentences is missing', async () => {
+    t.db.exec(`UPDATE captures SET analysis_json = NULL WHERE id = 'chatgpt-2026-09-21'`);
+    expect(meta(await portal('/portals/chatgpt/2026-09-21'), 'description')).toBe(`${SUMMARY_SENTENCES[0]} ${SUMMARY_SENTENCES[1]}`);
+  });
+
+  it('keeps the current description without a published analysis, and on portal hubs', async () => {
+    expect(meta(await portal('/portals/chatgpt/2026-09-07'), 'description')).toBe('Screenshots of the ChatGPT interface by OpenAI from the week of September 7, 2026, on desktop and mobile, with a short design analysis.');
+    t.db.exec(`UPDATE captures SET analysis_by = 'pending' WHERE id = 'chatgpt-2026-09-21'`);
+    expect(meta(await portal('/portals/chatgpt/2026-09-21'), 'description')).toMatch(/^Screenshots of the ChatGPT interface/);
+    t.db.exec(`UPDATE captures SET analysis_by = 'guideline-v1.3' WHERE id = 'chatgpt-2026-09-21'`);
+    expect(meta(await portal('/portals/chatgpt'), 'description')).toMatch(/^Weekly screenshots of the ChatGPT interface by OpenAI/);
+  });
+});

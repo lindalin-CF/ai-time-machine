@@ -1,6 +1,6 @@
 import type { Env, CaptureRow } from "./types";
 import { getPortal, latestCaptureForPortal, captureForPortalWeek, captureWeeksForPortal, sitemapCaptures, type SitemapCapture } from "./db";
-import { isPublishedAnalysis, displayedAnalysis, SYSTEM_TEST_WEEKS } from "./analysis";
+import { isPublishedAnalysis, displayedAnalysis, summaryDescription, SYSTEM_TEST_WEEKS } from "./analysis";
 import { cached } from "./api";
 import { consentMode, PRIVATE_HTML_CACHE, type ConsentMode } from "./consent";
 import { desktopSize, mobileSize } from "./api";
@@ -186,7 +186,9 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
   const name = portal.name;
   // Meta description: guideline analyses only. The section text also shows the system-test note.
   const analysis = cap && isPublishedAnalysis(cap) ? cap.analysis.trim() : "";
-  const description = shortText(
+  // Weekly pages with a published analysis describe it in its own words (meta, og and twitter).
+  const summary = weekParam !== null && cap ? summaryDescription(cap) : null;
+  const description = summary ?? shortText(
     weekParam !== null
       ? `Screenshots of the ${name} interface by ${portal.company} from the week of ${weekInWords(weekParam)}, on desktop and mobile, with a short design analysis. ${analysis}`
       : `Weekly screenshots of the ${name} interface by ${portal.company}, on desktop and mobile, with a short design analysis of each week.${cap ? ` Latest: week of ${weekInWords(cap.week)}.` : ""} ${analysis}`,

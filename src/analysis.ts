@@ -34,6 +34,27 @@ export function displayedAnalysis(row: AnalysisFields): string {
   return ANALYSIS_SOON;
 }
 
+export const SUMMARY_DESCRIPTION_MAX = 160;
+
+/**
+ * Search description from a published guideline analysis: its first summary sentence, plus the
+ * second when both fit, always shorter than SUMMARY_DESCRIPTION_MAX and ending at a sentence end.
+ * Null when there is no published analysis or its first sentence alone is too long.
+ */
+export function summaryDescription(row: AnalysisFields & { analysis_json?: string | null }): string | null {
+  if (!isPublishedAnalysis(row)) return null;
+  let sentences: string[] = [];
+  try {
+    const parsed = JSON.parse(row.analysis_json || "null") as { summary_sentences?: { text?: unknown }[] } | null;
+    sentences = (parsed?.summary_sentences ?? []).map((s) => (typeof s?.text === "string" ? s.text.trim() : "")).filter(Boolean);
+  } catch { /* fall back to the summary text */ }
+  if (!sentences.length) sentences = row.analysis!.trim().split(/(?<=[.!?])\s+/).filter(Boolean);
+  const [first, second] = sentences;
+  if (!first || first.length >= SUMMARY_DESCRIPTION_MAX) return null;
+  const both = second ? `${first} ${second}` : first;
+  return both.length < SUMMARY_DESCRIPTION_MAX ? both : first;
+}
+
 /** Returns the first reason the analysis is invalid, or null when it passes. */
 export function validateAnalysis(a: unknown, slug: string, week: string): string | null {
   if (!a || typeof a !== "object" || Array.isArray(a)) return "analysis must be a JSON object";
