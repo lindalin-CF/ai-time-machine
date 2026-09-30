@@ -58,6 +58,7 @@ export interface CaptureRow {
   analysis_by: string;
   analysis_json: string | null;     // full guideline JSON; never exposed publicly
   analysis_version: string | null;
+  analysis_published_at?: string | null;
   status: string;
   captured_at: string;
 }

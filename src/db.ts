@@ -77,8 +77,8 @@ export async function updateCaptureAnalysis(
   a: { analysis: string; analysis_by: string; analysis_json: string; analysis_version: string }
 ): Promise<void> {
   await env.DB.prepare(
-    `UPDATE captures SET analysis=?, analysis_by=?, analysis_json=?, analysis_version=? WHERE id=?`
-  ).bind(a.analysis, a.analysis_by, a.analysis_json, a.analysis_version, id).run();
+    `UPDATE captures SET analysis=?, analysis_by=?, analysis_json=?, analysis_version=?, analysis_published_at=? WHERE id=?`
+  ).bind(a.analysis, a.analysis_by, a.analysis_json, a.analysis_version, new Date().toISOString(), id).run();
 }
 
 /**
@@ -157,12 +157,13 @@ export async function captureWeeksForPortal(env: Env, slug: string): Promise<str
   return (results ?? []).map((r) => r.week);
 }
 
-export type SitemapCapture = { slug: string; week: string; r2_key: string | null; r2_key_mobile: string | null; captured_at: string };
+export type SitemapCapture = { slug: string; week: string; r2_key: string | null; r2_key_mobile: string | null; captured_at: string; analysis_published_at: string | null };
 
 /** Every successful capture on an active portal, with its screenshot keys (sitemap; read-only). */
 export async function sitemapCaptures(env: Env): Promise<SitemapCapture[]> {
   const { results } = await env.DB.prepare(
-    `SELECT c.slug AS slug, c.week AS week, c.r2_key AS r2_key, c.r2_key_mobile AS r2_key_mobile, c.captured_at AS captured_at
+    `SELECT c.slug AS slug, c.week AS week, c.r2_key AS r2_key, c.r2_key_mobile AS r2_key_mobile, c.captured_at AS captured_at,
+            c.analysis_published_at AS analysis_published_at
      FROM captures c JOIN portals p ON p.slug = c.slug
      WHERE c.status = 'ok' AND p.active = 1 ORDER BY p.sort_order ASC, c.week DESC`
   ).all<SitemapCapture>();

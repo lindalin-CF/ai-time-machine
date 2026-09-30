@@ -29,6 +29,8 @@
     "db:migrate:system-test:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0007_mark_system_test_weeks.sql",
     "db:migrate:question-log:local": "wrangler d1 execute ai-portal-library --local --file=./migrations/0008_question_log.sql",
     "db:migrate:question-log:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0008_question_log.sql",
+    "db:migrate:analysis-published:local": "wrangler d1 execute ai-portal-library --local --file=./migrations/0009_analysis_published_at.sql",
+    "db:migrate:analysis-published:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0009_analysis_published_at.sql",
     "test": "vitest run --config vitest.unit.config.mts"
   },
   "devDependencies": {

@@ -244,6 +244,9 @@ const HOW_WE_ANALYZE = `    <main class="howto">
       </ul>
     </main>`;
 
+/** Last content change of /how-we-analyze (YYYY-MM-DD), for its sitemap <lastmod>. Update it with the text. */
+export const HOW_WE_ANALYZE_UPDATED = "2026-09-27";
+
 /** /how-we-analyze: how the weekly screenshots and design analyses are made. */
 export function handleHowWeAnalyze(request: Request): Response {
   if (request.method !== "GET" && request.method !== "HEAD") return new Response("method not allowed", { status: 405 });
@@ -259,7 +262,9 @@ export function handleHowWeAnalyze(request: Request): Response {
   });
 }
 
-export const PRIVACY_UPDATED = "September 27, 2026";
+/** Last content change of /privacy (YYYY-MM-DD): shown on the page and used as its sitemap <lastmod>. */
+export const PRIVACY_UPDATED_DATE = "2026-09-27";
+export const PRIVACY_UPDATED = weekInWords(PRIVACY_UPDATED_DATE);
 
 const PRIVACY = `    <main class="howto">
       <h1>Privacy</h1>
@@ -337,15 +342,24 @@ export async function handleSitemap(env: Env): Promise<Response> {
     // Screenshots in R2 only (not the sample placeholders), at the same URLs the pages use.
     const images = (r: SitemapCapture) =>
       [r.r2_key, r.r2_key_mobile].filter((k): k is string => !!k).map((k) => `${ORIGIN}${shotUrl(k, r.slug, r.captured_at)}`);
-    const entries: { loc: string; images: string[] }[] = [`${ORIGIN}/`, `${ORIGIN}/how-we-analyze`, `${ORIGIN}/privacy`].map((loc) => ({ loc, images: [] }));
+    // <lastmod>: the newest capture or analysis publish that changed the page (W3C datetime, whole seconds).
+    const changed = (r: SitemapCapture) => [r.captured_at, r.analysis_published_at].filter((t): t is string => !!t && !Number.isNaN(Date.parse(t))).map(Date.parse);
+    const lastmod = (times: number[]) => (times.length ? new Date(Math.max(...times)).toISOString().replace(/\.\d{3}Z$/, "Z") : undefined);
+    const bySlug = new Map<string, number[]>();
+    for (const r of rows) bySlug.set(r.slug, [...(bySlug.get(r.slug) ?? []), ...changed(r)]);
+    const entries: { loc: string; lastmod?: string; images: string[] }[] = [
+      { loc: `${ORIGIN}/`, lastmod: lastmod(rows.flatMap(changed)), images: [] },
+      { loc: `${ORIGIN}/how-we-analyze`, lastmod: HOW_WE_ANALYZE_UPDATED, images: [] },
+      { loc: `${ORIGIN}/privacy`, lastmod: PRIVACY_UPDATED_DATE, images: [] },
+    ];
     const seen = new Set<string>();
     for (const r of rows) {
       // The portal page shows its newest week, which is the first row for each portal.
-      if (!seen.has(r.slug)) { seen.add(r.slug); entries.push({ loc: `${ORIGIN}/portals/${r.slug}`, images: images(r) }); }
-      entries.push({ loc: `${ORIGIN}/portals/${r.slug}/${r.week}`, images: images(r) });
+      if (!seen.has(r.slug)) { seen.add(r.slug); entries.push({ loc: `${ORIGIN}/portals/${r.slug}`, lastmod: lastmod(bySlug.get(r.slug)!), images: images(r) }); }
+      entries.push({ loc: `${ORIGIN}/portals/${r.slug}/${r.week}`, lastmod: lastmod(changed(r)), images: images(r) });
     }
-    const entry = (e: { loc: string; images: string[] }) =>
-      `  <url>\n    <loc>${esc(e.loc)}</loc>\n${e.images.map((i) => `    <image:image>\n      <image:loc>${esc(i)}</image:loc>\n    </image:image>\n`).join("")}  </url>`;
+    const entry = (e: { loc: string; lastmod?: string; images: string[] }) =>
+      `  <url>\n    <loc>${esc(e.loc)}</loc>\n${e.lastmod ? `    <lastmod>${esc(e.lastmod)}</lastmod>\n` : ""}${e.images.map((i) => `    <image:image>\n      <image:loc>${esc(i)}</image:loc>\n    </image:image>\n`).join("")}  </url>`;
     return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 ${entries.map(entry).join("\n")}
