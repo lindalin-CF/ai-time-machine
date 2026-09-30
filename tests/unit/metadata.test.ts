@@ -5,6 +5,7 @@ import { handleSitemap, handleFeed, handlePortalPage, handleHowWeAnalyze, handle
 import { handleApi } from '../../src/api';
 import { makeEnv } from './fake-env';
 import { invalidate } from '../../src/capture';
+import { FIXED_SUMMARY_OPENING } from '../../src/analysis';
 import { CACHE_VERSION } from '../../src/db';
 
 // SEO metadata: sitemap <lastmod>, robots, link previews, descriptions, JSON-LD and the RSS feed.
@@ -159,44 +160,52 @@ describe('weekly page descriptions', () => {
   beforeEach(() => { t = seed(); });
   const portal = async (path: string) => (await handlePortalPage(new Request(`https://x${path}`), t.env)).text();
   const descriptions = (html: string) => ['description', 'og:description', 'twitter:description'].map((k) => meta(html, k));
+  const setSentences = (id: string, sentences: string[]) =>
+    t.db.prepare(`UPDATE captures SET analysis_json = ?, analysis = ? WHERE id = ?`).run(JSON.stringify({ summary_sentences: sentences.map((text) => ({ text })) }), sentences.join(' '), id);
+  const OPENING = SUMMARY_SENTENCES[0];
+  const CURRENT = /^Screenshots of the ChatGPT interface by OpenAI from the week of September 21, 2026/;
 
-  it('uses the first two summary sentences when they fit under 160 characters', async () => {
-    const d = `${SUMMARY_SENTENCES[0]} ${SUMMARY_SENTENCES[1]}`;
+  it('skips the fixed opening and uses the sentences after it, as many as fit under 160 characters', async () => {
+    expect(OPENING).toMatch(FIXED_SUMMARY_OPENING);
+    const d = `${SUMMARY_SENTENCES[1]} ${SUMMARY_SENTENCES[2]}`;
     expect(d.length).toBeLessThan(160);
     expect(descriptions(await portal('/portals/chatgpt/2026-09-21'))).toEqual([d, d, d]);
   });
 
-  it('uses one sentence when two would be too long, and ends at a sentence end', async () => {
-    const long = 'The message box sits in the middle of the screen, under a large greeting, with suggested prompts below it.';
-    t.db.prepare(`UPDATE captures SET analysis_json = ? WHERE id = 'chatgpt-2026-09-21'`).run(JSON.stringify({ summary_sentences: [{ text: SUMMARY_SENTENCES[0] }, { text: long }] }));
+  it('stops at the last sentence that fits, so it always ends at a sentence end', async () => {
+    const s = ['The screen is dark.', 'A sidebar runs down the left side of the screen with the conversation list and settings.', 'The message box sits in the middle of the screen, under a large greeting.'];
+    setSentences('chatgpt-2026-09-21', [OPENING, ...s]);
     const [d] = descriptions(await portal('/portals/chatgpt/2026-09-21'));
-    expect(d).toBe(SUMMARY_SENTENCES[0]);
+    expect(d).toBe(`${s[0]} ${s[1]}`);
+    expect(`${d} ${s[2]}`.length).toBeGreaterThanOrEqual(160);
     expect(d!.endsWith('.')).toBe(true);
   });
 
-  it('keeps the current description when the first sentence alone is 160 characters or more', async () => {
-    const first = `This shows the desktop version of ChatGPT ${'with a very long description '.repeat(5)}for the week.`;
-    expect(first.length).toBeGreaterThanOrEqual(160);
-    t.db.prepare(`UPDATE captures SET analysis_json = ? WHERE id = 'chatgpt-2026-09-21'`).run(JSON.stringify({ summary_sentences: [{ text: first }] }));
-    expect(meta(await portal('/portals/chatgpt/2026-09-21'), 'description')).toMatch(/^Screenshots of the ChatGPT interface by OpenAI from the week of September 21, 2026/);
+  it('keeps the current description when the first sentence after the opening is 160 characters or more', async () => {
+    setSentences('chatgpt-2026-09-21', [OPENING, `${'x'.repeat(159)}.`, 'Short.']);
+    expect(meta(await portal('/portals/chatgpt/2026-09-21'), 'description')).toMatch(CURRENT);
   });
 
-  it('a first sentence of exactly 160 characters is too long', async () => {
-    const first = `${'x'.repeat(159)}.`;
-    expect(first.length).toBe(160);
-    t.db.prepare(`UPDATE captures SET analysis_json = ? WHERE id = 'chatgpt-2026-09-21'`).run(JSON.stringify({ summary_sentences: [{ text: first }] }));
-    expect(meta(await portal('/portals/chatgpt/2026-09-21'), 'description')).toMatch(/^Screenshots of the ChatGPT/);
+  it('keeps the current description when the summary is only the fixed opening', async () => {
+    setSentences('chatgpt-2026-09-21', [OPENING]);
+    expect(meta(await portal('/portals/chatgpt/2026-09-21'), 'description')).toMatch(CURRENT);
+    expect(meta(await portal('/portals/claude/2026-09-21'), 'description')).toMatch(/^Screenshots of the Claude interface/); // seeded that way
+  });
+
+  it('does not skip a first sentence that is not the fixed opening', async () => {
+    setSentences('chatgpt-2026-09-21', ['A dark screen with a sidebar.', 'The message box sits in the middle.']);
+    expect(meta(await portal('/portals/chatgpt/2026-09-21'), 'description')).toBe('A dark screen with a sidebar. The message box sits in the middle.');
   });
 
   it('falls back to splitting the summary text when summary_sentences is missing', async () => {
     t.db.exec(`UPDATE captures SET analysis_json = NULL WHERE id = 'chatgpt-2026-09-21'`);
-    expect(meta(await portal('/portals/chatgpt/2026-09-21'), 'description')).toBe(`${SUMMARY_SENTENCES[0]} ${SUMMARY_SENTENCES[1]}`);
+    expect(meta(await portal('/portals/chatgpt/2026-09-21'), 'description')).toBe(`${SUMMARY_SENTENCES[1]} ${SUMMARY_SENTENCES[2]}`);
   });
 
   it('keeps the current description without a published analysis, and on portal hubs', async () => {
     expect(meta(await portal('/portals/chatgpt/2026-09-07'), 'description')).toBe('Screenshots of the ChatGPT interface by OpenAI from the week of September 7, 2026, on desktop and mobile, with a short design analysis.');
     t.db.exec(`UPDATE captures SET analysis_by = 'pending' WHERE id = 'chatgpt-2026-09-21'`);
-    expect(meta(await portal('/portals/chatgpt/2026-09-21'), 'description')).toMatch(/^Screenshots of the ChatGPT interface/);
+    expect(meta(await portal('/portals/chatgpt/2026-09-21'), 'description')).toMatch(CURRENT);
     t.db.exec(`UPDATE captures SET analysis_by = 'guideline-v1.3' WHERE id = 'chatgpt-2026-09-21'`);
     expect(meta(await portal('/portals/chatgpt'), 'description')).toMatch(/^Weekly screenshots of the ChatGPT interface by OpenAI/);
   });
@@ -306,10 +315,12 @@ describe('/feed.xml', () => {
       link: `${ORIGIN}/portals/chatgpt/2026-09-21`,
       guid: `${ORIGIN}/portals/chatgpt/2026-09-21`,
       pubDate: 'Sat, 26 Sep 2026 08:00:00 GMT', // the analysis was published after the capture
-      description: SUMMARY_SENTENCES.join(' '),
+      description: SUMMARY_SENTENCES.slice(1).join(' '), // the full summary without the fixed opening
     });
     expect(xml).toContain(`<guid isPermaLink="true">${ORIGIN}/portals/chatgpt/2026-09-21</guid>`);
     expect(items(xml)[1].pubDate).toBe('Sat, 26 Sep 2026 00:52:33 GMT'); // no publish time recorded: capture time
+    // A summary that is only the fixed opening stays as it is, rather than an empty description.
+    expect(items(xml)[1].description).toBe('This shows the desktop version of Claude for the week of 2026-09-21, before scrolling.');
   });
 
   it('describes the channel and links to itself', () => {
@@ -324,7 +335,7 @@ describe('/feed.xml', () => {
 
   it('leaves out unpublished analyses and escapes text', async () => {
     t.db.exec(`UPDATE captures SET analysis_by = 'pending' WHERE id = 'claude-2026-09-21'`);
-    t.db.exec(`UPDATE captures SET analysis = 'Tabs <b> & "quotes"' WHERE id = 'chatgpt-2026-09-21'`);
+    t.db.exec(`UPDATE captures SET analysis = 'Tabs <b> & "quotes"', analysis_json = NULL WHERE id = 'chatgpt-2026-09-21'`);
     t.kv.clear();
     const x = await (await handleFeed(t.env)).text();
     expect(items(x).map((i) => i.link)).toEqual([`${ORIGIN}/portals/chatgpt/2026-09-21`]);

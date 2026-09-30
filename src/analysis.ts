@@ -36,23 +36,39 @@ export function displayedAnalysis(row: AnalysisFields): string {
 
 export const SUMMARY_DESCRIPTION_MAX = 160;
 
-/**
- * Search description from a published guideline analysis: its first summary sentence, plus the
- * second when both fit, always shorter than SUMMARY_DESCRIPTION_MAX and ending at a sentence end.
- * Null when there is no published analysis or its first sentence alone is too long.
- */
-export function summaryDescription(row: AnalysisFields & { analysis_json?: string | null }): string | null {
-  if (!isPublishedAnalysis(row)) return null;
+/** The fixed opening every summary starts with (guideline section 10), which says nothing page-specific. */
+export const FIXED_SUMMARY_OPENING = /^This shows the (?:desktop|mobile) version of .+ for the week of \d{4}-\d{2}-\d{2}, before scrolling\.$/;
+
+/** Sentences of a published analysis's summary, without the fixed opening. Empty when unpublished. */
+function summarySentences(row: AnalysisFields & { analysis_json?: string | null }): string[] {
+  if (!isPublishedAnalysis(row)) return [];
   let sentences: string[] = [];
   try {
     const parsed = JSON.parse(row.analysis_json || "null") as { summary_sentences?: { text?: unknown }[] } | null;
     sentences = (parsed?.summary_sentences ?? []).map((s) => (typeof s?.text === "string" ? s.text.trim() : "")).filter(Boolean);
   } catch { /* fall back to the summary text */ }
   if (!sentences.length) sentences = row.analysis!.trim().split(/(?<=[.!?])\s+/).filter(Boolean);
-  const [first, second] = sentences;
-  if (!first || first.length >= SUMMARY_DESCRIPTION_MAX) return null;
-  const both = second ? `${first} ${second}` : first;
-  return both.length < SUMMARY_DESCRIPTION_MAX ? both : first;
+  return sentences[0] && FIXED_SUMMARY_OPENING.test(sentences[0]) ? sentences.slice(1) : sentences;
+}
+
+/**
+ * Search description from a published guideline analysis: the summary sentences after the fixed
+ * opening, as many as fit, always shorter than SUMMARY_DESCRIPTION_MAX and ending at a sentence end.
+ * Null when there is no published analysis or the first of those sentences alone is too long.
+ */
+export function summaryDescription(row: AnalysisFields & { analysis_json?: string | null }): string | null {
+  let out = "";
+  for (const s of summarySentences(row)) {
+    const next = out ? `${out} ${s}` : s;
+    if (next.length >= SUMMARY_DESCRIPTION_MAX) break;
+    out = next;
+  }
+  return out || null;
+}
+
+/** RSS description: the whole summary without the fixed opening (the item title names the portal and week). */
+export function feedSummary(row: AnalysisFields & { analysis_json?: string | null }): string {
+  return summarySentences(row).join(" ") || (row.analysis ?? "").trim();
 }
 
 /** Returns the first reason the analysis is invalid, or null when it passes. */

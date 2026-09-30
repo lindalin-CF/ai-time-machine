@@ -157,12 +157,12 @@ export async function captureWeeksForPortal(env: Env, slug: string): Promise<str
   return (results ?? []).map((r) => r.week);
 }
 
-export type FeedCapture = { slug: string; week: string; name: string; analysis: string; analysis_by: string; captured_at: string; analysis_published_at: string | null };
+export type FeedCapture = { slug: string; week: string; name: string; analysis: string; analysis_by: string; analysis_json: string | null; captured_at: string; analysis_published_at: string | null };
 
 /** Published guideline analyses on active portals, newest first (RSS feed; read-only). */
 export async function feedCaptures(env: Env, limit = 200): Promise<FeedCapture[]> {
   const { results } = await env.DB.prepare(
-    `SELECT c.slug AS slug, c.week AS week, p.name AS name, c.analysis AS analysis, c.analysis_by AS analysis_by,
+    `SELECT c.slug AS slug, c.week AS week, p.name AS name, c.analysis AS analysis, c.analysis_by AS analysis_by, c.analysis_json AS analysis_json,
             c.captured_at AS captured_at, c.analysis_published_at AS analysis_published_at
      FROM captures c JOIN portals p ON p.slug = c.slug
      WHERE c.status = 'ok' AND p.active = 1 AND c.analysis_by LIKE 'guideline-v%' AND TRIM(COALESCE(c.analysis, '')) != ''

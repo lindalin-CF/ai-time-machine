@@ -1,6 +1,6 @@
 import type { Env, CaptureRow } from "./types";
 import { getPortal, latestCaptureForPortal, captureForPortalWeek, captureWeeksForPortal, sitemapCaptures, feedCaptures, type SitemapCapture } from "./db";
-import { isPublishedAnalysis, displayedAnalysis, summaryDescription, SYSTEM_TEST_WEEKS } from "./analysis";
+import { isPublishedAnalysis, displayedAnalysis, summaryDescription, feedSummary, SYSTEM_TEST_WEEKS } from "./analysis";
 import { cached } from "./api";
 import { consentMode, PRIVATE_HTML_CACHE, type ConsentMode } from "./consent";
 import { desktopSize, mobileSize } from "./api";
@@ -449,7 +449,7 @@ export async function handleFeed(env: Env): Promise<Response> {
       <link>${esc(link)}</link>
       <guid isPermaLink="true">${esc(link)}</guid>
       <pubDate>${new Date(when(r)).toUTCString()}</pubDate>
-      <description>${esc(r.analysis.trim())}</description>
+      <description>${esc(feedSummary(r))}</description>
     </item>`;
     });
     const built = rows.length ? new Date(Math.max(...rows.map(when))).toUTCString() : null;
