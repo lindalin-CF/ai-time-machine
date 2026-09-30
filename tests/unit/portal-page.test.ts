@@ -43,6 +43,6 @@ describe.each(PAGES)('portal page %s', (path) => {
 
 it('uses the new name in the portal page title and og:site_name', async () => {
   const html = await (await handlePortalPage(new Request(`https://x/portals/${SLUG}`), t.env)).text();
-  expect(html).toContain(`<title>Claude — logged-in UI screenshots | AI Interface Library</title>`);
+  expect(html).toContain(`<title>Claude interface screenshots — weekly UI history | AI Interface Library</title>`);
   expect(html).toContain('<meta property="og:site_name" content="AI Interface Library" />');
 });

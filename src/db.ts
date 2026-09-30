@@ -157,11 +157,14 @@ export async function captureWeeksForPortal(env: Env, slug: string): Promise<str
   return (results ?? []).map((r) => r.week);
 }
 
-/** slug + week of every successful capture on an active portal (sitemap; read-only). */
-export async function sitemapCaptures(env: Env): Promise<{ slug: string; week: string }[]> {
+export type SitemapCapture = { slug: string; week: string; r2_key: string | null; r2_key_mobile: string | null; captured_at: string };
+
+/** Every successful capture on an active portal, with its screenshot keys (sitemap; read-only). */
+export async function sitemapCaptures(env: Env): Promise<SitemapCapture[]> {
   const { results } = await env.DB.prepare(
-    `SELECT c.slug AS slug, c.week AS week FROM captures c JOIN portals p ON p.slug = c.slug
+    `SELECT c.slug AS slug, c.week AS week, c.r2_key AS r2_key, c.r2_key_mobile AS r2_key_mobile, c.captured_at AS captured_at
+     FROM captures c JOIN portals p ON p.slug = c.slug
      WHERE c.status = 'ok' AND p.active = 1 ORDER BY p.sort_order ASC, c.week DESC`
-  ).all<{ slug: string; week: string }>();
+  ).all<SitemapCapture>();
   return results ?? [];
 }

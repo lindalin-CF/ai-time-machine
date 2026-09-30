@@ -1,5 +1,6 @@
 import puppeteer from "@cloudflare/puppeteer";
 import type { Env, PortalRow, CaptureRow } from "./types";
+import { parseImageSize } from "./image-size";
 import { getPortal, paletteFromBrand, upsertCapture, refreshWeekCount, upsertWeek, upsertMobileCapture, CACHE_VERSION } from "./db";
 
 const VIEWPORT = { width: 1280, height: 800 };
@@ -80,10 +81,12 @@ export async function storeCapture(
 
   // A new desktop screenshot invalidates any earlier analysis. The guideline analysis is
   // produced locally and attached later via POST /api/analysis.
+  // Record the screenshot's real size (a local upload can differ from the cloud viewport).
+  const size = parseImageSize(png) ?? VIEWPORT;
   const row: CaptureRow = {
     ...baseRow(portal, week, id, r2Key, "ok"),
-    width: VIEWPORT.width,
-    height: VIEWPORT.height,
+    width: size.width,
+    height: size.height,
     palette: JSON.stringify(paletteFromBrand(portal.brand)),
     analysis: "",
     analysis_by: "pending",

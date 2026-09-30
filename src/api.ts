@@ -3,6 +3,7 @@ import type { Env, CaptureRow } from "./types";
 import { listPortals, listWeeks, latestWeek, capturesForWeek, getPortal, updateCaptureAnalysis, CACHE_VERSION } from "./db";
 import { hasCookieSecret, storeCapture, invalidate } from "./capture";
 import { validateAnalysis } from "./analysis";
+import { imageSizeOf, sampleSize, type ImageSize } from "./image-size";
 
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8" };
 
@@ -40,15 +41,28 @@ function imageMobileUrl(row: CaptureRow): string | null {
   return `/img/${row.r2_key_mobile}?v=${v}`;
 }
 
-function shapeCapture(row: CaptureRow) {
+/** Desktop size: the stored capture size, or the sample asset's size when there's no screenshot yet. */
+export function desktopSize(row: CaptureRow): ImageSize {
+  return row.r2_key ? { width: row.width || 1280, height: row.height || 800 } : sampleSize(row.slug);
+}
+
+/** Mobile size, measured from the R2 object (D1 stores only the desktop size). */
+export async function mobileSize(env: Env, row: CaptureRow): Promise<ImageSize | null> {
+  return row.r2_key_mobile ? await imageSizeOf(env, row.r2_key_mobile, Date.parse(row.captured_at) || 0) : null;
+}
+
+async function shapeCapture(env: Env, row: CaptureRow) {
   let palette: string[] = [];
   try { palette = JSON.parse(row.palette || "[]"); } catch { palette = []; }
   const mobile = imageMobileUrl(row);
+  const desktop = desktopSize(row);
+  const mSize = await mobileSize(env, row);
   return {
     id: row.id, slug: row.slug, portal: row.portal, company: row.company,
     url: row.url, brand: row.brand, week: row.week,
     image: imageUrl(row), imageMobile: mobile, hasMobile: !!mobile,
-    width: row.width, height: row.height,
+    width: desktop.width, height: desktop.height,
+    mobileWidth: mSize?.width ?? null, mobileHeight: mSize?.height ?? null,
     palette, analysis: row.analysis, analysisBy: row.analysis_by,
     status: row.status, sample: !row.r2_key, capturedAt: row.captured_at,
     signedIn: !!row.r2_key && row.r2_key.endsWith(".local.png"),
@@ -83,7 +97,7 @@ export async function capturesPayload(env: Env, week: string) {
     const rows = await capturesForWeek(env, week);
     const weeks = await listWeeks(env);
     const label = weeks.find((w) => w.week === week)?.label ?? week;
-    return { week, label, captures: rows.map(shapeCapture) };
+    return { week, label, captures: await Promise.all(rows.map((r) => shapeCapture(env, r))) };
   });
 }
 
@@ -128,12 +142,13 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     return json({
       slug,
       portal: portal.name,
-      shots: (rows.results || []).map((r) => {
+      shots: await Promise.all((rows.results || []).map(async (r) => {
         const v = Date.parse(r.created_at) || 0;
         let keys: string[] = [];
         if (r.images) { try { const p = JSON.parse(r.images); if (Array.isArray(p)) keys = p.filter((k) => typeof k === "string"); } catch { /* ignore */ } }
         if (!keys.length && r.r2_key) keys = [r.r2_key];
         const images = keys.map((k) => `/img/${k}?v=${v}`);
+        const sizes = await Promise.all(keys.map((k) => imageSizeOf(env, k, v)));
         return {
           id: r.id,
           slug: r.slug,
@@ -142,10 +157,11 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
           description: r.description || "",
           image: images[0] || "",
           images,
+          sizes,
           imageKeys: keys,
           createdAt: r.created_at,
         };
-      }),
+      })),
     });
   }
 
@@ -158,12 +174,13 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
        ORDER BY m.created_at DESC LIMIT 1000`
     ).all<{ id: string; slug: string; portal: string; company: string | null; device: string; description: string; r2_key: string; images: string | null; created_at: string }>();
     return json({
-      shots: (rows.results || []).map((r) => {
+      shots: await Promise.all((rows.results || []).map(async (r) => {
         const v = Date.parse(r.created_at) || 0;
         let keys: string[] = [];
         if (r.images) { try { const p = JSON.parse(r.images); if (Array.isArray(p)) keys = p.filter((k) => typeof k === "string"); } catch { /* ignore */ } }
         if (!keys.length && r.r2_key) keys = [r.r2_key];
         const images = keys.map((k) => `/img/${k}?v=${v}`);
+        const sizes = await Promise.all(keys.map((k) => imageSizeOf(env, k, v)));
         return {
           id: r.id,
           slug: r.slug,
@@ -173,10 +190,11 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
           description: r.description || "",
           image: images[0] || "",
           images,
+          sizes,
           imageKeys: keys,
           createdAt: r.created_at,
         };
-      }),
+      })),
     });
   }
 
@@ -278,7 +296,7 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
       `SELECT id, title, description, images, created_at FROM insights ORDER BY created_at DESC LIMIT 80`
     ).all<{ id: string; title: string; description: string; images: string | null; created_at: string }>();
     return json({
-      insights: (rows.results || []).map((r) => {
+      insights: await Promise.all((rows.results || []).map(async (r) => {
         let keys: string[] = [];
         if (r.images) { try { const p = JSON.parse(r.images); if (Array.isArray(p)) keys = p.filter((k) => typeof k === "string"); } catch { /* ignore */ } }
         const v = Date.parse(r.created_at) || 0;
@@ -287,9 +305,10 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
           title: r.title,
           description: r.description || "",
           images: keys.map((k) => `/img/${k}?v=${v}`),
+          sizes: await Promise.all(keys.map((k) => imageSizeOf(env, k, v))),
           createdAt: r.created_at,
         };
-      }),
+      })),
     });
   }
 

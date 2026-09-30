@@ -1,8 +1,11 @@
 import type { Env, CaptureRow } from "./types";
-import { getPortal, latestCaptureForPortal, captureForPortalWeek, captureWeeksForPortal, sitemapCaptures } from "./db";
+import { getPortal, latestCaptureForPortal, captureForPortalWeek, captureWeeksForPortal, sitemapCaptures, type SitemapCapture } from "./db";
 import { isPublishedAnalysis, displayedAnalysis, SYSTEM_TEST_WEEKS } from "./analysis";
 import { cached } from "./api";
 import { consentMode, PRIVATE_HTML_CACHE, type ConsentMode } from "./consent";
+import { desktopSize, mobileSize } from "./api";
+import { MOBILE_CAPTURE_SIZE } from "./image-size";
+import { shotAlt, weekInWords } from "./format";
 
 export const ORIGIN = "https://ai-portal-library.dev";
 const HTML_HEADERS = { "content-type": "text/html; charset=utf-8" };
@@ -166,18 +169,20 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
   const analysis = cap && isPublishedAnalysis(cap) ? cap.analysis.trim() : "";
   const description = shortText(
     weekParam !== null
-      ? `${name} by ${portal.company}: logged-in interface screenshots, desktop and mobile, captured the week of ${weekParam}, with design analysis. ${analysis}`
-      : `${name} by ${portal.company}: screenshots of the logged-in interface, desktop and mobile, with design analysis.${cap ? ` Latest capture: week of ${cap.week}.` : ""} ${analysis}`,
+      ? `Screenshots of the ${name} interface by ${portal.company} from the week of ${weekInWords(weekParam)}, on desktop and mobile, with a short design analysis. ${analysis}`
+      : `Weekly screenshots of the ${name} interface by ${portal.company}, on desktop and mobile, with a short design analysis of each week.${cap ? ` Latest: week of ${weekInWords(cap.week)}.` : ""} ${analysis}`,
     300
   );
 
   let shots = "";
   if (cap) {
     const desktop = shotUrl(cap.r2_key, slug, cap.captured_at);
-    shots += `      <figure class="desktop"><img src="${esc(desktop)}" alt="${esc(`${name} desktop interface screenshot (${cap.week})`)}" width="${cap.width || 1280}" loading="eager" /><figcaption>Desktop &middot; week of ${esc(cap.week)}</figcaption></figure>\n`;
+    const d = desktopSize(cap);
+    shots += `      <figure class="desktop"><img src="${esc(desktop)}" alt="${esc(shotAlt(name, "desktop", cap.week))}" width="${d.width}" height="${d.height}" loading="eager" /><figcaption>Desktop &middot; week of ${esc(cap.week)}</figcaption></figure>\n`;
     if (cap.r2_key_mobile) {
       const mobile = shotUrl(cap.r2_key_mobile, slug, cap.captured_at);
-      shots += `      <figure class="mobile"><img src="${esc(mobile)}" alt="${esc(`${name} mobile interface screenshot (${cap.week})`)}" loading="lazy" /><figcaption>Mobile &middot; week of ${esc(cap.week)}</figcaption></figure>\n`;
+      const m = (await mobileSize(env, cap)) ?? MOBILE_CAPTURE_SIZE;
+      shots += `      <figure class="mobile"><img src="${esc(mobile)}" alt="${esc(shotAlt(name, "mobile", cap.week))}" width="${m.width}" height="${m.height}" loading="lazy" /><figcaption>Mobile &middot; week of ${esc(cap.week)}</figcaption></figure>\n`;
     }
   }
 
@@ -199,8 +204,8 @@ ${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screens
   const html = page({
     consent: consentMode(request),
     title: weekParam !== null
-      ? `${name} — logged-in UI screenshots, week of ${weekParam} | AI Interface Library`
-      : `${name} — logged-in UI screenshots | AI Interface Library`,
+      ? `${name} interface — week of ${weekInWords(weekParam)} | AI Interface Library`
+      : `${name} interface screenshots — weekly UI history | AI Interface Library`,
     description,
     canonical,
     noindex: !!cap && SYSTEM_TEST_WEEKS.includes(cap.week),
@@ -329,15 +334,21 @@ export function handlePrivacy(request: Request): Response {
 export async function handleSitemap(env: Env): Promise<Response> {
   const xml = await cached(env, "cache:sitemap", 300, async () => {
     const rows = (await sitemapCaptures(env)).filter((r) => !SYSTEM_TEST_WEEKS.includes(r.week)); // portal order, newest week first
-    const urls = [`${ORIGIN}/`, `${ORIGIN}/how-we-analyze`, `${ORIGIN}/privacy`];
+    // Screenshots in R2 only (not the sample placeholders), at the same URLs the pages use.
+    const images = (r: SitemapCapture) =>
+      [r.r2_key, r.r2_key_mobile].filter((k): k is string => !!k).map((k) => `${ORIGIN}${shotUrl(k, r.slug, r.captured_at)}`);
+    const entries: { loc: string; images: string[] }[] = [`${ORIGIN}/`, `${ORIGIN}/how-we-analyze`, `${ORIGIN}/privacy`].map((loc) => ({ loc, images: [] }));
     const seen = new Set<string>();
     for (const r of rows) {
-      if (!seen.has(r.slug)) { seen.add(r.slug); urls.push(`${ORIGIN}/portals/${r.slug}`); }
-      urls.push(`${ORIGIN}/portals/${r.slug}/${r.week}`);
+      // The portal page shows its newest week, which is the first row for each portal.
+      if (!seen.has(r.slug)) { seen.add(r.slug); entries.push({ loc: `${ORIGIN}/portals/${r.slug}`, images: images(r) }); }
+      entries.push({ loc: `${ORIGIN}/portals/${r.slug}/${r.week}`, images: images(r) });
     }
+    const entry = (e: { loc: string; images: string[] }) =>
+      `  <url>\n    <loc>${esc(e.loc)}</loc>\n${e.images.map((i) => `    <image:image>\n      <image:loc>${esc(i)}</image:loc>\n    </image:image>\n`).join("")}  </url>`;
     return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map((u) => `  <url>\n    <loc>${esc(u)}</loc>\n  </url>`).join("\n")}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+${entries.map(entry).join("\n")}
 </urlset>
 `;
   });

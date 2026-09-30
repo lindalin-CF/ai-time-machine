@@ -27,6 +27,30 @@ const esc = (s) =>
   String(s ?? "").replace(/[&<>"']/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+// Same wording as src/format.ts (weekInWords, shotAlt); tests/unit/image-seo.test.ts checks they agree.
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+function weekInWords(week) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(week || "");
+  if (!m) return week || "";
+  const month = MONTHS[Number(m[2]) - 1];
+  return month ? `${month} ${Number(m[3])}, ${m[1]}` : week;
+}
+function shotAlt(portal, device, week) {
+  return `${portal} ${device} interface, week of ${weekInWords(week)}`;
+}
+/** width/height attributes, or nothing when the size is unknown. */
+function sizeAttrs(size) {
+  return size && size.width > 0 && size.height > 0 ? ` width="${size.width}" height="${size.height}"` : "";
+}
+// A mobile screenshot the Worker couldn't measure has the capture viewport's size (src/image-size.ts MOBILE_CAPTURE_SIZE).
+const MOBILE_CAPTURE_SIZE = { width: 780, height: 1688 };
+/** Real size of a capture's desktop or mobile screenshot, from /api/captures. */
+function shotSize(c, mobile) {
+  return mobile
+    ? (c.mobileWidth && c.mobileHeight ? { width: c.mobileWidth, height: c.mobileHeight } : MOBILE_CAPTURE_SIZE)
+    : { width: c.width || 1280, height: c.height || 800 };
+}
+
 async function getJSON(url) {
   const r = await fetch(url, { headers: { accept: "application/json" } });
   if (!r.ok) throw new Error(`${url} -> ${r.status}`);
@@ -296,6 +320,12 @@ function wireBrandLogos() {
 function iconUrl(slug) {
   return `/icons/${encodeURIComponent(slug)}.png`;
 }
+// Pixel size of public/icons/<slug>.png: 64x64 unless listed (tests check this against the files).
+const ICON_SIZES = { poe: 48, you: 16 };
+function iconSize(slug) {
+  const n = ICON_SIZES[slug] || 64;
+  return { width: n, height: n };
+}
 
 // Collapse long design-analysis text to 5 lines; only show the toggle when it
 // actually overflows. The method link is the last line of the text and stays
@@ -351,7 +381,7 @@ function card(c) {
   const shot = shotFor(c);
   const inner = shot.missing
     ? `<div class="shot-missing">No mobile capture yet</div>`
-    : `<img loading="lazy" src="${esc(shot.src)}" alt="${esc(c.portal)} ${mobile ? "mobile" : "landing"} page" />`;
+    : `<img loading="lazy" src="${esc(shot.src)}" alt="${esc(shotAlt(c.portal, mobile ? "mobile" : "desktop", c.week || state.week))}"${sizeAttrs(shotSize(c, mobile))} />`;
   return `
   <article class="card">
     <div class="shot${mobile ? " mobile" : ""}" style="--brand:${esc(c.brand)}">
@@ -362,7 +392,7 @@ function card(c) {
       <div class="card-head">
         <div class="portal-id">
           <span class="brand-logo" style="--brand:${esc(c.brand)}" data-icon="${esc(iconUrl(c.slug))}" title="${esc(c.company)}">
-            <img alt="" loading="lazy" />
+            <img alt="${esc(c.portal)} logo"${sizeAttrs(iconSize(c.slug))} loading="lazy" />
           </span>
           <div>
             <div class="portal-name"><a class="card-link" href="${esc(portalHref(c))}">${esc(c.portal)}</a></div>
@@ -422,9 +452,13 @@ function initLightbox() {
     img.removeAttribute("src");
     document.body.style.overflow = "";
   };
-  const open = (full, t, file) => {
+  const open = (full, t, file, thumb) => {
+    // The enlarged image is the same file as the thumbnail, so it takes the thumbnail's size and alt.
+    for (const a of ["width", "height"]) {
+      if (thumb?.getAttribute(a)) img.setAttribute(a, thumb.getAttribute(a)); else img.removeAttribute(a);
+    }
     img.src = full;
-    img.alt = t + " screenshot";
+    img.alt = thumb?.alt || t + " screenshot";
     dl.href = full;
     dl.setAttribute("download", (file || "screenshot") + ".png");
     el.hidden = false;
@@ -454,7 +488,7 @@ function initLightbox() {
   document.body.addEventListener("click", (e) => {
     const shot = e.target.closest("[data-full]");
     if (!shot) return;
-    open(shot.dataset.full, shot.dataset.title || "Screenshot", shot.dataset.file);
+    open(shot.dataset.full, shot.dataset.title || "Screenshot", shot.dataset.file, shot.querySelector("img"));
   });
 }
 
@@ -498,7 +532,7 @@ function renderCollection() {
       const shot = shotFor(c);
       const inner = shot.missing
         ? `<div class="shot-missing">No mobile capture yet</div>`
-        : `<img loading="lazy" src="${esc(shot.src)}" alt="${esc(c.portal)} ${mobile ? "mobile" : "landing"} page" />`;
+        : `<img loading="lazy" src="${esc(shot.src)}" alt="${esc(shotAlt(c.portal, mobile ? "mobile" : "desktop", c.week || state.week))}"${sizeAttrs(shotSize(c, mobile))} />`;
       return `
     <figure class="col-item">
       <div class="shot${mobile ? " mobile" : ""}" style="--brand:${esc(c.brand)}">
@@ -587,6 +621,12 @@ function fmtDateYear(iso) {
   }
 }
 
+/** Alt text for a manual snapshot: "Claude desktop interface, manual snapshot from September 12, 2026". */
+function manualAlt(s, portal = s.portal) {
+  const day = weekInWords(String(s.createdAt || "").slice(0, 10));
+  return `${portal} ${s.device === "mobile" ? "mobile" : "desktop"} interface, manual snapshot${day ? ` from ${day}` : ""}`;
+}
+
 // One result card, reusing the "Manual observations" modal card style.
 function manualResultCard(s) {
   const src = s.image || (s.images && s.images[0]) || "";
@@ -594,7 +634,7 @@ function manualResultCard(s) {
     ? ` data-full="${esc(src)}" data-title="${esc(s.portal)} manual snapshot" data-file="${esc(s.slug)}-manual-${esc(s.device)}"`
     : "";
   const inner = src
-    ? `<img src="${esc(src)}" alt="${esc(s.portal)} manual snapshot" loading="lazy" />`
+    ? `<img src="${esc(src)}" alt="${esc(manualAlt(s))}"${sizeAttrs((s.sizes || [])[0])} loading="lazy" />`
     : "";
   return `
     <figure class="manual-cell filled">
@@ -903,7 +943,7 @@ function initManualSnapshots() {
       const imgsE = (s.images && s.images.length ? s.images : [s.image]).filter(Boolean);
       const thumbs = imgsE.map((src, i) => `
               <div class="manual-edit-thumb" data-key="${esc(keys[i] || "")}">
-                <img src="${esc(src)}" alt="image ${i + 1}" />
+                <img src="${esc(src)}" alt="image ${i + 1}"${sizeAttrs((s.sizes || [])[i])} />
                 <button type="button" class="manual-thumb-del" aria-label="Delete image" title="Delete image">&times;</button>
               </div>`).join("");
       return `
@@ -927,9 +967,9 @@ function initManualSnapshots() {
         </figure>`;
     }
     const imgs = (s.images && s.images.length ? s.images : [s.image]).filter(Boolean);
-    const slides = imgs.map((src) => `
+    const slides = imgs.map((src, i) => `
           <div class="manual-img" data-full="${esc(src)}" data-title="${esc(current.portal)} manual snapshot" data-file="${esc(current.slug)}-manual-${esc(s.device)}">
-            <img src="${esc(src)}" alt="${esc(current.portal)} manual snapshot" loading="lazy" />
+            <img src="${esc(src)}" alt="${esc(manualAlt(s, current.portal))}"${sizeAttrs((s.sizes || [])[i])} loading="lazy" />
           </div>`).join("");
     const multi = imgs.length > 1;
     const nav = multi ? `
@@ -1302,13 +1342,13 @@ async function renderAnTable() {
       const caps = await anCapturesFor(an.week);
       columns = state.portals
         .filter((p) => an.portals.has(p.slug))
-        .map((p) => ({ label: p.name, icon: p.slug, cap: caps.find((c) => c.slug === p.slug) }));
+        .map((p) => ({ label: p.name, portalName: p.name, icon: p.slug, cap: caps.find((c) => c.slug === p.slug) }));
     } else {
       if (!an.portal || an.weeks.size === 0) { wrap.innerHTML = anEmpty("Pick a portal and at least one week to compare."); return; }
       const weeks = state.weeks.map((w) => w.week).filter((w) => an.weeks.has(w));
       const capsByWeek = await Promise.all(weeks.map((w) => anCapturesFor(w)));
       const p = state.portals.find((pp) => pp.slug === an.portal);
-      columns = weeks.map((w, i) => ({ label: shortWeekLabel(w), icon: i === 0 && p ? p.slug : "", cap: capsByWeek[i].find((c) => c.slug === an.portal) }));
+      columns = weeks.map((w, i) => ({ label: shortWeekLabel(w), portalName: p ? p.name : an.portal, icon: i === 0 && p ? p.slug : "", cap: capsByWeek[i].find((c) => c.slug === an.portal) }));
     }
   } catch {
     wrap.innerHTML = anEmpty("Could not load comparison data.");
@@ -1319,14 +1359,14 @@ async function renderAnTable() {
 
 function anTableHTML(cols) {
   const head = `<tr><th class="an-rowhead"></th>${cols.map((c) =>
-    `<th class="an-colhead">${c.icon ? `<span class="an-logo"><img alt="" loading="lazy" src="${esc(iconUrl(c.icon))}" onerror="this.parentNode.remove()" /></span>` : ""}<span>${esc(c.label)}</span></th>`
+    `<th class="an-colhead">${c.icon ? `<span class="an-logo"><img alt="${esc(c.portalName)} logo"${sizeAttrs(iconSize(c.icon))} loading="lazy" src="${esc(iconUrl(c.icon))}" onerror="this.parentNode.remove()" /></span>` : ""}<span>${esc(c.label)}</span></th>`
   ).join("")}</tr>`;
 
   const rows = [];
   rows.push(anRow("Snapshot", cols.map((c) => {
     const src = anShot(c.cap);
     if (!src) return `<td><div class="an-noshot">${c.cap ? (an.device === "mobile" ? "No mobile shot" : "—") : "No capture"}</div></td>`;
-    return `<td><div class="an-shot" data-full="${esc(src)}" data-title="${esc(c.label)}" data-file="${esc((c.cap.slug || "shot") + "-" + (c.cap.week || "") + (an.device === "mobile" ? "-mobile" : ""))}"><img loading="lazy" src="${esc(src)}" alt="${esc(c.label)}" /></div></td>`;
+    return `<td><div class="an-shot" data-full="${esc(src)}" data-title="${esc(c.label)}" data-file="${esc((c.cap.slug || "shot") + "-" + (c.cap.week || "") + (an.device === "mobile" ? "-mobile" : ""))}"><img loading="lazy" src="${esc(src)}" alt="${esc(shotAlt(c.portalName, an.device === "mobile" ? "mobile" : "desktop", c.cap.week))}"${sizeAttrs(shotSize(c.cap, an.device === "mobile"))} /></div></td>`;
   })));
   rows.push(anRow("Brand colour", cols.map((c) =>
     c.cap && c.cap.brand ? `<td><span class="an-swatch" style="background:${esc(c.cap.brand)}"></span><code>${esc(String(c.cap.brand).toUpperCase())}</code></td>` : `<td>—</td>`
@@ -1365,7 +1405,7 @@ function renderInsightsList(items) {
       <div class="insight-media">
         ${imgs.map((src, i) => `
           <button class="insight-thumb" type="button" data-full="${esc(src)}" data-title="${esc(it.title)}" data-file="insight-${esc(it.id)}-${i}">
-            <img src="${esc(src)}" alt="${esc(it.title)} image ${i + 1}" loading="lazy" />
+            <img src="${esc(src)}" alt="${esc(it.title)} image ${i + 1}"${sizeAttrs((it.sizes || [])[i])} loading="lazy" />
           </button>`).join("")}
       </div>` : "";
     return `
