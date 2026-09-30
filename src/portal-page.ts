@@ -46,7 +46,32 @@ const FOOTER_LEGAL = `      <div class="legal">&copy; 2026 AI Interface Library.
         </form>
       </dialog>`;
 
-function page(opts: { title: string; description: string; canonical?: string; noindex?: boolean; consent: ConsentMode; body: string }): string {
+export type PreviewImage = { url: string; width: number; height: number; alt: string };
+
+/** The site-wide link preview (public/og-image.png), used where a page has no screenshot of its own. */
+export const SITE_PREVIEW: PreviewImage = { url: `${ORIGIN}/og-image.png`, width: 1200, height: 630, alt: "AI Interface Library" };
+
+/** Link preview and search metadata for an indexable page (one with a canonical URL). */
+function socialMeta(title: string, description: string, canonical: string, image: PreviewImage): string {
+  return `  <link rel="canonical" href="${esc(canonical)}" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="AI Interface Library" />
+  <meta property="og:title" content="${esc(title)}" />
+  <meta property="og:description" content="${esc(description)}" />
+  <meta property="og:url" content="${esc(canonical)}" />
+  <meta property="og:image" content="${esc(image.url)}" />
+  <meta property="og:image:width" content="${image.width}" />
+  <meta property="og:image:height" content="${image.height}" />
+  <meta property="og:image:alt" content="${esc(image.alt)}" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${esc(title)}" />
+  <meta name="twitter:description" content="${esc(description)}" />
+  <meta name="twitter:image" content="${esc(image.url)}" />
+  <meta name="twitter:image:alt" content="${esc(image.alt)}" />
+`;
+}
+
+function page(opts: { title: string; description: string; canonical?: string; noindex?: boolean; image?: PreviewImage; consent: ConsentMode; body: string }): string {
   return `<!doctype html>
 <html lang="en" data-consent="${opts.consent}">
 <head>
@@ -56,14 +81,8 @@ function page(opts: { title: string; description: string; canonical?: string; no
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${esc(opts.title)}</title>
   <meta name="description" content="${esc(opts.description)}" />
-${opts.noindex ? '  <meta name="robots" content="noindex" />\n' : ""}${opts.canonical ? `  <link rel="canonical" href="${esc(opts.canonical)}" />
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="AI Interface Library" />
-  <meta property="og:title" content="${esc(opts.title)}" />
-  <meta property="og:description" content="${esc(opts.description)}" />
-  <meta property="og:url" content="${esc(opts.canonical)}" />
-  <meta property="og:image" content="${ORIGIN}/og-image.png" />
-` : ""}  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <meta name="robots" content="${opts.noindex ? "noindex" : "max-image-preview:large"}" />
+${opts.canonical ? socialMeta(opts.title, opts.description, opts.canonical, opts.image ?? SITE_PREVIEW) : ""}  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <style>
     body{margin:0;font:16px/1.6 system-ui,-apple-system,Segoe UI,sans-serif;background:#f4efe8;color:#231f1a}
     .wrap{max-width:1000px;margin:0 auto;padding:24px 16px}
@@ -201,8 +220,14 @@ ${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screens
       <section class="analysis"><h2>Design analysis</h2><p>${esc(displayedAnalysis(cap))}</p><p class="method"><a href="/how-we-analyze">How this analysis is made</a></p></section>` : `      <p>No captures yet for ${esc(name)}.</p>`}
     </main>`;
 
+  // Link preview: this page's desktop screenshot (the hub shows its latest week); the site image if there is none yet.
+  const image: PreviewImage | undefined = cap?.r2_key
+    ? { url: `${ORIGIN}${shotUrl(cap.r2_key, slug, cap.captured_at)}`, ...desktopSize(cap), alt: shotAlt(name, "desktop", cap.week) }
+    : undefined;
+
   const html = page({
     consent: consentMode(request),
+    image,
     title: weekParam !== null
       ? `${name} interface — week of ${weekInWords(weekParam)} | AI Interface Library`
       : `${name} interface screenshots — weekly UI history | AI Interface Library`,

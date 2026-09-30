@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { handleSitemap, ORIGIN, HOW_WE_ANALYZE_UPDATED, PRIVACY_UPDATED_DATE, PRIVACY_UPDATED } from '../../src/portal-page';
+import { readFileSync } from 'node:fs';
+import { handleSitemap, handlePortalPage, handleHowWeAnalyze, handlePrivacy, ORIGIN, HOW_WE_ANALYZE_UPDATED, PRIVACY_UPDATED_DATE, PRIVACY_UPDATED, SITE_PREVIEW } from '../../src/portal-page';
 import { handleApi } from '../../src/api';
 import { makeEnv } from './fake-env';
 
@@ -79,5 +80,72 @@ describe('analysis publish time', () => {
     expect(res.status).toBe(200);
     const row = t.db.prepare(`SELECT analysis_published_at FROM captures WHERE id = 'chatgpt-2026-09-07'`).get() as { analysis_published_at: string };
     expect(Date.parse(row.analysis_published_at)).toBeGreaterThanOrEqual(before);
+  });
+});
+
+// ---- robots and link previews ------------------------------------------------------
+const INDEX_HTML = readFileSync(new URL('../../public/index.html', import.meta.url), 'utf8');
+const head = (html: string) => html.match(/<head>([\s\S]*?)<\/head>/)![1];
+/** content of <meta property|name="key">, or undefined; fails if the tag appears more than once. */
+function meta(html: string, key: string): string | undefined {
+  const all = [...head(html).matchAll(new RegExp(`<meta (?:property|name)="${key.replace(/[:.]/g, '\\$&')}" content="([^"]*)" />`, 'g'))];
+  expect(all.length, key).toBeLessThanOrEqual(1);
+  return all[0]?.[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+}
+const canonicalOf = (html: string) => head(html).match(/<link rel="canonical" href="([^"]+)" \/>/)?.[1];
+
+describe('robots and link previews', () => {
+  let t: ReturnType<typeof seed>;
+  beforeEach(() => { t = seed(); });
+  const portal = async (path: string) => (await handlePortalPage(new Request(`https://x${path}`), t.env)).text();
+  const v = (at: string) => Date.parse(at);
+
+  it('marks every indexable page max-image-preview:large and keeps noindex on system-test weeks', async () => {
+    for (const html of [INDEX_HTML, await portal('/portals/chatgpt'), await portal('/portals/chatgpt/2026-09-07'),
+      await (await handleHowWeAnalyze(new Request('https://x/how-we-analyze'))).text(),
+      await (await handlePrivacy(new Request('https://x/privacy'))).text()]) {
+      expect(meta(html, 'robots')).toBe('max-image-preview:large');
+    }
+    expect(meta(await portal('/portals/chatgpt/2026-08-03'), 'robots')).toBe('noindex');
+    expect(meta(await portal('/portals/nope'), 'robots')).toBe('noindex');
+  });
+
+  it('a weekly page previews its own desktop screenshot', async () => {
+    const html = await portal('/portals/chatgpt/2026-09-07');
+    expect(meta(html, 'og:image')).toBe(`${ORIGIN}/img/shots/2026-09-07/chatgpt.local.png?v=${v('2026-09-13T16:59:51.824Z')}`);
+    expect(meta(html, 'og:image:width')).toBe('1280');
+    expect(meta(html, 'og:image:height')).toBe('800');
+    expect(meta(html, 'og:image:alt')).toBe('ChatGPT desktop interface, week of September 7, 2026');
+    expect(meta(html, 'twitter:card')).toBe('summary_large_image');
+    expect(meta(html, 'twitter:image')).toBe(meta(html, 'og:image'));
+    // The preview image is the screenshot shown on the page, with the same alt.
+    expect(html).toContain(`<img src="/img/shots/2026-09-07/chatgpt.local.png?v=${v('2026-09-13T16:59:51.824Z')}" alt="${meta(html, 'og:image:alt')}"`);
+  });
+
+  it('a portal hub previews its latest week', async () => {
+    const html = await portal('/portals/chatgpt');
+    expect(meta(html, 'og:image')).toBe(`${ORIGIN}/img/shots/2026-09-21/chatgpt.local.png?v=${v('2026-09-25T15:12:37.969Z')}`);
+    expect(meta(html, 'og:image:alt')).toBe('ChatGPT desktop interface, week of September 21, 2026');
+  });
+
+  it('pages without a screenshot keep the site preview image', async () => {
+    for (const html of [await (await handleHowWeAnalyze(new Request('https://x/how-we-analyze'))).text(), await (await handlePrivacy(new Request('https://x/privacy'))).text(), INDEX_HTML]) {
+      expect(meta(html, 'og:image')).toBe(SITE_PREVIEW.url);
+      expect([meta(html, 'og:image:width'), meta(html, 'og:image:height')]).toEqual(['1200', '630']);
+      expect(meta(html, 'og:image:alt')).toBe(SITE_PREVIEW.alt);
+      expect(meta(html, 'twitter:card')).toBe('summary_large_image');
+      expect(meta(html, 'twitter:image')).toBe(SITE_PREVIEW.url);
+    }
+    // og-image.png really is 1200x630.
+    const b = readFileSync(new URL('../../public/og-image.png', import.meta.url));
+    expect([b.readUInt32BE(16), b.readUInt32BE(20)]).toEqual([1200, 630]);
+  });
+
+  it('every page has og:url matching its canonical', async () => {
+    for (const html of [INDEX_HTML, await portal('/portals/chatgpt'), await portal('/portals/chatgpt/'), await portal('/portals/chatgpt/2026-09-21'),
+      await (await handleHowWeAnalyze(new Request('https://x/how-we-analyze'))).text(), await (await handlePrivacy(new Request('https://x/privacy'))).text()]) {
+      expect(canonicalOf(html)).toBeTruthy();
+      expect(meta(html, 'og:url')).toBe(canonicalOf(html));
+    }
   });
 });
