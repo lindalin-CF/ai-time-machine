@@ -711,6 +711,7 @@ function initHeroOrbFollow() {
   let raf = 0;
   let target = null;
   let current = null;
+  let rest = null; // orb's CSS resting position (left/top), relative to the panel
   let activeTouch = false;
 
   const stop = () => {
@@ -723,8 +724,8 @@ function initHeroOrbFollow() {
   const reset = () => {
     stop();
     current = null;
-    orb.style.left = "";
-    orb.style.top = "";
+    rest = null;
+    orb.style.transform = "";
   };
 
   const tick = () => {
@@ -732,13 +733,20 @@ function initHeroOrbFollow() {
     if (!current) current = { ...target };
     current.x += (target.x - current.x) * 0.18;
     current.y += (target.y - current.y) * 0.18;
-    orb.style.left = current.x.toFixed(2) + "px";
-    orb.style.top = current.y.toFixed(2) + "px";
+    // Translate from the resting position instead of setting left/top, so
+    // moving the orb stays on the compositor and doesn't trigger layout.
+    const dx = current.x - rest.x;
+    const dy = current.y - rest.y;
+    orb.style.transform = `translate3d(${dx.toFixed(2)}px, ${dy.toFixed(2)}px, 0)`;
     raf = requestAnimationFrame(tick);
   };
 
   const follow = (e) => {
     if (reduced.matches) { reset(); return; }
+    if (!rest) {
+      const cs = getComputedStyle(orb);
+      rest = { x: parseFloat(cs.left) || 0, y: parseFloat(cs.top) || 0 };
+    }
     const rect = panel.getBoundingClientRect();
     target = {
       x: e.clientX - rect.left - orb.offsetWidth / 2,

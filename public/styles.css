@@ -103,7 +103,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .hero-orb{
   --orb-angle:210deg;
   position:absolute;left:calc(25% + 10px);top:calc(38% - 10px);width:150px;height:150px;z-index:2;
-  border-radius:50%;transform-origin:center;pointer-events:none;will-change:left,top;
+  border-radius:50%;transform-origin:center;pointer-events:none;will-change:transform;
 }
 .hero-orb::before{
   content:"";position:absolute;inset:0;border-radius:50%;
@@ -114,7 +114,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
     conic-gradient(from var(--orb-angle),rgba(66,50,23,.20),rgba(235,98,44,.95),rgba(235,98,44,.78),rgba(66,50,23,.16),rgba(66,50,23,.20));
   background-size:17px 19px,23px 29px,11px 13px,auto;
   background-blend-mode:soft-light,multiply,overlay,normal;
-  filter:blur(.15px);opacity:.78;transform-origin:center;
+  opacity:.78;transform-origin:center;
   animation:orb-flow 14s linear infinite;
   -webkit-mask:radial-gradient(circle,transparent 0 35%,#000 36% 66%,transparent 67%);
           mask:radial-gradient(circle,transparent 0 35%,#000 36% 66%,transparent 67%);
@@ -128,8 +128,8 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   opacity:.92;
 }
 @keyframes orb-flow{
-  0%{--orb-angle:210deg;transform:rotate(0deg)}
-  100%{--orb-angle:570deg;transform:rotate(360deg)}
+  0%{transform:rotate(0deg)}
+  100%{transform:rotate(360deg)}
 }
 .hero-copy{position:absolute;z-index:3;left:18px;right:18px;bottom:22px;display:grid;grid-template-columns:1fr minmax(280px,48%);gap:40px;align-items:end}
 .hero-title{
