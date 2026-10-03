@@ -40,9 +40,9 @@ function shotAlt(portal, device, week) {
 }
 // Small display copy of a screenshot via Cloudflare Image Transformations (enabled only on the production zone).
 // onerror=redirect falls back to the original if a transformation fails or the monthly quota runs out.
-function thumbUrl(src) {
+function thumbUrl(src, width = 800) {
   if (typeof src === "string" && src.startsWith("/img/") && location.hostname === "ai-portal-library.dev") {
-    return "/cdn-cgi/image/width=800,fit=scale-down,format=auto,onerror=redirect" + src;
+    return `/cdn-cgi/image/width=${width},fit=scale-down,format=auto,onerror=redirect` + src;
   }
   return src;
 }
@@ -1382,7 +1382,7 @@ function anTableHTML(cols) {
   rows.push(anRow("Snapshot", cols.map((c) => {
     const src = anShot(c.cap);
     if (!src) return `<td><div class="an-noshot">${c.cap ? (an.device === "mobile" ? "No mobile shot" : "—") : "No capture"}</div></td>`;
-    return `<td><div class="an-shot" data-full="${esc(src)}" data-title="${esc(c.label)}" data-file="${esc((c.cap.slug || "shot") + "-" + (c.cap.week || "") + (an.device === "mobile" ? "-mobile" : ""))}"><img loading="lazy" src="${esc(thumbUrl(src))}" alt="${esc(shotAlt(c.portalName, an.device === "mobile" ? "mobile" : "desktop", c.cap.week))}"${sizeAttrs(shotSize(c.cap, an.device === "mobile"))} /></div></td>`;
+    return `<td><div class="an-shot an-shot--${an.device === "mobile" ? "mobile" : "desktop"}" data-full="${esc(src)}" data-title="${esc(c.label)}" data-file="${esc((c.cap.slug || "shot") + "-" + (c.cap.week || "") + (an.device === "mobile" ? "-mobile" : ""))}"><img loading="lazy" src="${esc(thumbUrl(src, 1280))}" alt="${esc(shotAlt(c.portalName, an.device === "mobile" ? "mobile" : "desktop", c.cap.week))}"${sizeAttrs(shotSize(c.cap, an.device === "mobile"))} /></div></td>`;
   })));
   rows.push(anRow("Brand colour", cols.map((c) =>
     c.cap && c.cap.brand ? `<td><span class="an-swatch" style="background:${esc(c.cap.brand)}"></span><code>${esc(String(c.cap.brand).toUpperCase())}</code></td>` : `<td>—</td>`
