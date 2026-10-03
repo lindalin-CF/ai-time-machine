@@ -38,6 +38,14 @@ function weekInWords(week) {
 function shotAlt(portal, device, week) {
   return `${portal} ${device} interface, week of ${weekInWords(week)}`;
 }
+// Small display copy of a screenshot via Cloudflare Image Transformations (enabled only on the production zone).
+// onerror=redirect falls back to the original if a transformation fails or the monthly quota runs out.
+function thumbUrl(src) {
+  if (typeof src === "string" && src.startsWith("/img/") && location.hostname === "ai-portal-library.dev") {
+    return "/cdn-cgi/image/width=800,fit=scale-down,format=auto,onerror=redirect" + src;
+  }
+  return src;
+}
 /** width/height attributes, or nothing when the size is unknown. */
 function sizeAttrs(size) {
   return size && size.width > 0 && size.height > 0 ? ` width="${size.width}" height="${size.height}"` : "";
@@ -381,7 +389,7 @@ function card(c) {
   const shot = shotFor(c);
   const inner = shot.missing
     ? `<div class="shot-missing">No mobile capture yet</div>`
-    : `<img loading="lazy" src="${esc(shot.src)}" alt="${esc(shotAlt(c.portal, mobile ? "mobile" : "desktop", c.week || state.week))}"${sizeAttrs(shotSize(c, mobile))} />`;
+    : `<img loading="lazy" src="${esc(thumbUrl(shot.src))}" alt="${esc(shotAlt(c.portal, mobile ? "mobile" : "desktop", c.week || state.week))}"${sizeAttrs(shotSize(c, mobile))} />`;
   return `
   <article class="card">
     <div class="shot${mobile ? " mobile" : ""}" style="--brand:${esc(c.brand)}">
@@ -532,7 +540,7 @@ function renderCollection() {
       const shot = shotFor(c);
       const inner = shot.missing
         ? `<div class="shot-missing">No mobile capture yet</div>`
-        : `<img loading="lazy" src="${esc(shot.src)}" alt="${esc(shotAlt(c.portal, mobile ? "mobile" : "desktop", c.week || state.week))}"${sizeAttrs(shotSize(c, mobile))} />`;
+        : `<img loading="lazy" src="${esc(thumbUrl(shot.src))}" alt="${esc(shotAlt(c.portal, mobile ? "mobile" : "desktop", c.week || state.week))}"${sizeAttrs(shotSize(c, mobile))} />`;
       return `
     <figure class="col-item">
       <div class="shot${mobile ? " mobile" : ""}" style="--brand:${esc(c.brand)}">
@@ -634,7 +642,7 @@ function manualResultCard(s) {
     ? ` data-full="${esc(src)}" data-title="${esc(s.portal)} manual snapshot" data-file="${esc(s.slug)}-manual-${esc(s.device)}"`
     : "";
   const inner = src
-    ? `<img src="${esc(src)}" alt="${esc(manualAlt(s))}"${sizeAttrs((s.sizes || [])[0])} loading="lazy" />`
+    ? `<img src="${esc(thumbUrl(src))}" alt="${esc(manualAlt(s))}"${sizeAttrs((s.sizes || [])[0])} loading="lazy" />`
     : "";
   return `
     <figure class="manual-cell filled">
@@ -951,7 +959,7 @@ function initManualSnapshots() {
       const imgsE = (s.images && s.images.length ? s.images : [s.image]).filter(Boolean);
       const thumbs = imgsE.map((src, i) => `
               <div class="manual-edit-thumb" data-key="${esc(keys[i] || "")}">
-                <img src="${esc(src)}" alt="image ${i + 1}"${sizeAttrs((s.sizes || [])[i])} />
+                <img src="${esc(thumbUrl(src))}" alt="image ${i + 1}"${sizeAttrs((s.sizes || [])[i])} />
                 <button type="button" class="manual-thumb-del" aria-label="Delete image" title="Delete image">&times;</button>
               </div>`).join("");
       return `
@@ -977,7 +985,7 @@ function initManualSnapshots() {
     const imgs = (s.images && s.images.length ? s.images : [s.image]).filter(Boolean);
     const slides = imgs.map((src, i) => `
           <div class="manual-img" data-full="${esc(src)}" data-title="${esc(current.portal)} manual snapshot" data-file="${esc(current.slug)}-manual-${esc(s.device)}">
-            <img src="${esc(src)}" alt="${esc(manualAlt(s, current.portal))}"${sizeAttrs((s.sizes || [])[i])} loading="lazy" />
+            <img src="${esc(thumbUrl(src))}" alt="${esc(manualAlt(s, current.portal))}"${sizeAttrs((s.sizes || [])[i])} loading="lazy" />
           </div>`).join("");
     const multi = imgs.length > 1;
     const nav = multi ? `
@@ -1374,7 +1382,7 @@ function anTableHTML(cols) {
   rows.push(anRow("Snapshot", cols.map((c) => {
     const src = anShot(c.cap);
     if (!src) return `<td><div class="an-noshot">${c.cap ? (an.device === "mobile" ? "No mobile shot" : "—") : "No capture"}</div></td>`;
-    return `<td><div class="an-shot" data-full="${esc(src)}" data-title="${esc(c.label)}" data-file="${esc((c.cap.slug || "shot") + "-" + (c.cap.week || "") + (an.device === "mobile" ? "-mobile" : ""))}"><img loading="lazy" src="${esc(src)}" alt="${esc(shotAlt(c.portalName, an.device === "mobile" ? "mobile" : "desktop", c.cap.week))}"${sizeAttrs(shotSize(c.cap, an.device === "mobile"))} /></div></td>`;
+    return `<td><div class="an-shot" data-full="${esc(src)}" data-title="${esc(c.label)}" data-file="${esc((c.cap.slug || "shot") + "-" + (c.cap.week || "") + (an.device === "mobile" ? "-mobile" : ""))}"><img loading="lazy" src="${esc(thumbUrl(src))}" alt="${esc(shotAlt(c.portalName, an.device === "mobile" ? "mobile" : "desktop", c.cap.week))}"${sizeAttrs(shotSize(c.cap, an.device === "mobile"))} /></div></td>`;
   })));
   rows.push(anRow("Brand colour", cols.map((c) =>
     c.cap && c.cap.brand ? `<td><span class="an-swatch" style="background:${esc(c.cap.brand)}"></span><code>${esc(String(c.cap.brand).toUpperCase())}</code></td>` : `<td>—</td>`
@@ -1413,7 +1421,7 @@ function renderInsightsList(items) {
       <div class="insight-media">
         ${imgs.map((src, i) => `
           <button class="insight-thumb" type="button" data-full="${esc(src)}" data-title="${esc(it.title)}" data-file="insight-${esc(it.id)}-${i}">
-            <img src="${esc(src)}" alt="${esc(it.title)} image ${i + 1}"${sizeAttrs((it.sizes || [])[i])} loading="lazy" />
+            <img src="${esc(thumbUrl(src))}" alt="${esc(it.title)} image ${i + 1}"${sizeAttrs((it.sizes || [])[i])} loading="lazy" />
           </button>`).join("")}
       </div>` : "";
     return `
