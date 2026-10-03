@@ -24,6 +24,8 @@
  *   node capture.mjs --auto            # no pausing (use once you're already logged in)
  *   node capture.mjs --auto --wait=10  # in --auto, wait 10s per page before capturing (default 6)
  *   node capture.mjs --week=2026-08-10 # store under a specific week instead of the current one
+ *   node capture.mjs manus --mobile-only  # recapture only the mobile shot; the desktop shot (and its
+ *                                      # design analysis + redacted image) is left untouched
  *   WORKER_URL=https://... node capture.mjs   # override the Worker URL
  */
 import puppeteer from "puppeteer";
@@ -107,6 +109,7 @@ async function loginState(page) {
 function parseArgs() {
   const argv = process.argv.slice(2);
   const auto = argv.includes("--auto");
+  const mobileOnly = argv.includes("--mobile-only");
   const weekArg = (argv.find((a) => a.startsWith("--week=")) || "").split("=")[1];
   const waitArg = (argv.find((a) => a.startsWith("--wait=")) || "").split("=")[1];
   const only = argv.filter((a) => !a.startsWith("--"));
@@ -115,7 +118,7 @@ function parseArgs() {
     process.exit(1);
   }
   const waitMs = waitArg ? Math.max(1, parseInt(waitArg, 10)) * 1000 : 6000;
-  return { auto, week: weekArg || isoMonday(), waitMs, only };
+  return { auto, mobileOnly, week: weekArg || isoMonday(), waitMs, only };
 }
 
 async function main() {
@@ -123,7 +126,7 @@ async function main() {
     console.error("✗ Set UPLOAD_TOKEN first:  export UPLOAD_TOKEN=<the value you gave `wrangler secret put UPLOAD_TOKEN`>");
     process.exit(1);
   }
-  const { auto, week, waitMs, only } = parseArgs();
+  const { auto, mobileOnly, week, waitMs, only } = parseArgs();
 
   console.log(`→ Worker: ${WORKER_URL}`);
   const res = await fetch(`${WORKER_URL}/api/portals`);
@@ -132,7 +135,7 @@ async function main() {
   const list = only.length ? portals.filter((p) => only.includes(p.slug)) : portals;
   if (!list.length) { console.error("✗ No matching portals. Slugs:", portals.map((p) => p.slug).join(", ")); process.exit(1); }
 
-  console.log(`→ Week: ${week}  |  ${list.length} portal(s)  |  ${auto ? `--auto (wait ${waitMs / 1000}s/page)` : "interactive"}`);
+  console.log(`→ Week: ${week}  |  ${list.length} portal(s)  |  ${auto ? `--auto (wait ${waitMs / 1000}s/page)` : "interactive"}${mobileOnly ? "  |  --mobile-only" : ""}`);
   console.log(`→ Profile: ${PROFILE_DIR}`);
 
   const launchOpts = {
@@ -154,7 +157,9 @@ async function main() {
   const rl = auto ? null : readline.createInterface({ input, output });
   const pages = await browser.pages();
   const page = pages[0] ?? (await browser.newPage());
-  await page.setViewport(VIEWPORT);
+  // --mobile-only: show the phone layout from the start, so what you check (and close popups on)
+  // is exactly what gets captured.
+  await page.setViewport(mobileOnly ? MOBILE_VIEWPORT : VIEWPORT);
 
   let ok = 0, fail = 0;
   const skipped = []; // slugs skipped because they still looked logged out
@@ -181,6 +186,22 @@ async function main() {
         console.log("      → --auto: skipping so a login screen never overwrites a good shot.");
         skipped.push(p.slug);
         break;
+      }
+
+      // --mobile-only: the page is already in the phone viewport, so capture as-is (no reload, which
+      // could bring back popups you closed). Never upload desktop here: a desktop upload resets that
+      // week's design analysis and replaces the redacted screenshot.
+      if (mobileOnly) {
+        try {
+          const mobBuf = await page.screenshot({ type: "png" });
+          const mobRes = await uploadShot(p.slug, week, mobBuf, "mobile");
+          if (mobRes.ok) { console.log(`    ✓ mobile uploaded (${(mobBuf.length / 1024).toFixed(0)} KB)`); ok++; }
+          else { console.log(`    ✗ mobile upload failed: ${mobRes.status} ${await mobRes.text()}`); fail++; }
+        } catch (e) {
+          console.log(`    ✗ mobile capture failed: ${e.message}`); fail++;
+        }
+        done = true;
+        continue;
       }
 
       // Looks signed in → capture desktop + mobile and upload both.
@@ -217,7 +238,7 @@ async function main() {
   console.log(`\nDone. ${ok} uploaded, ${fail} failed${skipped.length ? `, ${skipped.length} skipped (logged out): ${skipped.join(", ")}` : ""}.`);
   console.log(`View: ${WORKER_URL}  (week ${week})`);
   if (skipped.length) {
-    console.log(`\nTo redo the skipped ones after logging in:\n  node capture.mjs ${skipped.join(" ")}${week === isoMonday() ? "" : ` --week=${week}`}`);
+    console.log(`\nTo redo the skipped ones after logging in:\n  node capture.mjs ${skipped.join(" ")}${mobileOnly ? " --mobile-only" : ""}${week === isoMonday() ? "" : ` --week=${week}`}`);
   }
 }
 main().catch((e) => { console.error(e); process.exit(1); });
