@@ -128,7 +128,7 @@ describe('in a headless browser', () => {
     // The Analytics view's table icons are self-hosted too.
     await v.page.goto('https://site.test/#analytics');
     await v.page.waitForLoadState('networkidle');
-    await v.page.locator('#anPicker button').first().click().catch(() => {});
+    await v.page.locator('#anPortals button').first().click().catch(() => {});
     await v.page.waitForLoadState('networkidle');
     for (const src of await v.page.locator('.an-logo img').evaluateAll((els) => els.map((e) => e.getAttribute('src')))) {
       expect(src).toMatch(/^\/icons\/[a-z0-9-]+\.png$/);

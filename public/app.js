@@ -1,4 +1,7 @@
 // AI Surface Library — front-end controller
+import { mountAnCanvas, unmountAnCanvas } from "./analytics-canvas.js";
+import { weekPick } from "./analytics-weekpick.js";
+
 const $ = (sel, root = document) => root.querySelector(sel);
 
 const state = {
@@ -1222,6 +1225,7 @@ const an = {
   device: "desktop",
   portals: new Set(),   // selected slugs to compare (portals mode)
   weeks: new Set(),     // selected weeks to compare (weeks mode)
+  view: "table",        // "table" | "canvas"
   inited: false,
 };
 const AN_MAX = 4;       // cap columns for readability
@@ -1305,8 +1309,39 @@ function enterAnalytics() {
         renderAnalytics();
       })
     );
+    $("#anClear").addEventListener("click", () => {
+      (an.mode === "portals" ? an.portals : an.weeks).clear();
+      renderAnalytics();
+    });
+    view.querySelectorAll(".an-view .vt-btn").forEach((b) =>
+      b.addEventListener("click", () => {
+        an.view = b.dataset.anview;
+        view.querySelectorAll(".an-view .vt-btn").forEach((x) => {
+          const on = x === b; x.classList.toggle("active", on); x.setAttribute("aria-pressed", String(on));
+        });
+        anSyncDevice();
+        renderAnalytics();
+      })
+    );
   }
   renderAnalytics();
+}
+
+// Canvas compares desktop screenshots only (findings come from the desktop analysis): there, Mobile is
+// disabled and a Mobile selection falls back to Desktop. Back in Table, Mobile is enabled again and the
+// device stays Desktop until the user picks Mobile.
+const AN_CANVAS_DEVICE_NOTE = "Canvas compares desktop screenshots only.";
+function anSyncDevice() {
+  const canvas = an.view === "canvas";
+  if (canvas && an.device === "mobile") an.device = "desktop";
+  $("#analyticsView").querySelectorAll(".an-device .vt-btn").forEach((x) => {
+    const on = x.dataset.andevice === an.device;
+    x.classList.toggle("active", on); x.setAttribute("aria-pressed", String(on));
+    if (x.dataset.andevice !== "mobile") return;
+    x.disabled = canvas;
+    if (canvas) { x.setAttribute("aria-disabled", "true"); x.title = AN_CANVAS_DEVICE_NOTE; }
+    else { x.removeAttribute("aria-disabled"); x.removeAttribute("title"); }
+  });
 }
 
 function anChip(v, label, on, brand) {
@@ -1315,62 +1350,109 @@ function anChip(v, label, on, brand) {
 }
 
 function renderAnalytics() {
-  const ctxLabel = $("#anContextLabel"), ctx = $("#anContext");
-  const pickLabel = $("#anPickLabel"), pick = $("#anPicker");
-  if (an.mode === "portals") {
-    ctxLabel.textContent = "Week";
-    ctx.innerHTML = state.weeks.map((w) => anChip(w.week, shortWeekLabel(w.week), w.week === an.week)).join("");
-    pickLabel.textContent = "Portals";
-    pick.innerHTML = state.portals.map((p) => anChip(p.slug, p.name, an.portals.has(p.slug), p.brand)).join("");
-  } else {
-    ctxLabel.textContent = "Portal";
-    ctx.innerHTML = state.portals.map((p) => anChip(p.slug, p.name, p.slug === an.portal, p.brand)).join("");
-    pickLabel.textContent = "Weeks";
-    pick.innerHTML = state.weeks.map((w) => anChip(w.week, shortWeekLabel(w.week), an.weeks.has(w.week))).join("");
-  }
-  ctx.querySelectorAll(".chip").forEach((c) =>
+  const portalsMode = an.mode === "portals";
+  const weekOptions = state.weeks.map((w) => ({ value: w.week, label: shortWeekLabel(w.week) }));
+  // Across portals: one week, several portals. Over time: one portal, several weeks.
+  $("#anWeekLabel").textContent = portalsMode ? "Week" : "Weeks";
+  weekPick($("#anWeek"), portalsMode
+    ? {
+      options: weekOptions, selected: an.week ? [an.week] : [], multi: false, labelledBy: "anWeekLabel",
+      onChange: (week) => { an.week = week; renderAnalytics(); },
+    }
+    : {
+      // Multi select keeps its menu open, so only the count and the comparison re-render on each pick.
+      options: weekOptions, selected: state.weeks.map((w) => w.week).filter((w) => an.weeks.has(w)), multi: true, max: AN_MAX,
+      labelledBy: "anWeekLabel",
+      onChange: (weeks) => { an.weeks = new Set(weeks); anSyncSelection(); renderAnContent(); },
+    });
+  const chips = $("#anPortals");
+  chips.setAttribute("aria-label", portalsMode ? "Portals" : "Portal");
+  chips.innerHTML = state.portals
+    .map((p) => anChip(p.slug, p.name, portalsMode ? an.portals.has(p.slug) : p.slug === an.portal, p.brand))
+    .join("");
+  chips.querySelectorAll(".chip").forEach((c) =>
     c.addEventListener("click", () => {
-      if (an.mode === "portals") an.week = c.dataset.v; else an.portal = c.dataset.v;
-      renderAnalytics();
-    })
-  );
-  pick.querySelectorAll(".chip").forEach((c) =>
-    c.addEventListener("click", () => {
-      const set = an.mode === "portals" ? an.portals : an.weeks;
       const v = c.dataset.v;
-      if (set.has(v)) set.delete(v);
-      else if (set.size < AN_MAX) set.add(v);
+      if (!portalsMode) an.portal = v;
+      else if (an.portals.has(v)) an.portals.delete(v);
+      else if (an.portals.size < AN_MAX) an.portals.add(v);
       renderAnalytics();
     })
   );
-  renderAnTable();
+  anSyncSelection();
+  renderAnContent();
+}
+
+// "N of 4 selected" for what is being compared (portals, or weeks over time); Clear needs something to clear.
+function anSyncSelection() {
+  const n = an.mode === "portals" ? an.portals.size : an.weeks.size;
+  $("#anCount").textContent = `${n} of ${AN_MAX} selected`;
+  $("#anClear").disabled = n === 0;
+}
+
+// The comparison below the controls: table or canvas.
+function renderAnContent() {
+  const canvas = an.view === "canvas";
+  $("#anTableWrap").parentElement.hidden = canvas;
+  $("#anCanvasWrap").hidden = !canvas;
+  if (canvas) renderAnCanvas();
+  else { unmountAnCanvas(); renderAnTable(); }
 }
 
 function anEmpty(msg) { return `<div class="an-empty">${esc(msg)}</div>`; }
 
+// Columns for the current selection, shared by the table and the canvas: { columns } or { empty: message }.
+async function anColumns() {
+  try {
+    if (an.mode === "portals") {
+      if (!an.week || an.portals.size === 0) return { empty: "Pick a week and at least one portal to compare." };
+      const caps = await anCapturesFor(an.week);
+      return { columns: state.portals
+        .filter((p) => an.portals.has(p.slug))
+        .map((p) => ({ key: p.slug, label: p.name, portalName: p.name, icon: p.slug, cap: caps.find((c) => c.slug === p.slug) })) };
+    }
+    if (!an.portal || an.weeks.size === 0) return { empty: "Pick a portal and at least one week to compare." };
+    const weeks = state.weeks.map((w) => w.week).filter((w) => an.weeks.has(w));
+    const capsByWeek = await Promise.all(weeks.map((w) => anCapturesFor(w)));
+    const p = state.portals.find((pp) => pp.slug === an.portal);
+    return { columns: weeks.map((w, i) => ({ key: w, label: shortWeekLabel(w), portalName: p ? p.name : an.portal, icon: i === 0 && p ? p.slug : "", cap: capsByWeek[i].find((c) => c.slug === an.portal) })) };
+  } catch {
+    return { empty: "Could not load comparison data." };
+  }
+}
+
 async function renderAnTable() {
   const wrap = $("#anTableWrap");
   wrap.innerHTML = `<div class="an-loading">Loading…</div>`;
-  let columns = [];
-  try {
-    if (an.mode === "portals") {
-      if (!an.week || an.portals.size === 0) { wrap.innerHTML = anEmpty("Pick a week and at least one portal to compare."); return; }
-      const caps = await anCapturesFor(an.week);
-      columns = state.portals
-        .filter((p) => an.portals.has(p.slug))
-        .map((p) => ({ label: p.name, portalName: p.name, icon: p.slug, cap: caps.find((c) => c.slug === p.slug) }));
-    } else {
-      if (!an.portal || an.weeks.size === 0) { wrap.innerHTML = anEmpty("Pick a portal and at least one week to compare."); return; }
-      const weeks = state.weeks.map((w) => w.week).filter((w) => an.weeks.has(w));
-      const capsByWeek = await Promise.all(weeks.map((w) => anCapturesFor(w)));
-      const p = state.portals.find((pp) => pp.slug === an.portal);
-      columns = weeks.map((w, i) => ({ label: shortWeekLabel(w), portalName: p ? p.name : an.portal, icon: i === 0 && p ? p.slug : "", cap: capsByWeek[i].find((c) => c.slug === an.portal) }));
-    }
-  } catch {
-    wrap.innerHTML = anEmpty("Could not load comparison data.");
-    return;
-  }
-  wrap.innerHTML = anTableHTML(columns);
+  const { columns, empty } = await anColumns();
+  wrap.innerHTML = empty ? anEmpty(empty) : anTableHTML(columns);
+}
+
+// Canvas view: the same selection as the table, always desktop screenshots (findings describe the desktop capture only).
+let anCanvasSeq = 0;
+async function renderAnCanvas() {
+  const wrap = $("#anCanvasWrap");
+  const seq = ++anCanvasSeq;
+  unmountAnCanvas();
+  wrap.innerHTML = `<div class="an-loading">Loading…</div>`;
+  const { columns, empty } = await anColumns();
+  if (seq !== anCanvasSeq || an.view !== "canvas") return;
+  if (empty) { wrap.innerHTML = anEmpty(empty); return; }
+  const weekSub = (c) => (c.cap && c.cap.week ? shortWeekLabel(c.cap.week) : an.mode === "portals" ? shortWeekLabel(an.week) : c.label);
+  const cards = columns.map((c) => ({
+    id: c.key,
+    label: c.label,
+    sub: an.mode === "portals" ? weekSub(c) : c.portalName,
+    src: c.cap ? c.cap.image : null,
+    alt: c.cap ? shotAlt(c.portalName, "desktop", c.cap.week) : "",
+    size: c.cap ? shotSize(c.cap, false) : null,
+    file: c.cap ? `${c.cap.slug || "shot"}-${c.cap.week || ""}` : "",
+    metrics: c.cap && c.cap.metrics ? c.cap.metrics : null,
+  }));
+  const context = an.mode === "portals" ? an.week : an.portal;
+  const storageKey = `anCanvas:v1:${an.mode}:${context}:${columns.map((c) => c.key).sort().join(",")}`;
+  wrap.innerHTML = "";
+  mountAnCanvas(wrap, cards, { storageKey, thumbUrl, tools: $("#anCanvasTools"), note: $("#anCanvasNote") });
 }
 
 function anTableHTML(cols) {

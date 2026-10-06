@@ -3,6 +3,7 @@ import type { Env, CaptureRow } from "./types";
 import { listPortals, listWeeks, latestWeek, capturesForWeek, getPortal, updateCaptureAnalysis, CACHE_VERSION } from "./db";
 import { hasCookieSecret, storeCapture, invalidate } from "./capture";
 import { validateAnalysis } from "./analysis";
+import { captureMetrics } from "./capture-metrics";
 import { imageSizeOf, sampleSize, type ImageSize } from "./image-size";
 
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8" };
@@ -66,6 +67,8 @@ async function shapeCapture(env: Env, row: CaptureRow) {
     palette, analysis: row.analysis, analysisBy: row.analysis_by,
     status: row.status, sample: !row.r2_key, capturedAt: row.captured_at,
     signedIn: !!row.r2_key && row.r2_key.endsWith(".local.png"),
+    // Whitelisted numbers from the private guideline JSON for the Analytics canvas; null when unavailable.
+    metrics: captureMetrics(row),
   };
 }
 

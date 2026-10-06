@@ -828,3 +828,116 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .insight-empty{padding:34px;text-align:center;color:var(--cf-text-soft);border:1px dashed var(--cf-border-strong);border-radius:14px;background:var(--cf-bg-100)}
 @media(max-width:760px){.topnav{gap:10px}.topnav-link{font-size:11.5px}.insight-media{grid-template-columns:1fr 1fr}}
 @media(max-width:420px){.wordmark{max-width:38vw}.topnav{gap:8px}.topnav-link{font-size:11px}.insight-media{grid-template-columns:1fr}}
+
+/* ---------- analytics: canvas view (public/analytics-canvas.js) ---------- */
+.an-view{flex:0 0 auto}
+.an-view .vt-btn:focus-visible,.an-canvas-wrap .vt-btn:focus-visible,.anc-tools .vt-btn:focus-visible,.anc-box-x:focus-visible{outline:2px solid var(--cf-orange);outline-offset:2px}
+.an-canvas-wrap{border:1px solid var(--cf-border);border-radius:14px;overflow:hidden;background:var(--cf-bg-100)}
+.anc-note{margin:0;color:var(--cf-text-soft);font-size:12.5px;line-height:1.4;min-width:0;overflow-wrap:anywhere}
+.anc-tools{display:flex;align-items:center;gap:8px}
+.anc-zoom{align-items:center}
+.anc-zoom .vt-btn{min-width:30px;justify-content:center}
+.anc-zoom-pct{min-width:44px;text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--cf-text-soft)}
+/* Icon button, square and as tall as the zoom group: a zoom button is one text line (1lh) plus 6px padding
+   top and bottom, inside the group's 3px padding and 1px border, so 1lh + 20px (follows the loaded font). */
+.anc-reset{background:var(--cf-bg-300);border:1px solid var(--cf-border);width:calc(1lh + 20px);height:calc(1lh + 20px);padding:0;justify-content:center}
+.anc-board{position:relative;height:min(70vh,620px);overflow:hidden;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
+  background-color:var(--cf-bg-100);background-image:radial-gradient(var(--cf-border) 1px,transparent 1px);background-size:20px 20px}
+.anc-board:focus-visible{outline:2px solid var(--cf-orange);outline-offset:-2px}
+.anc-board.is-panning{cursor:grabbing}
+.anc-board.is-connecting{cursor:crosshair}
+.anc-world{position:absolute;left:0;top:0;transform-origin:0 0}
+.anc-edges{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+.anc-edge{fill:none;stroke:var(--cf-border-strong);stroke-width:2}
+.anc-edge.is-selected{stroke:var(--cf-orange);stroke-width:2.5}
+.anc-edge-hit{fill:none;stroke:transparent;stroke-width:14;pointer-events:stroke;cursor:pointer}
+.anc-ghost{fill:none;stroke:var(--cf-orange);stroke-width:2;stroke-dasharray:6 5}
+.anc-card{position:absolute;left:0;top:0;width:280px;background:var(--cf-bg-100);border:1px solid var(--cf-border);border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);cursor:grab}
+.anc-card.is-dragging{cursor:grabbing;border-color:var(--cf-border-strong);z-index:2}
+.anc-card-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:10px 12px 8px}
+.anc-card-title{font-weight:700;font-size:14px;color:var(--cf-text)}
+.anc-card-sub{font-family:var(--font-mono);font-size:10.5px;color:var(--cf-text-soft);white-space:nowrap}
+.anc-thumb{margin:0 10px 10px;border-radius:9px;overflow:hidden;border:1px solid var(--cf-border);background:var(--cf-bg-300);cursor:zoom-in}
+.anc-thumb img{display:block;width:100%;height:auto;pointer-events:none}
+.anc-noshot{display:grid;place-items:center;min-height:120px;margin:0 10px 10px;color:var(--cf-text-soft);font-size:12px;
+  border:1px dashed var(--cf-border-strong);border-radius:9px;background:var(--cf-bg-200)}
+.anc-handle{position:absolute;top:50%;width:14px;height:14px;margin-top:-7px;border-radius:50%;background:var(--cf-bg-100);
+  border:2px solid var(--cf-border-strong);cursor:crosshair}
+.anc-handle--in{left:-8px}
+.anc-handle--out{right:-8px}
+.anc-handle:hover,.anc-board.is-connecting .anc-handle--in{border-color:var(--cf-orange);background:rgba(235,98,44,.12)}
+.anc-box{position:absolute;left:0;top:0;width:230px;padding:8px 10px 10px;background:var(--cf-bg-200);border:1px solid var(--cf-border);
+  border-radius:var(--radius-sm);box-shadow:var(--shadow-sm);cursor:pointer}
+.anc-box.is-selected{border-color:var(--cf-orange)}
+.anc-box-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;font-family:var(--font-mono);
+  font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--cf-text-soft)}
+.anc-box-x{border:none;background:transparent;color:var(--cf-text-soft);font-size:16px;line-height:1;padding:2px 5px;border-radius:6px;cursor:pointer}
+.anc-box-x:hover{color:var(--cf-orange-ink);background:rgba(235,98,44,.1)}
+.anc-box-list{margin:0;padding:0 0 0 16px;font-size:12px;line-height:1.4;color:var(--cf-text)}
+.anc-box-list li+li{margin-top:4px}
+/* Narrow screens: stacked cards with the comparison between neighbours. */
+/* Canvas has no mobile analysis data, so Mobile is disabled there (public/app.js anSyncDevice). */
+.an-device .vt-btn:disabled,.an-device .vt-btn:disabled:hover{color:var(--cf-border-strong);background:transparent;box-shadow:none;cursor:not-allowed}
+.an-canvas-wrap > .anc-note{padding:10px 12px;border-bottom:1px solid var(--cf-border);background:var(--cf-bg-200)}
+.anc-stack{display:flex;flex-direction:column;align-items:stretch;gap:10px;padding:12px}
+.anc-card--stack,.anc-box--stack{position:static;width:auto;cursor:default}
+.anc-box--stack{margin:0 14px}
+
+/* ---------- analytics: control layout ----------
+   Row 1: Compare toggle, Week dropdown and Device toggle in equal columns as wide as the widest of
+   the three (1fr columns in a max-content grid), with the selected count and Clear on the right.
+   Row 2: portal chips across the full width.
+   Above the results: View toggle left, canvas zoom and reset right (Canvas only), then the note. */
+#analyticsView .an-bar--top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px}
+#analyticsView .an-primary{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:12px;max-width:100%}
+#analyticsView .an-selection{display:flex;align-items:center;gap:4px;margin-left:auto}
+#analyticsView .an-count{font-family:var(--font-mono);font-size:11px;color:var(--cf-text-soft);white-space:nowrap}
+/* Icon-only Clear: no background or border in any state; hover changes only the icon colour. */
+#analyticsView .an-clear{display:inline-grid;place-items:center;width:24px;height:24px;padding:0;margin:0;border:0;border-radius:6px;
+  background:none;color:var(--cf-text-soft);cursor:pointer}
+#analyticsView .an-clear:hover{color:var(--cf-text)}
+#analyticsView .an-clear:disabled,#analyticsView .an-clear:disabled:hover{color:var(--cf-border-strong);cursor:not-allowed}
+#analyticsView .an-clear:focus-visible,#analyticsView .an-mode .vt-btn:focus-visible,#analyticsView .an-device .vt-btn:focus-visible{outline:2px solid var(--cf-orange);outline-offset:2px}
+#analyticsView .an-mode,#analyticsView .an-device,#analyticsView .an-view{display:grid;grid-auto-flow:column;grid-auto-columns:1fr}
+#analyticsView .an-mode .vt-btn,#analyticsView .an-device .vt-btn,#analyticsView .an-view .vt-btn{justify-content:center}
+#analyticsView .an-resultsbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+#analyticsView .anc-tools[hidden]{display:none}
+#analyticsView .an-canvas-note{margin:-2px 0 12px}
+@media(max-width:760px){
+  #analyticsView .an-wp-btn{font-size:12px} /* the toggle buttons' size at this width */
+}
+@media(max-width:820px){
+  /* Below about 800px the three controls no longer fit side by side at their natural width, so row 1
+     stacks into one full-width column (all three stay the same width); the count and Clear wrap below. */
+  #analyticsView .an-primary{grid-auto-flow:row;flex-basis:100%}
+}
+
+/* ---------- analytics: week dropdown (public/analytics-weekpick.js) ----------
+   Matches a toggle group: same background, border, radius and button font; 6px button padding inside
+   the group's 3px padding gives 9px, so it is as tall as a toggle group. */
+#analyticsView .an-wp{position:relative;min-width:0}
+#analyticsView .an-wp-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin:0;
+  background:var(--cf-bg-300);border:1px solid var(--cf-border);border-radius:10px;padding:9px 10px 9px 14px;cursor:pointer;
+  font-family:var(--font-sans);font-weight:600;font-size:12.5px;color:var(--cf-text);text-align:left}
+#analyticsView .an-wp-btn:hover{border-color:var(--cf-border-strong)}
+#analyticsView .an-wp-btn:focus-visible{outline:2px solid var(--cf-orange);outline-offset:2px}
+#analyticsView .an-wp-value{display:grid}
+#analyticsView .an-wp-value > span{grid-area:1 / 1;white-space:nowrap}
+#analyticsView .an-wp-sizer{visibility:hidden}
+#analyticsView .an-wp-chevron{flex:0 0 auto;color:var(--cf-text-soft);transition:transform .15s}
+#analyticsView .an-wp.is-open .an-wp-chevron{transform:rotate(180deg)}
+#analyticsView .an-wp-list{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:30;margin:0;padding:4px;
+  max-height:min(320px,55vh);overflow-y:auto;overscroll-behavior:contain;
+  background:var(--cf-bg-100);border:1px solid var(--cf-border);border-radius:10px;box-shadow:var(--shadow-sm)}
+#analyticsView .an-wp-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;cursor:pointer;
+  font-family:var(--font-sans);font-size:12.5px;font-weight:600;color:var(--cf-text);white-space:nowrap}
+#analyticsView .an-wp-item:hover,#analyticsView .an-wp-item:focus{outline:none;background:rgba(235,98,44,.12);color:var(--cf-orange-ink)}
+#analyticsView .an-wp-item:focus-visible{outline:2px solid var(--cf-orange);outline-offset:-2px}
+#analyticsView .an-wp-item[aria-selected="true"]{color:var(--cf-orange-ink)}
+#analyticsView .an-wp-item[aria-disabled="true"]{color:var(--cf-border-strong);cursor:not-allowed;background:transparent}
+#analyticsView .an-wp-check{flex:0 0 auto;display:grid;place-items:center;width:14px;height:14px;border-radius:4px;
+  border:1.5px solid var(--cf-border-strong);background:var(--cf-bg-100)}
+#analyticsView .an-wp-item[aria-checked="true"] .an-wp-check{background:var(--cf-orange);border-color:var(--cf-orange)}
+#analyticsView .an-wp-item[aria-checked="true"] .an-wp-check::after{content:"";width:7px;height:4px;margin-top:-2px;
+  border-left:2px solid var(--cf-bg-100);border-bottom:2px solid var(--cf-bg-100);transform:rotate(-45deg)}

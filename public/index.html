@@ -164,32 +164,52 @@
         <p class="analytics-sub">Compare AI surface UIs side by side — brand colour, palette, tone and design notes. Compare different portals in one week, or track how a single portal changes across weeks.</p>
       </div>
       <div class="analytics-controls">
-        <div class="an-row">
-          <span class="an-label">Mode</span>
-          <div class="viewtoggle an-mode" role="group" aria-label="Comparison mode">
-            <button class="vt-btn active" type="button" data-mode="portals" aria-pressed="true">Compare portals</button>
-            <button class="vt-btn" type="button" data-mode="weeks" aria-pressed="false">Across weeks</button>
+        <div class="an-bar an-bar--top">
+          <div class="an-primary">
+            <div class="viewtoggle an-mode" role="group" aria-label="Compare">
+              <button class="vt-btn active" type="button" data-mode="portals" aria-pressed="true">Across portals</button>
+              <button class="vt-btn" type="button" data-mode="weeks" aria-pressed="false">Over time</button>
+            </div>
+            <span id="anWeekLabel" hidden>Week</span>
+            <div class="an-week" id="anWeek"></div>
+            <div class="viewtoggle an-device" role="group" aria-label="Screenshot device">
+              <button class="vt-btn active" type="button" data-andevice="desktop" aria-pressed="true">Desktop</button>
+              <button class="vt-btn" type="button" data-andevice="mobile" aria-pressed="false">Mobile</button>
+            </div>
+          </div>
+          <div class="an-selection">
+            <span class="an-count" id="anCount" aria-live="polite"></span>
+            <button class="an-clear" type="button" id="anClear" aria-label="Clear selection" title="Clear selection">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
           </div>
         </div>
-        <div class="an-row">
-          <span class="an-label" id="anContextLabel">Week</span>
-          <div class="an-chiprow" id="anContext"></div>
-        </div>
-        <div class="an-row">
-          <span class="an-label" id="anPickLabel">Portals</span>
-          <div class="an-chiprow" id="anPicker"></div>
-        </div>
-        <div class="an-row">
-          <span class="an-label">Device</span>
-          <div class="viewtoggle an-device" role="group" aria-label="Screenshot device">
-            <button class="vt-btn active" type="button" data-andevice="desktop" aria-pressed="true">Desktop</button>
-            <button class="vt-btn" type="button" data-andevice="mobile" aria-pressed="false">Mobile</button>
-          </div>
+        <div class="an-bar an-bar--portals">
+          <div class="an-chiprow" id="anPortals" role="group" aria-label="Portals"></div>
         </div>
       </div>
+      <div class="an-resultsbar">
+        <div class="viewtoggle an-view" role="group" aria-label="Comparison view">
+          <button class="vt-btn active" type="button" data-anview="table" aria-pressed="true">Table</button>
+          <button class="vt-btn" type="button" data-anview="canvas" aria-pressed="false">Canvas</button>
+        </div>
+        <div class="anc-tools" id="anCanvasTools" hidden>
+          <div class="viewtoggle anc-zoom" role="group" aria-label="Zoom">
+            <button class="vt-btn" type="button" data-zoom="out" aria-label="Zoom out">−</button>
+            <span class="anc-zoom-pct" aria-live="polite">100%</span>
+            <button class="vt-btn" type="button" data-zoom="in" aria-label="Zoom in">+</button>
+            <button class="vt-btn" type="button" data-zoom="fit">Fit</button>
+          </div>
+          <button class="vt-btn anc-reset" type="button" data-reset aria-label="Reset layout" title="Reset layout">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+        </div>
+      </div>
+      <p class="anc-note an-canvas-note" id="anCanvasNote" hidden>Drag a card to move it, drag from a card's right dot to another card's left dot to compare them.</p>
       <div class="analytics-table-wrap">
         <div class="an-table-scroll" id="anTableWrap"></div>
       </div>
+      <div class="an-canvas-wrap" id="anCanvasWrap" hidden></div>
     </section>
     <!-- notes: hand-written notes on interface changes (posted with scripts/local-capture/post-note.mjs) -->
     <section id="insightsView" class="insights" hidden>
