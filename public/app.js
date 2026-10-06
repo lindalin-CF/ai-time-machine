@@ -588,7 +588,7 @@ function initDownloadAll() {
 
 // ---- device toggle: Desktop / Mobile (both Library + Collection) ----------
 function syncToggles() {
-  document.querySelectorAll(".vt-btn").forEach((b) => {
+  document.querySelectorAll(".vt-btn[data-device]").forEach((b) => {
     const on = b.dataset.device === state.device;
     b.classList.toggle("active", on);
     b.setAttribute("aria-pressed", on ? "true" : "false");
