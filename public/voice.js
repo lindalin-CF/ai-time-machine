@@ -118,6 +118,24 @@ style.textContent = `
 .vp-textrow input:focus{outline:none;border-color:var(--cf-orange,#ff6633);
   box-shadow:0 0 0 3px rgba(255,102,51,.15)}
 .vp-textrow #vpSend{flex:0 0 auto;padding:10px 16px}
+.vp-msg a{color:inherit;text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere}
+.vp-heard{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;opacity:.8;margin-bottom:2px}
+
+.vp-suggest{padding:0 15px 10px}
+.vp-chips{display:flex;flex-wrap:wrap;gap:6px}
+.vp-chip{flex:0 0 auto;padding:6px 10px;border-radius:999px;border:1px solid var(--cf-border-strong,#e0c3a8);
+  background:var(--cf-bg-100,#fffdfa);color:var(--cf-text,#521000);font-family:var(--font-sans);font-size:12.5px;
+  line-height:1.3;cursor:pointer;text-align:left}
+.vp-chip:hover{background:var(--cf-bg-300,#f0e7db)}
+.vp-chip:focus-visible,.vp-suggest-toggle:focus-visible{outline:2px solid var(--cf-orange,#ff6633);outline-offset:2px}
+.vp-suggest-toggle{display:none;margin:0 0 6px;padding:2px 0;border:0;background:none;cursor:pointer;
+  font-family:var(--font-sans);font-size:12.5px;font-weight:600;color:var(--cf-text-soft,#8a5a3c);text-decoration:underline}
+.vp-suggest.collapsible .vp-suggest-toggle{display:inline-block}
+.vp-suggest.collapsible:not(.expanded) .vp-chips{display:none}
+@media (max-width:560px){
+  .vp-chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+  .vp-chip{white-space:nowrap}
+}
 `;
 document.head.appendChild(style);
 
@@ -147,11 +165,14 @@ panel.innerHTML = `
     </div>
   </div>
   <div class="vp-body" id="vpBody">
-    <p class="vp-hint">Ask me about the library — <b>type below</b> (works now), or
-      <b>start a call</b> to talk. Try: <b>"Which portals do you track?"</b>,
-      <b>"What's in the latest week?"</b>, or <b>"Tell me about ChatGPT's landing page."</b></p>
+    <p class="vp-hint">Ask me about the library — <b>type below</b>, or <b>start a call</b> to talk.
+      I can answer questions about layout, menu items, week-to-week changes, and comparisons between products.</p>
   </div>
   <div class="vp-err" id="vpErr"></div>
+  <div class="vp-suggest" id="vpSuggest">
+    <button type="button" class="vp-suggest-toggle" id="vpSuggestToggle" aria-expanded="false" aria-controls="vpChips">Suggested questions</button>
+    <div class="vp-chips" id="vpChips" role="group" aria-label="Suggested questions"></div>
+  </div>
   <form class="vp-textrow" id="vpTextForm">
     <input id="vpText" type="text" autocomplete="off" enterkeyhint="send"
            placeholder="Type a question and press Enter…" />
@@ -175,7 +196,66 @@ const callBtn = $("#vpCall");
 const muteBtn = $("#vpMute");
 const textForm = $("#vpTextForm");
 const textInput = $("#vpText");
+const suggest = $("#vpSuggest");
+const suggestToggle = $("#vpSuggestToggle");
+const chips = $("#vpChips");
 let interimEl = null;
+
+// Suggested questions: sent as typed questions. Once there is an answer they fold into one toggle.
+const SUGGESTED = ["What changed this week?", "Compare ChatGPT and Claude", "How has ChatGPT changed over the weeks?"];
+for (const q of SUGGESTED) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "vp-chip";
+  b.textContent = q;
+  b.addEventListener("click", () => sendQuestion(q));
+  chips.appendChild(b);
+}
+suggestToggle.addEventListener("click", () => {
+  const open = !suggest.classList.contains("expanded");
+  suggest.classList.toggle("expanded", open);
+  suggestToggle.setAttribute("aria-expanded", String(open));
+});
+function updateSuggestions(messages) {
+  const answered = messages.some((m) => m.role === "assistant");
+  if (answered && !suggest.classList.contains("collapsible")) {
+    suggest.classList.add("collapsible");
+    suggest.classList.remove("expanded");
+    suggestToggle.setAttribute("aria-expanded", "false");
+  }
+}
+
+// Typed questions waiting to come back in the transcript. A user message that isn't one of them was
+// heard from the microphone, and is labelled so a misheard question is easy to spot.
+const pendingTyped = [];
+const heard = new WeakSet();
+const seen = new WeakSet();
+function noteNewMessages(messages) {
+  for (const m of messages) {
+    if (seen.has(m)) continue;
+    seen.add(m);
+    if (m.role !== "user") continue;
+    const i = pendingTyped.indexOf(m.text);
+    if (i >= 0) pendingTyped.splice(i, 1);
+    else if (inCall) heard.add(m);
+  }
+}
+
+// Links to this site's pages in an answer ("/portals/chatgpt/2026-10-05", "/changes", or the same
+// with the site address) become clickable; everything else stays plain text.
+const SITE_LINK = /(?:https:\/\/ai-portal-library\.dev)?\/(?:portals\/[a-z0-9-]+(?:\/\d{4}-\d{2}-\d{2})?|changes)(?![\w/-])/g;
+function fillWithLinks(el, text) {
+  let last = 0;
+  for (const m of text.matchAll(SITE_LINK)) {
+    if (m.index > last) el.appendChild(document.createTextNode(text.slice(last, m.index)));
+    const a = document.createElement("a");
+    a.href = m[0].replace(/^https:\/\/ai-portal-library\.dev/, "");
+    a.textContent = m[0];
+    el.appendChild(a);
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) el.appendChild(document.createTextNode(text.slice(last)));
+}
 
 // ---- UI helpers -----------------------------------------------------------
 function openPanel(open) {
@@ -202,10 +282,21 @@ function renderTranscript(messages) {
     for (const m of messages) {
       const div = document.createElement("div");
       div.className = "vp-msg " + (m.role === "user" ? "user" : "assistant");
-      div.textContent = m.text;
+      if (m.role === "user") {
+        if (heard.has(m)) {
+          const tag = document.createElement("span");
+          tag.className = "vp-heard";
+          tag.textContent = "Heard";
+          div.appendChild(tag);
+        }
+        div.appendChild(document.createTextNode(m.text));
+      } else {
+        fillWithLinks(div, m.text);
+      }
       body.appendChild(div);
     }
   }
+  updateSuggestions(messages);
   body.scrollTop = body.scrollHeight;
 }
 function renderInterim(text) {
@@ -225,7 +316,7 @@ function ensureClient() {
   const c = new VoiceClient({ agent: AGENT, name: roomName(), query: { analytics: analyticsChoice() } });
   client = c;
   client.addEventListener("statuschange", (s) => { if (client === c) setStatus(s); });
-  client.addEventListener("transcriptchange", (m) => { if (client === c) renderTranscript(m); });
+  client.addEventListener("transcriptchange", (m) => { if (client === c) { noteNewMessages(m); renderTranscript(m); } });
   client.addEventListener("interimtranscript", renderInterim);
   client.addEventListener("error", (e) => showError(e || null));
   client.addEventListener("mutechange", (m) => { muteBtn.textContent = m ? "Unmute" : "Mute"; });
@@ -293,20 +384,23 @@ muteBtn.addEventListener("click", () => client?.toggleMute());
 
 // Text mode — works without a mic/call: sendText() routes through onTurn() (D1),
 // and when not in a call the agent replies with text only (no TTS needed).
-textForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const q = textInput.value.trim();
-  if (!q) return;
+function sendQuestion(q) {
   showError(null);
   ensureClient();
   // The socket may still be opening; wait (up to ~5s) for it, then send.
   let tries = 0;
   const trySend = () => {
-    if (client.connected) { client.sendText(q); return; }
+    if (client.connected) { pendingTyped.push(q); client.sendText(q); return; }
     if (tries++ < 25) { setTimeout(trySend, 200); return; }
     showError("Couldn't reach the agent. Check the connection and try again.");
   };
   trySend();
+}
+textForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const q = textInput.value.trim();
+  if (!q) return;
+  sendQuestion(q);
   textInput.value = "";
   textInput.focus();
 });

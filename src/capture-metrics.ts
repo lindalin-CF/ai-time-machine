@@ -95,7 +95,11 @@ function textSizes(v: unknown): number | null {
   return m ? Number(m[1]) : null;
 }
 
-/** D5.suggested_prompts: a count or { count }. Other D5 shapes (free text, other keys) are not parsed. */
+/**
+ * D5.suggested_prompts: a count or { count }. Other D5 shapes (free text, other keys) are not parsed.
+ * TODO: many published analyses record suggested prompts in other D5 shapes, so the canvas and the voice
+ * guide show "not measured" for them; parse those shapes (or settle one shape in the guideline).
+ */
 function suggestedPrompts(v: unknown): number | null {
   if (!isObject(v) || !("suggested_prompts" in v)) return null;
   const s = v.suggested_prompts;

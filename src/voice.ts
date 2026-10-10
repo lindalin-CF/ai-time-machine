@@ -1,10 +1,10 @@
 // Voice agent for the AI Surface Library.
 //
 // Wraps the base `Agent` with the @cloudflare/voice pipeline: Workers AI does
-// speech-to-text (Flux) and text-to-speech (Aura-1). `onTurn()` now answers with
-// an LLM (GPT-OSS) that is *grounded* in the library's D1 data, so it can handle
-// free-form questions ("compare ChatGPT and Claude", "which has the cleanest
-// design?") while still only using real captured data.
+// speech-to-text (Flux) and text-to-speech (Aura-1). `onTurn()` answers with an
+// LLM (GPT-OSS) grounded in published analyses only (src/voice-context.ts), so it
+// can handle free-form questions ("compare ChatGPT and Claude", "what changed
+// this week?") while still only using real captured data.
 //
 // Model choice follows the internal Voice Agents benchmark: Flux STT +
 // GPT-OSS + Aura-1 TTS was the lowest-latency, most-reliable pipeline. The
@@ -21,8 +21,9 @@ import {
 import { streamText } from "ai";
 import { createWorkersAI } from "workers-ai-provider";
 import type { Env } from "./types";
-import { listWeeks, latestWeek, capturesForWeek } from "./db";
-import { isPublishedAnalysis } from "./analysis";
+import { listPortals, publishedCaptures } from "./db";
+import { cached } from "./api";
+import { buildVoiceContext, capPageLinks, fluxWithKeyterms, voiceSystemPrompt } from "./voice-context";
 import { VOICE_RETENTION_MS } from "./voice-room";
 import { QUESTION_LOG_HEADER, logQuestion } from "./question-log";
 
@@ -32,7 +33,8 @@ const VoiceAgent = withVoice(Agent);
 const LLM_MODEL = "@cf/openai/gpt-oss-120b";
 
 export class PortalVoiceAgent extends VoiceAgent<Env> {
-  transcriber = new WorkersAIFluxSTT(this.env.AI);
+  // Flux with every portal name and site term boosted (see fluxWithKeyterms for why not the keyterms option).
+  transcriber = new WorkersAIFluxSTT(fluxWithKeyterms(this.env));
   tts = new WorkersAITTS(this.env.AI);
 
   /** Spoken questions waiting for their onTurn(), by connection; anything else reaching onTurn() was typed. */
@@ -62,26 +64,8 @@ export class PortalVoiceAgent extends VoiceAgent<Env> {
         .catch((err) => console.error("[PortalVoiceAgent] question log failed:", err)),
     );
     const workersai = createWorkersAI({ binding: this.env.AI });
-    const grounding = await this.buildLibraryContext();
-
-    const system = [
-      'You are the voice guide for the "AI Interface Library" — a gallery that',
-      "captures the landing pages of major AI / LLM portals every week and records a short",
-      "design note and colour palette for each one.",
-      "",
-      "Answer the user's spoken questions about these portals: layout, visual hierarchy,",
-      "brand colour, palette, and design choices. You may compare portals to each other.",
-      "",
-      "Rules:",
-      "- Use ONLY the library data below. Never invent portals, colours, or design details.",
-      "  If something isn't in the data, say you don't have that captured yet.",
-      "- Keep answers short and conversational — they are read aloud. One to three sentences",
-      "  unless the user asks for more detail.",
-      "- Describe colours naturally (e.g. \"a warm orange\"); only spell out a hex code if asked.",
-      "- Do not mention databases, JSON, context, or that you were given any data.",
-      "",
-      grounding,
-    ].join("\n");
+    // Spoken answers are read aloud, so their context has no page paths to read out.
+    const system = voiceSystemPrompt(await this.buildLibraryContext(spoken), spoken);
 
     const history = context.messages.map((m) => ({
       role: m.role as "user" | "assistant",
@@ -92,6 +76,11 @@ export class PortalVoiceAgent extends VoiceAgent<Env> {
       model: workersai(LLM_MODEL),
       system,
       messages: [...history, { role: "user" as const, content: transcript }],
+      // GPT-OSS spends part of its output budget on hidden reasoning. With the default budget, answers
+      // over the full library data stopped mid-sentence, so set the budget and keep reasoning low:
+      // the answers are short lookups in the data.
+      maxOutputTokens: 1500,
+      providerOptions: { "workers-ai": { reasoning_effort: "low" } },
       maxRetries: 1,
       abortSignal: context.signal,
       onError: (e) => console.error("[PortalVoiceAgent] LLM stream error:", e),
@@ -100,7 +89,8 @@ export class PortalVoiceAgent extends VoiceAgent<Env> {
     // Return the AI SDK `fullStream` (not `textStream`): @cloudflare/voice reads
     // the typed parts and speaks ONLY `text-delta` chunks, so GPT-OSS's reasoning
     // tokens are never sent to TTS. It also avoids the textStream chunk-joining bug.
-    return result.fullStream;
+    // Typed answers keep at most three links on their "Pages:" line; spoken answers have none.
+    return spoken ? result.fullStream : capPageLinks(result.fullStream);
   }
 
   /**
@@ -127,47 +117,15 @@ export class PortalVoiceAgent extends VoiceAgent<Env> {
     await this.schedule(new Date(due), "expireMessages");
   }
 
-  /** Compact, grounded snapshot of the latest capture week for the prompt. */
-  private async buildLibraryContext(): Promise<string> {
-    const week = await latestWeek(this.env);
-    if (!week) return "LIBRARY DATA: no captures have been recorded yet.";
-
-    const [weeks, caps] = await Promise.all([
-      listWeeks(this.env),
-      capturesForWeek(this.env, week),
-    ]);
-    const label = weeks.find((w) => w.week === week)?.label ?? week;
-    const ok = caps.filter((c) => c.status === "ok");
-
-    const lines = ok.map((c) => {
-      const palette = this.palette(c.palette);
-      // Only guideline analyses are grounding material; legacy/pending text is skipped.
-      const analysis = isPublishedAnalysis(c) ? this.trim(c.analysis, 600) : "";
-      return `- ${c.portal} (${c.company}) — brand colour ${c.brand}${
-        palette ? `; palette ${palette}` : ""
-      }.${analysis ? ` Design note: ${analysis}` : ""}`;
+  /**
+   * The library data for the prompt (src/voice-context.ts), cached in KV like the other cached
+   * responses and cleared with them when an analysis is published (invalidate() in src/capture.ts).
+   */
+  private async buildLibraryContext(spoken: boolean): Promise<string> {
+    return await cached(this.env, `cache:voice-context:${spoken ? "spoken" : "typed"}`, 300, async () => {
+      const [portals, published] = await Promise.all([listPortals(this.env), publishedCaptures(this.env)]);
+      return buildVoiceContext(portals, published, { links: !spoken, log: (msg) => console.warn(msg) });
     });
-
-    return [
-      `LIBRARY DATA — latest capture week: ${label} (${ok.length} portals tracked).`,
-      `Total archived weeks available: ${weeks.length}.`,
-      "Portals captured this week:",
-      ...lines,
-    ].join("\n");
-  }
-
-  private palette(raw: string): string {
-    try {
-      const v = JSON.parse(raw || "[]");
-      return Array.isArray(v) ? v.slice(0, 5).join(", ") : "";
-    } catch {
-      return "";
-    }
-  }
-
-  private trim(text: string, max: number): string {
-    const clean = (text || "").replace(/\s+/g, " ").trim();
-    return clean.length > max ? clean.slice(0, max - 1) + "…" : clean;
   }
 }
 
