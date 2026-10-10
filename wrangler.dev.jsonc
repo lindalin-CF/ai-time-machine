@@ -21,7 +21,13 @@
       "/how-we-analyze",
       "/how-we-analyze/",
       "/privacy",
-      "/privacy/"
+      "/privacy/",
+      "/license",
+      "/license/",
+      "/changes",
+      "/changes/",
+      "/llms.txt",
+      "/llms-full.txt"
     ]
   },
   "observability": {

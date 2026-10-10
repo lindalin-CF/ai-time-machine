@@ -101,6 +101,7 @@ describe('/sitemap.xml', () => {
       `${ORIGIN}/`,
       `${ORIGIN}/how-we-analyze`,
       `${ORIGIN}/privacy`,
+      `${ORIGIN}/license`,
       `${ORIGIN}/portals/claude`,
       `${ORIGIN}/portals/claude/2026-09-21`,
       `${ORIGIN}/portals/claude/2026-09-14`,

@@ -1,14 +1,20 @@
 import type { Env, CaptureRow } from "./types";
-import { getPortal, latestCaptureForPortal, captureForPortalWeek, captureWeeksForPortal, sitemapCaptures, feedCaptures, type SitemapCapture } from "./db";
+import { getPortal, latestCaptureForPortal, captureForPortalWeek, captureWeeksForPortal, sitemapCaptures, feedCaptures, publishedCaptures, type SitemapCapture } from "./db";
 import { isPublishedAnalysis, displayedAnalysis, summaryDescription, feedSummary, SYSTEM_TEST_WEEKS } from "./analysis";
 import { cached } from "./api";
 import { consentMode, PRIVATE_HTML_CACHE, type ConsentMode } from "./consent";
 import { desktopSize, mobileSize } from "./api";
 import { MOBILE_CAPTURE_SIZE } from "./image-size";
 import { shotAlt, weekInWords } from "./format";
+import { captureMetrics } from "./capture-metrics";
+import { changeEntries, navChangeSentence, navItemName, type ChangeEntry } from "./nav-changes";
 
 export const ORIGIN = "https://ai-portal-library.dev";
 const HTML_HEADERS = { "content-type": "text/html; charset=utf-8" };
+const MARKDOWN_HEADERS = { "content-type": "text/markdown; charset=utf-8" };
+
+/** The person who runs the site, as named in structured data. */
+export const SITE_PERSON = { "@type": "Person", name: "Linda" } as const;
 
 export function esc(s: unknown): string {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
@@ -24,8 +30,8 @@ function shortText(s: string, max: number): string {
   return t.length <= max ? t : t.slice(0, max - 1).replace(/\s+\S*$/, "") + "…";
 }
 
-/** Footer copyright line (with Privacy and Cookie preferences) + Disclaimer and Contact dialogs. The homepage (public/index.html) carries the same markup; both use /footer-dialogs.js. */
-const FOOTER_LEGAL = `      <div class="legal">&copy; 2026 AI Interface Library. All rights reserved. &middot; <button type="button" class="linkbtn" data-dialog="disclaimer" aria-haspopup="dialog">Disclaimer</button> &middot; <button type="button" class="linkbtn" data-dialog="contact" aria-haspopup="dialog">Contact</button> &middot; <a href="/privacy">Privacy</a> &middot; <button type="button" class="linkbtn" data-consent-open>Cookie preferences</button></div>
+/** Footer copyright line (with Privacy, License and Cookie preferences) + Disclaimer and Contact dialogs. The homepage (public/index.html) carries the same markup; both use /footer-dialogs.js. */
+const FOOTER_LEGAL = `      <div class="legal">&copy; 2026 AI Interface Library. All rights reserved. &middot; <button type="button" class="linkbtn" data-dialog="disclaimer" aria-haspopup="dialog">Disclaimer</button> &middot; <button type="button" class="linkbtn" data-dialog="contact" aria-haspopup="dialog">Contact</button> &middot; <a href="/privacy">Privacy</a> &middot; <a href="/license">License</a> &middot; <button type="button" class="linkbtn" data-consent-open>Cookie preferences</button></div>
       <dialog id="disclaimer" class="site-dialog" aria-labelledby="disclaimer-title">
         <form method="dialog">
           <button type="submit" class="site-dialog-x" aria-label="Close">&times;</button>
@@ -80,7 +86,7 @@ export function jsonLdScript(data: unknown): string {
   return `  <script type="application/ld+json">${JSON.stringify(data).replace(/</g, "\\u003c")}</script>\n`;
 }
 
-function page(opts: { title: string; description: string; canonical?: string; noindex?: boolean; image?: PreviewImage; jsonLd?: unknown; consent: ConsentMode; body: string }): string {
+function page(opts: { title: string; description: string; canonical?: string; noindex?: boolean; image?: PreviewImage; jsonLd?: unknown; markdown?: string; consent: ConsentMode; body: string }): string {
   return `<!doctype html>
 <html lang="en" data-consent="${opts.consent}">
 <head>
@@ -92,6 +98,7 @@ function page(opts: { title: string; description: string; canonical?: string; no
   <meta name="description" content="${esc(opts.description)}" />
   <meta name="robots" content="${opts.noindex ? "noindex" : "max-image-preview:large"}" />
 ${opts.canonical ? socialMeta(opts.title, opts.description, opts.canonical, opts.image ?? SITE_PREVIEW) : ""}${opts.jsonLd ? jsonLdScript(opts.jsonLd) : ""}  <link rel="alternate" type="application/rss+xml" title="AI Interface Library" href="${FEED_URL}" />
+${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts.markdown)}" />\n` : ""}
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <style>
     body{margin:0;font:16px/1.6 system-ui,-apple-system,Segoe UI,sans-serif;background:#f4efe8;color:#231f1a}
@@ -167,8 +174,10 @@ function isValidWeek(w: string): boolean {
 export async function handlePortalPage(request: Request, env: Env): Promise<Response> {
   if (request.method !== "GET" && request.method !== "HEAD") return new Response("method not allowed", { status: 405 });
   const url = new URL(request.url);
+  // "/portals/<slug>.md" and "/portals/<slug>/<week>.md" are the Markdown versions of the same pages.
+  const markdown = url.pathname.endsWith(".md");
   let parts: string[];
-  try { parts = url.pathname.replace(/^\/portals\//, "").replace(/\/$/, "").split("/").map(decodeURIComponent); } catch { return notFound(request); }
+  try { parts = url.pathname.replace(/^\/portals\//, "").replace(/\.md$/, "").replace(/\/$/, "").split("/").map(decodeURIComponent); } catch { return notFound(request); }
   if (parts.length < 1 || parts.length > 2) return notFound(request);
   const slug = parts[0];
   const weekParam = parts.length === 2 ? parts[1] : null;
@@ -206,18 +215,18 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
   );
 
   let shots = "";
-  const shotImages: { url: string; alt: string; width: number; height: number }[] = []; // also described in JSON-LD
+  const shotImages: { device: "Desktop" | "Mobile"; url: string; alt: string; width: number; height: number }[] = []; // also described in JSON-LD and Markdown
   if (cap) {
     const desktop = shotUrl(cap.r2_key, slug, cap.captured_at);
     const d = desktopSize(cap);
     const dAlt = shotAlt(name, "desktop", cap.week);
-    shotImages.push({ url: desktop, alt: dAlt, ...d });
+    shotImages.push({ device: "Desktop", url: desktop, alt: dAlt, ...d });
     shots += `      <figure class="desktop"><img src="${esc(desktop)}" alt="${esc(dAlt)}" width="${d.width}" height="${d.height}" loading="eager" /><figcaption>Desktop &middot; week of ${esc(weekInWords(cap.week))}</figcaption></figure>\n`;
     if (cap.r2_key_mobile) {
       const mobile = shotUrl(cap.r2_key_mobile, slug, cap.captured_at);
       const m = (await mobileSize(env, cap)) ?? MOBILE_CAPTURE_SIZE;
       const mAlt = shotAlt(name, "mobile", cap.week);
-      shotImages.push({ url: mobile, alt: mAlt, ...m });
+      shotImages.push({ device: "Mobile", url: mobile, alt: mAlt, ...m });
       shots += `      <figure class="mobile"><img src="${esc(mobile)}" alt="${esc(mAlt)}" width="${m.width}" height="${m.height}" loading="lazy" /><figcaption>Mobile &middot; week of ${esc(weekInWords(cap.week))}</figcaption></figure>\n`;
     }
   }
@@ -236,6 +245,16 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
 ${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screenshots">\n${shots}      </section>
       <section class="analysis"><h2>Design analysis</h2><p>${esc(displayedAnalysis(cap))}</p><p class="method"><a href="/how-we-analyze">How this analysis is made</a></p></section>` : `      <p>No captures yet for ${esc(name)}.</p>`}
     </main>`;
+
+  if (markdown) {
+    const md = portalMarkdown({
+      name, company: portal.company, canonical, cap,
+      shots: shotImages.map((img) => ({ device: img.device, url: img.url.startsWith("/") ? `${ORIGIN}${img.url}` : img.url })),
+    });
+    const headers: Record<string, string> = { ...MARKDOWN_HEADERS, "cache-control": "public, max-age=3600", link: `<${canonical}>; rel="canonical"` };
+    if (cap && SYSTEM_TEST_WEEKS.includes(cap.week)) headers["x-robots-tag"] = "noindex";
+    return new Response(request.method === "HEAD" ? null : md, { headers });
+  }
 
   // Link preview: this page's desktop screenshot (the hub shows its latest week); the site image if there is none yet.
   const image: PreviewImage | undefined = cap?.r2_key
@@ -263,6 +282,15 @@ ${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screens
         width: img.width,
         height: img.height,
       })),
+      // The published analysis, about the product it describes.
+      ...(cap && analysis && cap.analysis_published_at ? [{
+        "@type": "Article",
+        headline: `${name} interface — week of ${weekInWords(cap.week)}`,
+        datePublished: cap.analysis_published_at,
+        dateModified: cap.analysis_published_at,
+        ...(image ? { image: image.url } : {}),
+        about: { "@type": "SoftwareApplication", name, publisher: { "@type": "Organization", name: portal.company } },
+      }] : []),
     ],
   };
 
@@ -275,6 +303,7 @@ ${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screens
       : `${name} interface screenshots — weekly UI history | AI Interface Library`,
     description,
     canonical,
+    markdown: `${canonical}.md`,
     noindex: !!cap && SYSTEM_TEST_WEEKS.includes(cap.week),
     body,
   });
@@ -303,6 +332,8 @@ const HOW_WE_ANALYZE = `    <main class="howto">
       <p>Kimi is captured while signed out, because no account is used for it. Muse always opens on a conversation, so only the interface around it is analyzed.</p>
       <h2>Privacy</h2>
       <p>Screenshots come from real accounts. Names, conversation titles and other account details are left out of every analysis, and are covered in the screenshots where possible.</p>
+      <h2>Reusing the analyses</h2>
+      <p>The design analysis text and the menu change records can be reused under CC BY 4.0, with credit to AI Interface Library. Screenshots and product names are not covered. <a href="/license">See the license</a></p>
       <h2>Sources</h2>
       <ul>
         <li><a href="https://www.w3.org/TR/WCAG22/">W3C, Web Content Accessibility Guidelines (WCAG) 2.2</a></li>
@@ -312,7 +343,7 @@ const HOW_WE_ANALYZE = `    <main class="howto">
     </main>`;
 
 /** Last content change of /how-we-analyze (YYYY-MM-DD), for its sitemap <lastmod>. Update it with the text. */
-export const HOW_WE_ANALYZE_UPDATED = "2026-09-27";
+export const HOW_WE_ANALYZE_UPDATED = "2026-10-10";
 
 /** /how-we-analyze: how the weekly screenshots and design analyses are made. */
 export function handleHowWeAnalyze(request: Request): Response {
@@ -323,6 +354,38 @@ export function handleHowWeAnalyze(request: Request): Response {
     description: "How AI Interface Library captures AI product screens each week and analyzes their layout, visual hierarchy, text contrast and starting points, and what the analysis does not claim.",
     canonical: `${ORIGIN}/how-we-analyze`,
     body: HOW_WE_ANALYZE,
+  });
+  return new Response(request.method === "HEAD" ? null : html, {
+    headers: { ...HTML_HEADERS, "cache-control": PRIVATE_HTML_CACHE },
+  });
+}
+
+/** Last content change of /license (YYYY-MM-DD): shown on the page and used as its sitemap <lastmod>. */
+export const LICENSE_UPDATED_DATE = "2026-10-10";
+export const LICENSE_URL = `${ORIGIN}/license`;
+
+const LICENSE = `    <main class="howto">
+      <h1>License</h1>
+      <p class="meta">Last updated: ${weekInWords(LICENSE_UPDATED_DATE)}</p>
+      <h2>Analyses and menu changes: CC BY 4.0</h2>
+      <p>The design analysis text and the records of menu changes on this site are licensed under the <a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International license (CC BY 4.0)</a>. You may copy, share and adapt them for any purpose, including commercial use, as long as you give credit.</p>
+      <h2>How to give credit</h2>
+      <p>Name AI Interface Library and link to the page you used, or to <a href="${ORIGIN}/">${ORIGIN}/</a>. For example: &quot;Source: AI Interface Library, ${ORIGIN}/changes, CC BY 4.0.&quot;</p>
+      <h2>What this license does not cover</h2>
+      <p>Screenshots, product names, logos and trademarks belong to their respective companies and are not covered by this license. AI Interface Library is an independent project and is not affiliated with any of these companies.</p>
+      <h2>Questions</h2>
+      <p>For questions about reuse, email <a href="mailto:contact@ai-portal-library.dev">contact@ai-portal-library.dev</a>.</p>
+    </main>`;
+
+/** /license: what may be reused (analyses and menu changes, CC BY 4.0) and what may not (screenshots, names, trademarks). */
+export function handleLicense(request: Request): Response {
+  if (request.method !== "GET" && request.method !== "HEAD") return new Response("method not allowed", { status: 405 });
+  const html = page({
+    consent: consentMode(request),
+    title: "License | AI Interface Library",
+    description: "The design analyses and menu change records on AI Interface Library are licensed under CC BY 4.0. Screenshots, product names and trademarks belong to their companies and are not covered.",
+    canonical: LICENSE_URL,
+    body: LICENSE,
   });
   return new Response(request.method === "HEAD" ? null : html, {
     headers: { ...HTML_HEADERS, "cache-control": PRIVATE_HTML_CACHE },
@@ -418,7 +481,11 @@ export async function handleSitemap(env: Env): Promise<Response> {
       { loc: `${ORIGIN}/`, lastmod: lastmod(rows.flatMap(changed)), images: [] },
       { loc: `${ORIGIN}/how-we-analyze`, lastmod: HOW_WE_ANALYZE_UPDATED, images: [] },
       { loc: `${ORIGIN}/privacy`, lastmod: PRIVACY_UPDATED_DATE, images: [] },
+      { loc: LICENSE_URL, lastmod: LICENSE_UPDATED_DATE, images: [] },
     ];
+    // /changes once it lists something, dated by its newest change.
+    const changesMod = changesLastmod(await changes(env));
+    if (changesMod) entries.push({ loc: `${ORIGIN}/changes`, lastmod: changesMod, images: [] });
     const seen = new Set<string>();
     for (const r of rows) {
       // The portal page shows its newest week, which is the first row for each portal.
@@ -466,4 +533,86 @@ ${built ? `    <lastBuildDate>${built}</lastBuildDate>\n` : ""}${items.join("\n"
 `;
   });
   return new Response(xml, { headers: { "content-type": "application/rss+xml; charset=utf-8", "cache-control": "public, max-age=3600" } });
+}
+
+/** Every recorded menu change, newest week first (cached like the sitemap and feed). */
+async function changes(env: Env): Promise<ChangeEntry[]> {
+  return await cached(env, "cache:changes", 300, async () => changeEntries(await publishedCaptures(env)));
+}
+
+/** /changes sitemap <lastmod>: when the newest listed change was published (W3C datetime, whole seconds). */
+function changesLastmod(entries: ChangeEntry[]): string | undefined {
+  const times = entries.map((e) => Date.parse(e.publishedAt ?? "")).filter((n) => !Number.isNaN(n));
+  return times.length ? new Date(Math.max(...times)).toISOString().replace(/\.\d{3}Z$/, "Z") : undefined;
+}
+
+/** "Week of October 5, 2026 — ChatGPT: the sidebar item Scheduled is now labeled Tasks." */
+export function changeLine(e: ChangeEntry): string {
+  return `Week of ${weekInWords(e.week)} \u2014 ${e.name}: ${e.sentence}`;
+}
+
+/** /changes: every menu change recorded in a published analysis, newest week first, each linked to its weekly page. */
+export async function handleChanges(request: Request, env: Env): Promise<Response> {
+  if (request.method !== "GET" && request.method !== "HEAD") return new Response("method not allowed", { status: 405 });
+  const entries = await changes(env);
+  const url = (e: ChangeEntry) => `/portals/${e.slug}/${e.week}`;
+  const list = entries.length
+    ? `      <ul>\n${entries.map((e) => `        <li><a href="${esc(url(e))}">${esc(changeLine(e))}</a></li>`).join("\n")}\n      </ul>`
+    : `      <p>No menu changes have been recorded yet.</p>`;
+  const body = `    <main class="howto">
+      <h1>Menu changes</h1>
+      <p class="meta">Changes to the built-in menu items of AI products, from one weekly capture to the next.</p>
+      <p>Each line comes from a published design analysis that compares a product&#39;s desktop screen with the week before. Only menu items that can be seen and clicked are compared, and changes that could come from the account, the plan or the interface language are left out. <a href="/how-we-analyze">How we analyze</a></p>
+${list}
+    </main>`;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Menu changes in AI product interfaces",
+    itemListOrder: "https://schema.org/ItemListOrderDescending",
+    numberOfItems: entries.length,
+    itemListElement: entries.map((e, i) => ({ "@type": "ListItem", position: i + 1, name: changeLine(e), url: `${ORIGIN}${url(e)}` })),
+  };
+  const html = page({
+    consent: consentMode(request),
+    title: "Menu changes in AI products, week by week | AI Interface Library",
+    description: "Every change to the built-in menu items of AI products such as ChatGPT, Claude and Gemini, found by comparing weekly screenshots, newest first.",
+    canonical: `${ORIGIN}/changes`,
+    jsonLd,
+    body,
+  });
+  return new Response(request.method === "HEAD" ? null : html, {
+    headers: { ...HTML_HEADERS, "cache-control": PRIVATE_HTML_CACHE },
+  });
+}
+
+/** Markdown version of a portal page: the same facts as the HTML page, plus its menu items and menu changes. */
+function portalMarkdown(o: { name: string; company: string; canonical: string; cap: CaptureRow | null; shots: { device: string; url: string }[] }): string {
+  const lines = [`# ${o.name}`, "", `- Company: ${o.company}`];
+  if (!o.cap) return [...lines, `- Page: ${o.canonical}`, "", `No captures yet for ${o.name}.`, ""].join("\n");
+  const cap = o.cap;
+  lines.push(`- Week: week of ${weekInWords(cap.week)} (${cap.week})`, `- Page: ${o.canonical}`, "", "## Design analysis", "", displayedAnalysis(cap), "");
+
+  const m = captureMetrics(cap);
+  lines.push("## Menu items", "");
+  if (m?.navItems?.length) {
+    for (const region of ["sidebar", "top bar", "input area"] as const) {
+      const items = m.navItems.filter((it) => it.region === region);
+      if (items.length) lines.push(`- ${region[0].toUpperCase()}${region.slice(1)}: ${items.map(navItemName).join(", ")}`);
+    }
+    if (m.navSidebarVisible === false) lines.push("- The sidebar is collapsed in this capture, so its items are not listed.");
+  } else {
+    lines.push("No menu item data for this week.");
+  }
+  lines.push("", "## Menu changes", "");
+  if (m?.navChanges) {
+    const nc = m.navChanges;
+    lines.push(nc.items.length
+      ? `Compared with the week of ${weekInWords(nc.previousWeek)}:\n\n${nc.items.map((c) => `- ${navChangeSentence(c)[0].toUpperCase()}${navChangeSentence(c).slice(1)}`).join("\n")}`
+      : `No menu changes compared with the week of ${weekInWords(nc.previousWeek)}.`);
+  } else {
+    lines.push("No menu comparison for this week.");
+  }
+  lines.push("", "## Screenshots", "", ...(o.shots.length ? o.shots.map((s) => `- ${s.device}: ${s.url}`) : ["No screenshots."]), "");
+  return lines.join("\n");
 }

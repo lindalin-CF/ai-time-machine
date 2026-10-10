@@ -1,4 +1,33 @@
+# AI Interface Library
+# A plain summary of this site for language models and AI agents is at
+# https://ai-portal-library.dev/llms.txt (llmstxt.org format); the full latest analyses are at /llms-full.txt.
+
 User-agent: *
+Allow: /
+
+# AI search and assistant crawlers are welcome; listed by name so it is explicit.
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
 Allow: /
 
 Sitemap: https://ai-portal-library.dev/sitemap.xml

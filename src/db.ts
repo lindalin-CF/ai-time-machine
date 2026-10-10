@@ -183,3 +183,21 @@ export async function sitemapCaptures(env: Env): Promise<SitemapCapture[]> {
   ).all<SitemapCapture>();
   return results ?? [];
 }
+
+export type PublishedCapture = {
+  slug: string; week: string; name: string; company: string; status: string; analysis: string; analysis_by: string;
+  analysis_json: string | null; captured_at: string; analysis_published_at: string | null;
+};
+
+/** Published guideline analyses on active portals, in portal order, newest week first (/changes, /llms-full.txt; read-only). */
+export async function publishedCaptures(env: Env): Promise<PublishedCapture[]> {
+  const { results } = await env.DB.prepare(
+    `SELECT c.slug AS slug, c.week AS week, p.name AS name, p.company AS company, c.status AS status, c.analysis AS analysis,
+            c.analysis_by AS analysis_by, c.analysis_json AS analysis_json, c.captured_at AS captured_at,
+            c.analysis_published_at AS analysis_published_at
+     FROM captures c JOIN portals p ON p.slug = c.slug
+     WHERE c.status = 'ok' AND p.active = 1 AND c.analysis_by LIKE 'guideline-v%' AND TRIM(COALESCE(c.analysis, '')) != ''
+     ORDER BY p.sort_order ASC, p.name ASC, c.week DESC`
+  ).all<PublishedCapture>();
+  return results ?? [];
+}

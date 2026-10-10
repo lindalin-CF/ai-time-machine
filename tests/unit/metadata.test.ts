@@ -236,8 +236,12 @@ describe('JSON-LD', () => {
   beforeEach(() => { t = seed(); });
   const portal = async (path: string) => (await handlePortalPage(new Request(`https://x${path}`), t.env)).text();
 
-  it('homepage: a WebSite with the site name and URL, and nothing else', () => {
-    expect(jsonLd(INDEX_HTML)).toEqual([{ '@context': 'https://schema.org', '@type': 'WebSite', name: 'AI Interface Library', url: `${ORIGIN}/` }]);
+  it('homepage (static fallback): a WebSite with name, URL, description, language and publisher', () => {
+    expect(jsonLd(INDEX_HTML)).toEqual([{
+      '@context': 'https://schema.org', '@type': 'WebSite', name: 'AI Interface Library', url: `${ORIGIN}/`,
+      description: 'A weekly archive of AI product interfaces, analysed for layout, hierarchy and colour as a UI/UX design system.',
+      inLanguage: 'en', publisher: { '@type': 'Person', name: 'Linda' },
+    }]);
     expect(INDEX_HTML).toContain('<link rel="canonical" href="https://ai-portal-library.dev/" />');
     expect(INDEX_HTML).toContain('aria-label="AI Interface Library"'); // the visible site title
   });
@@ -246,7 +250,8 @@ describe('JSON-LD', () => {
     const html = await portal('/portals/chatgpt');
     const [block] = jsonLd(html);
     expect(block['@context']).toBe('https://schema.org');
-    const [crumbs, ...images] = block['@graph'];
+    const [crumbs, ...rest] = block['@graph'];
+    const images = rest.filter((n: any) => n['@type'] === 'ImageObject');
     expect(crumbs).toEqual({ '@type': 'BreadcrumbList', itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'AI Interface Library', item: `${ORIGIN}/` },
       { '@type': 'ListItem', position: 2, name: 'ChatGPT', item: `${ORIGIN}/portals/chatgpt` },
@@ -269,9 +274,11 @@ describe('JSON-LD', () => {
       const html = await portal(path);
       const blocks = jsonLd(html);
       expect(blocks).toHaveLength(1);
-      expect(html.match(/<script type="application\/ld\+json">[\s\S]*?<\/script>/)![0]).not.toMatch(FORBIDDEN);
       const text = visibleText(html).toLowerCase();
       const graph = blocks[0]['@graph'];
+      const screenshots = graph.filter((n: any) => n['@type'] === 'ImageObject');
+      // No rights or authorship claims on the breadcrumb or on other companies' screenshots.
+      for (const n of [graph[0], ...screenshots]) expect(JSON.stringify(n)).not.toMatch(FORBIDDEN);
 
       // Breadcrumbs: each name is on the page, the portal is the <h1>, links are this site's pages.
       const crumbs = graph[0].itemListElement;
@@ -281,9 +288,18 @@ describe('JSON-LD', () => {
       expect(crumbs.at(-1).item).toBe(html.match(/<link rel="canonical" href="([^"]+)" \/>/)![1]);
 
       // ImageObjects: exactly the screenshots on the page, same URL, caption = alt, same size.
-      const images = graph.slice(1).map((i: any) => ({ src: i.contentUrl, alt: i.caption, width: i.width, height: i.height }));
+      const images = screenshots.map((i: any) => ({ src: i.contentUrl, alt: i.caption, width: i.width, height: i.height }));
       expect(images).toEqual(pageImages(html));
-      for (const i of graph.slice(1)) expect(Object.keys(i).sort()).toEqual(['@type', 'caption', 'contentUrl', 'height', 'width']);
+      for (const i of screenshots) expect(Object.keys(i).sort()).toEqual(['@type', 'caption', 'contentUrl', 'height', 'width']);
+
+      // Article: only for a published analysis; the publisher named is the product's own company.
+      const articles = graph.filter((n: any) => n['@type'] === 'Article');
+      expect(graph).toHaveLength(1 + screenshots.length + articles.length);
+      for (const a of articles) {
+        expect(Object.keys(a).sort()).toEqual(['@type', 'about', 'dateModified', 'datePublished', 'headline', 'image']);
+        expect(a.about).toEqual({ '@type': 'SoftwareApplication', name: crumbs[1].name, publisher: { '@type': 'Organization', name: expect.any(String) } });
+        expect(text).toContain(a.about.publisher.name.toLowerCase());
+      }
     });
 
   it('escapes "<" so data can never close the script element', async () => {

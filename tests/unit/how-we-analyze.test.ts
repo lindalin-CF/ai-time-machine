@@ -49,6 +49,9 @@ describe('/how-we-analyze', () => {
       'Kimi is captured while signed out, because no account is used for it. Muse always opens on a conversation, so only the interface around it is analyzed.',
       'Privacy',
       'Screenshots come from real accounts. Names, conversation titles and other account details are left out of every analysis, and are covered in the screenshots where possible.',
+      'Reusing the analyses',
+      'The design analysis text and the menu change records can be reused under CC BY 4.0, with credit to AI Interface Library. Screenshots and product names are not covered.',
+      'See the license',
       'Sources',
       'W3C, Web Content Accessibility Guidelines (WCAG) 2.2',
       'Nielsen Norman Group, visual hierarchy in UX',
@@ -56,7 +59,7 @@ describe('/how-we-analyze', () => {
     ]);
     const main = html.match(/<main class="howto">[\s\S]*?<\/main>/)![0];
     expect(main.match(/<h1>/g)).toHaveLength(1);
-    expect(main.match(/<h2>/g)).toHaveLength(7);
+    expect(main.match(/<h2>/g)).toHaveLength(8);
   });
 
   it('links each source to its official page', () => {
