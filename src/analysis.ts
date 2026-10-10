@@ -5,7 +5,7 @@ export const MAX_ANALYSIS_BYTES = 64 * 1024;
 
 // Terms that must never reach the public summary (guideline section 10.2).
 const FORBIDDEN_SUMMARY: [RegExp, string][] = [
-  [/\b[LHCD][1-7]\b/, "metric ID"],
+  [/\b[LHCDN][1-7]\b/, "metric ID"],
   [/\bE[12]\b/, "evidence level (E1/E2)"],
   [/approx_/, "field value (approx_*)"],
   [/#(?:[0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})\b/, "hex color"],
@@ -100,7 +100,7 @@ export function validateAnalysis(a: unknown, slug: string, week: string): string
   if (summary !== texts.join(" ")) return "summary must equal summary_sentences texts joined by single spaces";
 
   if (!/^[\x20-\x7E]*$/.test(summary)) return "summary must be plain English (printable ASCII only)";
-  if (texts.length < 5 || texts.length > 9) return `summary has ${texts.length} sentences (must be 5 to 9)`;
+  if (texts.length < 5 || texts.length > 10) return `summary has ${texts.length} sentences (must be 5 to 10)`;
   for (const [i, t] of texts.entries()) {
     const words = t.trim().split(/\s+/).length;
     if (words > 20) return `summary sentence ${i + 1} has ${words} words (max 20)`;

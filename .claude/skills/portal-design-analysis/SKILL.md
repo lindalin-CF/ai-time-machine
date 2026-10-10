@@ -1,7 +1,7 @@
 ---
 name: portal-design-analysis
 description: 依 AI Surface Library 規範分析 AI portal 的桌面截圖，產出可追溯到指標、證據等級與位置的 Design analysis。使用者提供 portal 桌面截圖並要求 design analysis、跑規範、或比較不同週次截圖時使用。
-version: 1.4
+version: 1.5
 ---
 
 # AI Portal 桌面截圖 Design Analysis 規範
@@ -63,7 +63,7 @@ version: 1.4
 | 繼續上次對話的卡片、對話預覽、最近使用的 bot／agent 列 | 整塊列為排除區，同第一列處理 |
 | 標示為個人化的建議 prompt | 只在 D5 記錄**數量**，不記文字（`value`、`original_text`、`note` 都不寫內容），`note` 寫 `"Suggestions are labeled as personalized; texts not recorded."`。無法判斷建議是否個人化時，一律視為個人化 |
 | 主內容區文字裡混有個人資訊 | 以 `[name]`、`[file]` 等代稱取代後再翻譯記錄，例如 `"Good morning, [name] (translated from Chinese)"`；`original_text` 也同樣以代稱取代 |
-| 各指標的取樣與計數（C1–C4、H1、L4、D3、D5 等） | 一律跳過排除區，不從排除區取樣、不把排除區元素列入名次或計數 |
+| 各指標的取樣與計數（C1–C4、H1、L4、N1、D3、D5 等） | 一律跳過排除區，不從排除區取樣、不把排除區元素列入名次或計數 |
 | 跨週像素比對發現排除區有變動 | 只設 `excluded_region_changed: true`，不列位置、不描述 |
 | 公開摘要 | 完全不提排除區的存在、內容或變動 |
 | 唯一例外 | 帳號區中的帳號類型標籤（例如 Work、School）與方案字樣（例如 Premium），可記錄在 `context.account_type` 與 `context.plan_tier_visible`，只供跨週比較判斷干擾用，不得出現在摘要 |
@@ -135,25 +135,63 @@ version: 1.4
 | L4 | 可互動元素數 | 分區計數可辨識的按鈕、icon 按鈕、連結、chip、輸入框。hover 才出現的控制項不算；排除區內的元素不算 | 只描述；註明「近似計數，誤差約 ±2，不含排除區」 | E2 |
 | L5 | 視覺雜亂度（選用） | 以 Aalto Interface Metrics 或 Feature Congestion 計算，排除區先以背景色遮蓋 | 只用於同 portal 跨週相對比較，不做絕對判斷 | E1 |
 
-### 7.2 視覺層級（Visual hierarchy）
+### 7.2 導覽選單（Navigation）
+
+| ID | 觀察項目 | 做法 | 判讀 | 證據 |
+|---|---|---|---|---|
+| N1 | 產品導覽項目 | 依畫面順序列出側欄、頂列、輸入區旁可見的**產品內建**導覽與功能項目，每項記錄 `label`、`region`、`order`、`icon`、`badge`（見下） | 只描述；不推測項目的功能或用途 | E2 |
+
+每項欄位：
+
+| 欄位 | 值 |
+|---|---|
+| `label` | 項目文字的英文；介面非英文時寫翻譯，原文放同一項的 `original_text`（依第 0 節） |
+| `region` | `sidebar` / `top bar` / `input area` |
+| `order` | 在該區的順序，由上而下、由左而右，從 1 起算 |
+| `icon` | 只描述形狀，例如 `"clock icon"`；沒有圖示寫 `null`。依第 7 節開頭的規則，不寫功能 |
+| `badge` | 項目旁的標籤字樣，例如 `"New"`、`"Beta"`；沒有寫 `null` |
+
+規則：
+
+- **完全遵守第 2 節**：帳號專屬清單（對話標題、專案、自訂 GPT／Gem／agent、釘選項目等）不列入 N1。無法確定是產品內建還是帳號專屬時，一律視為排除區、不列入。
+- **看不到的不推測**：藏在「更多」（More、⋯ 等）選單裡、畫面上看不到的項目不列入；「更多」按鈕本身可見時照常列為一項。
+- **沒有文字標籤的圖示按鈕**（例如側欄頂端的放大鏡形圖示）照常列入，`label` 寫 `null`，只記 `icon`。
+- **不列入 N1**：產品 logo／文字標誌；輸入框下方的建議 prompt（記在 D5，它們會輪換，不是導覽項目）。
+- **側欄收合時**：N1 的 `value` 寫 `"not_visible"`，`note` 寫 `"The sidebar is collapsed; navigation items are not visible."`。
+- 輸入區旁的項目也可能記在 D5，兩個指標各自照規則記錄。
+
+```json
+{
+  "id": "N1",
+  "value": [
+    { "label": "New chat", "region": "sidebar", "order": 1, "icon": "pencil-on-square icon", "badge": null },
+    { "label": "Tasks", "region": "sidebar", "order": 4, "icon": "clock icon", "badge": null }
+  ],
+  "evidence": "E2",
+  "confidence": "high",
+  "note": ""
+}
+```
+
+### 7.3 視覺層級（Visual hierarchy）
 
 | ID | 觀察項目 | 做法 | 判讀 | 證據 |
 |---|---|---|---|---|
 | H1 | 視覺權重最高的前 3 個元素 | 依相對尺寸、對周邊的相對對比、飽和度、周圍留白排序；可互動與非互動元素都列入 | 三個名次的依據數值（尺寸、面積佔比、對比比值）並列寫出，讓讀者能自行比較；沒有數值可引用時信心標 `low` | E2 |
 | H2 | 主輸入區面積佔比 | 輸入框 w×h ÷ (1280×800)，百分比取到小數一位 | 只描述 | E1 或 E2 |
-| H3 | 字級層級數 | 量可見文字字高並估算字級（見 7.6 節），估算字級差 ≥ 2px 視為不同層級 | 只描述；`note` 寫明量測的是哪種文字（Latin / CJK / 其他） | E2 |
+| H3 | 字級層級數 | 量可見文字字高並估算字級（見 7.7 節），估算字級差 ≥ 2px 視為不同層級 | 只描述；`note` 寫明量測的是哪種文字（Latin / CJK / 其他） | E2 |
 
-### 7.3 色彩與字體（Colour & typography）
+### 7.4 色彩與字體（Colour & typography）
 
 | ID | 觀察項目 | 做法 | 判讀 | 證據 |
 |---|---|---|---|---|
 | C1 | 主色盤 | 取樣主背景、主要文字、次要文字、強調色（如送出按鈕填色）的 hex，附取樣座標 | 只描述 | E1 |
-| C2 | 主要內文對比 | 主內容區最大量的內文文字 vs 其背景，用 7.5 節公式。主內容區幾乎沒有內文時，改量最大量的可讀標籤（例如建議 chip 文字）並在 `note` 說明；所有內文都在排除區內時填 `not_measured` | 一般文字 ≥ 4.5 → `approx_pass`；大字（估算字級 ≥ 24px，或 ≥ 18.66px 粗體）≥ 3 → `approx_pass`；否則 `approx_fail` | E1 |
+| C2 | 主要內文對比 | 主內容區最大量的內文文字 vs 其背景，用 7.6 節公式。主內容區幾乎沒有內文時，改量最大量的可讀標籤（例如建議 chip 文字）並在 `note` 說明；所有內文都在排除區內時填 `not_measured` | 一般文字 ≥ 4.5 → `approx_pass`；大字（估算字級 ≥ 24px，或 ≥ 18.66px 粗體）≥ 3 → `approx_pass`；否則 `approx_fail` | E1 |
 | C3 | 最低對比文字 | 在 placeholder、次要文字、區段標籤、聲明文字中找對比最低者並計算。logo、純裝飾文字、排除區文字不列入 | 同 C2 | E1 |
 | C4 | 非文字對比 | 對主輸入框與送出按鈕（若可見）分別量：(1) 邊框或填色 vs 相鄰背景；(2) 是否有其他可辨識線索：元件內文字（例如 placeholder）對比 ≥ 4.5，或填色與背景對比 ≥ 3 | (1) ≥ 3 → `approx_pass`；(1) < 3 但 (2) 成立 → `approx_unclear`，`note` 寫明「邊界本身不足 3:1，但可由某線索辨識；是否符合需看實際樣式判定」；(1)(2) 都不成立 → `approx_fail`。`note` 另註明「反鋸齒可能使取樣色偏淡」。送出按鈕在輸入框為空時可能是停用狀態，停用元件不受此標準約束，此時 `note` 寫明 "The button may be inactive because the message box is empty; inactive components are exempt."，但仍照數值給結果 | E1 |
 | C5 | 字體分類與字級 | 無襯線／襯線／等寬；內文與最大標題的估算字級（px） | 字體名稱除非畫面上有文字明示，否則填 `cannot_determine` | E2 |
 
-### 7.4 主要動作引導（Primary action，含 Human-AI Interaction G1／G2）
+### 7.5 主要動作引導（Primary action，含 Human-AI Interaction G1／G2）
 
 | ID | 觀察項目 | 做法 | 判讀 | 證據 |
 |---|---|---|---|---|
@@ -165,7 +203,7 @@ version: 1.4
 | D6 | 限制聲明（G2：讓使用者知道系統多常出錯） | 是否可見與 AI 限制相關的聲明；位置（輸入框下方／頁尾／無）；類型：`mistakes`（可能出錯）、`ai_generated`（內容由 AI 生成）、`other` | 記錄有無、位置、類型、短文字（非英文依第 0 節翻譯）；對比引用 C3（若 C3 就是它）。摘要照實描述聲明內容，不要把 `ai_generated` 寫成「可能出錯」 | E2 |
 | D7 | 主標題／問候語 | 記錄主內容區最大標題或問候語的文字（英文翻譯，個人資訊以代稱取代），以及它是否提示一個具體任務（例如「試著要我回顧會議」） | `value` 寫翻譯文字；`suggests_task` 為 `true` / `false` | E2 |
 
-### 7.5 對比計算（C2–C4 共用）
+### 7.6 對比計算（C2–C4 共用）
 
 1. **背景色**：取文字 bbox 外擴 4px 的外環像素，取中位數。
 2. **文字色**：取 bbox 內與背景色亮度差最大的前 5% 像素，取中位數（避開反鋸齒邊緣）。
@@ -173,7 +211,7 @@ version: 1.4
 4. **對比比值**：`(L_亮 + 0.05) / (L_暗 + 0.05)`，報到小數一位，不四捨五入進門檻（4.47 報 4.4，不算達標）。
 5. 輸出附上 `samples: { "foreground": "#hex", "background": "#hex" }` 與 bbox。
 
-### 7.6 字級估算（H3、C2 大字判定、C5 共用）
+### 7.7 字級估算（H3、C2 大字判定、C5 共用）
 
 截圖量得的是字形高度，不是 CSS font-size，兩者換算因文字種類而異：
 
@@ -212,15 +250,20 @@ version: 1.4
 
 | context 欄位不同 | 受影響指標 |
 |---|---|
-| `plan_tier_visible` | L1、L4、D3、D4、D5、D6 |
+| `plan_tier_visible` | L1、L4、N1、D3、D4、D5、D6 |
 | `personalized_content` | H1、D7 |
 | `time_dependent_content` | H1、H3、D7 |
-| `ui_language` | H3、C5、D5、D6、D7 |
+| `ui_language` | H3、C5、N1、D5、D6、D7 |
 | `hover_or_focus_visible` | C1，以及與該元件重疊的所有指標 |
 | `promotional_content` | L1、L4、H1、H2、D3 |
 | `conversation_open` | 所有指標標 `confounded`（兩週畫面性質不同，無法比較） |
 
 **問候語輪換**：D7 文字改變一律標 `possibly_confounded`，`note` 寫 "Greetings may rotate between visits; a single screenshot cannot rule this out."
+
+**N1 的干擾判定**（比上表更嚴格，以此為準）：
+
+- `ui_language` 或 `plan_tier_visible` 與前一週不同，或側欄收合狀態不同（一週的 N1 是 `not_visible`、另一週不是）時，N1 的所有變動標 `confounded`。
+- `hover_or_focus_visible` 只影響 badge 判斷：與前一週不同時，只有 `badge_changed` 標 `possibly_confounded`，N1 的其他變動不受影響。
 
 ### 9.2 像素比對（有前一週 PNG 且能執行程式時）
 
@@ -243,6 +286,7 @@ version: 1.4
 | L2 | 差 ≥ 5 個百分點 |
 | L3 | 垂直三等分落段改變，或水平置中與否改變 |
 | L4 | 任一分區差 ≥ 3 |
+| N1 | 任何項目新增、移除、改名，或 badge 改變（只有 `order` 改變不算） |
 | H1 | 前 3 名的元素或順序改變 |
 | H2 | 差 ≥ 1.0 個百分點 |
 | C2–C4 | 判定結果改變，或比值差 ≥ 0.5 |
@@ -252,6 +296,24 @@ version: 1.4
 
 每筆變動輸出：`{ "id", "previous", "current", "status": "changed" | "possibly_confounded" | "confounded", "note" }`。沒有達門檻的變動時，`changes_vs_previous` 為空陣列。
 
+**N1 的變動判定**，依序：
+
+1. 同一 `region` 內 `label` 相同的項目視為同一項；`badge` 不同（包括 `null` 與有值之間）記 `badge_changed`。
+2. **改名**：前一週的某項目在本週不見了，但同一 `region`、同一 `order` 位置（或同樣 `icon`）出現了不同名字的項目，記為 `renamed`，**不要拆成一個 `removed` 加一個 `added`**。例：前一週側欄某位置是 "Scheduled"（clock icon），本週同位置、同圖示變成 "Tasks" → `renamed`。
+3. 前一週剩下沒配對的記 `removed`，本週剩下沒配對的記 `added`。
+
+**前一週 JSON 沒有 N1**（用 1.5 版以前的規範分析）：有前一週 PNG 時，依第 7.2 節規則從前一週截圖列出它的 N1 再比較，`note` 寫 `"Previous items read from the previous screenshot; the previous analysis predates N1."`；沒有前一週 PNG 時不比較 N1。
+
+N1 每筆變動一筆紀錄：
+
+```json
+{ "id": "N1", "change": "renamed", "previous": "Scheduled", "current": "Tasks", "region": "sidebar", "status": "changed", "note": "" }
+```
+
+- `change`：`added` / `removed` / `renamed` / `badge_changed`。
+- `previous`、`current`：項目名稱；`added` 的 `previous` 與 `removed` 的 `current` 為 `null`。`badge_changed` 時寫兩週的 badge 值，項目名稱寫在 `note`。
+- `status`：同其他指標，干擾判定見第 9.1 節。
+
 ## 10. 輸出格式（Step 7）
 
 輸出兩部分，順序固定：先 JSON，再摘要。
@@ -260,7 +322,7 @@ version: 1.4
 
 ```json
 {
-  "guideline_version": "1.4",
+  "guideline_version": "1.5",
   "portal": "example",
   "week": "2026-09-21",
   "variant": "desktop",
@@ -307,7 +369,7 @@ version: 1.4
 
 欄位規則：
 
-- `value`：數值、英文描述字串，或 `"not_measured"` / `"cannot_determine"`。
+- `value`：數值、英文描述字串，或 `"not_measured"` / `"cannot_determine"`。N1 例外：項目物件陣列，側欄收合時為 `"not_visible"`（見第 7.2 節）。
 - `original_text`：選填，僅在介面文字非英文時使用，存原文（個人資訊以代稱取代；排除區內容不得存）；網站不顯示。
 - 所有字串值（含 `note`）一律英文，見第 0 節。
 - `result`：僅 C2、C3、C4 使用，值為 `approx_pass` / `approx_unclear`（僅 C4）/ `approx_fail` / `null`。
@@ -324,13 +386,18 @@ version: 1.4
 
 **寫作規則**
 
-- 英文，5 到 8 句短句；有跨週比較時可再加 1 句比較句。每句不超過 20 個字。
+- 英文，5 到 8 句短句；有跨週比較時可再加 1 句比較句；N1 有 `changed` 的變動時，選單變化可再多用 1 句（所以最多 10 句）。每句不超過 20 個字。
 - **一句只講一件事**：不要用 and、but、with 把兩個不同指標的觀察接在同一句（例如「建議提示」和「沒有錯誤聲明」要分成兩句）。唯一例外是 C4 為 `approx_unclear` 時的固定句型。句數不夠放時，優先刪掉較不重要的觀察，而不是合併句子。
 - 用日常用字，目標是一般國中生讀得懂。不用分號、不用括號裡再塞說明。
 - 第一句固定：`This shows the desktop version of {portal name} for the week of {week}, before scrolling.`
-- 之後依序涵蓋：整體版面、畫面上最顯眼的東西、文字與顏色、使用者從哪裡開始（含問候語、建議提示與「可能出錯」聲明）；有比較結果時最後一句寫變動。
+- 之後依序涵蓋：整體版面、畫面上最顯眼的東西、文字與顏色、使用者從哪裡開始（含問候語、建議提示與「可能出錯」聲明）；有比較結果時最後寫變動（選單變化在前，見下）。
 - 只能使用 JSON 中已存在的數值與觀察，不得新增資訊。數字可以保留，但要換成一般人懂的說法（見下表）。
 - 比較句只能根據 `changes_vs_previous`：`changed` 可以寫；`possibly_confounded` 只能用中性字眼寫（"differs from"），不得寫成改版；`confounded` 不寫。完全沒有變動時寫 "The main screen looks the same as the week of {previous week}."
+- **選單變化先寫**：N1 有 `changed` 的變動時，比較句先寫選單變化，再寫其他數值變化。一樣一句只講一件事、20 字以內，`sources` 為 `["N1"]`。例：
+  - `renamed`："The sidebar item Scheduled is now labeled Tasks."
+  - `added`："A new Tasks item appears in the sidebar."
+  - `removed`："The Library item no longer appears in the sidebar."
+- 選單變化句同樣受第 8 節「把變動說成改版」約束：只寫看得到的變化，不寫 launched、redesigned、introduced a new feature 這類字眼。
 - **頁面文字中不得出現**：指標 ID（L1、H2、C4…）、證據等級（E1、E2）、`approx_pass` 等欄位值、WCAG 條文編號、座標、hex 色碼、下表左欄的術語、以及第 2 節排除區的任何資訊（包括它的存在）。
 - E1 未量測時寫：`Text and background colors were not measured for this capture.`
 - C4 為 `approx_unclear` 時寫成 "The outline of the message box is faint, but the hint text inside it is easy to read." 這類中性描述，不說達標或未達標。
@@ -377,12 +444,13 @@ version: 1.4
 6. 摘要與 note 中沒有第 8 節的禁止類型；無標籤圖示與按鈕（包括送出、麥克風）只描述形狀；每句只講一件事。
 7. 有前一週資料時，每筆變動都達第 9.3 節門檻，干擾判定與問候語輪換規則已套用。
 8. 第 1.1 節表列的 portal 已套用對應的收錄方式。
+9. N1 只列產品內建項目，沒有帳號專屬清單或無法確定的項目；側欄收合時為 `not_visible`；跨週比較中同位置或同圖示的名稱改變記為 `renamed`，沒有拆成移除加新增；有選單變化時比較句先寫選單。
 
 ## Repo integration
 
 本節只說明在 ai-time-machine repo 中的執行方式，不改變上述任何規則。
 
-- E1 量測改用 `scripts/local-capture/analysis/measure.mjs`（`size`、`color`、`contrast`、`pair`、`diff`），取代第 4 節的 Python；方法與第 7.5、9.2 節相同。
+- E1 量測改用 `scripts/local-capture/analysis/measure.mjs`（`size`、`color`、`contrast`、`pair`、`diff`），取代第 4 節的 Python；方法與第 7.6、9.2 節相同。
 - 需要元素範圍或多點顏色時，優先用 `extent <png> <x> <y> <w> <h> [--bg <hex>] [--threshold 30]` 與 `colors <png> <x1>,<y1> <x2>,<y2> ...`（單一程序一次完成），不要逐像素迴圈呼叫 `color`。
 - 流程：
   1. `node analysis/prepare.mjs <slug> [week]`：下載本週與前一週桌面截圖、前一週分析 JSON 到 `analysis/work/<slug>/<week>/`。
