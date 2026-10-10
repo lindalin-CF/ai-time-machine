@@ -327,6 +327,7 @@ N1 每筆變動一筆紀錄：
   "guideline_version": "1.5",
   "portal": "example",
   "week": "2026-09-21",
+  "previous_week": "2026-09-14",
   "variant": "desktop",
   "viewport": "1280x800",
   "scope": "first screen only, single logged-in account",
@@ -381,6 +382,7 @@ N1 每筆變動一筆紀錄：
   - `low`：E2 觀察，依據不足或有多種合理解讀
 - 每個指標都要輸出，量不到就填 `not_measured` 並在 `note` 說明原因。
 - `excluded_region_changed`、`unmapped_changes` 只在執行第 9.2 節時填寫，否則為 `null`。
+- `previous_week`：第 9 節比較的前一週日期（`input.json` 的 `previous_week`，格式 `YYYY-MM-DD`，必須早於 `week`）；沒有前一週可比較時為 `null`。網站用它判斷 `changes_vs_previous` 比較的是哪一週。
 
 ### 10.2 公開摘要（summary）— 必須是 plain English
 

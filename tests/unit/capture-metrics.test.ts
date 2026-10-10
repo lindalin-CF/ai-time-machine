@@ -59,13 +59,33 @@ const row = (a: unknown, extra: Record<string, unknown> = {}) => ({
 const EXPECTED = {
   colorScheme: 'dark', sidebarPct: 23, inputAreaPct: 6.5, inputPosition: 'middle',
   clickableApprox: 18, textSizes: 2, suggestedPrompts: 2, aiNote: true,
+  // The v1.4 fixture has no N1 and no changes_vs_previous.
+  navItems: null, navSidebarVisible: null, navChanges: null,
 };
+
+/** A v1.5 N1 value: labelled and icon-only items in three regions. */
+const N1_ITEMS = [
+  { label: null, region: 'sidebar', order: 1, icon: 'magnifier-shaped icon', badge: null },
+  { label: 'New chat', region: 'sidebar', order: 2, icon: 'pencil-on-square icon', badge: null },
+  { label: 'Tasks', region: 'sidebar', order: 3, icon: 'clock icon', badge: 'NEW' },
+  { label: 'Upgrade', region: 'top bar', order: 1, icon: null, badge: null },
+  { label: 'Think', region: 'input area', order: 1, icon: 'brain-shaped icon', badge: null },
+];
+const N1_RENAMED = { id: 'N1', change: 'renamed', previous: 'Scheduled', current: 'Tasks', region: 'sidebar', status: 'changed', note: 'Same clock icon.' };
+
+/** A v1.5 analysis: N1 with a sidebar field, a previous week and changes_vs_previous. */
+function analysisV15(n1: Record<string, unknown> = {}, top: Record<string, unknown> = {}) {
+  const a = analysis();
+  a.guideline_version = '1.5';
+  a.metrics.push({ id: 'N1', value: N1_ITEMS, sidebar: 'visible', evidence: 'E2', confidence: 'high', note: 'N1 note', ...n1 } as never);
+  return { ...a, previous_week: '2026-09-14', changes_vs_previous: [N1_RENAMED, { id: 'D7', previous: 'Hi', current: GREETING, status: 'possibly_confounded', note: '' }], ...top };
+}
 
 describe('captureMetrics', () => {
   it('returns only the whitelisted numbers, enums and booleans', () => {
     const m = captureMetrics(row(analysis()));
     expect(m).toEqual(EXPECTED);
-    for (const v of Object.values(m!)) expect(['number', 'string', 'boolean']).toContain(typeof v);
+    for (const v of Object.values(m!)) if (v !== null) expect(['number', 'string', 'boolean']).toContain(typeof v);
   });
 
   it('is null for system-test weeks', () => {
@@ -106,6 +126,81 @@ describe('captureMetrics', () => {
     const m = captureMetrics(row(analysis({}, { context: undefined, metrics: undefined })));
     expect(m).not.toBeNull();
     expect(Object.values(m!).every((v) => v === null)).toBe(true);
+  });
+
+  describe('N1 navigation items and changes', () => {
+    const m15 = (n1: Record<string, unknown> = {}, top: Record<string, unknown> = {}) => captureMetrics(row(analysisV15(n1, top)))!;
+    const label = (s: string) => ({ label: s, region: 'sidebar', order: 9, icon: null, badge: null });
+
+    it('keeps only label and region of labelled items', () => {
+      const m = m15();
+      expect(m.navItems).toEqual([
+        { label: 'New chat', region: 'sidebar' }, { label: 'Tasks', region: 'sidebar' },
+        { label: 'Upgrade', region: 'top bar' }, { label: 'Think', region: 'input area' },
+      ]);
+      expect(m.navSidebarVisible).toBe(true);
+      expect(m.navChanges).toEqual({ previousWeek: '2026-09-14', items: [{ change: 'renamed', previous: 'Scheduled', current: 'Tasks', region: 'sidebar' }] });
+      expect({ ...m, navItems: null, navSidebarVisible: null, navChanges: null }).toEqual(EXPECTED);
+    });
+
+    it('drops labels longer than 40 characters or not printable ASCII', () => {
+      const long = 'x'.repeat(41);
+      const items = [label('x'.repeat(40)), label(long), label('Tâches'), label('任務'), label('Tab\tbed'), label('   '), label('Library')];
+      expect(m15({ value: items }).navItems).toEqual([{ label: 'x'.repeat(40), region: 'sidebar' }, { label: 'Library', region: 'sidebar' }]);
+    });
+
+    it('drops items in unknown regions or with non-string labels', () => {
+      const items = [{ label: 'Home', region: 'main content' }, { label: 7, region: 'sidebar' }, 'Library', null, { label: 'Library', region: 'sidebar' }];
+      expect(m15({ value: items }).navItems).toEqual([{ label: 'Library', region: 'sidebar' }]);
+    });
+
+    it('is null when N1 is not an array, listed twice, or has more than 30 items', () => {
+      expect(m15({ value: 'not_measured' }).navItems).toBeNull();
+      expect(m15({ value: Array.from({ length: 31 }, (_, i) => label(`Item ${i}`)) }).navItems).toBeNull();
+      expect(m15({ value: Array.from({ length: 30 }, (_, i) => label(`Item ${i}`)) }).navItems).toHaveLength(30);
+      const a = analysisV15();
+      a.metrics.push({ id: 'N1', value: N1_ITEMS } as never);
+      expect(captureMetrics(row(a))!.navItems).toBeNull();
+    });
+
+    it('marks a collapsed sidebar', () => {
+      expect(m15({ sidebar: 'not_visible' }).navSidebarVisible).toBe(false);
+      expect(m15({ sidebar: 'hidden' }).navSidebarVisible).toBeNull();
+    });
+
+    it('keeps only well-formed N1 changes with status "changed"', () => {
+      const changes = [
+        N1_RENAMED,
+        { id: 'N1', change: 'added', previous: null, current: 'Codex', region: 'sidebar', status: 'changed' },
+        { id: 'N1', change: 'removed', previous: 'Sora', current: null, region: 'top bar', status: 'changed' },
+        { id: 'N1', change: 'renamed', previous: 'GPTs', current: 'Explore', region: 'sidebar', status: 'possibly_confounded' },
+        { id: 'N1', change: 'badge_changed', previous: null, current: 'NEW', region: 'sidebar', status: 'changed' },
+        { id: 'N1', change: 'renamed', previous: 'Scheduled', current: 'Tâches', region: 'sidebar', status: 'changed' },
+        { id: 'N1', change: 'added', previous: 'x', current: 'Codex', region: 'sidebar', status: 'changed' },
+        { id: 'N1', change: 'added', previous: null, current: 'Codex', region: 'footer', status: 'changed' },
+        { id: 'D7', previous: 'Hi', current: GREETING, status: 'changed' },
+      ];
+      expect(m15({}, { changes_vs_previous: changes }).navChanges).toEqual({
+        previousWeek: '2026-09-14',
+        items: [
+          { change: 'renamed', previous: 'Scheduled', current: 'Tasks', region: 'sidebar' },
+          { change: 'added', previous: null, current: 'Codex', region: 'sidebar' },
+          { change: 'removed', previous: 'Sora', current: null, region: 'top bar' },
+        ],
+      });
+    });
+
+    it('has an empty list when the previous week had no menu changes', () => {
+      expect(m15({}, { changes_vs_previous: [] }).navChanges).toEqual({ previousWeek: '2026-09-14', items: [] });
+    });
+
+    it('is null without a valid previous_week or changes_vs_previous array', () => {
+      expect(m15({}, { previous_week: undefined }).navChanges).toBeNull();
+      expect(m15({}, { previous_week: null }).navChanges).toBeNull();
+      expect(m15({}, { previous_week: '14 Sep 2026' }).navChanges).toBeNull();
+      expect(m15({}, { previous_week: WEEK }).navChanges).toBeNull();
+      expect(m15({}, { changes_vs_previous: null }).navChanges).toBeNull();
+    });
   });
 
   describe('L4 clickable items', () => {
@@ -192,10 +287,20 @@ describe('/api/captures metrics', () => {
       expect(text).not.toContain(secret);
     }
     expect(text).not.toMatch(/approx_/);
-    expect(text).not.toMatch(/\b[LHCD][1-7]\b/);
+    expect(text).not.toMatch(/\b[LHCDN][1-7]\b/);
     expect(text).not.toMatch(/\bE[12]\b/);
     expect(text).not.toContain('analysis_json');
     expect(JSON.stringify(body.captures[0].metrics)).not.toContain('#');
+  });
+
+  it('exposes N1 labels but none of their icons, badges, notes or the other changes', async () => {
+    insert(WEEK, analysisV15());
+    const { text, body } = await captures(WEEK);
+    expect((body.captures[0].metrics as { navItems: unknown[] }).navItems).toHaveLength(4);
+    for (const secret of ['clock icon', 'pencil-on-square', 'NEW', 'N1 note', 'Same clock icon', GREETING, 'possibly_confounded']) {
+      expect(text).not.toContain(secret);
+    }
+    expect(text).not.toMatch(/\b[LHCDN][1-7]\b/);
   });
 
   it('returns null metrics for a system-test week', async () => {

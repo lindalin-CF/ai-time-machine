@@ -83,6 +83,10 @@ export function validateAnalysis(a: unknown, slug: string, week: string): string
   if (o.portal !== slug) return `analysis.portal (${JSON.stringify(o.portal)}) does not match slug "${slug}"`;
   if (o.week !== week) return `analysis.week (${JSON.stringify(o.week)}) does not match week "${week}"`;
   if (o.variant !== "desktop") return `analysis.variant must be "desktop"`;
+  if (o.previous_week !== undefined && o.previous_week !== null &&
+      (typeof o.previous_week !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(o.previous_week) || o.previous_week >= week)) {
+    return `analysis.previous_week must be null or a YYYY-MM-DD date before "${week}"`;
+  }
 
   if (o.status === "not_analyzable") return null;
   if (o.status !== "ok") return `status must be "ok" or "not_analyzable"`;

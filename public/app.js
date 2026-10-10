@@ -1436,6 +1436,8 @@ async function renderAnCanvas() {
   const cards = columns.map((c) => ({
     id: c.key,
     label: c.label,
+    slug: c.cap ? c.cap.slug : null,
+    week: c.cap ? c.cap.week : null,
     sub: an.mode === "portals" ? weekSub(c) : c.portalName,
     src: c.cap ? c.cap.image : null,
     alt: c.cap ? shotAlt(c.portalName, "desktop", c.cap.week) : "",

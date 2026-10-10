@@ -1,6 +1,7 @@
 // Analytics "Canvas" view: screenshot cards on a pannable, zoomable board, joined by curved lines.
 // Each line carries a box of short findings built only from the whitelisted `metrics` that
-// /api/captures already returns (src/capture-metrics.ts). Nothing here writes to the server;
+// /api/captures already returns (src/capture-metrics.ts), including the N1 navigation item names
+// (navItems, navChanges). Nothing here writes to the server;
 // card positions and lines are kept per viewer in localStorage.
 
 const esc = (s) =>
@@ -13,6 +14,66 @@ const esc = (s) =>
 
 const fmtPct = (n) => `${Number.isInteger(n) ? n : n.toFixed(1)}%`;
 const word = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+// ---- menu items (N1) --------------------------------------------------------
+// Only visible changes are described (guideline section 8): never "launched", "redesigned" or
+// "new feature". Menu lines come before every other finding.
+
+const MENU = "menu items";
+const NAV_CHANGE_LINES = 2;
+const NAV_NAMES = 3;
+
+/** One line per recorded change, e.g. "The sidebar item Scheduled is now labeled Tasks." */
+function navChangeText(c) {
+  if (c.change === "renamed") return `The ${c.region} item ${c.previous} is now labeled ${c.current}.`;
+  if (c.change === "added") return `A new ${c.current} item appears in the ${c.region}.`;
+  return `The ${c.previous} item no longer appears in the ${c.region}.`;
+}
+
+const navKey = (it) => `${it.region}\u0000${it.label}`;
+const navList = (items) => {
+  const names = items.slice(0, NAV_NAMES).map((it) => `${it.label} (${it.region})`).join(", ");
+  return items.length > NAV_NAMES ? `${names} and ${items.length - NAV_NAMES} more` : names;
+};
+
+/**
+ * Menu findings for two cards ({ label, slug, week, metrics }): { diff, same, missing }.
+ * Same portal and the newer card's navChanges compare against the other card's week: one line per
+ * recorded change. Otherwise both cards' navItems are compared, leaving out the sidebar when either
+ * card's sidebar is collapsed.
+ */
+function navFindings(a, b, A, B, ma, mb) {
+  const samePortal = !!a.slug && a.slug === b.slug;
+  if (samePortal && a.week && b.week && a.week !== b.week) {
+    const [newer, olderWeek] = a.week > b.week ? [ma, b.week] : [mb, a.week];
+    const nc = newer.navChanges;
+    if (nc && nc.previousWeek === olderWeek && Array.isArray(nc.items) && nc.items.length) {
+      const diff = nc.items.length > NAV_CHANGE_LINES
+        ? [navChangeText(nc.items[0]), `and ${nc.items.length - 1} more menu changes.`]
+        : nc.items.map(navChangeText);
+      return { diff, same: [], missing: [] };
+    }
+  }
+  const missing = [[A, ma], [B, mb]].filter(([, m]) => !Array.isArray(m.navItems)).map(([label]) => label);
+  if (missing.length) return { diff: [], same: [], missing };
+
+  const noSidebar = ma.navSidebarVisible === false || mb.navSidebarVisible === false;
+  const keep = (items) => items.filter((it) => !(noSidebar && it.region === "sidebar"));
+  const ia = keep(ma.navItems), ib = keep(mb.navItems);
+  const where = noSidebar ? " outside the sidebar" : "";
+  const kb = new Set(ib.map(navKey)), ka = new Set(ia.map(navKey));
+  const onlyA = ia.filter((it) => !kb.has(navKey(it))), onlyB = ib.filter((it) => !ka.has(navKey(it)));
+  if (!onlyA.length && !onlyB.length) return { diff: [], same: [`Both show the same ${MENU}${where}.`], missing: [] };
+  if (!samePortal) {
+    return ia.length === ib.length
+      ? { diff: [], same: [`${A} and ${B} each show ${word(ia.length, "menu item", MENU)}${where}.`], missing: [] }
+      : { diff: [`${A} shows ${word(ia.length, "menu item", MENU)}${where}, ${B} shows ${ib.length}.`], same: [], missing: [] };
+  }
+  const diff = [];
+  if (onlyB.length) diff.push(`${B} shows ${MENU} that ${A} does not: ${navList(onlyB)}.`);
+  if (onlyA.length) diff.push(`${A} shows ${MENU} that ${B} does not: ${navList(onlyA)}.`);
+  return { diff, same: [], missing: [] };
+}
 
 const RULES = [
   {
@@ -90,16 +151,17 @@ const RULES = [
 ];
 
 /**
- * Up to 4 one-line findings comparing two cards ({ label, metrics }). A field is compared only when
- * both cards have it. Differences come first, in rule order; similarities fill up to two lines. With
- * room left, one line names the fields missing for either card ("No data").
+ * Up to 4 one-line findings comparing two cards ({ label, slug, week, metrics }). A field is compared
+ * only when both cards have it. Menu findings come first, then differences in rule order; similarities
+ * fill up to two lines. With room left, one line names the fields missing for either card ("No data").
  */
 export function compareFindings(a, b) {
   const A = (a && a.label) || "this capture", B = (b && b.label) || "this capture";
   const ma = (a && a.metrics) || {}, mb = (b && b.metrics) || {};
   const has = (m, k) => m[k] !== undefined && m[k] !== null;
-  const lines = [];
-  const same = [];
+  const nav = navFindings(a || {}, b || {}, A, B, ma, mb);
+  const lines = [...nav.diff];
+  const same = [...nav.same];
   for (const r of RULES) {
     if (!has(ma, r.key) || !has(mb, r.key)) continue;
     const x = ma[r.key], y = mb[r.key];
@@ -110,7 +172,7 @@ export function compareFindings(a, b) {
   const out = lines.slice(0, 4);
   if (out.length < 4) {
     const missing = [[A, ma], [B, mb]]
-      .map(([label, m]) => [label, RULES.filter((r) => !has(m, r.key)).map((r) => r.name)])
+      .map(([label, m]) => [label, [...(nav.missing.includes(label) ? [MENU] : []), ...RULES.filter((r) => !has(m, r.key)).map((r) => r.name)]])
       .filter(([, names]) => names.length);
     if (missing.length) out.push(`${missing.map(([label, names]) => `No data for ${label}: ${names.join(", ")}`).join("; ")}.`);
   }
