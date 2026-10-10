@@ -157,7 +157,7 @@ version: 1.5
 - **看不到的不推測**：藏在「更多」（More、⋯ 等）選單裡、畫面上看不到的項目不列入；「更多」按鈕本身可見時照常列為一項。
 - **沒有文字標籤的圖示按鈕**（例如側欄頂端的放大鏡形圖示）照常列入，`label` 寫 `null`，只記 `icon`。
 - **不列入 N1**：產品 logo／文字標誌；輸入框下方的建議 prompt（記在 D5，它們會輪換，不是導覽項目）。
-- **側欄收合時**：N1 的 `value` 寫 `"not_visible"`，`note` 寫 `"The sidebar is collapsed; navigation items are not visible."`。
+- **側欄狀態**：N1 另有 `sidebar` 欄位，值為 `"visible"` / `"not_visible"`（側欄收合）/ `"none"`（沒有側欄）。側欄收合時只有 sidebar 區的項目看不到：`sidebar` 寫 `"not_visible"`，`value` 不列 sidebar 區的項目，`note` 寫 `"The sidebar is collapsed; sidebar items are not visible."`；頂列和輸入區的項目照常記錄。
 - 輸入區旁的項目也可能記在 D5，兩個指標各自照規則記錄。
 
 ```json
@@ -167,6 +167,7 @@ version: 1.5
     { "label": "New chat", "region": "sidebar", "order": 1, "icon": "pencil-on-square icon", "badge": null },
     { "label": "Tasks", "region": "sidebar", "order": 4, "icon": "clock icon", "badge": null }
   ],
+  "sidebar": "visible",
   "evidence": "E2",
   "confidence": "high",
   "note": ""
@@ -262,7 +263,8 @@ version: 1.5
 
 **N1 的干擾判定**（比上表更嚴格，以此為準）：
 
-- `ui_language` 或 `plan_tier_visible` 與前一週不同，或側欄收合狀態不同（一週的 N1 是 `not_visible`、另一週不是）時，N1 的所有變動標 `confounded`。
+- `ui_language` 或 `plan_tier_visible` 與前一週不同時，N1 的所有變動標 `confounded`。
+- 兩週的 `sidebar` 不同（例如一週 `"visible"`、另一週 `"not_visible"`）時，只有 sidebar 區的變動標 `confounded`；頂列和輸入區照常判定。
 - `hover_or_focus_visible` 只影響 badge 判斷：與前一週不同時，只有 `badge_changed` 標 `possibly_confounded`，N1 的其他變動不受影響。
 
 ### 9.2 像素比對（有前一週 PNG 且能執行程式時）
@@ -369,7 +371,7 @@ N1 每筆變動一筆紀錄：
 
 欄位規則：
 
-- `value`：數值、英文描述字串，或 `"not_measured"` / `"cannot_determine"`。N1 例外：項目物件陣列，側欄收合時為 `"not_visible"`（見第 7.2 節）。
+- `value`：數值、英文描述字串，或 `"not_measured"` / `"cannot_determine"`。N1 例外：項目物件陣列，另有 `sidebar` 欄位記錄側欄是否可見（見第 7.2 節）。
 - `original_text`：選填，僅在介面文字非英文時使用，存原文（個人資訊以代稱取代；排除區內容不得存）；網站不顯示。
 - 所有字串值（含 `note`）一律英文，見第 0 節。
 - `result`：僅 C2、C3、C4 使用，值為 `approx_pass` / `approx_unclear`（僅 C4）/ `approx_fail` / `null`。
@@ -444,7 +446,7 @@ N1 每筆變動一筆紀錄：
 6. 摘要與 note 中沒有第 8 節的禁止類型；無標籤圖示與按鈕（包括送出、麥克風）只描述形狀；每句只講一件事。
 7. 有前一週資料時，每筆變動都達第 9.3 節門檻，干擾判定與問候語輪換規則已套用。
 8. 第 1.1 節表列的 portal 已套用對應的收錄方式。
-9. N1 只列產品內建項目，沒有帳號專屬清單或無法確定的項目；側欄收合時為 `not_visible`；跨週比較中同位置或同圖示的名稱改變記為 `renamed`，沒有拆成移除加新增；有選單變化時比較句先寫選單。
+9. N1 只列產品內建項目，沒有帳號專屬清單或無法確定的項目；側欄收合時 `sidebar` 為 `not_visible`，頂列和輸入區的項目照常記錄；跨週比較中同位置或同圖示的名稱改變記為 `renamed`，沒有拆成移除加新增；有選單變化時比較句先寫選單。
 
 ## Repo integration
 
