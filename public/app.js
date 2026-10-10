@@ -783,54 +783,45 @@ function initHeroOrbFollow() {
   window.addEventListener("resize", reset);
 }
 
-// ---- playful hero screenshot effect ----------------------------------------
-function initHeroScreenshotEffect() {
-  const frame = document.querySelector(".hero-frame");
-  const panel = document.querySelector(".hero-panel");
-  if (!frame || !panel) return;
+// ---- hero sub copy: design annotations on the keywords ---------------------
+function initHeroAnnotations() {
+  const sub = document.querySelector(".hero-sub");
+  if (!sub) return;
 
   const reduced = window.matchMedia("(prefers-reduced-motion:reduce)");
-  const clickFx = window.matchMedia("(pointer:fine) and (min-width:761px)");
-  let busy = false;
+  const PLAY_MS = 5000; // last annotation starts at 3.2s and runs 1.7s
+  let playingUntil = 0;
 
-  panel.addEventListener("click", (e) => {
-    if (!clickFx.matches || reduced.matches || busy) return;
-    if (e.target.closest("a,button,input,select,textarea")) return;
-    busy = true;
+  const play = () => {
+    if (reduced.matches || Date.now() < playingUntil) return;
+    playingUntil = Date.now() + PLAY_MS;
+    // Removing the class and forcing a reflow restarts the keyframes.
+    sub.classList.remove("annot");
+    void sub.offsetWidth;
+    sub.classList.add("annot");
+  };
 
-    const frameRect = frame.getBoundingClientRect();
-    const panelRect = panel.getBoundingClientRect();
-    const scale = panelRect.width < 520 ? 0.26 : 0.18;
-    const pad = panelRect.width < 520 ? 12 : 18;
-    const startX = panelRect.left - frameRect.left;
-    const startY = panelRect.top - frameRect.top;
-    const endX = frameRect.width - startX - panelRect.width * scale - pad;
-    const endY = frameRect.height - startY - panelRect.height * scale - pad;
+  // Start right as the last word lands. A fixed timer counts from when this
+  // script runs, which drifts on slow connections. If the words already
+  // finished before this ran, `finished` is resolved and play() runs at once.
+  const words = [...sub.querySelectorAll(".w")];
+  const wordIn = words.at(-1)?.getAnimations().find((a) => a.animationName === "word-in");
+  if (wordIn) wordIn.finished.then(play, () => {});
+  else play();
+  sub.addEventListener("mouseenter", play);
 
-    const shot = panel.cloneNode(true);
-    // Keep hero-panel styling so the fake screenshot visually matches the header.
-    shot.className = "hero-panel hero-snapshot-card";
-    shot.querySelectorAll("[id]").forEach((el) => el.removeAttribute("id"));
-    Object.assign(shot.style, {
-      left: startX + "px",
-      top: startY + "px",
-      width: panelRect.width + "px",
-      height: panelRect.height + "px",
-    });
-    // CSS custom properties must be set with setProperty(); Object.assign()
-    // creates plain JS fields and the keyframe vars stay unset.
-    shot.style.setProperty("--snap-x", endX + "px");
-    shot.style.setProperty("--snap-y", endY + "px");
-    shot.style.setProperty("--snap-scale", String(scale));
-
-    panel.classList.add("is-snapping");
-    frame.appendChild(shot);
-    shot.addEventListener("animationend", () => {
-      shot.remove();
-      panel.classList.remove("is-snapping");
-      busy = false;
-    }, { once: true });
-  });
+  // ::first-line doesn't reach into the inline-block word spans, so mark the
+  // first line's words ourselves to keep it in the darker text colour.
+  const markFirstLine = () => {
+    if (!words.length) return;
+    const top = words[0].offsetTop;
+    words.forEach((w) => w.classList.toggle("l1", Math.abs(w.offsetTop - top) < 2));
+  };
+  markFirstLine();
+  // fonts.ready can resolve before the web font is even requested; loadingdone
+  // fires after the swap, when line breaks may have changed.
+  document.fonts?.addEventListener("loadingdone", markFirstLine);
+  window.addEventListener("resize", markFirstLine);
 }
 
 // ---- manual snapshots: per-portal mini library + upload --------------------
@@ -1557,5 +1548,5 @@ initDownloadAll();
 initDeviceToggle();
 initSearch();
 initHeroOrbFollow();
-initHeroScreenshotEffect();
+initHeroAnnotations();
 boot().then(route);

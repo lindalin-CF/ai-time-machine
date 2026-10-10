@@ -145,6 +145,67 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 @media (prefers-reduced-motion:reduce){.title-line,.hero-orb::before{animation:none;transform:none}}
 .hero-sub{margin:0;max-width:42ch;color:var(--cf-text-soft);font-size:clamp(18px,2.2vw,28px);line-height:1.18;letter-spacing:-.035em}
 .hero-sub::first-line{color:var(--cf-text)}
+
+/* hero motion: grid draws in, sub copy rises word by word, keywords get design annotations */
+.hero-grid{animation:grid-draw .9s cubic-bezier(.16,1,.3,1) both}
+@keyframes grid-draw{from{clip-path:inset(50% 50%)}to{clip-path:inset(0 0)}}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+.hero-sub .w{display:inline-block;opacity:0;transform:translateY(.45em);
+  animation:word-in .6s cubic-bezier(.16,1,.3,1) forwards;animation-delay:calc(.45s + var(--i)*24ms)}
+@keyframes word-in{to{opacity:1;transform:none}}
+.hero-sub .w.l1{color:var(--cf-text)} /* first line, marked by app.js; ::first-line can't style inline-blocks */
+.hero-sub .kw{position:relative;display:inline-block}
+.hero-sub .ann{position:absolute;pointer-events:none;opacity:0}
+.hero-sub .tag{
+  bottom:calc(100% + 7px);left:-2px;display:flex;align-items:center;gap:5px;white-space:nowrap;
+  font-family:var(--font-mono);font-size:10px;font-weight:500;line-height:1;text-transform:uppercase;letter-spacing:.06em;
+  background:var(--cf-text);color:var(--cf-bg-100);padding:5px 7px 4px;border-radius:5px;
+}
+.hero-sub .tag.orange{background:var(--cf-orange)}
+.hero-sub .kw-layout .tag{left:auto;right:-6px}
+.hero-sub .box{inset:-3px -6px -2px;border:1.5px solid var(--cf-orange)}
+.hero-sub .box i{position:absolute;width:6px;height:6px;box-sizing:border-box;background:var(--cf-bg-100);border:1.5px solid var(--cf-orange)}
+.hero-sub .box i:nth-child(1){top:-3.75px;left:-3.75px}
+.hero-sub .box i:nth-child(2){top:-3.75px;right:-3.75px}
+.hero-sub .box i:nth-child(3){bottom:-3.75px;left:-3.75px}
+.hero-sub .box i:nth-child(4){bottom:-3.75px;right:-3.75px}
+.hero-sub .rule{left:0;right:0;bottom:-3px;height:1.5px;background:var(--cf-text);transform-origin:left}
+.hero-sub .rule.o{background:var(--cf-orange)}
+.hero-sub .bars{display:inline-flex;align-items:flex-end;gap:2px;height:9px}
+.hero-sub .bars b{width:3px;background:currentColor}
+.hero-sub .bars b:nth-child(1){height:9px}
+.hero-sub .bars b:nth-child(2){height:6px}
+.hero-sub .bars b:nth-child(3){height:3px}
+.hero-sub .sw{width:9px;height:9px;border-radius:50%;background:var(--cf-bg-300)}
+/* annotations play only while .annot is on (added/replayed by app.js) */
+.hero-sub.annot .tag{animation:ann-tag 1.7s cubic-bezier(.16,1,.3,1) both}
+.hero-sub.annot .box{animation:ann-box 1.7s cubic-bezier(.16,1,.3,1) both}
+.hero-sub.annot .rule{animation:ann-rule 1.7s cubic-bezier(.16,1,.3,1) both}
+.hero-sub.annot .sw{animation:ann-sw 1.7s ease-out both}
+.hero-sub.annot .kw-layout .ann{animation-delay:0s}
+.hero-sub.annot .kw-hier .ann{animation-delay:1.5s}
+.hero-sub.annot .kw-colour .ann,.hero-sub.annot .kw-colour .sw{animation-delay:3.2s} /* after hierarchy's tag is gone; they share a spot on mobile */
+@keyframes ann-tag{
+  0%{opacity:0;transform:translateY(5px)}
+  10%,82%{opacity:1;transform:none}
+  100%{opacity:0;transform:translateY(-3px)}
+}
+/* negative insets keep the corner handles, which overhang the frame, from being clipped */
+@keyframes ann-box{
+  0%{opacity:1;clip-path:inset(-4px 100% -4px -4px)}
+  16%,82%{opacity:1;clip-path:inset(-4px -4px -4px -4px)}
+  100%{opacity:0;clip-path:inset(-4px -4px -4px -4px)}
+}
+@keyframes ann-rule{
+  0%{opacity:1;transform:scaleX(0)}
+  16%,82%{opacity:1;transform:scaleX(1)}
+  100%{opacity:0;transform:scaleX(1)}
+}
+@keyframes ann-sw{0%,12%{background:var(--cf-bg-300)}40%,100%{background:var(--cf-bg-100)}}
+@media (prefers-reduced-motion:reduce){
+  .hero-grid,.hero-sub .w,.title-line{animation:none;opacity:1;transform:none;clip-path:none}
+  .hero-sub .ann{display:none}
+}
 .stats{position:absolute;z-index:3;left:18px;right:18px;top:18px;display:flex;justify-content:flex-end;gap:42px;margin:0;padding:0}
 .stat dt{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.10em;color:var(--cf-text-soft)}
 .stat dd{margin:2px 0 0;font-size:22px;font-weight:700;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:var(--cf-text)}
@@ -539,36 +600,6 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   .stats{gap:14px}
   .hero-title{font-size:clamp(36px,12.5vw,54px)}
   .collection-grid{grid-template-columns:1fr}
-}
-
-/* ---------- playful hero screenshot effect ---------- */
-.hero-panel.is-snapping::after{
-  content:"";position:absolute;inset:0;z-index:9;pointer-events:none;
-  background:rgba(245,241,233,.52);
-  animation:hero-capture-flash .76s ease-out forwards;
-}
-.hero-snapshot-card{
-  position:absolute;z-index:12;margin:0;overflow:hidden;pointer-events:none;
-  border-radius:18px;background:var(--cf-bg-100);border:1px solid rgba(66,50,23,.22);
-  box-shadow:0 26px 48px -24px rgba(21,14,5,.72),0 0 0 1px rgba(245,241,233,.55) inset;
-  transform-origin:top left;
-  animation:hero-snapshot-fly 2.16s cubic-bezier(.16,1,.3,1) forwards;
-}
-.hero-snapshot-card *{pointer-events:none!important}
-.hero-snapshot-card .title-line{animation:none!important;transform:translateY(0)!important}
-.hero-snapshot-card .hero-orb{animation:none!important}
-@keyframes hero-capture-flash{
-  0%{opacity:0}
-  18%{opacity:1}
-  100%{opacity:0}
-}
-@keyframes hero-snapshot-fly{
-  0%{opacity:1;transform:translate3d(0,0,0) scale(1);filter:saturate(1)}
-  58%{opacity:.96;transform:translate3d(var(--snap-x),var(--snap-y),0) scale(var(--snap-scale));filter:saturate(.96)}
-  100%{opacity:0;transform:translate3d(var(--snap-x),var(--snap-y),0) scale(var(--snap-scale));filter:saturate(.86)}
-}
-@media (prefers-reduced-motion:reduce){
-  .hero-panel.is-snapping::after,.hero-snapshot-card{animation:none!important;display:none!important}
 }
 
 /* ---------- custom week dropdown (orange selection, no native blue) ---------- */
