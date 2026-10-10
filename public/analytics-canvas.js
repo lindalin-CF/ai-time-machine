@@ -25,14 +25,21 @@ const NAV_NAMES = 3;
 
 /** One line per recorded change, e.g. "The sidebar item Scheduled is now labeled Tasks." */
 function navChangeText(c) {
+  if (c.icon) {
+    return c.change === "added"
+      ? `An icon button (${c.current}) now appears in the ${c.region}.`
+      : `An icon button (${c.previous}) no longer appears in the ${c.region}.`;
+  }
   if (c.change === "renamed") return `The ${c.region} item ${c.previous} is now labeled ${c.current}.`;
   if (c.change === "added") return `A new ${c.current} item appears in the ${c.region}.`;
   return `The ${c.previous} item no longer appears in the ${c.region}.`;
 }
 
-const navKey = (it) => `${it.region}\u0000${it.label}`;
+/** An item without text is shown by its icon label: "an icon button (clock icon)". */
+const navName = (it) => (it.icon ? `an icon button (${it.label})` : it.label);
+const navKey = (it) => `${it.region}\u0000${it.icon ? "icon" : "text"}\u0000${it.label}`;
 const navList = (items) => {
-  const names = items.slice(0, NAV_NAMES).map((it) => `${it.label} (${it.region})`).join(", ");
+  const names = items.slice(0, NAV_NAMES).map((it) => `${navName(it)} (${it.region})`).join(", ");
   return items.length > NAV_NAMES ? `${names} and ${items.length - NAV_NAMES} more` : names;
 };
 
@@ -40,7 +47,8 @@ const navList = (items) => {
  * Menu findings for two cards ({ label, slug, week, metrics }): { diff, same, missing }.
  * Same portal and the newer card's navChanges compare against the other card's week: one line per
  * recorded change. Otherwise both cards' navItems are compared, leaving out the sidebar when either
- * card's sidebar is collapsed.
+ * card's sidebar is collapsed, and leaving out items without text unless both cards record some
+ * (analyses before guideline v1.5.1 have no icon_label, so their icon buttons are not listed).
  */
 function navFindings(a, b, A, B, ma, mb) {
   const samePortal = !!a.slug && a.slug === b.slug;
@@ -58,7 +66,8 @@ function navFindings(a, b, A, B, ma, mb) {
   if (missing.length) return { diff: [], same: [], missing };
 
   const noSidebar = ma.navSidebarVisible === false || mb.navSidebarVisible === false;
-  const keep = (items) => items.filter((it) => !(noSidebar && it.region === "sidebar"));
+  const icons = ma.navItems.some((it) => it.icon) && mb.navItems.some((it) => it.icon);
+  const keep = (items) => items.filter((it) => !(noSidebar && it.region === "sidebar") && (icons || !it.icon));
   const ia = keep(ma.navItems), ib = keep(mb.navItems);
   const where = noSidebar ? " outside the sidebar" : "";
   const kb = new Set(ib.map(navKey)), ka = new Set(ia.map(navKey));

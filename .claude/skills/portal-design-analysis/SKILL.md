@@ -1,7 +1,7 @@
 ---
 name: portal-design-analysis
 description: 依 AI Surface Library 規範分析 AI portal 的桌面截圖，產出可追溯到指標、證據等級與位置的 Design analysis。使用者提供 portal 桌面截圖並要求 design analysis、跑規範、或比較不同週次截圖時使用。
-version: 1.5
+version: 1.5.1
 ---
 
 # AI Portal 桌面截圖 Design Analysis 規範
@@ -145,7 +145,9 @@ version: 1.5
 
 | 欄位 | 值 |
 |---|---|
-| `label` | 項目文字的英文；介面非英文時寫翻譯，原文放同一項的 `original_text`（依第 0 節） |
+| `label` | 項目文字的英文；沒有文字寫 `null`。介面非英文時只寫翻譯，**不要**在 `label` 裡加 `"(translated from …)"`；原文放同一項的 `original_text`（依第 0 節），語言記在 `translated_from` |
+| `translated_from` | 只有 `label` 是翻譯時才填，寫原文語言的英文名稱，例如 `"Chinese"`；否則省略 |
+| `icon_label` | 只有 `label` 為 `null` 時才填：圖示的簡短英文名稱，2 到 3 個字、不超過 24 字元，例如 `"clock icon"`、`"magnifier icon"`。一樣只描述形狀，不寫功能（不寫 `"search icon"`、`"send icon"`）；否則省略 |
 | `region` | `sidebar` / `top bar` / `input area` |
 | `order` | 在該區的順序，由上而下、由左而右，從 1 起算 |
 | `icon` | 只描述形狀，例如 `"clock icon"`；沒有圖示寫 `null`。依第 7 節開頭的規則，不寫功能 |
@@ -155,8 +157,14 @@ version: 1.5
 
 - **完全遵守第 2 節**：帳號專屬清單（對話標題、專案、自訂 GPT／Gem／agent、釘選項目等）不列入 N1。無法確定是產品內建還是帳號專屬時，一律視為排除區、不列入。
 - **看不到的不推測**：藏在「更多」（More、⋯ 等）選單裡、畫面上看不到的項目不列入；「更多」按鈕本身可見時照常列為一項。
-- **沒有文字標籤的圖示按鈕**（例如側欄頂端的放大鏡形圖示）照常列入，`label` 寫 `null`，只記 `icon`。
-- **不列入 N1**：產品 logo／文字標誌；輸入框下方的建議 prompt（記在 D5，它們會輪換，不是導覽項目）。
+- **沒有文字標籤的圖示按鈕**（例如側欄頂端的放大鏡形圖示）照常列入，`label` 寫 `null`，`icon` 照常描述形狀，另記 `icon_label`（見上表）。
+- **列入**：可以點擊的導覽項目，包括**可點擊的區段標題**。區段標題要看得出可以點擊（例如旁邊有展開箭頭或 chevron、樣式與其他導覽項目相同）才列入，例如 Projects 是連結就列入。
+- **不列入 N1**：
+  - 產品 logo／文字標誌。
+  - 輸入框下方的建議 prompt（記在 D5，它們會輪換，不是導覽項目）。
+  - **基本輸入控制**：只有送出（箭頭形）、麥克風／語音、附件／新增（加號形）這三類按鈕，不論有沒有文字標籤，都記在 D4，不列入 N1。
+  - 輸入區裡的**功能按鈕要列入 N1**（`region` 寫 `input area`）：工具、模式切換、模型選擇、設定，以及 Think、Deep research 這類按鈕，有沒有文字都算；沒有文字的照常 `label: null` 加 `icon_label`（例如輸入框裡的滑桿形圖示）。
+  - **不能點擊的區段標題**（例如只是分組文字的 Recents、History）；看不出能不能點擊時一律不列入。
 - **側欄狀態**：N1 另有 `sidebar` 欄位，值為 `"visible"` / `"not_visible"`（側欄收合）/ `"none"`（沒有側欄）。側欄收合時只有 sidebar 區的項目看不到：`sidebar` 寫 `"not_visible"`，`value` 不列 sidebar 區的項目，`note` 寫 `"The sidebar is collapsed; sidebar items are not visible."`；頂列和輸入區的項目照常記錄。
 - 輸入區旁的項目也可能記在 D5，兩個指標各自照規則記錄。
 
@@ -165,7 +173,9 @@ version: 1.5
   "id": "N1",
   "value": [
     { "label": "New chat", "region": "sidebar", "order": 1, "icon": "pencil-on-square icon", "badge": null },
-    { "label": "Tasks", "region": "sidebar", "order": 4, "icon": "clock icon", "badge": null }
+    { "label": "Tasks", "region": "sidebar", "order": 4, "icon": "clock icon", "badge": null },
+    { "label": null, "icon_label": "magnifier icon", "region": "sidebar", "order": 5, "icon": "magnifier-shaped icon", "badge": null },
+    { "label": "Library", "translated_from": "Chinese", "original_text": "程式庫", "region": "sidebar", "order": 6, "icon": "vertical-bars icon", "badge": null }
   ],
   "sidebar": "visible",
   "evidence": "E2",
@@ -313,7 +323,8 @@ N1 每筆變動一筆紀錄：
 ```
 
 - `change`：`added` / `removed` / `renamed` / `badge_changed`。
-- `previous`、`current`：項目名稱；`added` 的 `previous` 與 `removed` 的 `current` 為 `null`。`badge_changed` 時寫兩週的 badge 值，項目名稱寫在 `note`。
+- `previous`、`current`：項目名稱（`label`）；`added` 的 `previous` 與 `removed` 的 `current` 為 `null`。`badge_changed` 時寫兩週的 badge 值，項目名稱寫在 `note`。
+- 沒有文字標籤的項目：`previous`／`current` 寫該項的 `icon_label`，並加上 `"icon_only": true`。兩週都沒有文字的項目只會是 `added`、`removed` 或 `badge_changed`（`label` 都是 `null`，不會有 `renamed`）。
 - `status`：同其他指標，干擾判定見第 9.1 節。
 
 ## 10. 輸出格式（Step 7）
@@ -324,7 +335,7 @@ N1 每筆變動一筆紀錄：
 
 ```json
 {
-  "guideline_version": "1.5",
+  "guideline_version": "1.5.1",
   "portal": "example",
   "week": "2026-09-21",
   "previous_week": "2026-09-14",
@@ -401,6 +412,7 @@ N1 每筆變動一筆紀錄：
   - `renamed`："The sidebar item Scheduled is now labeled Tasks."
   - `added`："A new Tasks item appears in the sidebar."
   - `removed`："The Library item no longer appears in the sidebar."
+  - 沒有文字標籤的項目（`icon_only`）："An icon button (slider icon) now appears in the message box."、"An icon button (clock icon) no longer appears in the sidebar."
 - 選單變化句同樣受第 8 節「把變動說成改版」約束：只寫看得到的變化，不寫 launched、redesigned、introduced a new feature 這類字眼。
 - **頁面文字中不得出現**：指標 ID（L1、H2、C4…）、證據等級（E1、E2）、`approx_pass` 等欄位值、WCAG 條文編號、座標、hex 色碼、下表左欄的術語、以及第 2 節排除區的任何資訊（包括它的存在）。
 - E1 未量測時寫：`Text and background colors were not measured for this capture.`
@@ -448,7 +460,7 @@ N1 每筆變動一筆紀錄：
 6. 摘要與 note 中沒有第 8 節的禁止類型；無標籤圖示與按鈕（包括送出、麥克風）只描述形狀；每句只講一件事。
 7. 有前一週資料時，每筆變動都達第 9.3 節門檻，干擾判定與問候語輪換規則已套用。
 8. 第 1.1 節表列的 portal 已套用對應的收錄方式。
-9. N1 只列產品內建項目，沒有帳號專屬清單或無法確定的項目；側欄收合時 `sidebar` 為 `not_visible`，頂列和輸入區的項目照常記錄；跨週比較中同位置或同圖示的名稱改變記為 `renamed`，沒有拆成移除加新增；有選單變化時比較句先寫選單。
+9. N1 只列產品內建、可以點擊的項目，沒有帳號專屬清單、無法確定的項目、基本輸入控制（送出、麥克風／語音、附件／加號）或不能點擊的區段標題；輸入區的工具、模式、模型、設定等功能按鈕有列入；沒有文字的項目有 `icon_label`；翻譯過的 `label` 沒有 "(translated from …)"，語言記在 `translated_from`；側欄收合時 `sidebar` 為 `not_visible`，頂列和輸入區的項目照常記錄；跨週比較中同位置或同圖示的名稱改變記為 `renamed`，沒有拆成移除加新增；有選單變化時比較句先寫選單。
 
 ## Repo integration
 

@@ -170,6 +170,31 @@ describe('compareFindings menu items (N1)', () => {
     expect(lines.some((l: string) => /Tasks|Scheduled/.test(l))).toBe(false);
   });
 
+  it('states icon-only changes as icon buttons', () => {
+    const b = card('Oct 5', '2026-10-05', { navItems: OCT5, ...changes('2026-09-28',
+      { change: 'added', previous: null, current: 'slider icon', region: 'input area', icon: true },
+      { change: 'removed', previous: 'clock icon', current: null, region: 'sidebar', icon: true }) });
+    expect(compareFindings(sep28, b).slice(0, 2)).toEqual([
+      'An icon button (slider icon) now appears in the input area.',
+      'An icon button (clock icon) no longer appears in the sidebar.',
+    ]);
+  });
+
+  it('lists items without text by their icon label when both cards record them', () => {
+    const icon = (label: string, region = 'sidebar') => ({ label, region, icon: true });
+    const a = card('Sep 14', '2026-09-14', { navItems: [...SEP28, icon('magnifier icon')] });
+    const b = card('Oct 5', '2026-10-05', { navItems: [...SEP28, icon('magnifier icon'), icon('bell icon', 'top bar')] });
+    expect(compareFindings(a, b)[0]).toBe('Oct 5 shows menu items that Sep 14 does not: an icon button (bell icon) (top bar).');
+  });
+
+  it('leaves out items without text when only one card records them', () => {
+    const older = card('Sep 14', '2026-09-14', { navItems: SEP28 });
+    const newer = card('Oct 5', '2026-10-05', { navItems: [...SEP28, { label: 'bell icon', region: 'top bar', icon: true }] });
+    expect(compareFindings(older, newer)[0]).toBe('Both show the same menu items.');
+    const claude = card('Claude', '2026-10-05', { navItems: [...SEP28, { label: 'ghost icon', region: 'top bar', icon: true }] }, 'claude');
+    expect(compareFindings(card('ChatGPT', '2026-10-05', { navItems: OCT5 }), claude)).toContain('ChatGPT and Claude each show 6 menu items.');
+  });
+
   it('uses only visible-change wording', () => {
     const all = [sep28, oct5, card('Claude', '2026-10-05', { navItems: [item('Chats')] }, 'claude')]
       .flatMap((x) => [sep28, oct5].flatMap((y) => compareFindings(x, y)));

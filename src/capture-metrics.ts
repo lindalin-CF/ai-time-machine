@@ -2,8 +2,10 @@
 // Analytics canvas. Only numbers, enums and booleans leave this module: never text from the
 // screenshot (greeting, prompt or note text), hex colours, coordinates, metric IDs or approx_* values.
 // One deliberate exception: the names of the product's own navigation items (N1 labels and N1 entries
-// in changes_vs_previous), which the public summary already states. They are passed only when they are
-// printable ASCII of at most 40 characters in a known region, never notes, icons or badges.
+// in changes_vs_previous), which the public summary already states, and the short icon_label of an item
+// without text. After common punctuation is mapped to ASCII and a legacy " (translated from ...)" suffix
+// is removed, they are passed only when they are printable ASCII (labels at most 60 characters, icon
+// labels at most 24) in a known region, never notes, icon descriptions or badges.
 // The whole object is null unless the analysis is a published, ok, matching desktop analysis outside
 // the system-test weeks. Inside one, each field is parsed on its own: a field whose stored shape is not
 // one of the known shapes is null ("No data") and the others are still returned.
@@ -26,7 +28,7 @@ export interface CaptureMetrics {
   suggestedPrompts: number | null;
   /** Whether a note about the AI's limits (e.g. "can make mistakes") is visible. */
   aiNote: boolean | null;
-  /** N1 navigation items that carry a label (icon-only items are left out). */
+  /** N1 navigation items: labelled items, plus items without text that carry an icon_label (icon: true). */
   navItems: NavItem[] | null;
   /** false when N1 records the sidebar as collapsed, so sidebar items cannot be compared. */
   navSidebarVisible: boolean | null;
@@ -35,12 +37,15 @@ export interface CaptureMetrics {
 }
 
 export type NavRegion = "sidebar" | "top bar" | "input area";
-export interface NavItem { label: string; region: NavRegion }
+/** `label` is the item's text, or its icon_label when `icon` is true. */
+export interface NavItem { label: string; region: NavRegion; icon?: true }
 export interface NavChange {
   change: "added" | "removed" | "renamed";
   previous: string | null;
   current: string | null;
   region: NavRegion;
+  /** previous/current are icon_labels of an item without text. */
+  icon?: true;
 }
 
 type Row = { week?: string | null; slug?: string | null; analysis_by?: string | null; analysis_json?: string | null };
@@ -112,16 +117,36 @@ function aiNote(v: unknown): boolean | null {
 const NAV_REGIONS: readonly string[] = ["sidebar", "top bar", "input area"];
 const NAV_MAX = 30;
 const isRegion = (v: unknown): v is NavRegion => typeof v === "string" && NAV_REGIONS.includes(v);
-/** A navigation item name: printable ASCII, not blank, at most 40 characters. */
-const isNavLabel = (v: unknown): v is string =>
-  typeof v === "string" && v.length <= 40 && /^[\x20-\x7E]+$/.test(v) && !!v.trim();
+const LABEL_MAX = 60;
+const ICON_LABEL_MAX = 24;
+const TO_ASCII: Record<string, string> = {
+  "\u00b7": "-", "\u2022": "-", "\u2027": "-", "\u2219": "-", "\u2013": "-", "\u2014": "-",
+  "\u2018": "'", "\u2019": "'", "\u201c": '"', "\u201d": '"', "\u2026": "...", "\u00a0": " ",
+};
+/**
+ * A navigation item name ready to pass on, or null: common punctuation mapped to ASCII, a legacy
+ * " (translated from ...)" suffix removed, then printable ASCII, not blank, at most `max` characters.
+ */
+function navName(v: unknown, max = LABEL_MAX): string | null {
+  if (typeof v !== "string") return null;
+  const t = v
+    .replace(/[\u00b7\u2022\u2027\u2219\u2013\u2014\u2018\u2019\u201c\u201d\u2026\u00a0]/g, (c) => TO_ASCII[c])
+    .replace(/\s*\(translated from [^)]*\)\s*$/i, "")
+    .replace(/ {2,}/g, " ")
+    .trim();
+  return t && t.length <= max && /^[\x20-\x7E]+$/.test(t) ? t : null;
+}
 
 /** N1 value: an array of { label, region, ... }. Malformed items are dropped; a non-array or more than 30 kept items is null. */
 function navItems(v: unknown): NavItem[] | null {
   if (!Array.isArray(v)) return null;
   const items: NavItem[] = [];
   for (const it of v) {
-    if (isObject(it) && isNavLabel(it.label) && isRegion(it.region)) items.push({ label: it.label, region: it.region });
+    if (!isObject(it) || !isRegion(it.region)) continue;
+    const label = navName(it.label);
+    const iconLabel = it.label === null ? navName(it.icon_label, ICON_LABEL_MAX) : null;
+    if (label) items.push({ label, region: it.region });
+    else if (iconLabel) items.push({ label: iconLabel, region: it.region, icon: true });
   }
   return items.length <= NAV_MAX ? items : null;
 }
@@ -139,12 +164,14 @@ function navChanges(changes: unknown, previousWeek: unknown, week: string): Capt
   const items: NavChange[] = [];
   for (const c of changes) {
     if (!isObject(c) || c.id !== "N1" || c.status !== "changed" || !isRegion(c.region)) continue;
-    const { change, previous, current } = c;
+    const icon = c.icon_only === true;
+    const max = icon ? ICON_LABEL_MAX : LABEL_MAX;
+    const previous = navName(c.previous, max), current = navName(c.current, max);
     const ok =
-      (change === "renamed" && isNavLabel(previous) && isNavLabel(current) && previous !== current) ||
-      (change === "added" && previous === null && isNavLabel(current)) ||
-      (change === "removed" && isNavLabel(previous) && current === null);
-    if (ok) items.push({ change, previous: previous as string | null, current: current as string | null, region: c.region });
+      (c.change === "renamed" && !icon && previous && current && previous !== current) ||
+      (c.change === "added" && c.previous === null && current) ||
+      (c.change === "removed" && previous && c.current === null);
+    if (ok) items.push({ change: c.change as NavChange["change"], previous, current, region: c.region, ...(icon ? { icon: true as const } : {}) });
   }
   return items.length <= NAV_MAX ? { previousWeek, items } : null;
 }

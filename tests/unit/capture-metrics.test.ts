@@ -143,10 +143,36 @@ describe('captureMetrics', () => {
       expect({ ...m, navItems: null, navSidebarVisible: null, navChanges: null }).toEqual(EXPECTED);
     });
 
-    it('drops labels longer than 40 characters or not printable ASCII', () => {
-      const long = 'x'.repeat(41);
-      const items = [label('x'.repeat(40)), label(long), label('Tâches'), label('任務'), label('Tab\tbed'), label('   '), label('Library')];
-      expect(m15({ value: items }).navItems).toEqual([{ label: 'x'.repeat(40), region: 'sidebar' }, { label: 'Library', region: 'sidebar' }]);
+    it('drops labels longer than 60 characters or not printable ASCII', () => {
+      const long = 'x'.repeat(61);
+      const items = [label('x'.repeat(60)), label(long), label('Tâches'), label('任務'), label('Tab\tbed'), label('   '), label('Library')];
+      expect(m15({ value: items }).navItems).toEqual([{ label: 'x'.repeat(60), region: 'sidebar' }, { label: 'Library', region: 'sidebar' }]);
+    });
+
+    it('maps common punctuation to ASCII instead of dropping the item', () => {
+      const items = [label('Free plan · Upgrade'), label('Help – feedback'), label('Kimi’s “Docs”'), label('More…'), label('New\u00a0chat')];
+      expect(m15({ value: items }).navItems!.map((i) => i.label)).toEqual(['Free plan - Upgrade', 'Help - feedback', 'Kimi\'s "Docs"', 'More...', 'New chat']);
+    });
+
+    it('removes a legacy " (translated from ...)" suffix before checking the length', () => {
+      const items = [label('Download desktop app (translated from Chinese)'), label('Library (Translated from Japanese)'), label('Notes (beta)')];
+      expect(m15({ value: items }).navItems!.map((i) => i.label)).toEqual(['Download desktop app', 'Library', 'Notes (beta)']);
+    });
+
+    it('uses icon_label for items without text, up to 24 characters', () => {
+      const items = [
+        { label: null, icon_label: 'clock icon', region: 'sidebar', icon: 'clock-shaped icon with a dot', badge: null },
+        { label: null, icon_label: 'x'.repeat(25), region: 'sidebar' },
+        { label: null, icon_label: 'x'.repeat(24), region: 'top bar' },
+        { label: null, region: 'sidebar', icon: 'magnifier-shaped icon' },
+        { label: 'Tasks', icon_label: 'ignored icon', region: 'sidebar' },
+        { label: 'Tâches', icon_label: 'clock icon', region: 'sidebar' },
+      ];
+      expect(m15({ value: items }).navItems).toEqual([
+        { label: 'clock icon', region: 'sidebar', icon: true },
+        { label: 'x'.repeat(24), region: 'top bar', icon: true },
+        { label: 'Tasks', region: 'sidebar' },
+      ]);
     });
 
     it('drops items in unknown regions or with non-string labels', () => {
@@ -188,6 +214,22 @@ describe('captureMetrics', () => {
           { change: 'removed', previous: 'Sora', current: null, region: 'top bar' },
         ],
       });
+    });
+
+    it('normalizes change names and keeps icon_only changes as icon changes', () => {
+      const changes = [
+        { id: 'N1', change: 'added', previous: null, current: 'slider icon', icon_only: true, region: 'input area', status: 'changed' },
+        { id: 'N1', change: 'removed', previous: 'x'.repeat(25), current: null, icon_only: true, region: 'sidebar', status: 'changed' },
+        { id: 'N1', change: 'renamed', previous: 'clock icon', current: 'bell icon', icon_only: true, region: 'sidebar', status: 'changed' },
+        { id: 'N1', change: 'renamed', previous: 'Agents (translated from Chinese)', current: 'Free plan · Upgrade', region: 'top bar', status: 'changed' },
+        // Legacy v1.5 data: an icon description in current, without icon_only, is kept as a name (52 characters).
+        { id: 'N1', change: 'added', previous: null, current: 'slider-shaped icon (three horizontal lines with dots)', region: 'input area', status: 'changed' },
+      ];
+      expect(m15({}, { changes_vs_previous: changes }).navChanges!.items).toEqual([
+        { change: 'added', previous: null, current: 'slider icon', region: 'input area', icon: true },
+        { change: 'renamed', previous: 'Agents', current: 'Free plan - Upgrade', region: 'top bar' },
+        { change: 'added', previous: null, current: 'slider-shaped icon (three horizontal lines with dots)', region: 'input area' },
+      ]);
     });
 
     it('has an empty list when the previous week had no menu changes', () => {
