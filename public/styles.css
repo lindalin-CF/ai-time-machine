@@ -148,17 +148,19 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 
 /* hero motion: grid draws in, sub copy rises word by word, keywords get design annotations */
 .hero-grid{animation:grid-draw .6s cubic-bezier(.16,1,.3,1) both}
-@keyframes grid-draw{from{clip-path:inset(50% 50%)}to{clip-path:inset(0 0)}}
+/* Same units in both keyframes, so Chrome can interpolate and composite the clip. */
+@keyframes grid-draw{from{clip-path:inset(50% 50% 50% 50%)}to{clip-path:inset(0% 0% 0% 0%)}}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
-/* Words breathe in as one soft wave, left to right: each fades up from a slight blur and
-   drop, starting at its character offset (--c) in the sentence. Durations overlap their
-   neighbours many times over, so no word pops on its own. Only opacity, transform and filter
-   animate, which run on the compositor and stay smooth while app.js is busy on the main thread. */
+/* Words breathe in as one soft wave, left to right: each fades up from a slight drop, starting
+   at its character offset (--c) in the sentence. Durations overlap their neighbours many times
+   over, so no word pops on its own. Keep this to opacity and transform: Chrome runs those on the
+   compositor, so the wave keeps moving while analytics and app.js busy the main thread around 1s.
+   Adding filter:blur() moves it back to the main thread, and it froze there on reload. */
 .hero-sub .w{display:inline-block;
   animation:word-in .9s cubic-bezier(.22,1,.36,1) backwards;animation-delay:calc(.15s + var(--c)*5ms)}
 @keyframes word-in{
-  from{opacity:0;filter:blur(4px);transform:translateY(.16em)}
-  to{opacity:1;filter:none;transform:none}
+  from{opacity:0;transform:translateY(.16em)}
+  to{opacity:1;transform:none}
 }
 .hero-sub .w.l1{color:var(--cf-text)} /* first line, marked by app.js; ::first-line can't style inline-blocks */
 .hero-sub .kw{position:relative;display:inline-block}
