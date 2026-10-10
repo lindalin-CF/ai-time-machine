@@ -19,7 +19,18 @@ describe('homepage (public/index.html)', () => {
     // The hero joins the last two words with &nbsp; so they never wrap apart (::first-line stops text-wrap:pretty working).
     const hero = html.match(/<p class="hero-sub">\s*([\s\S]*?)\s*<\/p>/)![1];
     expect(hero).toContain('design&nbsp;system.');
-    expect(hero.replace(/&nbsp;/g, ' ')).toBe(SUBTITLE);
+    // Screen readers get the sentence from .sr-only; the animated word spans are aria-hidden.
+    expect(hero.match(/<span class="sr-only">([^<]*)<\/span>/)![1]).toBe(SUBTITLE);
+    // The visible words, minus their keyword annotations, must spell the same sentence.
+    const visible = hero
+      .replace(/<span class="sr-only">[^<]*<\/span>/, '')
+      .replace(/<span class="(?:bars|sw)">(?:<b><\/b>)*<\/span>/g, '')
+      .replace(/<span class="ann[^"]*"[^>]*>[^<]*(?:<i><\/i>)*<\/span>/g, '')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    expect(visible).toBe(SUBTITLE);
     expect(html).not.toMatch(/visual\s+design\s+system/i);
     expect(html).not.toContain('A living reference');
   });

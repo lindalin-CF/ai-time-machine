@@ -229,7 +229,8 @@ describe('API sizes', () => {
 
 describe('homepage meta description', () => {
   it('matches the hero subtitle and says nothing about landing pages', () => {
-    const sub = INDEX_HTML.match(/<p class="hero-sub">\s*([\s\S]*?)\s*<\/p>/)![1].replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ');
+    // The full sentence lives in the hero's .sr-only span; the visible copy is split into animated word spans.
+    const sub = INDEX_HTML.match(/<p class="hero-sub">\s*<span class="sr-only">([^<]*)<\/span>/)![1];
     for (const tag of ['name="description"', 'property="og:description"', 'name="twitter:description"']) {
       expect(INDEX_HTML).toContain(`<meta ${tag} content="${sub}" />`);
     }
