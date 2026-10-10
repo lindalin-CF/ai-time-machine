@@ -137,22 +137,29 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   letter-spacing:-.05em;margin:0;max-width:9ch;color:var(--cf-text);
 }
 .title-mask{display:block;overflow:hidden;line-height:1;padding:.04em 0 .08em}
-.title-line{display:block;transform:translateY(110%);animation:title-rise 1.17s cubic-bezier(.16,1,.3,1) forwards;will-change:transform}
-.title-mask:nth-child(1) .title-line{animation-delay:.11s}
-.title-mask:nth-child(2) .title-line{animation-delay:.34s}
-.title-mask:nth-child(3) .title-line{animation-delay:.57s}
+.title-line{display:block;transform:translateY(110%);animation:title-rise .8s cubic-bezier(.16,1,.3,1) forwards;will-change:transform}
+.title-mask:nth-child(1) .title-line{animation-delay:0s}
+.title-mask:nth-child(2) .title-line{animation-delay:.08s}
+.title-mask:nth-child(3) .title-line{animation-delay:.16s}
 @keyframes title-rise{to{transform:translateY(0)}}
 @media (prefers-reduced-motion:reduce){.title-line,.hero-orb::before{animation:none;transform:none}}
 .hero-sub{margin:0;max-width:42ch;color:var(--cf-text-soft);font-size:clamp(18px,2.2vw,28px);line-height:1.18;letter-spacing:-.035em}
 .hero-sub::first-line{color:var(--cf-text)}
 
 /* hero motion: grid draws in, sub copy rises word by word, keywords get design annotations */
-.hero-grid{animation:grid-draw .9s cubic-bezier(.16,1,.3,1) both}
+.hero-grid{animation:grid-draw .6s cubic-bezier(.16,1,.3,1) both}
 @keyframes grid-draw{from{clip-path:inset(50% 50%)}to{clip-path:inset(0 0)}}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
-.hero-sub .w{display:inline-block;opacity:0;transform:translateY(.45em);
-  animation:word-in .6s cubic-bezier(.16,1,.3,1) forwards;animation-delay:calc(.45s + var(--i)*24ms)}
-@keyframes word-in{to{opacity:1;transform:none}}
+/* Words breathe in as one soft wave, left to right: each fades up from a slight blur and
+   drop, starting at its character offset (--c) in the sentence. Durations overlap their
+   neighbours many times over, so no word pops on its own. Only opacity, transform and filter
+   animate, which run on the compositor and stay smooth while app.js is busy on the main thread. */
+.hero-sub .w{display:inline-block;
+  animation:word-in .9s cubic-bezier(.22,1,.36,1) backwards;animation-delay:calc(.15s + var(--c)*5ms)}
+@keyframes word-in{
+  from{opacity:0;filter:blur(4px);transform:translateY(.16em)}
+  to{opacity:1;filter:none;transform:none}
+}
 .hero-sub .w.l1{color:var(--cf-text)} /* first line, marked by app.js; ::first-line can't style inline-blocks */
 .hero-sub .kw{position:relative;display:inline-block}
 .hero-sub .ann{position:absolute;pointer-events:none;opacity:0}
@@ -183,12 +190,15 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .hero-sub.annot .rule{animation:ann-rule 1.7s cubic-bezier(.16,1,.3,1) both}
 .hero-sub.annot .sw{animation:ann-sw 1.7s ease-out both}
 .hero-sub.annot .kw-layout .ann{animation-delay:0s}
+/* Each tag hands off to the next the moment it fades out: by 1.5s the outgoing tag is at 1%
+   opacity and the incoming one reaches 30% within 10ms. No gap, and no visible overlap where
+   hierarchy and colour share a spot on mobile. */
 .hero-sub.annot .kw-hier .ann{animation-delay:1.5s}
-.hero-sub.annot .kw-colour .ann,.hero-sub.annot .kw-colour .sw{animation-delay:3.2s} /* after hierarchy's tag is gone; they share a spot on mobile */
+.hero-sub.annot .kw-colour .ann,.hero-sub.annot .kw-colour .sw{animation-delay:3s}
 @keyframes ann-tag{
   0%{opacity:0;transform:translateY(5px)}
   10%,82%{opacity:1;transform:none}
-  100%{opacity:0;transform:translateY(-3px)}
+  92%,100%{opacity:0;transform:translateY(-3px)}
 }
 /* negative insets keep the corner handles, which overhang the frame, from being clipped */
 @keyframes ann-box{
@@ -203,7 +213,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 }
 @keyframes ann-sw{0%,12%{background:var(--cf-bg-300)}40%,100%{background:var(--cf-bg-100)}}
 @media (prefers-reduced-motion:reduce){
-  .hero-grid,.hero-sub .w,.title-line{animation:none;opacity:1;transform:none;clip-path:none}
+  .hero-grid,.hero-sub .w,.title-line{animation:none;opacity:1;transform:none;clip-path:none;filter:none}
   .hero-sub .ann{display:none}
 }
 .stats{position:absolute;z-index:3;left:18px;right:18px;top:18px;display:flex;justify-content:flex-end;gap:42px;margin:0;padding:0}

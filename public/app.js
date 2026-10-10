@@ -789,7 +789,7 @@ function initHeroAnnotations() {
   if (!sub) return;
 
   const reduced = window.matchMedia("(prefers-reduced-motion:reduce)");
-  const PLAY_MS = 5000; // last annotation starts at 3.2s and runs 1.7s
+  const PLAY_MS = 4800; // last annotation starts at 3s and runs 1.7s
   let playingUntil = 0;
 
   const play = () => {
@@ -801,13 +801,16 @@ function initHeroAnnotations() {
     sub.classList.add("annot");
   };
 
-  // Start right as the last word lands. A fixed timer counts from when this
-  // script runs, which drifts on slow connections. If the words already
-  // finished before this ran, `finished` is resolved and play() runs at once.
+  // Start as the last word settles: its long ease-out already looks done about
+  // 55% of the way in. Timed from the word's own animation rather than from when
+  // this script ran, so slow connections don't add a pause. If the words already
+  // finished (the animation is gone), play() runs at once.
   const words = [...sub.querySelectorAll(".w")];
   const wordIn = words.at(-1)?.getAnimations().find((a) => a.animationName === "word-in");
-  if (wordIn) wordIn.finished.then(play, () => {});
-  else play();
+  if (wordIn) {
+    const t = wordIn.effect.getComputedTiming();
+    setTimeout(play, Math.max(0, t.delay + t.duration * 0.55 - (wordIn.currentTime ?? 0)));
+  } else play();
   sub.addEventListener("mouseenter", play);
 
   // ::first-line doesn't reach into the inline-block word spans, so mark the
