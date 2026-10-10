@@ -180,6 +180,15 @@ describe('compareFindings menu items (N1)', () => {
     ]);
   });
 
+  it('states an icon change with the region of the button', () => {
+    const iconChanged = (region: string) => ({ change: 'icon_changed', previous: 'bubble-clock icon', current: 'dashed bubble icon', region, icon: true });
+    const b = card('Oct 5', '2026-10-05', { navItems: OCT5, ...changes('2026-09-28', iconChanged('top bar'), iconChanged('input area')) });
+    expect(compareFindings(sep28, b).slice(0, 2)).toEqual([
+      'The icon of a top bar button changed (bubble-clock icon \u2192 dashed bubble icon).',
+      'The icon of an input area button changed (bubble-clock icon \u2192 dashed bubble icon).',
+    ]);
+  });
+
   it('lists items without text by their icon label when both cards record them', () => {
     const icon = (label: string, region = 'sidebar') => ({ label, region, icon: true });
     const a = card('Sep 14', '2026-09-14', { navItems: [...SEP28, icon('magnifier icon')] });

@@ -1,7 +1,7 @@
 ---
 name: portal-design-analysis
 description: 依 AI Surface Library 規範分析 AI portal 的桌面截圖，產出可追溯到指標、證據等級與位置的 Design analysis。使用者提供 portal 桌面截圖並要求 design analysis、跑規範、或比較不同週次截圖時使用。
-version: 1.5.1
+version: 1.5.2
 ---
 
 # AI Portal 桌面截圖 Design Analysis 規範
@@ -298,7 +298,7 @@ version: 1.5.1
 | L2 | 差 ≥ 5 個百分點 |
 | L3 | 垂直三等分落段改變，或水平置中與否改變 |
 | L4 | 任一分區差 ≥ 3 |
-| N1 | 任何項目新增、移除、改名，或 badge 改變（只有 `order` 改變不算） |
+| N1 | 任何項目新增、移除、改名、badge 改變，或沒有文字的項目圖示形狀改變（只有 `order` 改變不算） |
 | H1 | 前 3 名的元素或順序改變 |
 | H2 | 差 ≥ 1.0 個百分點 |
 | C2–C4 | 判定結果改變，或比值差 ≥ 0.5 |
@@ -312,7 +312,8 @@ version: 1.5.1
 
 1. 同一 `region` 內 `label` 相同的項目視為同一項；`badge` 不同（包括 `null` 與有值之間）記 `badge_changed`。
 2. **改名**：前一週的某項目在本週不見了，但同一 `region`、同一 `order` 位置（或同樣 `icon`）出現了不同名字的項目，記為 `renamed`，**不要拆成一個 `removed` 加一個 `added`**。例：前一週側欄某位置是 "Scheduled"（clock icon），本週同位置、同圖示變成 "Tasks" → `renamed`。
-3. 前一週剩下沒配對的記 `removed`，本週剩下沒配對的記 `added`。
+3. **圖示改變**：兩週在同一 `region`、同一 `order` 位置都是沒有文字的項目（`label` 都是 `null`），但圖示形狀不同（`icon_label` 不同），記為 `icon_changed`，**不要拆成一個 `removed` 加一個 `added`**。只有圖示的細部角度或描述用字不同、形狀其實相同時不算。例：前一週頂列某位置是 bubble-clock icon，本週同位置變成 dashed bubble icon → `icon_changed`。
+4. 前一週剩下沒配對的記 `removed`，本週剩下沒配對的記 `added`。
 
 **前一週 JSON 沒有 N1**（用 1.5 版以前的規範分析）：有前一週 PNG 時，依第 7.2 節規則從前一週截圖列出它的 N1 再比較，`note` 寫 `"Previous items read from the previous screenshot; the previous analysis predates N1."`；沒有前一週 PNG 時不比較 N1。
 
@@ -322,9 +323,10 @@ N1 每筆變動一筆紀錄：
 { "id": "N1", "change": "renamed", "previous": "Scheduled", "current": "Tasks", "region": "sidebar", "status": "changed", "note": "" }
 ```
 
-- `change`：`added` / `removed` / `renamed` / `badge_changed`。
+- `change`：`added` / `removed` / `renamed` / `badge_changed` / `icon_changed`。
 - `previous`、`current`：項目名稱（`label`）；`added` 的 `previous` 與 `removed` 的 `current` 為 `null`。`badge_changed` 時寫兩週的 badge 值，項目名稱寫在 `note`。
-- 沒有文字標籤的項目：`previous`／`current` 寫該項的 `icon_label`，並加上 `"icon_only": true`。兩週都沒有文字的項目只會是 `added`、`removed` 或 `badge_changed`（`label` 都是 `null`，不會有 `renamed`）。
+- 沒有文字標籤的項目：`previous`／`current` 寫該項的 `icon_label`，並加上 `"icon_only": true`。兩週都沒有文字的項目只會是 `added`、`removed`、`badge_changed` 或 `icon_changed`（`label` 都是 `null`，不會有 `renamed`）。
+- `icon_changed`：`previous`／`current` 寫兩週的 `icon_label`，加上 `"icon_only": true`。例：`{ "id": "N1", "change": "icon_changed", "previous": "bubble-clock icon", "current": "dashed bubble icon", "region": "top bar", "icon_only": true, "status": "changed", "note": "" }`
 - `status`：同其他指標，干擾判定見第 9.1 節。
 
 ## 10. 輸出格式（Step 7）
@@ -335,7 +337,7 @@ N1 每筆變動一筆紀錄：
 
 ```json
 {
-  "guideline_version": "1.5.1",
+  "guideline_version": "1.5.2",
   "portal": "example",
   "week": "2026-09-21",
   "previous_week": "2026-09-14",
@@ -413,6 +415,7 @@ N1 每筆變動一筆紀錄：
   - `added`："A new Tasks item appears in the sidebar."
   - `removed`："The Library item no longer appears in the sidebar."
   - 沒有文字標籤的項目（`icon_only`）："An icon button (slider icon) now appears in the message box."、"An icon button (clock icon) no longer appears in the sidebar."
+  - `icon_changed`："The icon of a top bar button changed from a bubble-clock icon to a dashed bubble icon."（摘要只能用 ASCII，不用箭頭）
 - 選單變化句同樣受第 8 節「把變動說成改版」約束：只寫看得到的變化，不寫 launched、redesigned、introduced a new feature 這類字眼。
 - **頁面文字中不得出現**：指標 ID（L1、H2、C4…）、證據等級（E1、E2）、`approx_pass` 等欄位值、WCAG 條文編號、座標、hex 色碼、下表左欄的術語、以及第 2 節排除區的任何資訊（包括它的存在）。
 - E1 未量測時寫：`Text and background colors were not measured for this capture.`
@@ -460,7 +463,7 @@ N1 每筆變動一筆紀錄：
 6. 摘要與 note 中沒有第 8 節的禁止類型；無標籤圖示與按鈕（包括送出、麥克風）只描述形狀；每句只講一件事。
 7. 有前一週資料時，每筆變動都達第 9.3 節門檻，干擾判定與問候語輪換規則已套用。
 8. 第 1.1 節表列的 portal 已套用對應的收錄方式。
-9. N1 只列產品內建、可以點擊的項目，沒有帳號專屬清單、無法確定的項目、基本輸入控制（送出、麥克風／語音、附件／加號）或不能點擊的區段標題；輸入區的工具、模式、模型、設定等功能按鈕有列入；沒有文字的項目有 `icon_label`；翻譯過的 `label` 沒有 "(translated from …)"，語言記在 `translated_from`；側欄收合時 `sidebar` 為 `not_visible`，頂列和輸入區的項目照常記錄；跨週比較中同位置或同圖示的名稱改變記為 `renamed`，沒有拆成移除加新增；有選單變化時比較句先寫選單。
+9. N1 只列產品內建、可以點擊的項目，沒有帳號專屬清單、無法確定的項目、基本輸入控制（送出、麥克風／語音、附件／加號）或不能點擊的區段標題；輸入區的工具、模式、模型、設定等功能按鈕有列入；沒有文字的項目有 `icon_label`；翻譯過的 `label` 沒有 "(translated from …)"，語言記在 `translated_from`；側欄收合時 `sidebar` 為 `not_visible`，頂列和輸入區的項目照常記錄；跨週比較中同位置或同圖示的名稱改變記為 `renamed`、沒有文字的項目同位置圖示形狀改變記為 `icon_changed`，都沒有拆成移除加新增；有選單變化時比較句先寫選單。
 
 ## Repo integration
 

@@ -25,6 +25,9 @@ const NAV_NAMES = 3;
 
 /** One line per recorded change, e.g. "The sidebar item Scheduled is now labeled Tasks." */
 function navChangeText(c) {
+  if (c.change === "icon_changed") {
+    return `The icon of ${/^[aeiou]/.test(c.region) ? "an" : "a"} ${c.region} button changed (${c.previous} \u2192 ${c.current}).`;
+  }
   if (c.icon) {
     return c.change === "added"
       ? `An icon button (${c.current}) now appears in the ${c.region}.`

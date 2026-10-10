@@ -232,6 +232,21 @@ describe('captureMetrics', () => {
       ]);
     });
 
+    it('keeps icon_changed only for icon_only items with two different icon labels', () => {
+      const ic = (extra: Record<string, unknown>) => ({ id: 'N1', change: 'icon_changed', previous: 'bubble-clock icon', current: 'dashed bubble icon', icon_only: true, region: 'top bar', status: 'changed', ...extra });
+      const changes = [
+        ic({}),
+        ic({ icon_only: undefined }),
+        ic({ current: 'bubble-clock icon' }),
+        ic({ current: 'x'.repeat(25) }),
+        ic({ previous: null }),
+        ic({ status: 'possibly_confounded' }),
+      ];
+      expect(m15({}, { changes_vs_previous: changes }).navChanges!.items).toEqual([
+        { change: 'icon_changed', previous: 'bubble-clock icon', current: 'dashed bubble icon', region: 'top bar', icon: true },
+      ]);
+    });
+
     it('has an empty list when the previous week had no menu changes', () => {
       expect(m15({}, { changes_vs_previous: [] }).navChanges).toEqual({ previousWeek: '2026-09-14', items: [] });
     });

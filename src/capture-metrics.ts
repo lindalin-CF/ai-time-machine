@@ -40,7 +40,7 @@ export type NavRegion = "sidebar" | "top bar" | "input area";
 /** `label` is the item's text, or its icon_label when `icon` is true. */
 export interface NavItem { label: string; region: NavRegion; icon?: true }
 export interface NavChange {
-  change: "added" | "removed" | "renamed";
+  change: "added" | "removed" | "renamed" | "icon_changed";
   previous: string | null;
   current: string | null;
   region: NavRegion;
@@ -170,7 +170,8 @@ function navChanges(changes: unknown, previousWeek: unknown, week: string): Capt
     const ok =
       (c.change === "renamed" && !icon && previous && current && previous !== current) ||
       (c.change === "added" && c.previous === null && current) ||
-      (c.change === "removed" && previous && c.current === null);
+      (c.change === "removed" && previous && c.current === null) ||
+      (c.change === "icon_changed" && icon && previous && current && previous !== current);
     if (ok) items.push({ change: c.change as NavChange["change"], previous, current, region: c.region, ...(icon ? { icon: true as const } : {}) });
   }
   return items.length <= NAV_MAX ? { previousWeek, items } : null;
