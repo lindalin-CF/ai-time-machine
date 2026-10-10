@@ -139,8 +139,8 @@ describe('analytics tags in the HTML', () => {
 });
 
 describe('footer', () => {
-  it('has "Privacy · License · Cookie preferences" after Contact on every page', async () => {
-    expect(LEGAL_LINE).toMatch(/Contact<\/button> &middot; <a href="\/privacy">Privacy<\/a> &middot; <a href="\/license">License<\/a> &middot; <button type="button" class="linkbtn" data-consent-open>Cookie preferences<\/button>$/);
+  it('has "Privacy · Cookie preferences" after Contact on every page', async () => {
+    expect(LEGAL_LINE).toMatch(/Contact<\/button> &middot; <a href="\/privacy">Privacy<\/a> &middot; <button type="button" class="linkbtn" data-consent-open>Cookie preferences<\/button>$/);
     expect(INDEX_HTML).toContain(LEGAL_LINE);
     for (const [name, get] of Object.entries(PAGES)) {
       const html = await (await get('US')).text();

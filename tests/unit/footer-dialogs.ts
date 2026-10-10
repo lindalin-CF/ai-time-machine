@@ -1,15 +1,15 @@
 import { expect } from 'vitest';
 
-// Shared checks for the footer copyright line (with Privacy, License and Cookie preferences) and its two dialogs (homepage and portal pages carry the same markup).
+// Shared checks for the footer copyright line (with License, Privacy and Cookie preferences) and its two dialogs (homepage and portal pages carry the same markup).
 
 export const EMAIL = 'contact@ai-portal-library.dev';
 
 export const LEGAL_LINE =
-  '&copy; 2026 AI Interface Library. All rights reserved. &middot; ' +
+  '&copy; 2026 AI Interface Library. Analyses licensed under CC BY 4.0 &middot; ' +
+  '<a href="/license">License</a> &middot; ' +
   '<button type="button" class="linkbtn" data-dialog="disclaimer" aria-haspopup="dialog">Disclaimer</button> &middot; ' +
   '<button type="button" class="linkbtn" data-dialog="contact" aria-haspopup="dialog">Contact</button> &middot; ' +
   '<a href="/privacy">Privacy</a> &middot; ' +
-  '<a href="/license">License</a> &middot; ' +
   '<button type="button" class="linkbtn" data-consent-open>Cookie preferences</button>';
 
 /** The <dialog> element with the given id, or undefined. */

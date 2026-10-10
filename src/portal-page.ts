@@ -30,8 +30,8 @@ function shortText(s: string, max: number): string {
   return t.length <= max ? t : t.slice(0, max - 1).replace(/\s+\S*$/, "") + "…";
 }
 
-/** Footer copyright line (with Privacy, License and Cookie preferences) + Disclaimer and Contact dialogs. The homepage (public/index.html) carries the same markup; both use /footer-dialogs.js. */
-const FOOTER_LEGAL = `      <div class="legal">&copy; 2026 AI Interface Library. All rights reserved. &middot; <button type="button" class="linkbtn" data-dialog="disclaimer" aria-haspopup="dialog">Disclaimer</button> &middot; <button type="button" class="linkbtn" data-dialog="contact" aria-haspopup="dialog">Contact</button> &middot; <a href="/privacy">Privacy</a> &middot; <a href="/license">License</a> &middot; <button type="button" class="linkbtn" data-consent-open>Cookie preferences</button></div>
+/** Footer copyright and license line (with License, Privacy and Cookie preferences) + Disclaimer and Contact dialogs. The homepage (public/index.html) carries the same markup; both use /footer-dialogs.js. */
+const FOOTER_LEGAL = `      <div class="legal">&copy; 2026 AI Interface Library. Analyses licensed under CC BY 4.0 &middot; <a href="/license">License</a> &middot; <button type="button" class="linkbtn" data-dialog="disclaimer" aria-haspopup="dialog">Disclaimer</button> &middot; <button type="button" class="linkbtn" data-dialog="contact" aria-haspopup="dialog">Contact</button> &middot; <a href="/privacy">Privacy</a> &middot; <button type="button" class="linkbtn" data-consent-open>Cookie preferences</button></div>
       <dialog id="disclaimer" class="site-dialog" aria-labelledby="disclaimer-title">
         <form method="dialog">
           <button type="submit" class="site-dialog-x" aria-label="Close">&times;</button>

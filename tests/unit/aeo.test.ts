@@ -295,7 +295,8 @@ describe('/license', () => {
 
   it('is linked from /how-we-analyze and the homepage footer, and listed in the sitemap', async () => {
     expect(await handleHowWeAnalyze(new Request('https://x/how-we-analyze')).text()).toContain('<a href="/license">See the license</a>');
-    expect(INDEX_HTML).toContain('<a href="/privacy">Privacy</a> &middot; <a href="/license">License</a>');
+    expect(INDEX_HTML).toContain('&copy; 2026 AI Interface Library. Analyses licensed under CC BY 4.0 &middot; <a href="/license">License</a> &middot; ');
+    expect(INDEX_HTML).not.toContain('All rights reserved');
     expect(await (await handleSitemap(t.env)).text()).toMatch(new RegExp(`<loc>${ORIGIN}/license</loc>\\s*<lastmod>2026-10-10</lastmod>`));
   });
 });
