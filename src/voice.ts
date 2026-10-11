@@ -23,7 +23,7 @@ import { createWorkersAI } from "workers-ai-provider";
 import type { Env } from "./types";
 import { listPortals, publishedCaptures } from "./db";
 import { cached } from "./api";
-import { buildVoiceContext, capPageLinks, fluxWithKeyterms, voiceSystemPrompt } from "./voice-context";
+import { buildVoiceContext, capPageLinks, fluxWithKeyterms, stripMarkdown, voiceSystemPrompt } from "./voice-context";
 import { VOICE_RETENTION_MS } from "./voice-room";
 import { QUESTION_LOG_HEADER, logQuestion } from "./question-log";
 
@@ -89,8 +89,10 @@ export class PortalVoiceAgent extends VoiceAgent<Env> {
     // Return the AI SDK `fullStream` (not `textStream`): @cloudflare/voice reads
     // the typed parts and speaks ONLY `text-delta` chunks, so GPT-OSS's reasoning
     // tokens are never sent to TTS. It also avoids the textStream chunk-joining bug.
+    // Markdown is stripped before it is spoken or shown (it was read aloud as "star star").
     // Typed answers keep at most three links on their "Pages:" line; spoken answers have none.
-    return spoken ? result.fullStream : capPageLinks(result.fullStream);
+    const plain = stripMarkdown(result.fullStream);
+    return spoken ? plain : capPageLinks(plain);
   }
 
   /**

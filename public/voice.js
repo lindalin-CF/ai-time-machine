@@ -241,6 +241,12 @@ function noteNewMessages(messages) {
   }
 }
 
+// Answers are plain text: Markdown characters, and list markers at the start of a line, are dropped
+// (the server does the same before speaking; stripMarkdownText in src/voice-context.ts).
+function cleanAnswer(text) {
+  return text.replace(/[*#`_]/g, "").split("\n").map((line) => line.replace(/^([ \t]*)(?:[-\u2022]|\d{1,3}\.)[ \t]+/, "$1")).join("\n");
+}
+
 // Links to this site's pages in an answer ("/portals/chatgpt/2026-10-05", "/changes", or the same
 // with the site address) become clickable; everything else stays plain text.
 const SITE_LINK = /(?:https:\/\/ai-portal-library\.dev)?\/(?:portals\/[a-z0-9-]+(?:\/\d{4}-\d{2}-\d{2})?|changes)(?![\w/-])/g;
@@ -291,7 +297,7 @@ function renderTranscript(messages) {
         }
         div.appendChild(document.createTextNode(m.text));
       } else {
-        fillWithLinks(div, m.text);
+        fillWithLinks(div, cleanAnswer(m.text));
       }
       body.appendChild(div);
     }

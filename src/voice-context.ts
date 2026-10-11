@@ -66,7 +66,7 @@ const COMPARES = /\bweek of \d{4}-\d{2}-\d{2}\b/;
  * The published summary for the prompt, split in two: the description (without the fixed opening and
  * without sentences the measures cover) and the sentences that compare with an earlier week.
  */
-function summaryParts(r: PublishedCapture): { body: string; comparisons: string[] } {
+function summaryParts(r: PublishedCapture): { body: string; comparisons: string[]; compared: { text: string; sources: string[] }[] } {
   let sentences: { text: string; sources: string[] }[] = [];
   try {
     const parsed = JSON.parse(r.analysis_json || "null") as { summary_sentences?: { text?: unknown; sources?: unknown }[] } | null;
@@ -78,9 +78,9 @@ function summaryParts(r: PublishedCapture): { body: string; comparisons: string[
   if (!sentences.length) sentences = r.analysis.replace(/\s+/g, " ").trim().split(/(?<=[.!?])\s+/).map((text) => ({ text, sources: [] }));
   const kept = sentences
     .filter((x, i) => !(i === 0 && FIXED_SUMMARY_OPENING.test(x.text)))
-    .filter((x) => !(x.sources.length && x.sources.every((id) => COVERED.has(id)) && x.sources.some((id) => MEASURED.has(id))))
-    .map((x) => x.text);
-  return { body: kept.filter((t) => !COMPARES.test(t)).join(" "), comparisons: kept.filter((t) => COMPARES.test(t)) };
+    .filter((x) => !(x.sources.length && x.sources.every((id) => COVERED.has(id)) && x.sources.some((id) => MEASURED.has(id))));
+  const compared = kept.filter((x) => COMPARES.test(x.text));
+  return { body: kept.filter((x) => !COMPARES.test(x.text)).map((x) => x.text).join(" "), comparisons: compared.map((x) => x.text), compared };
 }
 
 /** Labelled menu items by region; icon buttons without text are only counted, to keep the prompt short. */
@@ -159,6 +159,35 @@ const TRACKED: Metric[] = [
  * its guideline threshold, as a chain of values with the week each new value was first seen, then its
  * menu changes and the summary sentences that say how a week differs from the one before.
  */
+/** Each value a measure moved to past its threshold, with the value before and the week it was first seen. */
+function metricSteps(t: Metric, ordered: Row[]): { week: string; from: string; to: string }[] {
+  let current: unknown = null;
+  const steps: { week: string; from: string; to: string }[] = [];
+  for (const r of ordered) {
+    const v = r.metrics ? t.get(r.metrics) : null;
+    if (v == null) continue;
+    if (current == null) { current = v; continue; }
+    if (t.differs(current as never, v as never)) {
+      steps.push({ week: r.week, from: t.show(current as never), to: t.show(v as never) });
+      current = v;
+    }
+  }
+  return steps;
+}
+
+/** Menu changes and the summary sentences that say how a week differs from the one before (not "the same as" ones). */
+function datedChanges(ordered: Row[], menu: ChangeEntry[]): { week: string; text: string }[] {
+  return [
+    ...menu.map((c) => ({ week: c.week, text: c.sentence.replace(/\.$/, "") })),
+    ...ordered.flatMap((r) => summaryParts(r).comparisons
+      .filter((c) => !/\b(?:is|are|looks|look|stays|stay) the same\b/i.test(c)) // "no change" sentences
+      .map((c) => ({ week: r.week, text: c.replace(/\.$/, "") }))),
+  ].sort((a, b) => (a.week < b.week ? -1 : a.week > b.week ? 1 : 0));
+}
+
+/** Dates written inside a sentence ("the week of 2026-09-28") in the same short form as the rest. */
+const shortDates = (text: string, year: string) => text.replace(/\b(\d{4}-\d{2}-\d{2})\b/g, (d) => shortWeek(d, year));
+
 export function productChanges(name: string, rows: Row[], menu: ChangeEntry[]): string {
   const ordered = [...rows].sort((a, b) => (a.week < b.week ? -1 : 1)); // oldest first
   if (!ordered.length) return "";
@@ -166,30 +195,95 @@ export function productChanges(name: string, rows: Row[], menu: ChangeEntry[]): 
   const at = (week: string) => `(${shortWeek(week, year)})`;
   const parts: string[] = [];
   for (const t of TRACKED) {
-    let current: unknown = null;
-    let first = "";
-    const steps: string[] = [];
-    for (const r of ordered) {
-      const v = r.metrics ? t.get(r.metrics) : null;
-      if (v == null) continue;
-      if (current == null) { current = v; first = t.show(v as never); continue; }
-      if (t.differs(current as never, v as never)) { steps.push(`${t.show(v as never)} ${at(r.week)}`); current = v; }
-    }
-    if (steps.length) parts.push(`${t.label} ${first} \u2192 ${steps.join(" \u2192 ")}`);
+    const steps = metricSteps(t, ordered);
+    if (steps.length) parts.push(`${t.label} ${steps[0].from} \u2192 ${steps.map((st) => `${st.to} ${at(st.week)}`).join(" \u2192 ")}`);
   }
   // Dated changes lead with the week they were seen; dates inside a sentence are shortened the same way.
-  const seen = (week: string, text: string) =>
-    `seen ${shortWeek(week, year)}: ${text.replace(/\.$/, "").replace(/\b(\d{4}-\d{2}-\d{2})\b/g, (d) => shortWeek(d, year))}`;
-  const dated = [
-    ...menu.map((c) => ({ week: c.week, text: seen(c.week, c.sentence) })),
-    ...ordered.flatMap((r) => summaryParts(r).comparisons
-      .filter((c) => !/\b(?:is|are|looks|look|stays|stay) the same\b/i.test(c)) // "no change" sentences
-      .map((c) => ({ week: r.week, text: seen(r.week, c) }))),
-  ].sort((a, b) => (a.week < b.week ? -1 : a.week > b.week ? 1 : 0));
-  parts.push(...dated.map((d) => d.text));
+  parts.push(...datedChanges(ordered, menu).map((d) => `seen ${shortWeek(d.week, year)}: ${shortDates(d.text, year)}`));
   const span = ordered.length === 1 ? `week of ${shortWeek(ordered[0].week)}` : `${ordered.length} weeks, ${shortWeek(ordered[0].week, year)} to ${shortWeek(ordered.at(-1)!.week)}`;
   if (ordered.length === 1) return `- ${name}: Only one week analyzed (${span}), so there is nothing to compare yet.`;
   return parts.length ? `- ${name} changes (${span}): ${parts.join("; ")}.` : `- ${name}: No changes recorded across ${ordered.length} weeks (${shortWeek(ordered[0].week, year)} to ${shortWeek(ordered.at(-1)!.week)}).`;
+}
+
+type ChangeStatus = "changed" | "possibly_confounded" | "confounded";
+const STATUSES: readonly string[] = ["changed", "possibly_confounded", "confounded"];
+
+/** How the analysis judged each metric's change against the week before (IDs and status only; N1 is handled separately). */
+function changeStatuses(r: PublishedCapture): Map<string, ChangeStatus[]> {
+  const out = new Map<string, ChangeStatus[]>();
+  try {
+    const parsed = JSON.parse(r.analysis_json || "null") as { changes_vs_previous?: { id?: unknown; status?: unknown }[] } | null;
+    for (const c of parsed?.changes_vs_previous ?? []) {
+      if (typeof c?.id !== "string" || c.id === "N1" || typeof c.status !== "string" || !STATUSES.includes(c.status)) continue;
+      out.set(c.id, [...(out.get(c.id) ?? []), c.status as ChangeStatus]);
+    }
+  } catch { /* no statuses */ }
+  return out;
+}
+
+/**
+ * One status for a set of metric IDs: "changed" if any of them changed, else "possibly_confounded" if any
+ * might come from the visit (rotating greetings, pop-ups, promotions), else "confounded" or none.
+ * `fallback`: with no matching ID, judge by all of the analysis's own changes (sentences that cite
+ * changes_vs_previous itself).
+ */
+function statusOf(statuses: Map<string, ChangeStatus[]>, ids: string[], fallback = false): ChangeStatus | null {
+  let found = ids.flatMap((id) => statuses.get(id) ?? []);
+  if (!found.length && fallback) found = [...statuses.values()].flat();
+  for (const st of ["changed", "possibly_confounded", "confounded"] as const) if (found.includes(st)) return st;
+  return null;
+}
+
+// The metric each measured change is judged by, so "this week" follows the analysis's own status.
+const METRIC_ID: Record<string, string> = {
+  "color scheme": "C1", "sidebar width": "L2", "message box size": "H2", "message box position": "L3",
+  "clickable items": "L4", "suggested prompts": "D5", "note about AI mistakes": "D6",
+};
+
+/**
+ * "This week" answers, worked out in code: only the changes first seen in the latest week, per product,
+ * each compared with that product's previous analysed week. Products whose latest analysis is from an
+ * earlier week are named with their week instead of being counted as unchanged.
+ */
+export function thisWeekChanges(latest: Latest[], rowsOf: (name: string) => Row[], menuOf: (name: string) => ChangeEntry[]): string[] {
+  if (!latest.length) return [];
+  const week = latest.map((l) => l.row.week).sort().at(-1)!;
+  const year = week.slice(0, 4);
+  const lines: string[] = [];
+  const unchanged: string[] = [], first: string[] = [], older: string[] = [], rotating: string[] = [];
+  for (const l of latest) {
+    if (l.row.week !== week) { older.push(`${l.name} (latest analysis: week of ${shortWeek(l.row.week, year)})`); continue; }
+    const ordered = [...rowsOf(l.name)].sort((a, b) => (a.week < b.week ? -1 : 1));
+    const previous = ordered.at(-2)?.week;
+    if (!previous) { first.push(l.name); continue; }
+    // Only what the analysis judged "changed" counts; "possibly_confounded" (text that may rotate between
+    // visits, pop-ups, promotions) is named on one line; "confounded" is left out.
+    const statuses = changeStatuses(l.row);
+    const items: string[] = [];
+    let mayRotate = false;
+    const sort = (status: ChangeStatus | null, text: string) => {
+      if (status === "changed") items.push(text);
+      else if (status === "possibly_confounded") mayRotate = true;
+    };
+    for (const t of TRACKED) {
+      for (const st of metricSteps(t, ordered).filter((x) => x.week === week)) sort(statusOf(statuses, [METRIC_ID[t.label]]), `${t.label} ${st.from} \u2192 ${st.to}`);
+    }
+    for (const c of menuOf(l.name).filter((c) => c.week === week)) items.push(c.sentence.replace(/\.$/, "")); // menu changes are "changed" only
+    for (const c of summaryParts(l.row).compared) {
+      if (/\b(?:is|are|looks|look|stays|stay) the same\b/i.test(c.text)) continue;
+      sort(statusOf(statuses, c.sources, true), shortDates(c.text.replace(/\.$/, ""), year));
+    }
+    if (mayRotate) rotating.push(l.name);
+    if (items.length) lines.push(`- ${l.name} (compared with ${shortWeek(previous, year)}): ${items.join("; ")}.`);
+    else unchanged.push(l.name);
+  }
+  return [
+    ...lines,
+    `- No changes this week: ${unchanged.length ? unchanged.join(", ") : "none"}.`,
+    ...(rotating.length ? [`- Text or content that may rotate between visits (greetings, headings, pop-ups, promotions) also differs for: ${rotating.join(", ")}. These are not counted as changes.`] : []),
+    ...(first.length ? [`- First analysed this week, nothing to compare yet: ${first.join(", ")}.`] : []),
+    ...(older.length ? [`- Not analysed this week, so not part of this week's changes: ${older.join(", ")}.`] : []),
+  ];
 }
 
 /**
@@ -244,6 +338,8 @@ export function buildVoiceContext(
       const list = keptRows(p.slug);
       return list.length ? [`- ${p.name}: ${list.map(historyEntry).join("; ")}`] : [];
     });
+    const slugOf = new Map(portals.map((p) => [p.name, p.slug]));
+    const thisWeek = thisWeekChanges(latestRows, (name) => bySlug.get(slugOf.get(name)!) ?? [], (name) => changes.filter((c) => c.slug === slugOf.get(name)));
     const perProduct = portals.flatMap((p) => {
       const list = keptRows(p.slug);
       return list.length ? [productChanges(p.name, list, changes.filter((c) => c.slug === p.slug && kept.has(c.week)))] : [];
@@ -254,6 +350,9 @@ export function buildVoiceContext(
       "",
       "PRODUCT GROUPS, every product in each group, worked out from each product's latest analysis",
       ...(groups.length ? groups : ["- No published analyses yet."]),
+      "",
+      `THIS WEEK'S CHANGES${weeks.length ? `, week of ${shortWeek(weeks[0])}` : ""}: only changes first seen in the latest week, each compared with that product's previous analysed week`,
+      ...(thisWeek.length ? thisWeek : ["- No published analyses yet."]),
       "",
       "CHANGES PER PRODUCT, every change worked out across all analysed weeks (the week in brackets is when it was first seen)",
       ...(perProduct.length ? perProduct : ["- No published analyses yet."]),
@@ -301,13 +400,20 @@ export function voiceSystemPrompt(context: string, spoken: boolean): string {
     "  say so instead of guessing.",
     "- For \"which products\" questions, answer from PRODUCT GROUPS, and for questions about changes, answer from CHANGES",
     "  PER PRODUCT. These lists are already complete: name every product or change they give, with the count, and never",
-    "  pick only some of them. For a change question about one product, include every item on its line and every step",
-    "  of each \"a -> b (week) -> c (week)\" chain, in order.",
+    "  pick only some of them (when the answer is read aloud, the three-item rule below applies, and the rest follow on",
+    "  request). For a change question about one product, include every item on its line and every step of each",
+    "  \"a -> b (week) -> c (week)\" chain, in order.",
     "- Only describe what is visible. Do not judge usability or design quality (no \"user-friendly\", \"intuitive\",",
     "  \"clean\", \"better\"), do not predict what users will do, do not guess design intent, and do not call a change a",
     "  redesign, launch or new feature.",
     "- Do not mention databases, JSON, context or that you were given data.",
-    "- Write plain text: no Markdown, no asterisks, no headings, no tables.",
+    "- Always write plain text. Never use Markdown: no bold or italics, no headings, no bullet or numbered lists, no",
+    "  backticks, no tables. To list things, use full sentences or separate the items with commas.",
+    "- \"This week\" means the latest week. For questions about this week, answer only from THIS WEEK'S CHANGES and name",
+    "  its week; changes listed there are compared with each product's previous analysed week. Do not use older changes.",
+    "  Give the real changes first. Then always add one short sentence naming the products whose text or content may",
+    "  rotate between visits (for example \"Text that may rotate between visits also differs for ChatGPT and Gemini.\"),",
+    "  and do not describe those differences as changes.",
     "",
     "Understanding the question:",
     "- Questions often come from speech recognition and can contain misheard words, or typos. Product names and site terms",
@@ -326,6 +432,10 @@ export function voiceSystemPrompt(context: string, spoken: boolean): string {
       ? [
           "This answer will be read aloud:",
           "- Answer in English, in one to three short sentences unless asked for more.",
+          "- When listing, say at most three items, then ask \"Want me to go through the rest?\" if there are more. If the user",
+          "  says yes, continue with the next three. This also applies to this-week, which-products and change answers: say how",
+          "  many there are in total, give the first three with what changed for each (not just the product names), and ask.",
+          "  Skip the rotating-text sentence until the list is done.",
           "- Never read out web addresses or page paths.",
         ]
       : [
@@ -333,7 +443,7 @@ export function voiceSystemPrompt(context: string, spoken: boolean): string {
           "- Answer in the language of the question (for example Chinese for a Chinese question), in the same script: Traditional",
           "  Chinese for a Traditional Chinese question, Simplified for Simplified. Keep product names and menu item names as",
           "  they are written in the data.",
-          "- Keep it short: one to four sentences, or a short list.",
+          "- Keep it short: one to four sentences. When listing, you can give the complete list, separated by commas.",
           "- If the answer is about specific products or menu changes, end with a line \"Pages:\" followed by the page paths",
           "  given in square brackets in the data for those products or changes, written without the brackets and separated by",
           "  spaces (for example \"Pages: /portals/chatgpt/2026-10-05 /changes\"). Use only paths that appear in the data, and at",
@@ -398,4 +508,54 @@ export async function* capPageLinks<T extends { type: string; text?: unknown }>(
   }
   const out = flush();
   if (out) yield out;
+}
+
+// Markdown that reached speech was read aloud ("star star Grok"), so answers are cleaned before they are
+// spoken or shown: these characters go everywhere, list markers only at the start of a line.
+// public/voice.js cleans displayed text the same way (cleanAnswer).
+const MD_CHARS = /[*#`_]/g;
+const LIST_MARKER = /^([ \t]*)(?:[-\u2022]|\d{1,3}\.)[ \t]+/;
+/** Text at the start of a line that may still turn into a list marker once more arrives. */
+const MAYBE_MARKER = /^[ \t]*(?:[-\u2022]|\d{1,3}\.?)?$/;
+
+/** The same cleanup on a whole text (used for complete answers and in tests). */
+export function stripMarkdownText(text: string): string {
+  return text.replace(MD_CHARS, "").split("\n").map((line) => line.replace(LIST_MARKER, "$1")).join("\n");
+}
+
+/**
+ * Stream version of stripMarkdownText for AI SDK fullStream parts. Characters are dropped one by one,
+ * so a "**" split across chunks is still removed; only a possible list marker at the start of a line
+ * is held back until the next chunk shows whether it is one.
+ */
+export async function* stripMarkdown<T extends { type: string; text?: unknown }>(parts: AsyncIterable<T>): AsyncGenerator<T> {
+  let pending = "";
+  let lineStart = true;
+  let last: T | null = null;
+  const clean = (text: string, final: boolean): string => {
+    let out = "";
+    let rest = pending + text.replace(MD_CHARS, "");
+    pending = "";
+    while (rest) {
+      const nl = rest.indexOf("\n");
+      const line = nl < 0 ? rest : rest.slice(0, nl + 1);
+      rest = nl < 0 ? "" : rest.slice(nl + 1);
+      if (!lineStart) { out += line; lineStart = nl >= 0; continue; }
+      if (nl < 0 && !final && MAYBE_MARKER.test(line)) { pending = line; break; }
+      out += line.replace(LIST_MARKER, "$1");
+      lineStart = nl >= 0;
+    }
+    return out;
+  };
+  for await (const part of parts) {
+    if (part.type === "text-delta" && typeof part.text === "string") {
+      last = part;
+      const text = clean(part.text, false);
+      if (text) yield { ...part, text };
+      continue;
+    }
+    if (pending && last) { const text = clean("", true); if (text) yield { ...last, text }; }
+    yield part;
+  }
+  if (pending && last) { const text = clean("", true); if (text) yield { ...last, text }; }
 }

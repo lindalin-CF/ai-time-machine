@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('@cloudflare/puppeteer', () => ({ default: {} }));
 
 import { listPortals, publishedCaptures } from '../../src/db';
-import { buildVoiceContext, capPageLinks, fluxWithKeyterms, voiceKeyterms, voiceSystemPrompt, FLUX_MODEL, VOICE_CONTEXT_MAX, VOICE_TERMS } from '../../src/voice-context';
+import { buildVoiceContext, capPageLinks, fluxWithKeyterms, stripMarkdown, stripMarkdownText, voiceKeyterms, voiceSystemPrompt, FLUX_MODEL, VOICE_CONTEXT_MAX, VOICE_TERMS } from '../../src/voice-context';
 import { makeEnv } from './fake-env';
 
 // Private text an analysis carries that must never reach the prompt.
@@ -189,7 +189,7 @@ describe('worked-out lists', () => {
     week('2026-09-07', '2026-08-24', { clickable: 24 }); // 1 more: under the threshold of 3
     week('2026-09-21', '2026-09-07', { clickable: 26 });
     week('2026-09-28', '2026-09-21', { clickable: 23, H2: '3.9%' }); // 0.6 points: under the threshold of 1
-    week('2026-10-05', '2026-09-28', { clickable: 23, changes: [renamed], extra: ['The question above the message box differs from the week of 2026-09-28.'] });
+    week('2026-10-05', '2026-09-28', { clickable: 23, changes: [renamed, { id: 'D7', previous: 'a', current: 'b', status: 'possibly_confounded' }], extra: ['The question above the message box differs from the week of 2026-09-28.'] });
   };
 
   it('groups every product, with counts, from its latest analysis', async () => {
@@ -239,6 +239,62 @@ describe('worked-out lists', () => {
     expect(text).not.toContain('The question above the message box differs from the week of 2026-09-28'); // not in the description
   });
 
+  it("lists only this week's changes, against each product's previous analysed week", async () => {
+    chatgptWeeks();
+    t.db.exec(`UPDATE captures SET analysis_by = 'guideline-v1.4', week = '2026-09-28', id = 'grok-2026-09-28' WHERE slug = 'grok'`);
+    t.db.exec(`UPDATE captures SET analysis_json = json_set(analysis_json, '$.week', '2026-09-28') WHERE slug = 'grok'`);
+    add('kimi', 'Kimi', 'Moonshot AI', '2026-09-28', analysis('kimi', '2026-09-28', '2026-09-21'));
+    add('kimi', 'Kimi', 'Moonshot AI', '2026-10-05', analysis('kimi', '2026-10-05', '2026-09-28'));
+    const text = await context();
+    const section = text.slice(text.indexOf("THIS WEEK'S CHANGES"), text.indexOf('CHANGES PER PRODUCT'));
+    expect(section).toContain("THIS WEEK'S CHANGES, week of Oct 5: only changes first seen in the latest week");
+    expect(section).toContain('- ChatGPT (compared with Sep 28): the sidebar item Scheduled is now labeled Tasks.');
+    expect(section).toContain('also differs for: ChatGPT. These are not counted as changes.'); // the question: possibly_confounded
+    expect(section).not.toMatch(/clickable items|light \u2192 dark|Sep 21/); // earlier changes stay out
+    expect(section).toContain('- No changes this week: Kimi.');
+    expect(section).toContain('- First analysed this week, nothing to compare yet: Claude.'); // its 09-28 analysis is unpublished
+    expect(section).toContain("- Not analysed this week, so not part of this week's changes: Grok (latest analysis: week of Sep 28).");
+  });
+
+  it("this week: only 'changed' items count; 'possibly_confounded' ones are named on one line; 'confounded' ones are left out", async () => {
+    t.db.exec(`DELETE FROM captures`);
+    const st = (id: string, status: string) => ({ id, previous: 'a', current: 'b', status });
+    const week = (slug: string, name: string, w: string, prev: string, o: Parameters<typeof analysis>[3]) => add(slug, name, 'Co', w, analysis(slug, w, prev, o));
+    week('gemini', 'Gemini', '2026-09-28', '2026-09-21', { clickable: 11 });
+    week('gemini', 'Gemini', '2026-10-05', '2026-09-28', { clickable: 15, changes: [st('D7', 'possibly_confounded'), st('L4', 'changed')],
+      extra: ['The heading text differs from the week of 2026-09-28.'] });
+    week('qwen', 'Qwen Chat', '2026-09-28', '2026-09-21', { clickable: 16 });
+    week('qwen', 'Qwen Chat', '2026-10-05', '2026-09-28', { clickable: 22, changes: [st('L4', 'possibly_confounded'), st('L1', 'possibly_confounded')],
+      extra: ['The bottom of the screen differs from the week of 2026-09-28 because a rating survey appears there.'] });
+    week('grok', 'Grok', '2026-09-28', '2026-09-21', { clickable: 22 });
+    week('grok', 'Grok', '2026-10-05', '2026-09-28', { clickable: 25, changes: [st('C1', 'confounded')], extra: ['The label on the Fast mode button is brighter than in the week of 2026-09-28.'] });
+    week('copilot', 'Copilot', '2026-09-28', '2026-09-21', { clickable: 20 });
+    week('copilot', 'Copilot', '2026-10-05', '2026-09-28', { clickable: 23, changes: [st('L1', 'changed')], extra: ['The message box is narrower than in the week of 2026-09-28.'] });
+    const text = await context();
+    const section = text.slice(text.indexOf("THIS WEEK'S CHANGES"), text.indexOf('CHANGES PER PRODUCT'));
+    expect(section).toContain('- Gemini (compared with Sep 28): clickable items 11 \u2192 15.'); // L4 changed; the heading may rotate
+    expect(section).toContain('- Copilot (compared with Sep 28): The message box is narrower than in the week of Sep 28.'); // 20 -> 23 has no L4 judgement
+    expect(section).toContain('- No changes this week: Grok, Qwen Chat.');
+    expect(section).toContain('- Text or content that may rotate between visits (greetings, headings, pop-ups, promotions) also differs for: Gemini, Qwen Chat. These are not counted as changes.');
+    expect(section).not.toMatch(/heading text|rating survey|Fast mode|22 \u2192 25|20 \u2192 23/); // possibly confounded, confounded, or not judged a change
+  });
+
+  it('this week: a sentence citing changes_vs_previous itself takes the status of the analysis\'s own changes', async () => {
+    t.db.exec(`DELETE FROM captures`);
+    add('kimi', 'Kimi', 'Moonshot AI', '2026-09-28', analysis('kimi', '2026-09-28', '2026-09-21'));
+    const a = analysis('kimi', '2026-10-05', '2026-09-28', { changes: [{ id: 'D5', previous: 'a', current: 'b', status: 'changed' }] });
+    a.summary_sentences.push({ text: 'The explore inspiration link now sits below the footer, unlike the week of 2026-09-28.', sources: ['changes_vs_previous', 'D5'] });
+    add('kimi', 'Kimi', 'Moonshot AI', '2026-10-05', a);
+    expect(await context()).toContain('- Kimi (compared with Sep 28): The explore inspiration link now sits below the footer, unlike the week of Sep 28.');
+  });
+
+  it('tells the model "this week" means the latest week and its list', () => {
+    const p = voiceSystemPrompt('', false);
+    expect(p).toContain('"This week" means the latest week.');
+    expect(p).toContain("answer only from THIS WEEK'S CHANGES");
+    expect(p).toMatch(/Give the real changes first\. Then always add one short sentence naming the products whose text or content may\s+rotate between visits/);
+  });
+
   it('tells the model to answer from these complete lists', () => {
     const p = voiceSystemPrompt('', false);
     expect(p).toContain('answer from PRODUCT GROUPS');
@@ -281,13 +337,17 @@ describe('voice system prompt', () => {
   it('spoken answers are English and never read addresses; typed answers follow the question language and cite pages', () => {
     const spoken = prompt(true), typed = prompt(false);
     expect(spoken).toContain('Answer in English');
+    expect(spoken).toContain('say at most three items, then ask "Want me to go through the rest?"');
+    expect(spoken).toMatch(/This also applies to this-week, which-products and change answers: say how\s+many there are in total, give the first three with what changed for each/);
+    expect(typed).not.toContain('Want me to go through the rest?');
     expect(spoken).toContain('Never read out web addresses or page paths.');
     expect(spoken).not.toContain('Pages:');
     expect(typed).toContain('Answer in the language of the question (for example Chinese for a Chinese question)');
     expect(typed).toContain('Traditional\n  Chinese for a Traditional Chinese question');
     expect(typed).toContain('end with a line "Pages:"');
     expect(typed).toContain('written without the brackets');
-    expect(typed).toContain('Write plain text: no Markdown');
+    expect(typed).toContain('Always write plain text. Never use Markdown');
+    expect(typed).toContain('separate the items with commas');
     expect(typed).not.toContain('Answer in English');
   });
 });
@@ -347,5 +407,47 @@ describe('capPageLinks', () => {
 
   it('keeps text after the Pages line', async () => {
     expect(text(await run(delta('A.\nPages: /a /b /c /d\nThanks.')))).toBe('A.\nPages: /a /b /c\nThanks.');
+  });
+});
+
+describe('stripMarkdown', () => {
+  type Part = { type: string; text?: string; id?: string };
+  async function* parts(...items: Part[]) { for (const p of items) yield p; }
+  const delta = (text: string): Part => ({ type: 'text-delta', id: 't1', text });
+  const collect = async (gen: AsyncIterable<Part>) => { const out: Part[] = []; for await (const p of gen) out.push(p); return out; };
+  const text = (out: Part[]) => out.filter((p) => p.type === 'text-delta').map((p) => p.text).join('');
+  const run = async (...chunks: string[]) => text(await collect(stripMarkdown(parts(...chunks.map(delta)))));
+
+  it('removes bold, italics, headings and backticks, even when ** is split across chunks', async () => {
+    expect(await run('**Gr', 'ok** is *dark*.')).toBe('Grok is dark.');
+    expect(await run('*', '*Grok*', '*')).toBe('Grok');
+    expect(await run('## Answer\nUse `Tasks` in __the__ sidebar.')).toBe(' Answer\nUse Tasks in the sidebar.');
+  });
+
+  it('removes list markers at the start of a line, even when split across chunks', async () => {
+    expect(await run('- ChatGPT\n- Cl', 'aude\n1', '. Gemini\n\u2022 Poe\n2. ', 'Kimi')).toBe('ChatGPT\nClaude\nGemini\nPoe\nKimi');
+    expect(await run('Products:\n', '-', ' Grok')).toBe('Products:\nGrok');
+  });
+
+  it('keeps hyphens, numbers and dashes that are not list markers', async () => {
+    expect(await run('2026 was a year.\n-based on data\nA - B and 3.3% of the screen')).toBe('2026 was a year.\n-based on data\nA - B and 3.3% of the screen');
+    expect(await run('Meta AI is first.\n1')).toBe('Meta AI is first.\n1'); // a held "1" is flushed at the end
+  });
+
+  it('streams text that cannot be a list marker straight away, and keeps other parts in order', async () => {
+    const out = await collect(stripMarkdown(parts({ type: 'text-start' }, delta('Meta AI '), delta('**9.8%**'), { type: 'text-end' }, { type: 'finish' })));
+    expect(out.map((p) => p.type)).toEqual(['text-start', 'text-delta', 'text-delta', 'text-end', 'finish']);
+    expect(out[1].text).toBe('Meta AI ');
+    expect(text(out)).toBe('Meta AI 9.8%');
+  });
+
+  it('matches the whole-text cleanup', async () => {
+    const answer = '**Dark theme:**\n- ChatGPT\n- Claude\n1. Poe\n## Done `ok` _yes_';
+    expect(await run(...answer.match(/.{1,3}/gs)!)).toBe(stripMarkdownText(answer));
+  });
+
+  it('runs before the link cap, so a bold "Pages:" line is still capped', async () => {
+    const out = await collect(capPageLinks(stripMarkdown(parts(delta('Kimi and Pi.\n**Pa'), delta('ges:** /a /b /c /d')))));
+    expect(text(out)).toBe('Kimi and Pi.\nPages: /a /b /c');
   });
 });
