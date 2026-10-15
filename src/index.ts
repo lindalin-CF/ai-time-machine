@@ -8,47 +8,56 @@ import { handleHomepage } from "./homepage";
 import { isVoiceRoomPath } from "./voice-room";
 import { expireLegacyRoom } from "./voice";
 import { QUESTION_LOG_CRON, purgeOldQuestions, withQuestionLogPermission } from "./question-log";
+import { canonicalRedirect, noindexOnWorkersDev } from "./host";
 
 // Export the Workflow class so the runtime can find it (class_name in wrangler.jsonc).
 export { CaptureWorkflow } from "./workflow";
 // Export the voice Durable Object so the runtime can find it (class_name in wrangler.jsonc).
 export { PortalVoiceAgent } from "./voice";
 
+/** The site's routes; fetch() adds the host handling around them. */
+async function route(request: Request, url: URL, env: Env, ctx: ExecutionContext): Promise<Response> {
+  try {
+    // Voice agent WebSocket + control routes (/agents/portal-voice-agent/<name>).
+    if (url.pathname.startsWith("/agents/")) {
+      // Only per-tab rooms (src/voice-room.ts); a shared room name would mix visitors' conversations.
+      if (!isVoiceRoomPath(url.pathname)) return new Response("not found", { status: 404 });
+      ctx.waitUntil(expireLegacyRoom(env).catch((err) => console.error("[voice] legacy room expiry failed:", err)));
+      // The Durable Object logs questions only when the Worker says analytics are allowed (src/question-log.ts).
+      const routed = await routeAgentRequest(withQuestionLogPermission(request), env);
+      if (routed) return routed;
+    }
+    if (url.pathname.startsWith("/api/")) return await handleApi(request, env, ctx);
+    if (url.pathname.startsWith("/img/")) return await handleImage(request, env);
+    if (url.pathname.startsWith("/portals/")) return await handlePortalPage(request, env);
+    if (url.pathname === "/sitemap.xml") return await handleSitemap(env);
+    if (url.pathname === "/feed.xml") return await handleFeed(env);
+    if (url.pathname === "/how-we-analyze" || url.pathname === "/how-we-analyze/") return handleHowWeAnalyze(request);
+    if (url.pathname === "/privacy" || url.pathname === "/privacy/") return handlePrivacy(request);
+    if (url.pathname === "/license" || url.pathname === "/license/") return handleLicense(request);
+    if (url.pathname === "/changes" || url.pathname === "/changes/") return await handleChanges(request, env);
+    if (url.pathname === "/llms.txt") return await handleLlmsTxt(request, env);
+    if (url.pathname === "/llms-full.txt") return await handleLlmsFullTxt(request, env);
+    if (url.pathname === "/" && (request.method === "GET" || request.method === "HEAD")) return await handleHomepage(request, env);
+  } catch (err) {
+    return new Response(JSON.stringify({ error: String(err) }), {
+      status: 500,
+      headers: { "content-type": "application/json" },
+    });
+  }
+  // Static assets (KUMO gallery). run_worker_first only routes the paths above here,
+  // but keep this fallback so direct navigations still resolve.
+  return env.ASSETS.fetch(request);
+}
+
 export default {
   // ---- HTTP: API + R2 image streaming; everything else falls through to static assets ----
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
-    try {
-      // Voice agent WebSocket + control routes (/agents/portal-voice-agent/<name>).
-      if (url.pathname.startsWith("/agents/")) {
-        // Only per-tab rooms (src/voice-room.ts); a shared room name would mix visitors' conversations.
-        if (!isVoiceRoomPath(url.pathname)) return new Response("not found", { status: 404 });
-        ctx.waitUntil(expireLegacyRoom(env).catch((err) => console.error("[voice] legacy room expiry failed:", err)));
-        // The Durable Object logs questions only when the Worker says analytics are allowed (src/question-log.ts).
-        const routed = await routeAgentRequest(withQuestionLogPermission(request), env);
-        if (routed) return routed;
-      }
-      if (url.pathname.startsWith("/api/")) return await handleApi(request, env, ctx);
-      if (url.pathname.startsWith("/img/")) return await handleImage(request, env);
-      if (url.pathname.startsWith("/portals/")) return await handlePortalPage(request, env);
-      if (url.pathname === "/sitemap.xml") return await handleSitemap(env);
-      if (url.pathname === "/feed.xml") return await handleFeed(env);
-      if (url.pathname === "/how-we-analyze" || url.pathname === "/how-we-analyze/") return handleHowWeAnalyze(request);
-      if (url.pathname === "/privacy" || url.pathname === "/privacy/") return handlePrivacy(request);
-      if (url.pathname === "/license" || url.pathname === "/license/") return handleLicense(request);
-      if (url.pathname === "/changes" || url.pathname === "/changes/") return await handleChanges(request, env);
-      if (url.pathname === "/llms.txt") return await handleLlmsTxt(request, env);
-      if (url.pathname === "/llms-full.txt") return await handleLlmsFullTxt(request, env);
-      if (url.pathname === "/" && (request.method === "GET" || request.method === "HEAD")) return await handleHomepage(request, env);
-    } catch (err) {
-      return new Response(JSON.stringify({ error: String(err) }), {
-        status: 500,
-        headers: { "content-type": "application/json" },
-      });
-    }
-    // Static assets (KUMO gallery). run_worker_first only routes the paths above here,
-    // but keep this fallback so direct navigations still resolve.
-    return env.ASSETS.fetch(request);
+    // www → the bare domain, before anything else (src/host.ts).
+    const redirect = canonicalRedirect(url);
+    if (redirect) return redirect;
+    return noindexOnWorkersDev(url, await route(request, url, env, ctx));
   },
 
   // ---- Cron: daily question-log retention (03:30 UTC) + weekly capture kickoff (Mondays 09:00 UTC) ----
