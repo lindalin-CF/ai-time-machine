@@ -1,7 +1,7 @@
 ---
 name: portal-design-analysis
 description: 依 AI Surface Library 規範分析 AI portal 的桌面截圖，產出可追溯到指標、證據等級與位置的 Design analysis。使用者提供 portal 桌面截圖並要求 design analysis、跑規範、或比較不同週次截圖時使用。
-version: 1.5.2
+version: 1.5.3
 ---
 
 # AI Portal 桌面截圖 Design Analysis 規範
@@ -113,7 +113,7 @@ version: 1.5.2
 | `personalized_content` | `true` / `false` | 主內容區是否有個人化內容（排除區以外）。只寫類型，例如 "greeting includes [name]" |
 | `time_dependent_content` | `true` / `false` + 簡述 | 例如早安／晚安問候。問候語是否會輪換無法從單張截圖判斷，不在此猜測 |
 | `hover_or_focus_visible` | `true` / `false` + 元件類型 | 某元件呈現亮起、底色或外框，而且不像是「目前選取」的狀態（例如游標停在某個圖示上）。只寫元件類型，例如 "sidebar toggle icon"；信心通常為 `low` |
-| `promotional_content` | `true` / `false` + 類型 | 宣傳卡片、升級橫幅、下載 app 提示等短期行銷元素。浮在畫面上的同時記 `modal_present: "partial"`；把頁面推開的橫幅只記這裡 |
+| `promotional_content` | `true` / `false` + 類型 | 宣傳卡片、升級橫幅、下載 app 提示等短期行銷元素，以及歡迎彈窗、onboarding 提示、新功能介紹浮層、評分或意見問卷（見第 9.1 節）。浮在畫面上的同時記 `modal_present: "partial"`；把頁面推開的橫幅只記這裡 |
 | `conversation_open` | `true` / `false` | 見第 1.1 節 |
 | `ui_language` | 語言代碼 | 依介面文字判斷 |
 | `privacy_flag` | `true` / `false` | 見第 2.3 節 |
@@ -269,6 +269,8 @@ version: 1.5.2
 | `promotional_content` | L1、L4、H1、H2、D3 |
 | `conversation_open` | 所有指標標 `confounded`（兩週畫面性質不同，無法比較） |
 
+**彈窗與提示類內容**：歡迎彈窗、onboarding 提示、新功能介紹浮層、評分或意見問卷一律歸入 `promotional_content`。這類元素在兩週之間出現或消失時，因此產生的變動（該元素本身，以及與它重疊或被它推開的所有指標，不限上表列出的指標）一律標 `possibly_confounded`，不標 `changed`；`note` 寫 "Pop-ups, onboarding tips, feature tours and surveys come and go between visits; a single screenshot cannot show a lasting change." 這條規則也適用於 N1。
+
 **問候語輪換**：D7 文字改變一律標 `possibly_confounded`，`note` 寫 "Greetings may rotate between visits; a single screenshot cannot rule this out."
 
 **N1 的干擾判定**（比上表更嚴格，以此為準）：
@@ -337,7 +339,7 @@ N1 每筆變動一筆紀錄：
 
 ```json
 {
-  "guideline_version": "1.5.2",
+  "guideline_version": "1.5.3",
   "portal": "example",
   "week": "2026-09-21",
   "previous_week": "2026-09-14",
