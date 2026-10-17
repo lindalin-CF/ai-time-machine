@@ -2,7 +2,7 @@ import { routeAgentRequest } from "agents";
 import type { Env, CaptureJob } from "./types";
 import { handleApi, handleImage, isoMonday, weekLabel } from "./api";
 import { capturePortal } from "./capture";
-import { handlePortalPage, handleSitemap, handleFeed, handleHowWeAnalyze, handlePrivacy, handleChanges, handleLicense } from "./portal-page";
+import { handlePortalPage, handleSitemap, handleFeed, handleHowWeAnalyze, handlePrivacy, handleChanges, handleLicense, handleChangelog } from "./portal-page";
 import { handleLlmsTxt, handleLlmsFullTxt } from "./aeo";
 import { handleHomepage } from "./homepage";
 import { isVoiceRoomPath } from "./voice-room";
@@ -35,6 +35,7 @@ async function route(request: Request, url: URL, env: Env, ctx: ExecutionContext
     if (url.pathname === "/how-we-analyze" || url.pathname === "/how-we-analyze/") return handleHowWeAnalyze(request);
     if (url.pathname === "/privacy" || url.pathname === "/privacy/") return handlePrivacy(request);
     if (url.pathname === "/license" || url.pathname === "/license/") return handleLicense(request);
+    if (url.pathname === "/changelog" || url.pathname === "/changelog/") return handleChangelog(request);
     if (url.pathname === "/changes" || url.pathname === "/changes/") return await handleChanges(request, env);
     if (url.pathname === "/llms.txt") return await handleLlmsTxt(request, env);
     if (url.pathname === "/llms-full.txt") return await handleLlmsFullTxt(request, env);

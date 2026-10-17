@@ -36,6 +36,7 @@ export async function handleLlmsTxt(request: Request, env: Env): Promise<Respons
       "## Changes",
       "",
       `- [Menu changes](${ORIGIN}/changes): every change to the products' built-in menu items between weekly captures, newest first`,
+      `- [Changelog](${ORIGIN}/changelog): decisions and releases for the library itself, newest first`,
       "",
       "## Method",
       "",

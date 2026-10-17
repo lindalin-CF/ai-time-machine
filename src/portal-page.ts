@@ -8,6 +8,7 @@ import { MOBILE_CAPTURE_SIZE } from "./image-size";
 import { shotAlt, weekInWords } from "./format";
 import { captureMetrics } from "./capture-metrics";
 import { changeEntries, navChangeSentence, navItemName, type ChangeEntry } from "./nav-changes";
+import { CHANGELOG, CHANGELOG_UPDATED, changelogDate, changelogDatetime, utcOffsetLabel, type ChangelogEntry } from "./changelog";
 
 export const ORIGIN = "https://ai-portal-library.dev";
 const HTML_HEADERS = { "content-type": "text/html; charset=utf-8" };
@@ -31,7 +32,7 @@ function shortText(s: string, max: number): string {
 }
 
 /** Footer copyright and license line (with License, Privacy and Cookie preferences) + Disclaimer and Contact dialogs. The homepage (public/index.html) carries the same markup; both use /footer-dialogs.js. */
-const FOOTER_LEGAL = `      <div class="legal">&copy; 2026 AI Interface Library. Analyses licensed under CC BY 4.0 &middot; <a href="/license">License</a> &middot; <button type="button" class="linkbtn" data-dialog="disclaimer" aria-haspopup="dialog">Disclaimer</button> &middot; <button type="button" class="linkbtn" data-dialog="contact" aria-haspopup="dialog">Contact</button> &middot; <a href="/privacy">Privacy</a> &middot; <button type="button" class="linkbtn" data-consent-open>Cookie preferences</button></div>
+const FOOTER_LEGAL = `      <div class="legal">&copy; 2026 AI Interface Library. Analyses licensed under CC BY 4.0 &middot; <a href="/license">License</a> &middot; <a href="/changelog">Changelog</a> &middot; <button type="button" class="linkbtn" data-dialog="disclaimer" aria-haspopup="dialog">Disclaimer</button> &middot; <button type="button" class="linkbtn" data-dialog="contact" aria-haspopup="dialog">Contact</button> &middot; <a href="/privacy">Privacy</a> &middot; <button type="button" class="linkbtn" data-consent-open>Cookie preferences</button></div>
       <dialog id="disclaimer" class="site-dialog" aria-labelledby="disclaimer-title">
         <form method="dialog">
           <button type="submit" class="site-dialog-x" aria-label="Close">&times;</button>
@@ -86,7 +87,7 @@ export function jsonLdScript(data: unknown): string {
   return `  <script type="application/ld+json">${JSON.stringify(data).replace(/</g, "\\u003c")}</script>\n`;
 }
 
-function page(opts: { title: string; description: string; canonical?: string; noindex?: boolean; image?: PreviewImage; jsonLd?: unknown; markdown?: string; consent: ConsentMode; body: string }): string {
+function page(opts: { title: string; description: string; canonical?: string; noindex?: boolean; image?: PreviewImage; jsonLd?: unknown; markdown?: string; head?: string; consent: ConsentMode; body: string }): string {
   return `<!doctype html>
 <html lang="en" data-consent="${opts.consent}">
 <head>
@@ -139,7 +140,7 @@ ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts
     .contact-mail{display:inline-flex;align-items:center;padding:8px 16px;border-radius:8px;background:#231f1a;color:#fffdf9;text-decoration:none}
     .contact-mail:hover{background:#3a332b}
   </style>
-</head>
+${opts.head ?? ""}</head>
 <body>
   <div class="wrap">
     <header><a href="/">&larr; AI Interface Library</a></header>
@@ -392,6 +393,95 @@ export function handleLicense(request: Request): Response {
   });
 }
 
+export const CHANGELOG_URL = `${ORIGIN}/changelog`;
+
+/** Changelog layout: date column with a dot on a connecting line, entry on the right; the date stacks above the title on phones. Colors match page(); the accent is the homepage's orange. */
+const CHANGELOG_HEAD = `  <link rel="stylesheet" href="/fonts/fonts.css" />
+  <style>
+    .changelog{font-family:'Space Grotesk','Inter',system-ui,-apple-system,sans-serif}
+    .changelog .meta{font-size:1.05rem}
+    .cl{list-style:none;margin:56px 0 0;padding:0}
+    .cl-entry{position:relative;display:grid;grid-template-columns:220px minmax(0,1fr);padding-bottom:96px;scroll-margin-top:24px}
+    .cl-entry:last-child{padding-bottom:0}
+    .cl-entry::before{content:"";position:absolute;left:0;top:8px;width:9px;height:9px;border-radius:50%;background:#eb622c;box-shadow:0 0 0 4px #f4efe8;z-index:1}
+    .cl-entry:not(:last-child)::after{content:"";position:absolute;left:4px;top:12px;bottom:-12px;width:1px;background:#d8cfc2}
+    .cl-when{display:flex;flex-direction:column;padding:0 24px}
+    .cl-date{font-weight:700;line-height:1.6}
+    .cl-time{font-size:.85rem;color:#6b6257}
+    .cl-body{font-size:18px;line-height:1.6;min-width:0}
+    .cl-body h2{font-size:40px;line-height:1.1;letter-spacing:-.03em;font-weight:700;margin:0;overflow-wrap:anywhere}
+    .cl-anchor{margin-left:12px;font-size:18px;font-weight:600;letter-spacing:0;color:#cc501e;text-decoration:none;vertical-align:middle}
+    .cl-anchor:hover,.cl-anchor:focus-visible{text-decoration:underline}
+    .cl-copied{margin-left:8px;font-size:.8rem;font-weight:500;letter-spacing:0;color:#6b6257;vertical-align:middle}
+    .cl-body .cl-sub{margin:10px 0 24px;font-style:italic;color:#6b6257}
+    .cl-body ul{list-style:disc;margin:0 0 24px;padding-left:1.2em}
+    .cl-body li{margin:0 0 8px}
+    .cl-body li::marker{color:#6b6257}
+    .cl-body p{margin:0}
+    @media (max-width:720px){
+      .cl{margin-top:40px}
+      .cl-entry{grid-template-columns:minmax(0,1fr);padding-left:24px;padding-bottom:72px}
+      .cl-when{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:0 10px;padding:0;margin-bottom:8px}
+      .cl-body h2{font-size:30px}
+    }
+  </style>
+`;
+
+/** Clicking an entry's "#" also copies its /changelog#<slug> URL. */
+const CHANGELOG_SCRIPT = `  <script>
+    document.addEventListener("click", function (e) {
+      var a = e.target.closest && e.target.closest(".cl-anchor");
+      if (!a || !navigator.clipboard) return;
+      navigator.clipboard.writeText(a.href).then(function () {
+        var note = a.nextElementSibling;
+        note.textContent = "Link copied";
+        clearTimeout(note._t);
+        note._t = setTimeout(function () { note.textContent = ""; }, 2000);
+      }, function () {});
+    });
+  </script>
+`;
+
+function changelogEntry(e: ChangelogEntry): string {
+  const time = e.time ? `\n          <span class="cl-time">${esc(e.time)} &middot; ${esc(utcOffsetLabel())}</span>` : "";
+  return `      <li class="cl-entry" id="${esc(e.slug)}">
+        <time class="cl-when" datetime="${esc(changelogDatetime(e))}">
+          <span class="cl-date">${esc(changelogDate(e.date))}</span>${time}
+        </time>
+        <div class="cl-body">
+          <h2>${esc(e.title)}<a class="cl-anchor" href="/changelog#${esc(e.slug)}" aria-label="Link to ${esc(e.title)}">#</a><span class="cl-copied" aria-live="polite"></span></h2>
+          <p class="cl-sub">${esc(e.subtitle)}</p>
+          <ul>
+${e.bullets.map((b) => `            <li><strong>${esc(b.lead)}:</strong> ${esc(b.text)}</li>`).join("\n")}
+          </ul>
+          <p>${esc(e.closing)}</p>
+        </div>
+      </li>`;
+}
+
+/** /changelog: decisions and releases for the site (src/changelog.ts), newest first. Not /changes, which lists the products' menu changes. */
+export function handleChangelog(request: Request): Response {
+  if (request.method !== "GET" && request.method !== "HEAD") return new Response("method not allowed", { status: 405 });
+  const html = page({
+    consent: consentMode(request),
+    title: "Changelog | AI Interface Library",
+    description: "Decisions and releases for AI Interface Library, newest first.",
+    canonical: CHANGELOG_URL,
+    head: CHANGELOG_HEAD,
+    body: `    <main class="changelog">
+      <h1>Changelog</h1>
+      <p class="meta">Decisions and releases for AI Interface Library.</p>
+      <ol class="cl">
+${CHANGELOG.map(changelogEntry).join("\n")}
+      </ol>
+    </main>
+${CHANGELOG_SCRIPT}`,
+  });
+  return new Response(request.method === "HEAD" ? null : html, {
+    headers: { ...HTML_HEADERS, "cache-control": PRIVATE_HTML_CACHE },
+  });
+}
+
 /** Last content change of /privacy (YYYY-MM-DD): shown on the page and used as its sitemap <lastmod>. */
 export const PRIVACY_UPDATED_DATE = "2026-09-27";
 export const PRIVACY_UPDATED = weekInWords(PRIVACY_UPDATED_DATE);
@@ -486,6 +576,7 @@ export async function handleSitemap(env: Env): Promise<Response> {
     // /changes once it lists something, dated by its newest change.
     const changesMod = changesLastmod(await changes(env));
     if (changesMod) entries.push({ loc: `${ORIGIN}/changes`, lastmod: changesMod, images: [] });
+    entries.push({ loc: CHANGELOG_URL, lastmod: CHANGELOG_UPDATED, images: [] });
     const seen = new Set<string>();
     for (const r of rows) {
       // The portal page shows its newest week, which is the first row for each portal.
