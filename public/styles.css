@@ -220,6 +220,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 }
 .stats{position:absolute;z-index:3;left:18px;right:18px;top:18px;display:flex;justify-content:flex-end;gap:42px;margin:0;padding:0}
 .stat dt{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.10em;color:var(--cf-text-soft)}
+.stat-short{display:none}
 .stat dd{margin:2px 0 0;font-size:22px;font-weight:700;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:var(--cf-text)}
 
 /* ---------- controls ---------- */
@@ -501,21 +502,34 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 
   .hero{margin-top:6px;margin-bottom:24px;padding:16px 0 14px}
   .hero-frame{padding:9px;border-radius:22px}
-  .hero-panel{min-height:590px;border-radius:14px}
-  .hero-orb{left:calc(50% - 58px);top:38%;width:116px;height:116px}
-  .stats{
-    left:14px;
-    right:14px;
-    top:14px;
-    justify-content:flex-start;
-    gap:18px;
+  /* Content sets the height (min-height is only a floor), so long copy grows the panel instead of being clipped. */
+  .hero-panel{
+    min-height:472px;
+    border-radius:14px;
+    display:flex;
+    flex-direction:column;
+    padding:14px 14px 18px;
   }
-  .stat dt{font-size:9px;letter-spacing:.08em}
+  /* Sits in the empty band between the stats row and the title, on the right. */
+  .hero-orb{left:calc(100% - 96px - 18px);top:112px;width:96px;height:96px}
+  .stats{
+    position:relative;
+    order:-1; /* after .hero-copy in the markup; shown first */
+    inset:auto;
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    grid-template-rows:auto auto;
+    grid-auto-flow:column; /* labels share row 1, numbers share row 2, so the numbers line up even if a label wraps */
+    gap:0 14px;
+  }
+  .stat{display:contents}
+  .stat dt{font-size:9px;letter-spacing:.04em;white-space:nowrap}
   .stat dd{font-size:20px}
   .hero-copy{
-    left:14px;
-    right:14px;
-    bottom:18px;
+    position:relative;
+    inset:auto;
+    margin-top:auto;
+    padding-top:24px;
     grid-template-columns:1fr;
     gap:18px;
   }
@@ -608,10 +622,16 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 @media(max-width:420px){
   .topbar{flex-direction:column;align-items:flex-start}
   .topnav{width:100%;justify-content:flex-start}
-  .hero-panel{min-height:640px}
-  .stats{gap:14px}
+  .hero-panel{min-height:512px}
+  .stats{column-gap:10px}
   .hero-title{font-size:clamp(36px,12.5vw,54px)}
   .collection-grid{grid-template-columns:1fr}
+}
+
+/* Below 360px the full stat labels can't fit on one line: show short labels, keep the full text for screen readers. */
+@media(max-width:359px){
+  .stat-full{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+  .stat-short{display:inline}
 }
 
 /* ---------- custom week dropdown (orange selection, no native blue) ---------- */
