@@ -33,7 +33,7 @@ Read `~/AI-Surface-Archive/redaction-ledger.json` (create it as `{"version":1,"i
 ```json
 { "r2_key": "shots/2026-08-24/grok.local.png", "week": "2026-08-24", "slug": "grok", "variant": "desktop",
   "original_sha1": "…", "redacted_sha1": "…", "previous_redacted_sha1": [],
-  "redacted_file": "scripts/local-capture/analysis/work/…", "boxes": [{"x":0,"y":0,"w":0,"h":0,"fill":"#RRGGBB","category":"…"}],
+  "redacted_file": "scripts/local-capture/analysis/work/…", "boxes": [{"x":0,"y":0,"w":0,"h":0,"fill":"#RRGGBB","shape":"rect","category":"…"}],
   "result": "redacted | no change", "date": "YYYY-MM-DD", "upload_status": "pending review | uploaded | not uploaded (excluded) | no change | failed: …",
   "uploaded_at": null, "archived_before_upload": [], "notes": "" }
 ```
@@ -70,21 +70,23 @@ b. If analysis/work/<slug>/<week>/analysis.json exists, read metrics[id=L1].valu
 c. View each image (Read tool). To read small text, write zoomed crops into D/crops/ (new names only), e.g.
    node --input-type=module -e 'import{PNG}from"pngjs";import{readFileSync,writeFileSync,existsSync}from"fs";const[i,o,x,y,w,h,z="3"]=process.argv.slice(1);if(existsSync(o))throw Error("exists");const s=PNG.sync.read(readFileSync(i)),Z=+z,d=new PNG({width:w*Z,height:h*Z});for(let r=0;r<h*Z;r++)for(let c=0;c<w*Z;c++){const si=(((+y+(r/Z|0))*s.width)+(+x+(c/Z|0)))*4,di=(r*w*Z+c)*4;for(let k=0;k<4;k++)d.data[di+k]=s.data[si+k]}writeFileSync(o,PNG.sync.write(d))' D/original-desktop.png D/crops/desktop-sidebar.png 0 300 260 500 3
    Cover: the account holder's name, emails, usernames/handles, conversation or chat titles and previews (history lists, recents, search results), project and folder names, custom or organization agent/bot/GPT/gem names, workspace or organization names, and any other person's name.
-   Keep visible: avatars (photos or initials badges), all product UI (nav labels, built-in model/agent names, buttons, suggestion chips, plan badges like "Free"/"Pro", legal text, promo copy).
+   Avatars (photos or initials badges) are ALWAYS covered, with a circle mask that keeps their position (see d). category "avatar".
+   Keep visible: all product UI (nav labels, built-in model/agent names, buttons, suggestion chips, plan badges like "Free"/"Pro", legal text, promo copy).
    Names, emails, usernames and other identifying details are ALWAYS covered, even inside open conversation content (for example an assistant message or greeting in the main pane that addresses the account holder by name). Cover just those words, not the surrounding message.
    Do NOT cover the rest of open conversation content (messages in the main pane). Flag it as "open conversation, needs decision" instead.
    If unsure whether something is product UI or account-specific, flag it as uncertain; cover it only if it plausibly identifies the account.
 d. For each item, get a tight box: node analysis/measure.mjs extent D/original-<variant>.png <x> <y> <w> <h>
    using a search box that contains only that text (not an avatar or icon next to it). Pad bbox_css_px by 4px on every side, round outward to integers, clamp to the image. Coordinates are image pixels when measure size reports scale 1 or null (both 1280x800 desktop and non-16:10 mobile images); if scale is 2+, multiply by scale.
    Fill color: sample the background right next to the box (measure.mjs colors at 2–3 points just outside it, e.g. 2px left and right of the padded box at mid-height) and use the median/common value. If the neighbours differ (gradient, selected row highlight), split the box or pick the colour that surrounds most of it, and note it.
-   Make sure a padded box never overlaps an avatar, icon or other product UI; shrink it on that side if needed.
-   Write the redacted image in one pass, with a colour per box (no intermediate files):
-   OUT=D/redacted-<variant>.png BOXES='[[x,y,w,h,"#RRGGBB"],...]' node --input-type=module -e 'import{PNG}from"pngjs";import{readFileSync,writeFileSync,existsSync}from"fs";import{resolve}from"path";const[i]=process.argv.slice(1),o=process.env.OUT;if(existsSync(o)||resolve(i)===resolve(o))throw Error("refusing to overwrite "+o);const p=PNG.sync.read(readFileSync(i));for(const[x,y,w,h,c]of JSON.parse(process.env.BOXES)){const v=[1,3,5].map(k=>parseInt(c.slice(k,k+2),16));for(let yy=y;yy<Math.min(p.height,y+h);yy++)for(let xx=x;xx<Math.min(p.width,x+w);xx++){const j=(yy*p.width+xx)*4;p.data[j]=v[0];p.data[j+1]=v[1];p.data[j+2]=v[2];p.data[j+3]=255}}writeFileSync(o,PNG.sync.write(p),{flag:"wx"});console.log("wrote",o)' D/original-<variant>.png
-   View the result (and zoomed crops of each box, new names in D/crops/) and confirm: nothing readable remains (no partial letters, descenders or ellipses), fills blend in, and avatars and product UI are intact. If not, write a new version (redacted-<variant>-v2.png, …) from the ORIGINAL, never from a redacted file, and report the final one.
+   Make sure a padded text box never overlaps an avatar mask, icon or other product UI; shrink it on that side if needed.
+   Avatars: measure the avatar's own edge (measure.mjs extent on a search box around just the avatar), then grow the box by 2px on every side so the circle also covers the anti-aliased rim, round outward and clamp. Mark it "circle". Colour: sample 2–3 points just outside the circle (measure.mjs colors); if the median sample is dark ((R+G+B)/3 < 128) use #5f5f5f, otherwise #c8c8c8. Never use the avatar's own colour.
+   Write the redacted image in one pass from the original, with a colour per box (no intermediate files). A box is [x,y,w,h,"#RRGGBB"] for a rectangle or [x,y,w,h,"#RRGGBB","circle"] for an avatar; a circle fills only the ellipse inside its box and leaves the pixels outside it unchanged. The fill is analysis/fill-boxes.mjs, the same code analysis/redact.mjs uses (run from scripts/local-capture):
+   OUT=D/redacted-<variant>.png BOXES='[[x,y,w,h,"#RRGGBB"],[x,y,w,h,"#5f5f5f","circle"],...]' node --input-type=module -e 'import{PNG}from"pngjs";import{readFileSync,writeFileSync,existsSync}from"fs";import{resolve}from"path";import{fillBoxes}from"./analysis/fill-boxes.mjs";const[i]=process.argv.slice(1),o=process.env.OUT;if(existsSync(o)||resolve(i)===resolve(o))throw Error("refusing to overwrite "+o);const p=PNG.sync.read(readFileSync(i));for(const b of fillBoxes(p,JSON.parse(process.env.BOXES)))console.log("filled",b.shape,b.x,b.y,b.w,b.h,b.fill);writeFileSync(o,PNG.sync.write(p),{flag:"wx"});console.log("wrote",o)' D/original-<variant>.png
+   View the result (and zoomed crops of each box, new names in D/crops/) and confirm: nothing readable remains (no partial letters, descenders or ellipses), no avatar rim or initial shows around a circle, fills blend in, and product UI is intact. If not, write a new version (redacted-<variant>-v2.png, …) from the ORIGINAL, never from a redacted file, and report the final one.
 e. If an image needs no redaction, record "no change" and write no redacted file.
 f. Write D/report.json (new file; if it exists use report-v2.json, …):
-   {"slug":"<slug>","week":"<week>","images":[{"variant":"desktop","r2_key":"…","original_file":"analysis/work/redact/…/original-desktop.png","original_sha1":"…","archive_path":"~/AI-Surface-Archive/…","result":"redacted"|"no change"|"error","redacted_file":"…"|null,"redacted_sha1":"…"|null,"boxes":[{"x":0,"y":0,"w":0,"h":0,"fill":"#RRGGBB","category":"…"}],"flags":["open conversation, needs decision: <where, no content>"],"uncertain":["…"],"needs_decision":true|false,"notes":"…"}]}
-   category is one of: account name, email, username, conversation title, conversation preview, project or folder name, custom agent name, workspace or organization name, other person's name, other (explain in notes without quoting text).
+   {"slug":"<slug>","week":"<week>","images":[{"variant":"desktop","r2_key":"…","original_file":"analysis/work/redact/…/original-desktop.png","original_sha1":"…","archive_path":"~/AI-Surface-Archive/…","result":"redacted"|"no change"|"error","redacted_file":"…"|null,"redacted_sha1":"…"|null,"boxes":[{"x":0,"y":0,"w":0,"h":0,"fill":"#RRGGBB","shape":"rect"|"circle","category":"…"}],"flags":["open conversation, needs decision: <where, no content>"],"uncertain":["…"],"needs_decision":true|false,"notes":"…"}]}
+   category is one of: avatar, account name, email, username, conversation title, conversation preview, project or folder name, custom agent name, workspace or organization name, other person's name, other (explain in notes without quoting text).
    needs_decision is true if there's any flag or anything uncertain.
 
 Reply with exactly this report and nothing else, one block per image:
@@ -93,7 +95,7 @@ IMAGE: <variant> <r2_key>
 RESULT: redacted | no change | error (<reason>)
 ORIGINAL: <path> sha1=<…> ; ARCHIVED: <path> (cmp identical: yes/no)
 REDACTED: <path> sha1=<…> | none
-BOXES: <x,y,w,h fill #hex — category> per line, or none
+BOXES: <x,y,w,h fill #hex [circle] — category> per line, or none
 FLAGS: <list or none>
 UNCERTAIN: <list or none>
 NEEDS_DECISION: yes | no
@@ -105,7 +107,7 @@ For every image a subagent returned, add or update its ledger row (snapshot the 
 
 ## 5. Review page, then stop
 
-Write `W/review.html` (local only, never deployed or published). Use relative image paths (`<slug>/original-desktop.png`). For each image: portal, variant, R2 key, result, the original and redacted version side by side, each at least 600px wide (mobile ~390px), with click-to-open-full-size, the list of boxes with categories and fill colours, flags and uncertain items. Order: images with `needs_decision` first, then redacted, then no change, then skipped/error. Draw a thin outline of each box on the original (absolutely positioned divs scaled to the displayed size) so the reviewer can see what was covered. Put a summary table at the top.
+Write `W/review.html` (local only, never deployed or published). Use relative image paths (`<slug>/original-desktop.png`). For each image: portal, variant, R2 key, result, the original and redacted version side by side, each at least 600px wide (mobile ~390px), with click-to-open-full-size, the list of boxes with categories and fill colours, flags and uncertain items. Order: images with `needs_decision` first, then redacted, then no change, then skipped/error. Draw a thin outline of each box on the original (absolutely positioned divs scaled to the displayed size; circle boxes get `border-radius: 50%`) so the reviewer can see what was covered. Put a summary table at the top.
 
 Then **stop**. Give the user the full path of `review.html`, a one-line tally (redacted / no change / needs decision / skipped / error), and remind them to reply "upload all" or "upload all except <slug/variant>, …". Upload nothing.
 
