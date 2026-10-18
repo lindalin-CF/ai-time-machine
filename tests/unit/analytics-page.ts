@@ -24,10 +24,10 @@ const API: Record<string, unknown> = {
 };
 const captures = (week: string) => ({ week, label: `Week of ${week}`, captures: [cap('chatgpt', 'ChatGPT', week), cap('claude', 'Claude', week)] });
 
-type SiteOpts = { width?: number; hasTouch?: boolean; clipboard?: boolean; storage?: Record<string, string>; initScript?: string; shotShaped?: boolean; weeks?: string[]; clock?: boolean };
+type SiteOpts = { width?: number; hasTouch?: boolean; clipboard?: boolean; storage?: Record<string, string>; initScript?: string; shotShaped?: boolean; weeks?: string[]; clock?: boolean; pages?: Record<string, string> };
 
 /** The homepage at `hash` ("" for the gallery), loaded. `storage` is put in localStorage and `initScript` runs before the page does;
- * `weeks` (newest first) replaces the archived weeks. `clock` installs Playwright's fake timers before the page runs (time still
+ * `weeks` (newest first) replaces the archived weeks. `pages` serves more HTML pages by path (for example a server-rendered portal page). `clock` installs Playwright's fake timers before the page runs (time still
  * flows until a test pauses it with pauseClock()). */
 export async function openSite(browser: Browser, hash: string, opts: SiteOpts = {}): Promise<Page> {
   const context = await browser.newContext({ viewport: { width: opts.width ?? 1280, height: 900 }, hasTouch: opts.hasTouch });
@@ -38,6 +38,7 @@ export async function openSite(browser: Browser, hash: string, opts: SiteOpts = 
     const url = new URL(route.request().url());
     if (url.host !== 'site.test') return route.abort();
     if (url.pathname === '/') return route.fulfill({ contentType: 'text/html', body: INDEX_HTML });
+    if (opts.pages?.[url.pathname]) return route.fulfill({ contentType: 'text/html', body: opts.pages[url.pathname] });
     if (url.pathname === '/api/captures') return route.fulfill({ json: captures(url.searchParams.get('week') || WEEKS[0]) });
     if (url.pathname === '/api/weeks' && opts.weeks) return route.fulfill({ json: { weeks: opts.weeks.map((week) => ({ week, label: `Week of ${week}` })) } });
     if (API[url.pathname]) return route.fulfill({ json: API[url.pathname] });
@@ -53,6 +54,36 @@ export async function openSite(browser: Browser, hash: string, opts: SiteOpts = 
   await page.waitForLoadState('load');
   return page;
 }
+
+/**
+ * Runs before each page: on every DOM change and every animation frame, records which views are visible and
+ * whether the nav link for `view` is coloured as active. Frames before styles.css has loaded are skipped (the
+ * browser does not paint them), so pages without it (server-rendered pages) record nothing.
+ */
+export const probe = (view: string, nav: string) => `(() => {
+  const frames = window.__frames = [];
+  const check = () => {
+    const css = document.querySelector('link[href="/styles.css"]');
+    if (!css || !css.sheet || !document.body) return;
+    const vis = (sel) => { const el = document.querySelector(sel); return !!el && el.checkVisibility(); };
+    const link = document.querySelector('.topnav-link[data-nav="${nav}"]');
+    const other = document.querySelector('.topnav-link:not([data-nav="${nav}"])');
+    frames.push({
+      gallery: vis('#galleryView') || vis('.hero'),
+      target: vis('${view}'),
+      navActive: !!link && !!other && getComputedStyle(link).color !== getComputedStyle(other).color,
+      loading: !!document.querySelector('#anCanvasWrap .an-loading'),
+      routed: !!document.querySelector('.topnav-link.active'),
+    });
+  };
+  new MutationObserver(check).observe(document, { subtree: true, childList: true, attributes: true });
+  const tick = () => { check(); requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+})();`;
+
+export type Frame = { gallery: boolean; target: boolean; navActive: boolean; loading: boolean; routed: boolean };
+/** The frames probe() recorded on the current page. */
+export const frames = (page: Page) => page.evaluate(() => (window as unknown as { __frames: Frame[] }).__frames);
 
 /** Stop the page's timers (setTimeout, requestAnimationFrame); after this only page.clock.runFor() moves them on.
  * The page's fake time keeps running until pauseAt() arrives, so it jumps 10s ahead to stay in the future (a target in

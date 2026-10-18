@@ -1,39 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { chromium, type Browser, type Page } from 'playwright';
-import { WEEKS, openSite } from './analytics-page';
+import { WEEKS, frames, openSite, probe } from './analytics-page';
 
 // Links to #compare, #collection and #notes show that view from the first paint (html[data-view], set by the
 // inline script in index.html's <head>), never the homepage; Compare opens in Canvas at 136%.
 
-/**
- * Runs before the page: on every DOM change and every animation frame, records which views are visible and
- * whether the nav link for `view` is coloured as active. Frames before styles.css has loaded are skipped (the
- * browser does not paint them).
- */
-const probe = (view: string, nav: string) => `(() => {
-  const frames = window.__frames = [];
-  const check = () => {
-    const css = document.querySelector('link[href="/styles.css"]');
-    if (!css || !css.sheet || !document.body) return;
-    const vis = (sel) => { const el = document.querySelector(sel); return !!el && el.checkVisibility(); };
-    const link = document.querySelector('.topnav-link[data-nav="${nav}"]');
-    const other = document.querySelector('.topnav-link:not([data-nav="${nav}"])');
-    frames.push({
-      gallery: vis('#galleryView') || vis('.hero'),
-      target: vis('${view}'),
-      navActive: !!link && !!other && getComputedStyle(link).color !== getComputedStyle(other).color,
-      loading: !!document.querySelector('#anCanvasWrap .an-loading'),
-      routed: !!document.querySelector('.topnav-link.active'),
-    });
-  };
-  new MutationObserver(check).observe(document, { subtree: true, childList: true, attributes: true });
-  const tick = () => { check(); requestAnimationFrame(tick); };
-  requestAnimationFrame(tick);
-})();`;
-
-type Frame = { gallery: boolean; target: boolean; navActive: boolean; loading: boolean; routed: boolean };
-const frames = (page: Page) => page.evaluate(() => (window as unknown as { __frames: Frame[] }).__frames);
 const HERO_ANIMATIONS = ['title-rise', 'word-in', 'grid-draw', 'orb-flow', 'ann-tag', 'ann-box', 'ann-rule', 'ann-sw'];
 const heroAnimations = (page: Page) => page.evaluate((names) =>
   document.getAnimations().map((a) => (a as CSSAnimation).animationName).filter((n) => names.includes(n)), HERO_ANIMATIONS);

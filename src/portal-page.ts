@@ -209,6 +209,42 @@ function notFound(request: Request): Response {
   return new Response(html, { status: 404, headers: { ...HTML_HEADERS, "cache-control": PRIVATE_HTML_CACHE } });
 }
 
+/**
+ * The Compare page (public/index.html) in Week by week mode, Canvas, desktop, for one portal and two weeks (newer first),
+ * in the same format as its Copy link button (buildAnalyticsHash in public/analytics-share.js), so it opens as a shared link.
+ */
+export function compareWeeksHash(slug: string, weeks: [string, string]): string {
+  return `#compare?view=canvas&mode=time&portal=${encodeURIComponent(slug)}&weeks=${weeks.map(encodeURIComponent).join(",")}&device=desktop`;
+}
+
+/**
+ * The two weeks a portal page compares: the shown week and the nearest newer one (the "Next week" link), newer first.
+ * The hub and the latest week have no newer week, so they use the nearest older one (the "Previous week" link).
+ * Null with fewer than two captures.
+ */
+export function compareWeeks(curWeek: string | null, prevWeek: string | null, nextWeek: string | null): [string, string] | null {
+  if (!curWeek) return null;
+  if (nextWeek) return [nextWeek, curWeek];
+  if (prevWeek) return [curWeek, prevWeek];
+  return null;
+}
+
+/**
+ * Portal pages with a Compare button: it sits at the right end of the week links' row (on its own line, left-aligned,
+ * when the row wraps). Styled like the active Desktop/Mobile toggle on the homepage (.vt-btn.active in public/styles.css).
+ */
+const COMPARE_HEAD = `  <link rel="stylesheet" href="/fonts/fonts.css" />
+  <style>
+    .weeknav-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;margin:0 0 24px}
+    .weeknav-row.solo{justify-content:flex-end}
+    .weeknav-row .weeknav{margin:0}
+    .compare-cta{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid #d9cebd;border-radius:8px;background:#f5f1e9;color:#cc501e;
+      font:600 12.5px/1.2 'Space Grotesk','Inter',system-ui,-apple-system,sans-serif;text-decoration:none;white-space:nowrap;box-shadow:0 1px 3px rgba(66,50,23,.12)}
+    .compare-cta:hover{background:#ded4c6}
+    .compare-cta:focus-visible{outline:2px solid #eb622c;outline-offset:2px}
+  </style>
+`;
+
 /** True for a real calendar date written YYYY-MM-DD. */
 function isValidWeek(w: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(w)) return false;
@@ -244,6 +280,7 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
   const prevWeek = curWeek ? weeks.find((w) => w < curWeek) ?? null : null; // nearest older
   const nextWeek = curWeek ? [...weeks].reverse().find((w) => w > curWeek) ?? null : null; // nearest newer
   const isLatest = !!curWeek && curWeek === latestWeek;
+  const compareHash = (() => { const w = compareWeeks(curWeek, prevWeek, nextWeek); return w ? compareWeeksHash(slug, w) : null; })();
   // Every weekly page is its own canonical (and sitemap) URL, so it stays stable when a newer week arrives.
   const canonical = weekParam !== null ? `${ORIGIN}/portals/${slug}/${weekParam}` : `${ORIGIN}/portals/${slug}`;
 
@@ -282,7 +319,14 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
     ? `<a href="/portals/${esc(slug)}" rel="next">Next week (${esc(nextWeek)}) &rarr;</a>`
     : `<a href="/portals/${esc(slug)}/${esc(nextWeek)}" rel="next">Next week (${esc(nextWeek)}) &rarr;</a>`);
   if (latestWeek && !isLatest) navLinks.push(`<a href="/portals/${esc(slug)}">Latest (${esc(latestWeek)})</a>`);
-  const weekNav = navLinks.length ? `      <nav class="weeknav" aria-label="${esc(name)} weekly captures">${navLinks.join(" ")}</nav>\n` : "";
+  const nav = navLinks.length ? `<nav class="weeknav" aria-label="${esc(name)} weekly captures">${navLinks.join(" ")}</nav>` : "";
+  const compareLink = compareHash
+    ? `<a class="compare-cta" href="/${esc(compareHash)}" aria-label="Compare ${esc(name)} week by week">Compare <span class="arrow" aria-hidden="true">&rarr;</span></a>`
+    : "";
+  // Compare shares the week links' row, at its right end (alone on the right when there are no week links).
+  const weekNav = compareLink
+    ? `      <div class="weeknav-row${nav ? "" : " solo"}">\n${nav ? `        ${nav}\n` : ""}        ${compareLink}\n      </div>\n`
+    : nav ? `      ${nav}\n` : "";
 
   const timelineHtml = weekParam !== null ? "" : `      <section class="timeline"><h2>How the ${esc(name)} UI changed</h2>
 ${timeline.length
@@ -302,6 +346,7 @@ ${timelineHtml}      <section class="analysis"><h2>Design analysis</h2><p>${esc(
   if (markdown) {
     const md = portalMarkdown({
       name, company: portal.company, canonical, cap, timeline: weekParam === null ? timeline : null, slug,
+      compare: compareHash ? `${ORIGIN}/${compareHash}` : null,
       shots: shotImages.map((img) => ({ device: img.device, url: img.url.startsWith("/") ? `${ORIGIN}${img.url}` : img.url })),
     });
     const headers: Record<string, string> = { ...MARKDOWN_HEADERS, "cache-control": "public, max-age=3600", link: `<${canonical}>; rel="canonical"` };
@@ -356,6 +401,7 @@ ${timelineHtml}      <section class="analysis"><h2>Design analysis</h2><p>${esc(
     canonical,
     markdown: `${canonical}.md`,
     noindex: !!cap && SYSTEM_TEST_WEEKS.includes(cap.week),
+    head: compareHash ? COMPARE_HEAD : undefined,
     body,
   });
   return new Response(request.method === "HEAD" ? null : html, {
@@ -728,7 +774,7 @@ ${list}
 }
 
 /** Markdown version of a portal page: the same facts as the HTML page, plus its menu items and menu changes. */
-function portalMarkdown(o: { name: string; slug: string; company: string; canonical: string; cap: CaptureRow | null; timeline: TimelineWeek[] | null; shots: { device: string; url: string }[] }): string {
+function portalMarkdown(o: { name: string; slug: string; company: string; canonical: string; cap: CaptureRow | null; timeline: TimelineWeek[] | null; shots: { device: string; url: string }[]; compare: string | null }): string {
   const lines = [`# ${o.name}`, "", `- Company: ${o.company}`];
   // Hub only: the same "How the <Name> UI changed" list as the HTML page.
   const timeline = o.timeline === null ? [] : [`## How the ${o.name} UI changed`, "", ...(o.timeline.length
@@ -736,7 +782,7 @@ function portalMarkdown(o: { name: string; slug: string; company: string; canoni
     : [`No menu changes have been recorded for ${o.name} yet.`]), ""];
   if (!o.cap) return [...lines, `- Page: ${o.canonical}`, "", `No captures yet for ${o.name}.`, "", ...timeline].join("\n");
   const cap = o.cap;
-  lines.push(`- Week: week of ${weekInWords(cap.week)} (${cap.week})`, `- Page: ${o.canonical}`, "", "## Design analysis", "", displayedAnalysis(cap), "");
+  lines.push(`- Week: week of ${weekInWords(cap.week)} (${cap.week})`, `- Page: ${o.canonical}`, ...(o.compare ? [`- Compare week by week: ${o.compare}`] : []), "", "## Design analysis", "", displayedAnalysis(cap), "");
 
   const m = captureMetrics(cap);
   lines.push("## Menu items", "");

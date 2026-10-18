@@ -15,6 +15,18 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "compare-from-portal-pages",
+    date: "2026-10-18",
+    time: "17:26",
+    title: "Compare From Any Product Page",
+    subtitle: "One click from a product to its last two weeks side by side",
+    bullets: [
+      { lead: "Compare button", text: "Each product page has a Compare button next to the capture date. It opens Compare in Week by week, with that product and two neighbouring weeks on the canvas." },
+      { lead: "Which weeks", text: "A past week opens next to the week after it; the latest week opens next to the week before it." },
+    ],
+    closing: "Open any product page and click Compare.",
+  },
+  {
     slug: "analytics-is-now-compare",
     date: "2026-10-18",
     time: "13:51",
