@@ -1,5 +1,5 @@
 // AI Surface Library — front-end controller
-import { anCanvasState, mountAnCanvas, unmountAnCanvas } from "./analytics-canvas.js";
+import { anCanvasState, findingsCellHTML, mountAnCanvas, tableFindings, unmountAnCanvas } from "./analytics-canvas.js";
 import { buildAnalyticsHash, compareHash, hashRoute, parseAnalyticsHash } from "./analytics-share.js";
 import { weekPick } from "./analytics-weekpick.js";
 
@@ -1569,6 +1569,7 @@ function anTableHTML(cols) {
     if (!src) return `<td><div class="an-noshot">${c.cap ? (an.device === "mobile" ? "No mobile shot" : "—") : "No capture"}</div></td>`;
     return `<td><div class="an-shot an-shot--${an.device === "mobile" ? "mobile" : "desktop"}" data-full="${esc(src)}" data-title="${esc(c.label)}" data-file="${esc((c.cap.slug || "shot") + "-" + (c.cap.week || "") + (an.device === "mobile" ? "-mobile" : ""))}"><img loading="lazy" src="${esc(thumbUrl(src, 1280))}" alt="${esc(shotAlt(c.portalName, an.device === "mobile" ? "mobile" : "desktop", c.cap.week))}"${sizeAttrs(shotSize(c.cap, an.device === "mobile"))} /></div></td>`;
   })));
+  rows.push(...anFindingRows(cols));
   rows.push(anRow("Brand colour", cols.map((c) =>
     c.cap && c.cap.brand ? `<td><span class="an-swatch" style="background:${esc(c.cap.brand)}"></span><code>${esc(String(c.cap.brand).toUpperCase())}</code></td>` : `<td>—</td>`
   )));
@@ -1591,6 +1592,39 @@ function anTableHTML(cols) {
   return `<table class="an-table"><thead>${head}</thead><tbody>${rows.join("")}</tbody></table>`;
 }
 function anRow(label, tds) { return `<tr><th class="an-rowhead">${esc(label)}</th>${tds.join("")}</tr>`; }
+
+/** A Table column as a findings card (public/analytics-canvas.js): the same fields the Canvas cards use. */
+const anFindingCard = (c) => ({ label: c.label, slug: c.cap ? c.cap.slug : null, week: c.cap ? c.cap.week : null, metrics: c.cap && c.cap.metrics ? c.cap.metrics : null });
+
+/**
+ * Differences and Similarities rows, from the same findings as the Canvas box. Two columns: one cell spanning both.
+ * More columns: Week by week compares each week with the next older one (the last column is the oldest shown);
+ * Across products compares each product with the first column. Metrics come from the desktop analysis only, so
+ * with Mobile selected each cell says so.
+ */
+function anFindingRows(cols) {
+  const note = an.device === "mobile" ? "From the desktop analysis" : "";
+  const muted = (text) => `<div class="an-cmp-empty">${esc(text)}</div>`;
+  const row = (kind, label, cells) => `<tr class="an-cmp-row"><th class="an-rowhead">${esc(label)}</th>${cells(kind).join("")}</tr>`;
+  let cells;
+  if (cols.length === 2) {
+    const [a, b] = cols;
+    const f = tableFindings(anFindingCard(a), anFindingCard(b));
+    cells = (kind) => [`<td class="an-cmp an-cmp--span" colspan="2"><div class="an-cmp-inner">${findingsCellHTML(f, kind, { heading: `${a.label} vs ${b.label}`, note })}</div></td>`];
+  } else {
+    const weeks = an.mode === "weeks";
+    // Each column's pair: [this column, the column it is compared with], or a muted line instead.
+    const pairs = cols.map((c, i) => {
+      if (weeks) return i === cols.length - 1 ? "Oldest week shown" : [c, cols[i + 1]];
+      return i === 0 ? "Compared against this" : [c, cols[0]];
+    });
+    const found = pairs.map((p) => (typeof p === "string" ? null : tableFindings(anFindingCard(p[0]), anFindingCard(p[1]))));
+    cells = (kind) => pairs.map((p, i) => `<td class="an-cmp">${typeof p === "string"
+      ? muted(p)
+      : findingsCellHTML(found[i], kind, { heading: `vs ${p[1].label}`, note })}</td>`);
+  }
+  return [row("differences", "Differences", cells), row("similarities", "Similarities", cells)];
+}
 
 // ---- insights: manual memo feed -------------------------------------------
 function renderInsightsList(items) {

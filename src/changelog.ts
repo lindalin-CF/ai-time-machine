@@ -15,6 +15,18 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "table-differences-similarities",
+    date: "2026-10-18",
+    time: "17:27",
+    title: "Differences and Similarities in the Table",
+    subtitle: "See at a glance what changed between columns",
+    bullets: [
+      { lead: "Two new rows", text: "Under the screenshots, Differences and Similarities list what differs and what matches, from the same measurements as the Canvas comparison box." },
+      { lead: "Who is compared", text: "Week by week compares each week with the week before it; Across products compares each product with the first one." },
+    ],
+    closing: "Open Compare and switch to Table.",
+  },
+  {
     slug: "compare-from-portal-pages",
     date: "2026-10-18",
     time: "17:26",

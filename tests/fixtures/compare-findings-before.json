@@ -1,0 +1,6194 @@
+{
+ "note": "compareFindings() output recorded before the findingLists() refactor (public/analytics-canvas.js). Metrics from /api/captures, 2026-09-28 to 2026-10-12.",
+ "cards": {
+  "chatgpt@2026-10-12": {
+   "label": "ChatGPT",
+   "slug": "chatgpt",
+   "week": "2026-10-12",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 27,
+    "inputAreaPct": 3.9,
+    "inputPosition": "middle",
+    "clickableApprox": 19,
+    "textSizes": 4,
+    "suggestedPrompts": 0,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "magnifier icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "split rectangle icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "New chat",
+      "region": "sidebar"
+     },
+     {
+      "label": "Images",
+      "region": "sidebar"
+     },
+     {
+      "label": "Tasks",
+      "region": "sidebar"
+     },
+     {
+      "label": "Library",
+      "region": "sidebar"
+     },
+     {
+      "label": "Plugins",
+      "region": "sidebar"
+     },
+     {
+      "label": "Codex",
+      "region": "sidebar"
+     },
+     {
+      "label": "Explore",
+      "region": "sidebar"
+     },
+     {
+      "label": "Chat",
+      "region": "top bar"
+     },
+     {
+      "label": "Work",
+      "region": "top bar"
+     },
+     {
+      "label": "circular arrows icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "Think",
+      "region": "input area"
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-10-05",
+     "items": [
+      {
+       "change": "renamed",
+       "previous": "More",
+       "current": "Explore",
+       "region": "sidebar"
+      },
+      {
+       "change": "removed",
+       "previous": "Upgrade",
+       "current": null,
+       "region": "top bar"
+      }
+     ]
+    }
+   }
+  },
+  "claude@2026-10-12": {
+   "label": "Claude",
+   "slug": "claude",
+   "week": "2026-10-12",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 23,
+    "inputAreaPct": 6.5,
+    "inputPosition": "middle",
+    "clickableApprox": 18,
+    "textSizes": 2,
+    "suggestedPrompts": 0,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "panel icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "speech bubble icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "angle bracket icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "New",
+      "region": "sidebar"
+     },
+     {
+      "label": "Projects",
+      "region": "sidebar"
+     },
+     {
+      "label": "Artifacts",
+      "region": "sidebar"
+     },
+     {
+      "label": "Scheduled",
+      "region": "sidebar"
+     },
+     {
+      "label": "Design",
+      "region": "sidebar"
+     },
+     {
+      "label": "Customize",
+      "region": "sidebar"
+     },
+     {
+      "label": "More",
+      "region": "sidebar"
+     },
+     {
+      "label": "ghost icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "Chat",
+      "region": "input area"
+     },
+     {
+      "label": "Cowork",
+      "region": "input area"
+     },
+     {
+      "label": "Opus 5.5 High",
+      "region": "input area"
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-10-05",
+     "items": []
+    }
+   }
+  },
+  "gemini@2026-10-12": {
+   "label": "Gemini",
+   "slug": "gemini",
+   "week": "2026-10-12",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 4,
+    "inputAreaPct": 4.1,
+    "inputPosition": "middle",
+    "clickableApprox": 15,
+    "textSizes": 3,
+    "suggestedPrompts": 0,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "pencil-circle icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "magnifier icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "four-circle grid icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "picture-frame icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "clock icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "hexagon icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "gear icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "Get app",
+      "region": "top bar"
+     },
+     {
+      "label": "Upgrade",
+      "region": "top bar"
+     },
+     {
+      "label": "dotted-circle pencil",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "Gemini Auto",
+      "region": "input area"
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-10-05",
+     "items": [
+      {
+       "change": "icon_changed",
+       "previous": "diamond icon",
+       "current": "clock icon",
+       "region": "sidebar",
+       "icon": true
+      },
+      {
+       "change": "added",
+       "previous": null,
+       "current": "hexagon icon",
+       "region": "sidebar",
+       "icon": true
+      },
+      {
+       "change": "renamed",
+       "previous": "Flash Extended",
+       "current": "Gemini Auto",
+       "region": "input area"
+      }
+     ]
+    }
+   }
+  },
+  "perplexity@2026-10-12": {
+   "label": "Perplexity",
+   "slug": "perplexity",
+   "week": "2026-10-12",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 19,
+    "inputAreaPct": 7.4,
+    "inputPosition": "middle",
+    "clickableApprox": 22,
+    "textSizes": 3,
+    "suggestedPrompts": null,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "bell icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "magnifier icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "split-square icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "New",
+      "region": "sidebar"
+     },
+     {
+      "label": "Computer",
+      "region": "sidebar"
+     },
+     {
+      "label": "Automations",
+      "region": "sidebar"
+     },
+     {
+      "label": "Artifacts",
+      "region": "sidebar"
+     },
+     {
+      "label": "Customize",
+      "region": "sidebar"
+     },
+     {
+      "label": "Projects",
+      "region": "sidebar"
+     },
+     {
+      "label": "Recents",
+      "region": "sidebar"
+     },
+     {
+      "label": "Upgrade plan",
+      "region": "sidebar"
+     },
+     {
+      "label": "Free plan - Upgrade",
+      "region": "top bar"
+     },
+     {
+      "label": "glasses icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "three-lines icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "Search",
+      "region": "input area"
+     },
+     {
+      "label": "Computer",
+      "region": "input area"
+     },
+     {
+      "label": "Model",
+      "region": "input area"
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-10-05",
+     "items": [
+      {
+       "change": "renamed",
+       "previous": "Sessions",
+       "current": "Recents",
+       "region": "sidebar"
+      }
+     ]
+    }
+   }
+  },
+  "copilot@2026-10-12": {
+   "label": "Microsoft Copilot",
+   "slug": "copilot",
+   "week": "2026-10-12",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 20,
+    "inputAreaPct": 4.5,
+    "inputPosition": "middle",
+    "clickableApprox": 23,
+    "textSizes": 3,
+    "suggestedPrompts": null,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "nine-dot grid icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "checked square icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "split rectangle icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "New chat",
+      "region": "sidebar"
+     },
+     {
+      "label": "Search",
+      "region": "sidebar"
+     },
+     {
+      "label": "Library",
+      "region": "sidebar"
+     },
+     {
+      "label": "Agents",
+      "region": "sidebar"
+     },
+     {
+      "label": "Notebooks",
+      "region": "sidebar"
+     },
+     {
+      "label": "gear icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "Work IQ",
+      "region": "top bar"
+     },
+     {
+      "label": "Auto",
+      "region": "top bar"
+     },
+     {
+      "label": "shield icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "dashed bubble icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "three dots icon",
+      "region": "top bar",
+      "icon": true
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-10-05",
+     "items": []
+    }
+   }
+  },
+  "mistral@2026-10-12": {
+   "label": "Le Chat",
+   "slug": "mistral",
+   "week": "2026-10-12",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 20,
+    "inputAreaPct": 4.2,
+    "inputPosition": "middle",
+    "clickableApprox": null,
+    "textSizes": 3,
+    "suggestedPrompts": null,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "magnifier icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "side-panel icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "Work",
+      "region": "sidebar"
+     },
+     {
+      "label": "Code",
+      "region": "sidebar"
+     },
+     {
+      "label": "New Chat",
+      "region": "sidebar"
+     },
+     {
+      "label": "Context",
+      "region": "sidebar"
+     },
+     {
+      "label": "Scheduled",
+      "region": "sidebar"
+     },
+     {
+      "label": "Upgrade to Pro",
+      "region": "sidebar"
+     },
+     {
+      "label": "dashed bubble icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "Fast",
+      "region": "input area"
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-10-05",
+     "items": []
+    }
+   }
+  },
+  "grok@2026-10-12": {
+   "label": "Grok",
+   "slug": "grok",
+   "week": "2026-10-12",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 20,
+    "inputAreaPct": 7.5,
+    "inputPosition": "middle",
+    "clickableApprox": 23,
+    "textSizes": 4,
+    "suggestedPrompts": 0,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "magnifier icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "panel icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "Chat",
+      "region": "sidebar"
+     },
+     {
+      "label": "Imagine",
+      "region": "sidebar"
+     },
+     {
+      "label": "Library",
+      "region": "sidebar"
+     },
+     {
+      "label": "Automations",
+      "region": "sidebar"
+     },
+     {
+      "label": "Add project",
+      "region": "sidebar"
+     },
+     {
+      "label": "Plugins",
+      "region": "sidebar"
+     },
+     {
+      "label": "Grok Bot",
+      "region": "top bar"
+     },
+     {
+      "label": "Private",
+      "region": "top bar"
+     },
+     {
+      "label": "Fast",
+      "region": "input area"
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-10-05",
+     "items": []
+    }
+   }
+  },
+  "deepseek@2026-10-12": {
+   "label": "DeepSeek",
+   "slug": "deepseek",
+   "week": "2026-10-12",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 0,
+    "inputAreaPct": 9.5,
+    "inputPosition": "middle",
+    "clickableApprox": null,
+    "textSizes": 3,
+    "suggestedPrompts": null,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "split-rectangle icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "magnifier icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "bubble-plus icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "Deep Think",
+      "region": "input area"
+     },
+     {
+      "label": "Smart Search",
+      "region": "input area"
+     }
+    ],
+    "navSidebarVisible": false,
+    "navChanges": {
+     "previousWeek": "2026-10-05",
+     "items": []
+    }
+   }
+  },
+  "meta-ai@2026-10-12": {
+   "label": "Meta AI",
+   "slug": "meta-ai",
+   "week": "2026-10-12",
+   "metrics": null
+  },
+  "manus@2026-10-12": {
+   "label": "Manus",
+   "slug": "manus",
+   "week": "2026-10-12",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 4,
+    "inputAreaPct": 9,
+    "inputPosition": "bottom",
+    "clickableApprox": 33,
+    "textSizes": 3,
+    "suggestedPrompts": 3,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "pencil-square icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "monitor icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "cog-shaped icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "book-spines icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "circle-line-square icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "linked shapes icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "four-circle grid icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "three-dot icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "folder icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "checklist icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "monitor-phone icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "bell icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "Manus 2.0 Lite",
+      "region": "top bar"
+     },
+     {
+      "label": "Upgrade",
+      "region": "top bar"
+     },
+     {
+      "label": "Cloud",
+      "region": "input area"
+     },
+     {
+      "label": "Choose project",
+      "region": "input area"
+     },
+     {
+      "label": "two-plug icon",
+      "region": "input area",
+      "icon": true
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-10-05",
+     "items": []
+    }
+   }
+  },
+  "poe@2026-10-12": {
+   "label": "Poe",
+   "slug": "poe",
+   "week": "2026-10-12",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 5,
+    "inputAreaPct": 6.2,
+    "inputPosition": "middle",
+    "clickableApprox": null,
+    "textSizes": 4,
+    "suggestedPrompts": null,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "pencil square icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "magnifier icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "star bubble icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "compass icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "four shapes icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "zigzag arrow icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "shapes plus icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "arched bars icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "tray arrow icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "gear icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "slashed pencil icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "@ sign icon",
+      "region": "input area",
+      "icon": true
+     },
+     {
+      "label": "slider icon",
+      "region": "input area",
+      "icon": true
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-10-05",
+     "items": []
+    }
+   }
+  },
+  "qwen@2026-10-12": {
+   "label": "Qwen Chat",
+   "slug": "qwen",
+   "week": "2026-10-12",
+   "metrics": {
+    "colorScheme": "light",
+    "sidebarPct": 19,
+    "inputAreaPct": 4.3,
+    "inputPosition": "middle",
+    "clickableApprox": null,
+    "textSizes": 3,
+    "suggestedPrompts": null,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "split-square icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "New Chat",
+      "region": "sidebar"
+     },
+     {
+      "label": "Search Chats",
+      "region": "sidebar"
+     },
+     {
+      "label": "Community",
+      "region": "sidebar"
+     },
+     {
+      "label": "Coder",
+      "region": "sidebar"
+     },
+     {
+      "label": "Create",
+      "region": "sidebar"
+     },
+     {
+      "label": "Projects",
+      "region": "sidebar"
+     },
+     {
+      "label": "New Project",
+      "region": "sidebar"
+     },
+     {
+      "label": "All chats",
+      "region": "sidebar"
+     },
+     {
+      "label": "Qwen3.7-Plus",
+      "region": "top bar"
+     },
+     {
+      "label": "dashed-square icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "Auto",
+      "region": "input area"
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-10-05",
+     "items": [
+      {
+       "change": "added",
+       "previous": null,
+       "current": "Create",
+       "region": "sidebar"
+      }
+     ]
+    }
+   }
+  },
+  "kimi@2026-10-12": {
+   "label": "Kimi",
+   "slug": "kimi",
+   "week": "2026-10-12",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 0,
+    "inputAreaPct": 8.6,
+    "inputPosition": "middle",
+    "clickableApprox": 17,
+    "textSizes": 2,
+    "suggestedPrompts": null,
+    "aiNote": true,
+    "navItems": [
+     {
+      "label": "split-square icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "Log in",
+      "region": "top bar"
+     },
+     {
+      "label": "Download desktop app",
+      "region": "top bar"
+     },
+     {
+      "label": "Fast",
+      "region": "input area"
+     },
+     {
+      "label": "Advanced",
+      "region": "input area"
+     },
+     {
+      "label": "Select project",
+      "region": "input area"
+     },
+     {
+      "label": "Plugins",
+      "region": "input area"
+     },
+     {
+      "label": "PPT",
+      "region": "input area"
+     },
+     {
+      "label": "Deep research",
+      "region": "input area"
+     },
+     {
+      "label": "Docs",
+      "region": "input area"
+     },
+     {
+      "label": "Build app",
+      "region": "input area"
+     },
+     {
+      "label": "Sheets",
+      "region": "input area"
+     },
+     {
+      "label": "Design",
+      "region": "input area"
+     }
+    ],
+    "navSidebarVisible": false,
+    "navChanges": {
+     "previousWeek": "2026-10-05",
+     "items": []
+    }
+   }
+  },
+  "pi@2026-10-12": {
+   "label": "Pi",
+   "slug": "pi",
+   "week": "2026-10-12",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 22,
+    "inputAreaPct": 4.5,
+    "inputPosition": "bottom",
+    "clickableApprox": 12,
+    "textSizes": 4,
+    "suggestedPrompts": 0,
+    "aiNote": true,
+    "navItems": [
+     {
+      "label": "split-rectangle icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "New chat",
+      "region": "sidebar"
+     },
+     {
+      "label": "Activities",
+      "region": "sidebar"
+     },
+     {
+      "label": "Discover",
+      "region": "sidebar"
+     },
+     {
+      "label": "My stuff",
+      "region": "sidebar"
+     },
+     {
+      "label": "Help & feedback",
+      "region": "sidebar"
+     },
+     {
+      "label": "Settings",
+      "region": "sidebar"
+     },
+     {
+      "label": "three-dot icon",
+      "region": "top bar",
+      "icon": true
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-10-05",
+     "items": []
+    }
+   }
+  },
+  "muse@2026-10-12": {
+   "label": "Muse",
+   "slug": "muse",
+   "week": "2026-10-12",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 6,
+    "inputAreaPct": 4.4,
+    "inputPosition": "bottom",
+    "clickableApprox": 12,
+    "textSizes": 1,
+    "suggestedPrompts": 0,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "speech-bubble icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "magnifier icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "notebook icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "lightbulb icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "checked-box icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "four-shapes icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "tray-arrow icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "two-lines icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "left-arrow icon",
+      "region": "top bar",
+      "icon": true
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-10-05",
+     "items": []
+    }
+   }
+  },
+  "chatgpt@2026-10-05": {
+   "label": "ChatGPT",
+   "slug": "chatgpt",
+   "week": "2026-10-05",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 20,
+    "inputAreaPct": 3.3,
+    "inputPosition": "middle",
+    "clickableApprox": 23,
+    "textSizes": 4,
+    "suggestedPrompts": 3,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "magnifier icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "split rectangle icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "New chat",
+      "region": "sidebar"
+     },
+     {
+      "label": "Images",
+      "region": "sidebar"
+     },
+     {
+      "label": "Library",
+      "region": "sidebar"
+     },
+     {
+      "label": "Tasks",
+      "region": "sidebar"
+     },
+     {
+      "label": "Plugins",
+      "region": "sidebar"
+     },
+     {
+      "label": "Projects",
+      "region": "sidebar"
+     },
+     {
+      "label": "Codex",
+      "region": "sidebar"
+     },
+     {
+      "label": "More",
+      "region": "sidebar"
+     },
+     {
+      "label": "Chat",
+      "region": "top bar"
+     },
+     {
+      "label": "Work",
+      "region": "top bar"
+     },
+     {
+      "label": "Upgrade",
+      "region": "top bar"
+     },
+     {
+      "label": "circular arrows icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "Think",
+      "region": "input area"
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-09-28",
+     "items": [
+      {
+       "change": "renamed",
+       "previous": "Scheduled",
+       "current": "Tasks",
+       "region": "sidebar"
+      }
+     ]
+    }
+   }
+  },
+  "claude@2026-10-05": {
+   "label": "Claude",
+   "slug": "claude",
+   "week": "2026-10-05",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 23,
+    "inputAreaPct": 6.5,
+    "inputPosition": "middle",
+    "clickableApprox": 18,
+    "textSizes": 2,
+    "suggestedPrompts": 0,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "panel icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "speech bubble icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "angle bracket icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "New",
+      "region": "sidebar"
+     },
+     {
+      "label": "Projects",
+      "region": "sidebar"
+     },
+     {
+      "label": "Artifacts",
+      "region": "sidebar"
+     },
+     {
+      "label": "Scheduled",
+      "region": "sidebar"
+     },
+     {
+      "label": "Design",
+      "region": "sidebar"
+     },
+     {
+      "label": "Customize",
+      "region": "sidebar"
+     },
+     {
+      "label": "More",
+      "region": "sidebar"
+     },
+     {
+      "label": "ghost icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "Chat",
+      "region": "input area"
+     },
+     {
+      "label": "Cowork",
+      "region": "input area"
+     },
+     {
+      "label": "Opus 5.5 High",
+      "region": "input area"
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-09-28",
+     "items": []
+    }
+   }
+  },
+  "gemini@2026-10-05": {
+   "label": "Gemini",
+   "slug": "gemini",
+   "week": "2026-10-05",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 4,
+    "inputAreaPct": 4.1,
+    "inputPosition": "middle",
+    "clickableApprox": 13,
+    "textSizes": 3,
+    "suggestedPrompts": 0,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "pencil-circle icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "magnifier icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "picture-frame icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "four-circle grid icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "diamond icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "gear icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "Get app",
+      "region": "top bar"
+     },
+     {
+      "label": "Upgrade",
+      "region": "top bar"
+     },
+     {
+      "label": "dotted-circle pencil",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "Flash Extended",
+      "region": "input area"
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-09-28",
+     "items": []
+    }
+   }
+  },
+  "perplexity@2026-10-05": {
+   "label": "Perplexity",
+   "slug": "perplexity",
+   "week": "2026-10-05",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 19,
+    "inputAreaPct": 7.4,
+    "inputPosition": "middle",
+    "clickableApprox": 23,
+    "textSizes": 3,
+    "suggestedPrompts": null,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "magnifier icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "bell icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "split-square icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "New",
+      "region": "sidebar"
+     },
+     {
+      "label": "Computer",
+      "region": "sidebar"
+     },
+     {
+      "label": "Automations",
+      "region": "sidebar"
+     },
+     {
+      "label": "Artifacts",
+      "region": "sidebar"
+     },
+     {
+      "label": "Customize",
+      "region": "sidebar"
+     },
+     {
+      "label": "Projects",
+      "region": "sidebar"
+     },
+     {
+      "label": "Sessions",
+      "region": "sidebar"
+     },
+     {
+      "label": "Upgrade plan",
+      "region": "sidebar"
+     },
+     {
+      "label": "Free plan - Upgrade",
+      "region": "top bar"
+     },
+     {
+      "label": "glasses icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "three-lines icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "Search",
+      "region": "input area"
+     },
+     {
+      "label": "Computer",
+      "region": "input area"
+     },
+     {
+      "label": "Model",
+      "region": "input area"
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-09-28",
+     "items": []
+    }
+   }
+  },
+  "copilot@2026-10-05": {
+   "label": "Microsoft Copilot",
+   "slug": "copilot",
+   "week": "2026-10-05",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 20,
+    "inputAreaPct": 4.5,
+    "inputPosition": "middle",
+    "clickableApprox": 23,
+    "textSizes": 3,
+    "suggestedPrompts": null,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "nine-dot grid icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "checked square icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "split rectangle icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "New chat",
+      "region": "sidebar"
+     },
+     {
+      "label": "Search",
+      "region": "sidebar"
+     },
+     {
+      "label": "Library",
+      "region": "sidebar"
+     },
+     {
+      "label": "Agents",
+      "region": "sidebar"
+     },
+     {
+      "label": "Notebooks",
+      "region": "sidebar"
+     },
+     {
+      "label": "gear icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "Work IQ",
+      "region": "top bar"
+     },
+     {
+      "label": "Auto",
+      "region": "top bar"
+     },
+     {
+      "label": "shield icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "dashed bubble icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "three dots icon",
+      "region": "top bar",
+      "icon": true
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-09-28",
+     "items": []
+    }
+   }
+  },
+  "mistral@2026-10-05": {
+   "label": "Le Chat",
+   "slug": "mistral",
+   "week": "2026-10-05",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 20,
+    "inputAreaPct": 4.2,
+    "inputPosition": "middle",
+    "clickableApprox": null,
+    "textSizes": 3,
+    "suggestedPrompts": null,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "magnifier icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "side-panel icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "Work",
+      "region": "sidebar"
+     },
+     {
+      "label": "Code",
+      "region": "sidebar"
+     },
+     {
+      "label": "New Chat",
+      "region": "sidebar"
+     },
+     {
+      "label": "Context",
+      "region": "sidebar"
+     },
+     {
+      "label": "Scheduled",
+      "region": "sidebar"
+     },
+     {
+      "label": "Upgrade to Pro",
+      "region": "sidebar"
+     },
+     {
+      "label": "dashed bubble icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "Fast",
+      "region": "input area"
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-09-28",
+     "items": [
+      {
+       "change": "icon_changed",
+       "previous": "bubble-clock icon",
+       "current": "dashed bubble icon",
+       "region": "top bar",
+       "icon": true
+      }
+     ]
+    }
+   }
+  },
+  "grok@2026-10-05": {
+   "label": "Grok",
+   "slug": "grok",
+   "week": "2026-10-05",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 20,
+    "inputAreaPct": 7.5,
+    "inputPosition": "middle",
+    "clickableApprox": 25,
+    "textSizes": 4,
+    "suggestedPrompts": 0,
+    "aiNote": false,
+    "navItems": null,
+    "navSidebarVisible": null,
+    "navChanges": null
+   }
+  },
+  "deepseek@2026-10-05": {
+   "label": "DeepSeek",
+   "slug": "deepseek",
+   "week": "2026-10-05",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 0,
+    "inputAreaPct": 9.5,
+    "inputPosition": "middle",
+    "clickableApprox": null,
+    "textSizes": 3,
+    "suggestedPrompts": null,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "split-rectangle icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "magnifier icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "bubble-plus icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "Deep Think",
+      "region": "input area"
+     },
+     {
+      "label": "Smart Search",
+      "region": "input area"
+     }
+    ],
+    "navSidebarVisible": false,
+    "navChanges": {
+     "previousWeek": "2026-09-28",
+     "items": []
+    }
+   }
+  },
+  "meta-ai@2026-10-05": {
+   "label": "Meta AI",
+   "slug": "meta-ai",
+   "week": "2026-10-05",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 20,
+    "inputAreaPct": 9.8,
+    "inputPosition": "middle",
+    "clickableApprox": null,
+    "textSizes": 3,
+    "suggestedPrompts": null,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "panel icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "New chat",
+      "region": "sidebar"
+     },
+     {
+      "label": "Search",
+      "region": "sidebar"
+     },
+     {
+      "label": "Media",
+      "region": "sidebar"
+     },
+     {
+      "label": "Artifacts",
+      "region": "sidebar"
+     },
+     {
+      "label": "Scheduled",
+      "region": "sidebar"
+     },
+     {
+      "label": "Vibes",
+      "region": "sidebar"
+     },
+     {
+      "label": "bell icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "Instant",
+      "region": "input area"
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-09-28",
+     "items": []
+    }
+   }
+  },
+  "manus@2026-10-05": {
+   "label": "Manus",
+   "slug": "manus",
+   "week": "2026-10-05",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 4,
+    "inputAreaPct": 9,
+    "inputPosition": "bottom",
+    "clickableApprox": 34,
+    "textSizes": 3,
+    "suggestedPrompts": 3,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "pencil-square icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "monitor icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "cog-shaped icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "book-spines icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "circle-line-square icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "linked shapes icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "four-circle grid icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "three-dot icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "folder icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "checklist icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "hand-mark icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "monitor-phone icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "bell icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "Manus 2.0 Lite",
+      "region": "top bar"
+     },
+     {
+      "label": "Upgrade",
+      "region": "top bar"
+     },
+     {
+      "label": "Cloud",
+      "region": "input area"
+     },
+     {
+      "label": "Choose project",
+      "region": "input area"
+     },
+     {
+      "label": "two-plug icon",
+      "region": "input area",
+      "icon": true
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-09-28",
+     "items": []
+    }
+   }
+  },
+  "poe@2026-10-05": {
+   "label": "Poe",
+   "slug": "poe",
+   "week": "2026-10-05",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 5,
+    "inputAreaPct": 6.2,
+    "inputPosition": "middle",
+    "clickableApprox": null,
+    "textSizes": 4,
+    "suggestedPrompts": null,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "pencil square icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "magnifier icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "star bubble icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "compass icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "four shapes icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "zigzag arrow icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "shapes plus icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "arched bars icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "tray arrow icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "gear icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "slashed pencil icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "@ sign icon",
+      "region": "input area",
+      "icon": true
+     },
+     {
+      "label": "slider icon",
+      "region": "input area",
+      "icon": true
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-09-28",
+     "items": [
+      {
+       "change": "added",
+       "previous": null,
+       "current": "slider icon",
+       "region": "input area",
+       "icon": true
+      }
+     ]
+    }
+   }
+  },
+  "qwen@2026-10-05": {
+   "label": "Qwen Chat",
+   "slug": "qwen",
+   "week": "2026-10-05",
+   "metrics": {
+    "colorScheme": "light",
+    "sidebarPct": 19,
+    "inputAreaPct": 4.3,
+    "inputPosition": "middle",
+    "clickableApprox": null,
+    "textSizes": 3,
+    "suggestedPrompts": null,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "split-square icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "New Chat",
+      "region": "sidebar"
+     },
+     {
+      "label": "Search Chats",
+      "region": "sidebar"
+     },
+     {
+      "label": "Community",
+      "region": "sidebar"
+     },
+     {
+      "label": "Coder",
+      "region": "sidebar"
+     },
+     {
+      "label": "Projects",
+      "region": "sidebar"
+     },
+     {
+      "label": "New Project",
+      "region": "sidebar"
+     },
+     {
+      "label": "All chats",
+      "region": "sidebar"
+     },
+     {
+      "label": "Qwen3.7-Plus",
+      "region": "top bar"
+     },
+     {
+      "label": "dashed-square icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "Auto",
+      "region": "input area"
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-09-28",
+     "items": []
+    }
+   }
+  },
+  "kimi@2026-10-05": {
+   "label": "Kimi",
+   "slug": "kimi",
+   "week": "2026-10-05",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 0,
+    "inputAreaPct": 8.6,
+    "inputPosition": "middle",
+    "clickableApprox": 17,
+    "textSizes": 3,
+    "suggestedPrompts": null,
+    "aiNote": true,
+    "navItems": [
+     {
+      "label": "split-square icon",
+      "region": "top bar",
+      "icon": true
+     },
+     {
+      "label": "Log in",
+      "region": "top bar"
+     },
+     {
+      "label": "Download desktop app",
+      "region": "top bar"
+     },
+     {
+      "label": "Fast",
+      "region": "input area"
+     },
+     {
+      "label": "Advanced",
+      "region": "input area"
+     },
+     {
+      "label": "Select project",
+      "region": "input area"
+     },
+     {
+      "label": "Plugins",
+      "region": "input area"
+     },
+     {
+      "label": "PPT",
+      "region": "input area"
+     },
+     {
+      "label": "Deep research",
+      "region": "input area"
+     },
+     {
+      "label": "Docs",
+      "region": "input area"
+     },
+     {
+      "label": "Build app",
+      "region": "input area"
+     },
+     {
+      "label": "Sheets",
+      "region": "input area"
+     },
+     {
+      "label": "Design",
+      "region": "input area"
+     }
+    ],
+    "navSidebarVisible": false,
+    "navChanges": {
+     "previousWeek": "2026-09-28",
+     "items": []
+    }
+   }
+  },
+  "pi@2026-10-05": {
+   "label": "Pi",
+   "slug": "pi",
+   "week": "2026-10-05",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 22,
+    "inputAreaPct": 4.5,
+    "inputPosition": "bottom",
+    "clickableApprox": 12,
+    "textSizes": 4,
+    "suggestedPrompts": 0,
+    "aiNote": true,
+    "navItems": [
+     {
+      "label": "split-rectangle icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "New chat",
+      "region": "sidebar"
+     },
+     {
+      "label": "Activities",
+      "region": "sidebar"
+     },
+     {
+      "label": "Discover",
+      "region": "sidebar"
+     },
+     {
+      "label": "My stuff",
+      "region": "sidebar"
+     },
+     {
+      "label": "Help & feedback",
+      "region": "sidebar"
+     },
+     {
+      "label": "Settings",
+      "region": "sidebar"
+     },
+     {
+      "label": "three-dot icon",
+      "region": "top bar",
+      "icon": true
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-09-28",
+     "items": []
+    }
+   }
+  },
+  "muse@2026-10-05": {
+   "label": "Muse",
+   "slug": "muse",
+   "week": "2026-10-05",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 6,
+    "inputAreaPct": 3.3,
+    "inputPosition": "bottom",
+    "clickableApprox": 12,
+    "textSizes": 1,
+    "suggestedPrompts": 0,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "speech-bubble icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "magnifier icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "notebook icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "lightbulb icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "checked-box icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "four-shapes icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "tray-arrow icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "two-lines icon",
+      "region": "sidebar",
+      "icon": true
+     },
+     {
+      "label": "left-arrow icon",
+      "region": "top bar",
+      "icon": true
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-09-28",
+     "items": []
+    }
+   }
+  },
+  "chatgpt@2026-09-28": {
+   "label": "ChatGPT",
+   "slug": "chatgpt",
+   "week": "2026-09-28",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 20,
+    "inputAreaPct": 3.3,
+    "inputPosition": "middle",
+    "clickableApprox": 23,
+    "textSizes": 4,
+    "suggestedPrompts": 3,
+    "aiNote": false,
+    "navItems": [
+     {
+      "label": "New chat",
+      "region": "sidebar"
+     },
+     {
+      "label": "Images",
+      "region": "sidebar"
+     },
+     {
+      "label": "Library",
+      "region": "sidebar"
+     },
+     {
+      "label": "Scheduled",
+      "region": "sidebar"
+     },
+     {
+      "label": "Plugins",
+      "region": "sidebar"
+     },
+     {
+      "label": "Projects",
+      "region": "sidebar"
+     },
+     {
+      "label": "Codex",
+      "region": "sidebar"
+     },
+     {
+      "label": "More",
+      "region": "sidebar"
+     },
+     {
+      "label": "Chat",
+      "region": "top bar"
+     },
+     {
+      "label": "Work",
+      "region": "top bar"
+     },
+     {
+      "label": "Upgrade",
+      "region": "top bar"
+     },
+     {
+      "label": "Think",
+      "region": "input area"
+     }
+    ],
+    "navSidebarVisible": true,
+    "navChanges": {
+     "previousWeek": "2026-09-21",
+     "items": []
+    }
+   }
+  },
+  "claude@2026-09-28": {
+   "label": "Claude",
+   "slug": "claude",
+   "week": "2026-09-28",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 23,
+    "inputAreaPct": 6.5,
+    "inputPosition": "middle",
+    "clickableApprox": 18,
+    "textSizes": 2,
+    "suggestedPrompts": 0,
+    "aiNote": false,
+    "navItems": null,
+    "navSidebarVisible": null,
+    "navChanges": null
+   }
+  },
+  "gemini@2026-09-28": {
+   "label": "Gemini",
+   "slug": "gemini",
+   "week": "2026-09-28",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 4,
+    "inputAreaPct": 4.1,
+    "inputPosition": "middle",
+    "clickableApprox": 13,
+    "textSizes": 3,
+    "suggestedPrompts": 0,
+    "aiNote": false,
+    "navItems": null,
+    "navSidebarVisible": null,
+    "navChanges": null
+   }
+  },
+  "perplexity@2026-09-28": {
+   "label": "Perplexity",
+   "slug": "perplexity",
+   "week": "2026-09-28",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 19,
+    "inputAreaPct": 7.4,
+    "inputPosition": "middle",
+    "clickableApprox": 23,
+    "textSizes": 3,
+    "suggestedPrompts": null,
+    "aiNote": false,
+    "navItems": null,
+    "navSidebarVisible": null,
+    "navChanges": null
+   }
+  },
+  "copilot@2026-09-28": {
+   "label": "Microsoft Copilot",
+   "slug": "copilot",
+   "week": "2026-09-28",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 20,
+    "inputAreaPct": 4.8,
+    "inputPosition": "middle",
+    "clickableApprox": 22,
+    "textSizes": 3,
+    "suggestedPrompts": null,
+    "aiNote": false,
+    "navItems": null,
+    "navSidebarVisible": null,
+    "navChanges": null
+   }
+  },
+  "mistral@2026-09-28": {
+   "label": "Le Chat",
+   "slug": "mistral",
+   "week": "2026-09-28",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 20,
+    "inputAreaPct": 4.2,
+    "inputPosition": "middle",
+    "clickableApprox": null,
+    "textSizes": 3,
+    "suggestedPrompts": null,
+    "aiNote": false,
+    "navItems": null,
+    "navSidebarVisible": null,
+    "navChanges": null
+   }
+  },
+  "grok@2026-09-28": {
+   "label": "Grok",
+   "slug": "grok",
+   "week": "2026-09-28",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 20,
+    "inputAreaPct": 7.5,
+    "inputPosition": "middle",
+    "clickableApprox": 22,
+    "textSizes": 4,
+    "suggestedPrompts": 0,
+    "aiNote": false,
+    "navItems": null,
+    "navSidebarVisible": null,
+    "navChanges": null
+   }
+  },
+  "deepseek@2026-09-28": {
+   "label": "DeepSeek",
+   "slug": "deepseek",
+   "week": "2026-09-28",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 0,
+    "inputAreaPct": 9.5,
+    "inputPosition": "middle",
+    "clickableApprox": null,
+    "textSizes": 3,
+    "suggestedPrompts": null,
+    "aiNote": false,
+    "navItems": null,
+    "navSidebarVisible": null,
+    "navChanges": null
+   }
+  },
+  "meta-ai@2026-09-28": {
+   "label": "Meta AI",
+   "slug": "meta-ai",
+   "week": "2026-09-28",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 20,
+    "inputAreaPct": 9.8,
+    "inputPosition": "middle",
+    "clickableApprox": null,
+    "textSizes": 3,
+    "suggestedPrompts": null,
+    "aiNote": false,
+    "navItems": null,
+    "navSidebarVisible": null,
+    "navChanges": null
+   }
+  },
+  "manus@2026-09-28": {
+   "label": "Manus",
+   "slug": "manus",
+   "week": "2026-09-28",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 4,
+    "inputAreaPct": 9,
+    "inputPosition": "bottom",
+    "clickableApprox": 34,
+    "textSizes": 3,
+    "suggestedPrompts": 3,
+    "aiNote": false,
+    "navItems": null,
+    "navSidebarVisible": null,
+    "navChanges": null
+   }
+  },
+  "poe@2026-09-28": {
+   "label": "Poe",
+   "slug": "poe",
+   "week": "2026-09-28",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 5,
+    "inputAreaPct": 6.2,
+    "inputPosition": "middle",
+    "clickableApprox": null,
+    "textSizes": 4,
+    "suggestedPrompts": null,
+    "aiNote": false,
+    "navItems": null,
+    "navSidebarVisible": null,
+    "navChanges": null
+   }
+  },
+  "qwen@2026-09-28": {
+   "label": "Qwen Chat",
+   "slug": "qwen",
+   "week": "2026-09-28",
+   "metrics": {
+    "colorScheme": "light",
+    "sidebarPct": 19,
+    "inputAreaPct": 4.3,
+    "inputPosition": "middle",
+    "clickableApprox": null,
+    "textSizes": 3,
+    "suggestedPrompts": null,
+    "aiNote": false,
+    "navItems": null,
+    "navSidebarVisible": null,
+    "navChanges": null
+   }
+  },
+  "kimi@2026-09-28": {
+   "label": "Kimi",
+   "slug": "kimi",
+   "week": "2026-09-28",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 0,
+    "inputAreaPct": 8.6,
+    "inputPosition": "middle",
+    "clickableApprox": 17,
+    "textSizes": 3,
+    "suggestedPrompts": null,
+    "aiNote": true,
+    "navItems": null,
+    "navSidebarVisible": null,
+    "navChanges": null
+   }
+  },
+  "pi@2026-09-28": {
+   "label": "Pi",
+   "slug": "pi",
+   "week": "2026-09-28",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 22,
+    "inputAreaPct": 4.5,
+    "inputPosition": "bottom",
+    "clickableApprox": 12,
+    "textSizes": 4,
+    "suggestedPrompts": 0,
+    "aiNote": true,
+    "navItems": null,
+    "navSidebarVisible": null,
+    "navChanges": null
+   }
+  },
+  "muse@2026-09-28": {
+   "label": "Muse",
+   "slug": "muse",
+   "week": "2026-09-28",
+   "metrics": {
+    "colorScheme": "dark",
+    "sidebarPct": 6,
+    "inputAreaPct": 3.3,
+    "inputPosition": "bottom",
+    "clickableApprox": 12,
+    "textSizes": 1,
+    "suggestedPrompts": 0,
+    "aiNote": false,
+    "navItems": null,
+    "navSidebarVisible": null,
+    "navChanges": null
+   }
+  }
+ },
+ "cases": [
+  {
+   "a": "chatgpt@2026-10-12",
+   "b": "claude@2026-10-12",
+   "out": [
+    "ChatGPT shows 13 menu items, Claude shows 14.",
+    "Claude's message box covers more of the screen than ChatGPT's (6.5% vs 3.9%).",
+    "ChatGPT uses 4 text sizes, Claude uses 2."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-10-12",
+   "b": "gemini@2026-10-12",
+   "out": [
+    "ChatGPT shows 13 menu items, Gemini shows 11.",
+    "ChatGPT shows more clickable items than Gemini (~19 vs ~15).",
+    "ChatGPT's sidebar is wider than Gemini's (27% vs 4% of the screen width).",
+    "ChatGPT uses 4 text sizes, Gemini uses 3."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-10-12",
+   "b": "perplexity@2026-10-12",
+   "out": [
+    "ChatGPT shows 13 menu items, Perplexity shows 17.",
+    "Perplexity's message box covers more of the screen than ChatGPT's (7.4% vs 3.9%).",
+    "Perplexity shows more clickable items than ChatGPT (~22 vs ~19).",
+    "ChatGPT's sidebar is wider than Perplexity's (27% vs 19% of the screen width)."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-10-12",
+   "b": "copilot@2026-10-12",
+   "out": [
+    "ChatGPT shows 13 menu items, Microsoft Copilot shows 14.",
+    "Microsoft Copilot shows more clickable items than ChatGPT (~23 vs ~19).",
+    "ChatGPT's sidebar is wider than Microsoft Copilot's (27% vs 20% of the screen width).",
+    "ChatGPT uses 4 text sizes, Microsoft Copilot uses 3."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-10-12",
+   "b": "mistral@2026-10-12",
+   "out": [
+    "ChatGPT shows 13 menu items, Le Chat shows 10.",
+    "ChatGPT's sidebar is wider than Le Chat's (27% vs 20% of the screen width).",
+    "ChatGPT uses 4 text sizes, Le Chat uses 3.",
+    "No data for Le Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-10-12",
+   "b": "grok@2026-10-12",
+   "out": [
+    "ChatGPT shows 13 menu items, Grok shows 11.",
+    "Grok's message box covers more of the screen than ChatGPT's (7.5% vs 3.9%).",
+    "Grok shows more clickable items than ChatGPT (~23 vs ~19).",
+    "ChatGPT's sidebar is wider than Grok's (27% vs 20% of the screen width)."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-10-12",
+   "b": "deepseek@2026-10-12",
+   "out": [
+    "ChatGPT shows 4 menu items outside the sidebar, DeepSeek shows 5.",
+    "DeepSeek's message box covers more of the screen than ChatGPT's (9.5% vs 3.9%).",
+    "ChatGPT's sidebar takes 27% of the screen width, DeepSeek shows no sidebar.",
+    "ChatGPT uses 4 text sizes, DeepSeek uses 3."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-10-12",
+   "b": "meta-ai@2026-10-12",
+   "out": [
+    "No comparable data for ChatGPT and Meta AI."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-10-12",
+   "b": "manus@2026-10-12",
+   "out": [
+    "ChatGPT shows 13 menu items, Manus shows 17.",
+    "Manus's message box covers more of the screen than ChatGPT's (9% vs 3.9%).",
+    "Manus shows more clickable items than ChatGPT (~33 vs ~19).",
+    "ChatGPT shows no suggested prompts, Manus shows 3."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-10-12",
+   "b": "poe@2026-10-12",
+   "out": [
+    "Poe's message box covers more of the screen than ChatGPT's (6.2% vs 3.9%).",
+    "ChatGPT's sidebar is wider than Poe's (27% vs 5% of the screen width).",
+    "No data for Poe: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-10-12",
+   "b": "qwen@2026-10-12",
+   "out": [
+    "ChatGPT shows 13 menu items, Qwen Chat shows 12.",
+    "ChatGPT's sidebar is wider than Qwen Chat's (27% vs 19% of the screen width).",
+    "ChatGPT uses 4 text sizes, Qwen Chat uses 3.",
+    "ChatGPT was captured in dark mode, Qwen Chat in light mode."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-10-12",
+   "b": "kimi@2026-10-12",
+   "out": [
+    "ChatGPT shows 4 menu items outside the sidebar, Kimi shows 13.",
+    "Kimi's message box covers more of the screen than ChatGPT's (8.6% vs 3.9%).",
+    "ChatGPT's sidebar takes 27% of the screen width, Kimi shows no sidebar.",
+    "ChatGPT uses 4 text sizes, Kimi uses 2."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-10-12",
+   "b": "pi@2026-10-12",
+   "out": [
+    "ChatGPT shows 13 menu items, Pi shows 8.",
+    "ChatGPT shows more clickable items than Pi (~19 vs ~12).",
+    "ChatGPT's sidebar is wider than Pi's (27% vs 22% of the screen width).",
+    "Pi shows a note about the AI's limits, ChatGPT does not."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-10-12",
+   "b": "muse@2026-10-12",
+   "out": [
+    "ChatGPT shows 13 menu items, Muse shows 9.",
+    "ChatGPT shows more clickable items than Muse (~19 vs ~12).",
+    "ChatGPT's sidebar is wider than Muse's (27% vs 6% of the screen width).",
+    "ChatGPT uses 4 text sizes, Muse uses 1."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-10-12",
+   "b": "chatgpt@2026-10-05",
+   "out": [
+    "The sidebar item More is now labeled Explore.",
+    "The Upgrade item no longer appears in the top bar.",
+    "ChatGPT shows more clickable items than ChatGPT (~23 vs ~19).",
+    "ChatGPT shows no suggested prompts, ChatGPT shows 3."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-10-12",
+   "b": "chatgpt@2026-09-28",
+   "out": [
+    "ChatGPT shows menu items that ChatGPT does not: Scheduled (sidebar), Projects (sidebar), More (sidebar) and 1 more.",
+    "ChatGPT shows menu items that ChatGPT does not: Tasks (sidebar), Explore (sidebar).",
+    "ChatGPT shows more clickable items than ChatGPT (~23 vs ~19).",
+    "ChatGPT shows no suggested prompts, ChatGPT shows 3."
+   ]
+  },
+  {
+   "a": "claude@2026-10-12",
+   "b": "chatgpt@2026-10-12",
+   "out": [
+    "Claude shows 14 menu items, ChatGPT shows 13.",
+    "Claude's message box covers more of the screen than ChatGPT's (6.5% vs 3.9%).",
+    "Claude uses 2 text sizes, ChatGPT uses 4."
+   ]
+  },
+  {
+   "a": "claude@2026-10-12",
+   "b": "gemini@2026-10-12",
+   "out": [
+    "Claude shows 14 menu items, Gemini shows 11.",
+    "Claude's message box covers more of the screen than Gemini's (6.5% vs 4.1%).",
+    "Claude shows more clickable items than Gemini (~18 vs ~15).",
+    "Claude's sidebar is wider than Gemini's (23% vs 4% of the screen width)."
+   ]
+  },
+  {
+   "a": "claude@2026-10-12",
+   "b": "perplexity@2026-10-12",
+   "out": [
+    "Claude shows 14 menu items, Perplexity shows 17.",
+    "Perplexity shows more clickable items than Claude (~22 vs ~18).",
+    "Claude uses 2 text sizes, Perplexity uses 3.",
+    "No data for Perplexity: suggested prompts."
+   ]
+  },
+  {
+   "a": "claude@2026-10-12",
+   "b": "copilot@2026-10-12",
+   "out": [
+    "Claude's message box covers more of the screen than Microsoft Copilot's (6.5% vs 4.5%).",
+    "Microsoft Copilot shows more clickable items than Claude (~23 vs ~18).",
+    "Claude uses 2 text sizes, Microsoft Copilot uses 3.",
+    "No data for Microsoft Copilot: suggested prompts."
+   ]
+  },
+  {
+   "a": "claude@2026-10-12",
+   "b": "mistral@2026-10-12",
+   "out": [
+    "Claude shows 14 menu items, Le Chat shows 10.",
+    "Claude's message box covers more of the screen than Le Chat's (6.5% vs 4.2%).",
+    "Claude uses 2 text sizes, Le Chat uses 3.",
+    "No data for Le Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "claude@2026-10-12",
+   "b": "grok@2026-10-12",
+   "out": [
+    "Claude shows 14 menu items, Grok shows 11.",
+    "Grok's message box covers more of the screen than Claude's (7.5% vs 6.5%).",
+    "Grok shows more clickable items than Claude (~23 vs ~18).",
+    "Claude uses 2 text sizes, Grok uses 4."
+   ]
+  },
+  {
+   "a": "claude@2026-10-12",
+   "b": "deepseek@2026-10-12",
+   "out": [
+    "Claude shows 4 menu items outside the sidebar, DeepSeek shows 5.",
+    "DeepSeek's message box covers more of the screen than Claude's (9.5% vs 6.5%).",
+    "Claude's sidebar takes 23% of the screen width, DeepSeek shows no sidebar.",
+    "Claude uses 2 text sizes, DeepSeek uses 3."
+   ]
+  },
+  {
+   "a": "claude@2026-10-12",
+   "b": "meta-ai@2026-10-12",
+   "out": [
+    "No comparable data for Claude and Meta AI."
+   ]
+  },
+  {
+   "a": "claude@2026-10-12",
+   "b": "manus@2026-10-12",
+   "out": [
+    "Claude shows 14 menu items, Manus shows 17.",
+    "Manus's message box covers more of the screen than Claude's (9% vs 6.5%).",
+    "Manus shows more clickable items than Claude (~33 vs ~18).",
+    "Claude shows no suggested prompts, Manus shows 3."
+   ]
+  },
+  {
+   "a": "claude@2026-10-12",
+   "b": "poe@2026-10-12",
+   "out": [
+    "Claude shows 14 menu items, Poe shows 13.",
+    "Claude's sidebar is wider than Poe's (23% vs 5% of the screen width).",
+    "Claude uses 2 text sizes, Poe uses 4.",
+    "No data for Poe: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "claude@2026-10-12",
+   "b": "qwen@2026-10-12",
+   "out": [
+    "Claude shows 14 menu items, Qwen Chat shows 12.",
+    "Claude's message box covers more of the screen than Qwen Chat's (6.5% vs 4.3%).",
+    "Claude uses 2 text sizes, Qwen Chat uses 3.",
+    "Claude was captured in dark mode, Qwen Chat in light mode."
+   ]
+  },
+  {
+   "a": "claude@2026-10-12",
+   "b": "kimi@2026-10-12",
+   "out": [
+    "Claude shows 4 menu items outside the sidebar, Kimi shows 13.",
+    "Kimi's message box covers more of the screen than Claude's (8.6% vs 6.5%).",
+    "Claude's sidebar takes 23% of the screen width, Kimi shows no sidebar.",
+    "Kimi shows a note about the AI's limits, Claude does not."
+   ]
+  },
+  {
+   "a": "claude@2026-10-12",
+   "b": "pi@2026-10-12",
+   "out": [
+    "Claude shows 14 menu items, Pi shows 8.",
+    "Claude's message box covers more of the screen than Pi's (6.5% vs 4.5%).",
+    "Claude shows more clickable items than Pi (~18 vs ~12).",
+    "Claude uses 2 text sizes, Pi uses 4."
+   ]
+  },
+  {
+   "a": "claude@2026-10-12",
+   "b": "muse@2026-10-12",
+   "out": [
+    "Claude shows 14 menu items, Muse shows 9.",
+    "Claude's message box covers more of the screen than Muse's (6.5% vs 4.4%).",
+    "Claude shows more clickable items than Muse (~18 vs ~12).",
+    "Claude's sidebar is wider than Muse's (23% vs 6% of the screen width)."
+   ]
+  },
+  {
+   "a": "claude@2026-10-12",
+   "b": "claude@2026-10-05",
+   "out": [
+    "Both show the same menu items.",
+    "Claude's and Claude's message boxes cover a similar share of the screen (6.5% vs 6.5%)."
+   ]
+  },
+  {
+   "a": "claude@2026-10-12",
+   "b": "claude@2026-09-28",
+   "out": [
+    "Claude's and Claude's message boxes cover a similar share of the screen (6.5% vs 6.5%).",
+    "Claude and Claude show about the same number of clickable items (~18 vs ~18).",
+    "No data for Claude: menu items; No data for Claude: menu items."
+   ]
+  },
+  {
+   "a": "gemini@2026-10-12",
+   "b": "chatgpt@2026-10-12",
+   "out": [
+    "Gemini shows 11 menu items, ChatGPT shows 13.",
+    "ChatGPT shows more clickable items than Gemini (~19 vs ~15).",
+    "ChatGPT's sidebar is wider than Gemini's (27% vs 4% of the screen width).",
+    "Gemini uses 3 text sizes, ChatGPT uses 4."
+   ]
+  },
+  {
+   "a": "gemini@2026-10-12",
+   "b": "claude@2026-10-12",
+   "out": [
+    "Gemini shows 11 menu items, Claude shows 14.",
+    "Claude's message box covers more of the screen than Gemini's (6.5% vs 4.1%).",
+    "Claude shows more clickable items than Gemini (~18 vs ~15).",
+    "Claude's sidebar is wider than Gemini's (23% vs 4% of the screen width)."
+   ]
+  },
+  {
+   "a": "gemini@2026-10-12",
+   "b": "perplexity@2026-10-12",
+   "out": [
+    "Gemini shows 11 menu items, Perplexity shows 17.",
+    "Perplexity's message box covers more of the screen than Gemini's (7.4% vs 4.1%).",
+    "Perplexity shows more clickable items than Gemini (~22 vs ~15).",
+    "Perplexity's sidebar is wider than Gemini's (19% vs 4% of the screen width)."
+   ]
+  },
+  {
+   "a": "gemini@2026-10-12",
+   "b": "copilot@2026-10-12",
+   "out": [
+    "Gemini shows 11 menu items, Microsoft Copilot shows 14.",
+    "Microsoft Copilot shows more clickable items than Gemini (~23 vs ~15).",
+    "Microsoft Copilot's sidebar is wider than Gemini's (20% vs 4% of the screen width).",
+    "No data for Microsoft Copilot: suggested prompts."
+   ]
+  },
+  {
+   "a": "gemini@2026-10-12",
+   "b": "mistral@2026-10-12",
+   "out": [
+    "Gemini shows 11 menu items, Le Chat shows 10.",
+    "Le Chat's sidebar is wider than Gemini's (20% vs 4% of the screen width).",
+    "No data for Le Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "gemini@2026-10-12",
+   "b": "grok@2026-10-12",
+   "out": [
+    "Grok's message box covers more of the screen than Gemini's (7.5% vs 4.1%).",
+    "Grok shows more clickable items than Gemini (~23 vs ~15).",
+    "Grok's sidebar is wider than Gemini's (20% vs 4% of the screen width).",
+    "Gemini uses 3 text sizes, Grok uses 4."
+   ]
+  },
+  {
+   "a": "gemini@2026-10-12",
+   "b": "deepseek@2026-10-12",
+   "out": [
+    "Gemini shows 4 menu items outside the sidebar, DeepSeek shows 5.",
+    "DeepSeek's message box covers more of the screen than Gemini's (9.5% vs 4.1%).",
+    "Gemini's sidebar takes 4% of the screen width, DeepSeek shows no sidebar.",
+    "No data for DeepSeek: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "gemini@2026-10-12",
+   "b": "meta-ai@2026-10-12",
+   "out": [
+    "No comparable data for Gemini and Meta AI."
+   ]
+  },
+  {
+   "a": "gemini@2026-10-12",
+   "b": "manus@2026-10-12",
+   "out": [
+    "Gemini shows 11 menu items, Manus shows 17.",
+    "Manus's message box covers more of the screen than Gemini's (9% vs 4.1%).",
+    "Manus shows more clickable items than Gemini (~33 vs ~15).",
+    "Gemini shows no suggested prompts, Manus shows 3."
+   ]
+  },
+  {
+   "a": "gemini@2026-10-12",
+   "b": "poe@2026-10-12",
+   "out": [
+    "Gemini shows 11 menu items, Poe shows 13.",
+    "Poe's message box covers more of the screen than Gemini's (6.2% vs 4.1%).",
+    "Gemini uses 3 text sizes, Poe uses 4.",
+    "No data for Poe: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "gemini@2026-10-12",
+   "b": "qwen@2026-10-12",
+   "out": [
+    "Gemini shows 11 menu items, Qwen Chat shows 12.",
+    "Qwen Chat's sidebar is wider than Gemini's (19% vs 4% of the screen width).",
+    "Gemini was captured in dark mode, Qwen Chat in light mode.",
+    "No data for Qwen Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "gemini@2026-10-12",
+   "b": "kimi@2026-10-12",
+   "out": [
+    "Gemini shows 4 menu items outside the sidebar, Kimi shows 13.",
+    "Kimi's message box covers more of the screen than Gemini's (8.6% vs 4.1%).",
+    "Gemini's sidebar takes 4% of the screen width, Kimi shows no sidebar.",
+    "Gemini uses 3 text sizes, Kimi uses 2."
+   ]
+  },
+  {
+   "a": "gemini@2026-10-12",
+   "b": "pi@2026-10-12",
+   "out": [
+    "Gemini shows 11 menu items, Pi shows 8.",
+    "Gemini shows more clickable items than Pi (~15 vs ~12).",
+    "Pi's sidebar is wider than Gemini's (22% vs 4% of the screen width).",
+    "Gemini uses 3 text sizes, Pi uses 4."
+   ]
+  },
+  {
+   "a": "gemini@2026-10-12",
+   "b": "muse@2026-10-12",
+   "out": [
+    "Gemini shows 11 menu items, Muse shows 9.",
+    "Gemini shows more clickable items than Muse (~15 vs ~12).",
+    "Gemini uses 3 text sizes, Muse uses 1.",
+    "Gemini's message box sits in the middle third of the screen, Muse's in the bottom third."
+   ]
+  },
+  {
+   "a": "gemini@2026-10-12",
+   "b": "gemini@2026-10-05",
+   "out": [
+    "The icon of a sidebar button changed (diamond icon → clock icon).",
+    "and 2 more menu changes."
+   ]
+  },
+  {
+   "a": "gemini@2026-10-12",
+   "b": "gemini@2026-09-28",
+   "out": [
+    "Gemini's and Gemini's message boxes cover a similar share of the screen (4.1% vs 4.1%).",
+    "Gemini and Gemini show about the same number of clickable items (~15 vs ~13).",
+    "No data for Gemini: menu items; No data for Gemini: menu items."
+   ]
+  },
+  {
+   "a": "perplexity@2026-10-12",
+   "b": "chatgpt@2026-10-12",
+   "out": [
+    "Perplexity shows 17 menu items, ChatGPT shows 13.",
+    "Perplexity's message box covers more of the screen than ChatGPT's (7.4% vs 3.9%).",
+    "Perplexity shows more clickable items than ChatGPT (~22 vs ~19).",
+    "ChatGPT's sidebar is wider than Perplexity's (27% vs 19% of the screen width)."
+   ]
+  },
+  {
+   "a": "perplexity@2026-10-12",
+   "b": "claude@2026-10-12",
+   "out": [
+    "Perplexity shows 17 menu items, Claude shows 14.",
+    "Perplexity shows more clickable items than Claude (~22 vs ~18).",
+    "Perplexity uses 3 text sizes, Claude uses 2.",
+    "No data for Perplexity: suggested prompts."
+   ]
+  },
+  {
+   "a": "perplexity@2026-10-12",
+   "b": "gemini@2026-10-12",
+   "out": [
+    "Perplexity shows 17 menu items, Gemini shows 11.",
+    "Perplexity's message box covers more of the screen than Gemini's (7.4% vs 4.1%).",
+    "Perplexity shows more clickable items than Gemini (~22 vs ~15).",
+    "Perplexity's sidebar is wider than Gemini's (19% vs 4% of the screen width)."
+   ]
+  },
+  {
+   "a": "perplexity@2026-10-12",
+   "b": "copilot@2026-10-12",
+   "out": [
+    "Perplexity shows 17 menu items, Microsoft Copilot shows 14.",
+    "Perplexity's message box covers more of the screen than Microsoft Copilot's (7.4% vs 4.5%).",
+    "No data for Perplexity: suggested prompts; No data for Microsoft Copilot: suggested prompts."
+   ]
+  },
+  {
+   "a": "perplexity@2026-10-12",
+   "b": "mistral@2026-10-12",
+   "out": [
+    "Perplexity shows 17 menu items, Le Chat shows 10.",
+    "Perplexity's message box covers more of the screen than Le Chat's (7.4% vs 4.2%).",
+    "No data for Perplexity: suggested prompts; No data for Le Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "perplexity@2026-10-12",
+   "b": "grok@2026-10-12",
+   "out": [
+    "Perplexity shows 17 menu items, Grok shows 11.",
+    "Perplexity uses 3 text sizes, Grok uses 4.",
+    "No data for Perplexity: suggested prompts."
+   ]
+  },
+  {
+   "a": "perplexity@2026-10-12",
+   "b": "deepseek@2026-10-12",
+   "out": [
+    "Perplexity shows 6 menu items outside the sidebar, DeepSeek shows 5.",
+    "DeepSeek's message box covers more of the screen than Perplexity's (9.5% vs 7.4%).",
+    "Perplexity's sidebar takes 19% of the screen width, DeepSeek shows no sidebar.",
+    "No data for Perplexity: suggested prompts; No data for DeepSeek: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "perplexity@2026-10-12",
+   "b": "meta-ai@2026-10-12",
+   "out": [
+    "No comparable data for Perplexity and Meta AI."
+   ]
+  },
+  {
+   "a": "perplexity@2026-10-12",
+   "b": "manus@2026-10-12",
+   "out": [
+    "Manus's message box covers more of the screen than Perplexity's (9% vs 7.4%).",
+    "Manus shows more clickable items than Perplexity (~33 vs ~22).",
+    "Perplexity's sidebar is wider than Manus's (19% vs 4% of the screen width).",
+    "Perplexity's message box sits in the middle third of the screen, Manus's in the bottom third."
+   ]
+  },
+  {
+   "a": "perplexity@2026-10-12",
+   "b": "poe@2026-10-12",
+   "out": [
+    "Perplexity shows 17 menu items, Poe shows 13.",
+    "Perplexity's message box covers more of the screen than Poe's (7.4% vs 6.2%).",
+    "Perplexity's sidebar is wider than Poe's (19% vs 5% of the screen width).",
+    "Perplexity uses 3 text sizes, Poe uses 4."
+   ]
+  },
+  {
+   "a": "perplexity@2026-10-12",
+   "b": "qwen@2026-10-12",
+   "out": [
+    "Perplexity shows 17 menu items, Qwen Chat shows 12.",
+    "Perplexity's message box covers more of the screen than Qwen Chat's (7.4% vs 4.3%).",
+    "Perplexity was captured in dark mode, Qwen Chat in light mode.",
+    "No data for Perplexity: suggested prompts; No data for Qwen Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "perplexity@2026-10-12",
+   "b": "kimi@2026-10-12",
+   "out": [
+    "Perplexity shows 6 menu items outside the sidebar, Kimi shows 13.",
+    "Kimi's message box covers more of the screen than Perplexity's (8.6% vs 7.4%).",
+    "Perplexity shows more clickable items than Kimi (~22 vs ~17).",
+    "Perplexity's sidebar takes 19% of the screen width, Kimi shows no sidebar."
+   ]
+  },
+  {
+   "a": "perplexity@2026-10-12",
+   "b": "pi@2026-10-12",
+   "out": [
+    "Perplexity shows 17 menu items, Pi shows 8.",
+    "Perplexity's message box covers more of the screen than Pi's (7.4% vs 4.5%).",
+    "Perplexity shows more clickable items than Pi (~22 vs ~12).",
+    "Perplexity uses 3 text sizes, Pi uses 4."
+   ]
+  },
+  {
+   "a": "perplexity@2026-10-12",
+   "b": "muse@2026-10-12",
+   "out": [
+    "Perplexity shows 17 menu items, Muse shows 9.",
+    "Perplexity's message box covers more of the screen than Muse's (7.4% vs 4.4%).",
+    "Perplexity shows more clickable items than Muse (~22 vs ~12).",
+    "Perplexity's sidebar is wider than Muse's (19% vs 6% of the screen width)."
+   ]
+  },
+  {
+   "a": "perplexity@2026-10-12",
+   "b": "perplexity@2026-10-05",
+   "out": [
+    "The sidebar item Sessions is now labeled Recents.",
+    "Perplexity's and Perplexity's message boxes cover a similar share of the screen (7.4% vs 7.4%).",
+    "No data for Perplexity: suggested prompts; No data for Perplexity: suggested prompts."
+   ]
+  },
+  {
+   "a": "perplexity@2026-10-12",
+   "b": "perplexity@2026-09-28",
+   "out": [
+    "Perplexity's and Perplexity's message boxes cover a similar share of the screen (7.4% vs 7.4%).",
+    "Perplexity and Perplexity show about the same number of clickable items (~22 vs ~23).",
+    "No data for Perplexity: menu items, suggested prompts; No data for Perplexity: menu items, suggested prompts."
+   ]
+  },
+  {
+   "a": "copilot@2026-10-12",
+   "b": "chatgpt@2026-10-12",
+   "out": [
+    "Microsoft Copilot shows 14 menu items, ChatGPT shows 13.",
+    "Microsoft Copilot shows more clickable items than ChatGPT (~23 vs ~19).",
+    "ChatGPT's sidebar is wider than Microsoft Copilot's (27% vs 20% of the screen width).",
+    "Microsoft Copilot uses 3 text sizes, ChatGPT uses 4."
+   ]
+  },
+  {
+   "a": "copilot@2026-10-12",
+   "b": "claude@2026-10-12",
+   "out": [
+    "Claude's message box covers more of the screen than Microsoft Copilot's (6.5% vs 4.5%).",
+    "Microsoft Copilot shows more clickable items than Claude (~23 vs ~18).",
+    "Microsoft Copilot uses 3 text sizes, Claude uses 2.",
+    "No data for Microsoft Copilot: suggested prompts."
+   ]
+  },
+  {
+   "a": "copilot@2026-10-12",
+   "b": "gemini@2026-10-12",
+   "out": [
+    "Microsoft Copilot shows 14 menu items, Gemini shows 11.",
+    "Microsoft Copilot shows more clickable items than Gemini (~23 vs ~15).",
+    "Microsoft Copilot's sidebar is wider than Gemini's (20% vs 4% of the screen width).",
+    "No data for Microsoft Copilot: suggested prompts."
+   ]
+  },
+  {
+   "a": "copilot@2026-10-12",
+   "b": "perplexity@2026-10-12",
+   "out": [
+    "Microsoft Copilot shows 14 menu items, Perplexity shows 17.",
+    "Perplexity's message box covers more of the screen than Microsoft Copilot's (7.4% vs 4.5%).",
+    "No data for Microsoft Copilot: suggested prompts; No data for Perplexity: suggested prompts."
+   ]
+  },
+  {
+   "a": "copilot@2026-10-12",
+   "b": "mistral@2026-10-12",
+   "out": [
+    "Microsoft Copilot shows 14 menu items, Le Chat shows 10.",
+    "Microsoft Copilot's and Le Chat's message boxes cover a similar share of the screen (4.5% vs 4.2%).",
+    "No data for Microsoft Copilot: suggested prompts; No data for Le Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "copilot@2026-10-12",
+   "b": "grok@2026-10-12",
+   "out": [
+    "Microsoft Copilot shows 14 menu items, Grok shows 11.",
+    "Grok's message box covers more of the screen than Microsoft Copilot's (7.5% vs 4.5%).",
+    "Microsoft Copilot uses 3 text sizes, Grok uses 4.",
+    "No data for Microsoft Copilot: suggested prompts."
+   ]
+  },
+  {
+   "a": "copilot@2026-10-12",
+   "b": "deepseek@2026-10-12",
+   "out": [
+    "DeepSeek's message box covers more of the screen than Microsoft Copilot's (9.5% vs 4.5%).",
+    "Microsoft Copilot's sidebar takes 20% of the screen width, DeepSeek shows no sidebar.",
+    "No data for Microsoft Copilot: suggested prompts; No data for DeepSeek: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "copilot@2026-10-12",
+   "b": "meta-ai@2026-10-12",
+   "out": [
+    "No comparable data for Microsoft Copilot and Meta AI."
+   ]
+  },
+  {
+   "a": "copilot@2026-10-12",
+   "b": "manus@2026-10-12",
+   "out": [
+    "Microsoft Copilot shows 14 menu items, Manus shows 17.",
+    "Manus's message box covers more of the screen than Microsoft Copilot's (9% vs 4.5%).",
+    "Manus shows more clickable items than Microsoft Copilot (~33 vs ~23).",
+    "Microsoft Copilot's sidebar is wider than Manus's (20% vs 4% of the screen width)."
+   ]
+  },
+  {
+   "a": "copilot@2026-10-12",
+   "b": "poe@2026-10-12",
+   "out": [
+    "Microsoft Copilot shows 14 menu items, Poe shows 13.",
+    "Poe's message box covers more of the screen than Microsoft Copilot's (6.2% vs 4.5%).",
+    "Microsoft Copilot's sidebar is wider than Poe's (20% vs 5% of the screen width).",
+    "Microsoft Copilot uses 3 text sizes, Poe uses 4."
+   ]
+  },
+  {
+   "a": "copilot@2026-10-12",
+   "b": "qwen@2026-10-12",
+   "out": [
+    "Microsoft Copilot shows 14 menu items, Qwen Chat shows 12.",
+    "Microsoft Copilot was captured in dark mode, Qwen Chat in light mode.",
+    "No data for Microsoft Copilot: suggested prompts; No data for Qwen Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "copilot@2026-10-12",
+   "b": "kimi@2026-10-12",
+   "out": [
+    "Microsoft Copilot shows 5 menu items outside the sidebar, Kimi shows 13.",
+    "Kimi's message box covers more of the screen than Microsoft Copilot's (8.6% vs 4.5%).",
+    "Microsoft Copilot shows more clickable items than Kimi (~23 vs ~17).",
+    "Microsoft Copilot's sidebar takes 20% of the screen width, Kimi shows no sidebar."
+   ]
+  },
+  {
+   "a": "copilot@2026-10-12",
+   "b": "pi@2026-10-12",
+   "out": [
+    "Microsoft Copilot shows 14 menu items, Pi shows 8.",
+    "Microsoft Copilot shows more clickable items than Pi (~23 vs ~12).",
+    "Microsoft Copilot uses 3 text sizes, Pi uses 4.",
+    "Pi shows a note about the AI's limits, Microsoft Copilot does not."
+   ]
+  },
+  {
+   "a": "copilot@2026-10-12",
+   "b": "muse@2026-10-12",
+   "out": [
+    "Microsoft Copilot shows 14 menu items, Muse shows 9.",
+    "Microsoft Copilot shows more clickable items than Muse (~23 vs ~12).",
+    "Microsoft Copilot's sidebar is wider than Muse's (20% vs 6% of the screen width).",
+    "Microsoft Copilot uses 3 text sizes, Muse uses 1."
+   ]
+  },
+  {
+   "a": "copilot@2026-10-12",
+   "b": "copilot@2026-10-05",
+   "out": [
+    "Both show the same menu items.",
+    "Microsoft Copilot's and Microsoft Copilot's message boxes cover a similar share of the screen (4.5% vs 4.5%).",
+    "No data for Microsoft Copilot: suggested prompts; No data for Microsoft Copilot: suggested prompts."
+   ]
+  },
+  {
+   "a": "copilot@2026-10-12",
+   "b": "copilot@2026-09-28",
+   "out": [
+    "Microsoft Copilot's and Microsoft Copilot's message boxes cover a similar share of the screen (4.5% vs 4.8%).",
+    "Microsoft Copilot and Microsoft Copilot show about the same number of clickable items (~23 vs ~22).",
+    "No data for Microsoft Copilot: menu items, suggested prompts; No data for Microsoft Copilot: menu items, suggested prompts."
+   ]
+  },
+  {
+   "a": "mistral@2026-10-12",
+   "b": "chatgpt@2026-10-12",
+   "out": [
+    "Le Chat shows 10 menu items, ChatGPT shows 13.",
+    "ChatGPT's sidebar is wider than Le Chat's (27% vs 20% of the screen width).",
+    "Le Chat uses 3 text sizes, ChatGPT uses 4.",
+    "No data for Le Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "mistral@2026-10-12",
+   "b": "claude@2026-10-12",
+   "out": [
+    "Le Chat shows 10 menu items, Claude shows 14.",
+    "Claude's message box covers more of the screen than Le Chat's (6.5% vs 4.2%).",
+    "Le Chat uses 3 text sizes, Claude uses 2.",
+    "No data for Le Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "mistral@2026-10-12",
+   "b": "gemini@2026-10-12",
+   "out": [
+    "Le Chat shows 10 menu items, Gemini shows 11.",
+    "Le Chat's sidebar is wider than Gemini's (20% vs 4% of the screen width).",
+    "No data for Le Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "mistral@2026-10-12",
+   "b": "perplexity@2026-10-12",
+   "out": [
+    "Le Chat shows 10 menu items, Perplexity shows 17.",
+    "Perplexity's message box covers more of the screen than Le Chat's (7.4% vs 4.2%).",
+    "No data for Le Chat: clickable items, suggested prompts; No data for Perplexity: suggested prompts."
+   ]
+  },
+  {
+   "a": "mistral@2026-10-12",
+   "b": "copilot@2026-10-12",
+   "out": [
+    "Le Chat shows 10 menu items, Microsoft Copilot shows 14.",
+    "Le Chat's and Microsoft Copilot's message boxes cover a similar share of the screen (4.2% vs 4.5%).",
+    "No data for Le Chat: clickable items, suggested prompts; No data for Microsoft Copilot: suggested prompts."
+   ]
+  },
+  {
+   "a": "mistral@2026-10-12",
+   "b": "grok@2026-10-12",
+   "out": [
+    "Le Chat shows 10 menu items, Grok shows 11.",
+    "Grok's message box covers more of the screen than Le Chat's (7.5% vs 4.2%).",
+    "Le Chat uses 3 text sizes, Grok uses 4.",
+    "No data for Le Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "mistral@2026-10-12",
+   "b": "deepseek@2026-10-12",
+   "out": [
+    "Le Chat shows 2 menu items outside the sidebar, DeepSeek shows 5.",
+    "DeepSeek's message box covers more of the screen than Le Chat's (9.5% vs 4.2%).",
+    "Le Chat's sidebar takes 20% of the screen width, DeepSeek shows no sidebar.",
+    "No data for Le Chat: clickable items, suggested prompts; No data for DeepSeek: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "mistral@2026-10-12",
+   "b": "meta-ai@2026-10-12",
+   "out": [
+    "No comparable data for Le Chat and Meta AI."
+   ]
+  },
+  {
+   "a": "mistral@2026-10-12",
+   "b": "manus@2026-10-12",
+   "out": [
+    "Le Chat shows 10 menu items, Manus shows 17.",
+    "Manus's message box covers more of the screen than Le Chat's (9% vs 4.2%).",
+    "Le Chat's sidebar is wider than Manus's (20% vs 4% of the screen width).",
+    "Le Chat's message box sits in the middle third of the screen, Manus's in the bottom third."
+   ]
+  },
+  {
+   "a": "mistral@2026-10-12",
+   "b": "poe@2026-10-12",
+   "out": [
+    "Le Chat shows 10 menu items, Poe shows 13.",
+    "Poe's message box covers more of the screen than Le Chat's (6.2% vs 4.2%).",
+    "Le Chat's sidebar is wider than Poe's (20% vs 5% of the screen width).",
+    "Le Chat uses 3 text sizes, Poe uses 4."
+   ]
+  },
+  {
+   "a": "mistral@2026-10-12",
+   "b": "qwen@2026-10-12",
+   "out": [
+    "Le Chat shows 10 menu items, Qwen Chat shows 12.",
+    "Le Chat was captured in dark mode, Qwen Chat in light mode.",
+    "No data for Le Chat: clickable items, suggested prompts; No data for Qwen Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "mistral@2026-10-12",
+   "b": "kimi@2026-10-12",
+   "out": [
+    "Le Chat shows 2 menu items outside the sidebar, Kimi shows 13.",
+    "Kimi's message box covers more of the screen than Le Chat's (8.6% vs 4.2%).",
+    "Le Chat's sidebar takes 20% of the screen width, Kimi shows no sidebar.",
+    "Le Chat uses 3 text sizes, Kimi uses 2."
+   ]
+  },
+  {
+   "a": "mistral@2026-10-12",
+   "b": "pi@2026-10-12",
+   "out": [
+    "Le Chat shows 10 menu items, Pi shows 8.",
+    "Le Chat uses 3 text sizes, Pi uses 4.",
+    "Pi shows a note about the AI's limits, Le Chat does not.",
+    "Le Chat's message box sits in the middle third of the screen, Pi's in the bottom third."
+   ]
+  },
+  {
+   "a": "mistral@2026-10-12",
+   "b": "muse@2026-10-12",
+   "out": [
+    "Le Chat shows 10 menu items, Muse shows 9.",
+    "Le Chat's sidebar is wider than Muse's (20% vs 6% of the screen width).",
+    "Le Chat uses 3 text sizes, Muse uses 1.",
+    "Le Chat's message box sits in the middle third of the screen, Muse's in the bottom third."
+   ]
+  },
+  {
+   "a": "mistral@2026-10-12",
+   "b": "mistral@2026-10-05",
+   "out": [
+    "Both show the same menu items.",
+    "Le Chat's and Le Chat's message boxes cover a similar share of the screen (4.2% vs 4.2%).",
+    "No data for Le Chat: clickable items, suggested prompts; No data for Le Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "mistral@2026-10-12",
+   "b": "mistral@2026-09-28",
+   "out": [
+    "Le Chat's and Le Chat's message boxes cover a similar share of the screen (4.2% vs 4.2%).",
+    "Le Chat's and Le Chat's sidebars take a similar share of the screen width (20% vs 20%).",
+    "No data for Le Chat: menu items, clickable items, suggested prompts; No data for Le Chat: menu items, clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "grok@2026-10-12",
+   "b": "chatgpt@2026-10-12",
+   "out": [
+    "Grok shows 11 menu items, ChatGPT shows 13.",
+    "Grok's message box covers more of the screen than ChatGPT's (7.5% vs 3.9%).",
+    "Grok shows more clickable items than ChatGPT (~23 vs ~19).",
+    "ChatGPT's sidebar is wider than Grok's (27% vs 20% of the screen width)."
+   ]
+  },
+  {
+   "a": "grok@2026-10-12",
+   "b": "claude@2026-10-12",
+   "out": [
+    "Grok shows 11 menu items, Claude shows 14.",
+    "Grok's message box covers more of the screen than Claude's (7.5% vs 6.5%).",
+    "Grok shows more clickable items than Claude (~23 vs ~18).",
+    "Grok uses 4 text sizes, Claude uses 2."
+   ]
+  },
+  {
+   "a": "grok@2026-10-12",
+   "b": "gemini@2026-10-12",
+   "out": [
+    "Grok's message box covers more of the screen than Gemini's (7.5% vs 4.1%).",
+    "Grok shows more clickable items than Gemini (~23 vs ~15).",
+    "Grok's sidebar is wider than Gemini's (20% vs 4% of the screen width).",
+    "Grok uses 4 text sizes, Gemini uses 3."
+   ]
+  },
+  {
+   "a": "grok@2026-10-12",
+   "b": "perplexity@2026-10-12",
+   "out": [
+    "Grok shows 11 menu items, Perplexity shows 17.",
+    "Grok uses 4 text sizes, Perplexity uses 3.",
+    "No data for Perplexity: suggested prompts."
+   ]
+  },
+  {
+   "a": "grok@2026-10-12",
+   "b": "copilot@2026-10-12",
+   "out": [
+    "Grok shows 11 menu items, Microsoft Copilot shows 14.",
+    "Grok's message box covers more of the screen than Microsoft Copilot's (7.5% vs 4.5%).",
+    "Grok uses 4 text sizes, Microsoft Copilot uses 3.",
+    "No data for Microsoft Copilot: suggested prompts."
+   ]
+  },
+  {
+   "a": "grok@2026-10-12",
+   "b": "mistral@2026-10-12",
+   "out": [
+    "Grok shows 11 menu items, Le Chat shows 10.",
+    "Grok's message box covers more of the screen than Le Chat's (7.5% vs 4.2%).",
+    "Grok uses 4 text sizes, Le Chat uses 3.",
+    "No data for Le Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "grok@2026-10-12",
+   "b": "deepseek@2026-10-12",
+   "out": [
+    "Grok shows 3 menu items outside the sidebar, DeepSeek shows 5.",
+    "DeepSeek's message box covers more of the screen than Grok's (9.5% vs 7.5%).",
+    "Grok's sidebar takes 20% of the screen width, DeepSeek shows no sidebar.",
+    "Grok uses 4 text sizes, DeepSeek uses 3."
+   ]
+  },
+  {
+   "a": "grok@2026-10-12",
+   "b": "meta-ai@2026-10-12",
+   "out": [
+    "No comparable data for Grok and Meta AI."
+   ]
+  },
+  {
+   "a": "grok@2026-10-12",
+   "b": "manus@2026-10-12",
+   "out": [
+    "Grok shows 11 menu items, Manus shows 17.",
+    "Manus's message box covers more of the screen than Grok's (9% vs 7.5%).",
+    "Manus shows more clickable items than Grok (~33 vs ~23).",
+    "Grok shows no suggested prompts, Manus shows 3."
+   ]
+  },
+  {
+   "a": "grok@2026-10-12",
+   "b": "poe@2026-10-12",
+   "out": [
+    "Grok shows 11 menu items, Poe shows 13.",
+    "Grok's message box covers more of the screen than Poe's (7.5% vs 6.2%).",
+    "Grok's sidebar is wider than Poe's (20% vs 5% of the screen width).",
+    "No data for Poe: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "grok@2026-10-12",
+   "b": "qwen@2026-10-12",
+   "out": [
+    "Grok shows 11 menu items, Qwen Chat shows 12.",
+    "Grok's message box covers more of the screen than Qwen Chat's (7.5% vs 4.3%).",
+    "Grok uses 4 text sizes, Qwen Chat uses 3.",
+    "Grok was captured in dark mode, Qwen Chat in light mode."
+   ]
+  },
+  {
+   "a": "grok@2026-10-12",
+   "b": "kimi@2026-10-12",
+   "out": [
+    "Grok shows 3 menu items outside the sidebar, Kimi shows 13.",
+    "Kimi's message box covers more of the screen than Grok's (8.6% vs 7.5%).",
+    "Grok shows more clickable items than Kimi (~23 vs ~17).",
+    "Grok's sidebar takes 20% of the screen width, Kimi shows no sidebar."
+   ]
+  },
+  {
+   "a": "grok@2026-10-12",
+   "b": "pi@2026-10-12",
+   "out": [
+    "Grok shows 11 menu items, Pi shows 8.",
+    "Grok's message box covers more of the screen than Pi's (7.5% vs 4.5%).",
+    "Grok shows more clickable items than Pi (~23 vs ~12).",
+    "Pi shows a note about the AI's limits, Grok does not."
+   ]
+  },
+  {
+   "a": "grok@2026-10-12",
+   "b": "muse@2026-10-12",
+   "out": [
+    "Grok shows 11 menu items, Muse shows 9.",
+    "Grok's message box covers more of the screen than Muse's (7.5% vs 4.4%).",
+    "Grok shows more clickable items than Muse (~23 vs ~12).",
+    "Grok's sidebar is wider than Muse's (20% vs 6% of the screen width)."
+   ]
+  },
+  {
+   "a": "grok@2026-10-12",
+   "b": "grok@2026-10-05",
+   "out": [
+    "Grok's and Grok's message boxes cover a similar share of the screen (7.5% vs 7.5%).",
+    "Grok and Grok show about the same number of clickable items (~23 vs ~25).",
+    "No data for Grok: menu items; No data for Grok: menu items."
+   ]
+  },
+  {
+   "a": "grok@2026-10-12",
+   "b": "grok@2026-09-28",
+   "out": [
+    "Grok's and Grok's message boxes cover a similar share of the screen (7.5% vs 7.5%).",
+    "Grok and Grok show about the same number of clickable items (~23 vs ~22).",
+    "No data for Grok: menu items; No data for Grok: menu items."
+   ]
+  },
+  {
+   "a": "deepseek@2026-10-12",
+   "b": "chatgpt@2026-10-12",
+   "out": [
+    "DeepSeek shows 5 menu items outside the sidebar, ChatGPT shows 4.",
+    "DeepSeek's message box covers more of the screen than ChatGPT's (9.5% vs 3.9%).",
+    "ChatGPT's sidebar takes 27% of the screen width, DeepSeek shows no sidebar.",
+    "DeepSeek uses 3 text sizes, ChatGPT uses 4."
+   ]
+  },
+  {
+   "a": "deepseek@2026-10-12",
+   "b": "claude@2026-10-12",
+   "out": [
+    "DeepSeek shows 5 menu items outside the sidebar, Claude shows 4.",
+    "DeepSeek's message box covers more of the screen than Claude's (9.5% vs 6.5%).",
+    "Claude's sidebar takes 23% of the screen width, DeepSeek shows no sidebar.",
+    "DeepSeek uses 3 text sizes, Claude uses 2."
+   ]
+  },
+  {
+   "a": "deepseek@2026-10-12",
+   "b": "gemini@2026-10-12",
+   "out": [
+    "DeepSeek shows 5 menu items outside the sidebar, Gemini shows 4.",
+    "DeepSeek's message box covers more of the screen than Gemini's (9.5% vs 4.1%).",
+    "Gemini's sidebar takes 4% of the screen width, DeepSeek shows no sidebar.",
+    "No data for DeepSeek: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "deepseek@2026-10-12",
+   "b": "perplexity@2026-10-12",
+   "out": [
+    "DeepSeek shows 5 menu items outside the sidebar, Perplexity shows 6.",
+    "DeepSeek's message box covers more of the screen than Perplexity's (9.5% vs 7.4%).",
+    "Perplexity's sidebar takes 19% of the screen width, DeepSeek shows no sidebar.",
+    "No data for DeepSeek: clickable items, suggested prompts; No data for Perplexity: suggested prompts."
+   ]
+  },
+  {
+   "a": "deepseek@2026-10-12",
+   "b": "copilot@2026-10-12",
+   "out": [
+    "DeepSeek's message box covers more of the screen than Microsoft Copilot's (9.5% vs 4.5%).",
+    "Microsoft Copilot's sidebar takes 20% of the screen width, DeepSeek shows no sidebar.",
+    "No data for DeepSeek: clickable items, suggested prompts; No data for Microsoft Copilot: suggested prompts."
+   ]
+  },
+  {
+   "a": "deepseek@2026-10-12",
+   "b": "mistral@2026-10-12",
+   "out": [
+    "DeepSeek shows 5 menu items outside the sidebar, Le Chat shows 2.",
+    "DeepSeek's message box covers more of the screen than Le Chat's (9.5% vs 4.2%).",
+    "Le Chat's sidebar takes 20% of the screen width, DeepSeek shows no sidebar.",
+    "No data for DeepSeek: clickable items, suggested prompts; No data for Le Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "deepseek@2026-10-12",
+   "b": "grok@2026-10-12",
+   "out": [
+    "DeepSeek shows 5 menu items outside the sidebar, Grok shows 3.",
+    "DeepSeek's message box covers more of the screen than Grok's (9.5% vs 7.5%).",
+    "Grok's sidebar takes 20% of the screen width, DeepSeek shows no sidebar.",
+    "DeepSeek uses 3 text sizes, Grok uses 4."
+   ]
+  },
+  {
+   "a": "deepseek@2026-10-12",
+   "b": "meta-ai@2026-10-12",
+   "out": [
+    "No comparable data for DeepSeek and Meta AI."
+   ]
+  },
+  {
+   "a": "deepseek@2026-10-12",
+   "b": "manus@2026-10-12",
+   "out": [
+    "Manus's sidebar takes 4% of the screen width, DeepSeek shows no sidebar.",
+    "DeepSeek's message box sits in the middle third of the screen, Manus's in the bottom third.",
+    "No data for DeepSeek: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "deepseek@2026-10-12",
+   "b": "poe@2026-10-12",
+   "out": [
+    "DeepSeek shows 5 menu items outside the sidebar, Poe shows 3.",
+    "DeepSeek's message box covers more of the screen than Poe's (9.5% vs 6.2%).",
+    "Poe's sidebar takes 5% of the screen width, DeepSeek shows no sidebar.",
+    "DeepSeek uses 3 text sizes, Poe uses 4."
+   ]
+  },
+  {
+   "a": "deepseek@2026-10-12",
+   "b": "qwen@2026-10-12",
+   "out": [
+    "DeepSeek shows 5 menu items outside the sidebar, Qwen Chat shows 3.",
+    "DeepSeek's message box covers more of the screen than Qwen Chat's (9.5% vs 4.3%).",
+    "Qwen Chat's sidebar takes 19% of the screen width, DeepSeek shows no sidebar.",
+    "DeepSeek was captured in dark mode, Qwen Chat in light mode."
+   ]
+  },
+  {
+   "a": "deepseek@2026-10-12",
+   "b": "kimi@2026-10-12",
+   "out": [
+    "DeepSeek shows 5 menu items outside the sidebar, Kimi shows 13.",
+    "DeepSeek uses 3 text sizes, Kimi uses 2.",
+    "Kimi shows a note about the AI's limits, DeepSeek does not.",
+    "No data for DeepSeek: clickable items, suggested prompts; No data for Kimi: suggested prompts."
+   ]
+  },
+  {
+   "a": "deepseek@2026-10-12",
+   "b": "pi@2026-10-12",
+   "out": [
+    "DeepSeek shows 5 menu items outside the sidebar, Pi shows 1.",
+    "DeepSeek's message box covers more of the screen than Pi's (9.5% vs 4.5%).",
+    "Pi's sidebar takes 22% of the screen width, DeepSeek shows no sidebar.",
+    "DeepSeek uses 3 text sizes, Pi uses 4."
+   ]
+  },
+  {
+   "a": "deepseek@2026-10-12",
+   "b": "muse@2026-10-12",
+   "out": [
+    "DeepSeek shows 5 menu items outside the sidebar, Muse shows 1.",
+    "DeepSeek's message box covers more of the screen than Muse's (9.5% vs 4.4%).",
+    "Muse's sidebar takes 6% of the screen width, DeepSeek shows no sidebar.",
+    "DeepSeek uses 3 text sizes, Muse uses 1."
+   ]
+  },
+  {
+   "a": "deepseek@2026-10-12",
+   "b": "deepseek@2026-10-05",
+   "out": [
+    "Both show the same menu items outside the sidebar.",
+    "DeepSeek's and DeepSeek's message boxes cover a similar share of the screen (9.5% vs 9.5%).",
+    "No data for DeepSeek: clickable items, suggested prompts; No data for DeepSeek: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "deepseek@2026-10-12",
+   "b": "deepseek@2026-09-28",
+   "out": [
+    "DeepSeek's and DeepSeek's message boxes cover a similar share of the screen (9.5% vs 9.5%).",
+    "Neither DeepSeek nor DeepSeek shows a sidebar.",
+    "No data for DeepSeek: menu items, clickable items, suggested prompts; No data for DeepSeek: menu items, clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-10-12",
+   "b": "chatgpt@2026-10-12",
+   "out": [
+    "No comparable data for Meta AI and ChatGPT."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-10-12",
+   "b": "claude@2026-10-12",
+   "out": [
+    "No comparable data for Meta AI and Claude."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-10-12",
+   "b": "gemini@2026-10-12",
+   "out": [
+    "No comparable data for Meta AI and Gemini."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-10-12",
+   "b": "perplexity@2026-10-12",
+   "out": [
+    "No comparable data for Meta AI and Perplexity."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-10-12",
+   "b": "copilot@2026-10-12",
+   "out": [
+    "No comparable data for Meta AI and Microsoft Copilot."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-10-12",
+   "b": "mistral@2026-10-12",
+   "out": [
+    "No comparable data for Meta AI and Le Chat."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-10-12",
+   "b": "grok@2026-10-12",
+   "out": [
+    "No comparable data for Meta AI and Grok."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-10-12",
+   "b": "deepseek@2026-10-12",
+   "out": [
+    "No comparable data for Meta AI and DeepSeek."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-10-12",
+   "b": "manus@2026-10-12",
+   "out": [
+    "No comparable data for Meta AI and Manus."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-10-12",
+   "b": "poe@2026-10-12",
+   "out": [
+    "No comparable data for Meta AI and Poe."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-10-12",
+   "b": "qwen@2026-10-12",
+   "out": [
+    "No comparable data for Meta AI and Qwen Chat."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-10-12",
+   "b": "kimi@2026-10-12",
+   "out": [
+    "No comparable data for Meta AI and Kimi."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-10-12",
+   "b": "pi@2026-10-12",
+   "out": [
+    "No comparable data for Meta AI and Pi."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-10-12",
+   "b": "muse@2026-10-12",
+   "out": [
+    "No comparable data for Meta AI and Muse."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-10-12",
+   "b": "meta-ai@2026-10-05",
+   "out": [
+    "No comparable data for Meta AI and Meta AI."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-10-12",
+   "b": "meta-ai@2026-09-28",
+   "out": [
+    "No comparable data for Meta AI and Meta AI."
+   ]
+  },
+  {
+   "a": "manus@2026-10-12",
+   "b": "chatgpt@2026-10-12",
+   "out": [
+    "Manus shows 17 menu items, ChatGPT shows 13.",
+    "Manus's message box covers more of the screen than ChatGPT's (9% vs 3.9%).",
+    "Manus shows more clickable items than ChatGPT (~33 vs ~19).",
+    "Manus shows 3 suggested prompts, ChatGPT shows none."
+   ]
+  },
+  {
+   "a": "manus@2026-10-12",
+   "b": "claude@2026-10-12",
+   "out": [
+    "Manus shows 17 menu items, Claude shows 14.",
+    "Manus's message box covers more of the screen than Claude's (9% vs 6.5%).",
+    "Manus shows more clickable items than Claude (~33 vs ~18).",
+    "Manus shows 3 suggested prompts, Claude shows none."
+   ]
+  },
+  {
+   "a": "manus@2026-10-12",
+   "b": "gemini@2026-10-12",
+   "out": [
+    "Manus shows 17 menu items, Gemini shows 11.",
+    "Manus's message box covers more of the screen than Gemini's (9% vs 4.1%).",
+    "Manus shows more clickable items than Gemini (~33 vs ~15).",
+    "Manus shows 3 suggested prompts, Gemini shows none."
+   ]
+  },
+  {
+   "a": "manus@2026-10-12",
+   "b": "perplexity@2026-10-12",
+   "out": [
+    "Manus's message box covers more of the screen than Perplexity's (9% vs 7.4%).",
+    "Manus shows more clickable items than Perplexity (~33 vs ~22).",
+    "Perplexity's sidebar is wider than Manus's (19% vs 4% of the screen width).",
+    "Manus's message box sits in the bottom third of the screen, Perplexity's in the middle third."
+   ]
+  },
+  {
+   "a": "manus@2026-10-12",
+   "b": "copilot@2026-10-12",
+   "out": [
+    "Manus shows 17 menu items, Microsoft Copilot shows 14.",
+    "Manus's message box covers more of the screen than Microsoft Copilot's (9% vs 4.5%).",
+    "Manus shows more clickable items than Microsoft Copilot (~33 vs ~23).",
+    "Microsoft Copilot's sidebar is wider than Manus's (20% vs 4% of the screen width)."
+   ]
+  },
+  {
+   "a": "manus@2026-10-12",
+   "b": "mistral@2026-10-12",
+   "out": [
+    "Manus shows 17 menu items, Le Chat shows 10.",
+    "Manus's message box covers more of the screen than Le Chat's (9% vs 4.2%).",
+    "Le Chat's sidebar is wider than Manus's (20% vs 4% of the screen width).",
+    "Manus's message box sits in the bottom third of the screen, Le Chat's in the middle third."
+   ]
+  },
+  {
+   "a": "manus@2026-10-12",
+   "b": "grok@2026-10-12",
+   "out": [
+    "Manus shows 17 menu items, Grok shows 11.",
+    "Manus's message box covers more of the screen than Grok's (9% vs 7.5%).",
+    "Manus shows more clickable items than Grok (~33 vs ~23).",
+    "Manus shows 3 suggested prompts, Grok shows none."
+   ]
+  },
+  {
+   "a": "manus@2026-10-12",
+   "b": "deepseek@2026-10-12",
+   "out": [
+    "Manus's sidebar takes 4% of the screen width, DeepSeek shows no sidebar.",
+    "Manus's message box sits in the bottom third of the screen, DeepSeek's in the middle third.",
+    "No data for DeepSeek: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "manus@2026-10-12",
+   "b": "meta-ai@2026-10-12",
+   "out": [
+    "No comparable data for Manus and Meta AI."
+   ]
+  },
+  {
+   "a": "manus@2026-10-12",
+   "b": "poe@2026-10-12",
+   "out": [
+    "Manus shows 17 menu items, Poe shows 13.",
+    "Manus's message box covers more of the screen than Poe's (9% vs 6.2%).",
+    "Manus uses 3 text sizes, Poe uses 4.",
+    "Manus's message box sits in the bottom third of the screen, Poe's in the middle third."
+   ]
+  },
+  {
+   "a": "manus@2026-10-12",
+   "b": "qwen@2026-10-12",
+   "out": [
+    "Manus shows 17 menu items, Qwen Chat shows 12.",
+    "Manus's message box covers more of the screen than Qwen Chat's (9% vs 4.3%).",
+    "Qwen Chat's sidebar is wider than Manus's (19% vs 4% of the screen width).",
+    "Manus was captured in dark mode, Qwen Chat in light mode."
+   ]
+  },
+  {
+   "a": "manus@2026-10-12",
+   "b": "kimi@2026-10-12",
+   "out": [
+    "Manus shows 5 menu items outside the sidebar, Kimi shows 13.",
+    "Manus shows more clickable items than Kimi (~33 vs ~17).",
+    "Manus's sidebar takes 4% of the screen width, Kimi shows no sidebar.",
+    "Manus uses 3 text sizes, Kimi uses 2."
+   ]
+  },
+  {
+   "a": "manus@2026-10-12",
+   "b": "pi@2026-10-12",
+   "out": [
+    "Manus shows 17 menu items, Pi shows 8.",
+    "Manus's message box covers more of the screen than Pi's (9% vs 4.5%).",
+    "Manus shows more clickable items than Pi (~33 vs ~12).",
+    "Manus shows 3 suggested prompts, Pi shows none."
+   ]
+  },
+  {
+   "a": "manus@2026-10-12",
+   "b": "muse@2026-10-12",
+   "out": [
+    "Manus shows 17 menu items, Muse shows 9.",
+    "Manus's message box covers more of the screen than Muse's (9% vs 4.4%).",
+    "Manus shows more clickable items than Muse (~33 vs ~12).",
+    "Manus shows 3 suggested prompts, Muse shows none."
+   ]
+  },
+  {
+   "a": "manus@2026-10-12",
+   "b": "manus@2026-10-05",
+   "out": [
+    "Manus shows menu items that Manus does not: an icon button (hand-mark icon) (sidebar).",
+    "Manus's and Manus's message boxes cover a similar share of the screen (9% vs 9%)."
+   ]
+  },
+  {
+   "a": "manus@2026-10-12",
+   "b": "manus@2026-09-28",
+   "out": [
+    "Manus's and Manus's message boxes cover a similar share of the screen (9% vs 9%).",
+    "Manus and Manus show about the same number of clickable items (~33 vs ~34).",
+    "No data for Manus: menu items; No data for Manus: menu items."
+   ]
+  },
+  {
+   "a": "poe@2026-10-12",
+   "b": "chatgpt@2026-10-12",
+   "out": [
+    "Poe's message box covers more of the screen than ChatGPT's (6.2% vs 3.9%).",
+    "ChatGPT's sidebar is wider than Poe's (27% vs 5% of the screen width).",
+    "No data for Poe: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "poe@2026-10-12",
+   "b": "claude@2026-10-12",
+   "out": [
+    "Poe shows 13 menu items, Claude shows 14.",
+    "Claude's sidebar is wider than Poe's (23% vs 5% of the screen width).",
+    "Poe uses 4 text sizes, Claude uses 2.",
+    "No data for Poe: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "poe@2026-10-12",
+   "b": "gemini@2026-10-12",
+   "out": [
+    "Poe shows 13 menu items, Gemini shows 11.",
+    "Poe's message box covers more of the screen than Gemini's (6.2% vs 4.1%).",
+    "Poe uses 4 text sizes, Gemini uses 3.",
+    "No data for Poe: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "poe@2026-10-12",
+   "b": "perplexity@2026-10-12",
+   "out": [
+    "Poe shows 13 menu items, Perplexity shows 17.",
+    "Perplexity's message box covers more of the screen than Poe's (7.4% vs 6.2%).",
+    "Perplexity's sidebar is wider than Poe's (19% vs 5% of the screen width).",
+    "Poe uses 4 text sizes, Perplexity uses 3."
+   ]
+  },
+  {
+   "a": "poe@2026-10-12",
+   "b": "copilot@2026-10-12",
+   "out": [
+    "Poe shows 13 menu items, Microsoft Copilot shows 14.",
+    "Poe's message box covers more of the screen than Microsoft Copilot's (6.2% vs 4.5%).",
+    "Microsoft Copilot's sidebar is wider than Poe's (20% vs 5% of the screen width).",
+    "Poe uses 4 text sizes, Microsoft Copilot uses 3."
+   ]
+  },
+  {
+   "a": "poe@2026-10-12",
+   "b": "mistral@2026-10-12",
+   "out": [
+    "Poe shows 13 menu items, Le Chat shows 10.",
+    "Poe's message box covers more of the screen than Le Chat's (6.2% vs 4.2%).",
+    "Le Chat's sidebar is wider than Poe's (20% vs 5% of the screen width).",
+    "Poe uses 4 text sizes, Le Chat uses 3."
+   ]
+  },
+  {
+   "a": "poe@2026-10-12",
+   "b": "grok@2026-10-12",
+   "out": [
+    "Poe shows 13 menu items, Grok shows 11.",
+    "Grok's message box covers more of the screen than Poe's (7.5% vs 6.2%).",
+    "Grok's sidebar is wider than Poe's (20% vs 5% of the screen width).",
+    "No data for Poe: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "poe@2026-10-12",
+   "b": "deepseek@2026-10-12",
+   "out": [
+    "Poe shows 3 menu items outside the sidebar, DeepSeek shows 5.",
+    "DeepSeek's message box covers more of the screen than Poe's (9.5% vs 6.2%).",
+    "Poe's sidebar takes 5% of the screen width, DeepSeek shows no sidebar.",
+    "Poe uses 4 text sizes, DeepSeek uses 3."
+   ]
+  },
+  {
+   "a": "poe@2026-10-12",
+   "b": "meta-ai@2026-10-12",
+   "out": [
+    "No comparable data for Poe and Meta AI."
+   ]
+  },
+  {
+   "a": "poe@2026-10-12",
+   "b": "manus@2026-10-12",
+   "out": [
+    "Poe shows 13 menu items, Manus shows 17.",
+    "Manus's message box covers more of the screen than Poe's (9% vs 6.2%).",
+    "Poe uses 4 text sizes, Manus uses 3.",
+    "Poe's message box sits in the middle third of the screen, Manus's in the bottom third."
+   ]
+  },
+  {
+   "a": "poe@2026-10-12",
+   "b": "qwen@2026-10-12",
+   "out": [
+    "Poe shows 13 menu items, Qwen Chat shows 12.",
+    "Poe's message box covers more of the screen than Qwen Chat's (6.2% vs 4.3%).",
+    "Qwen Chat's sidebar is wider than Poe's (19% vs 5% of the screen width).",
+    "Poe uses 4 text sizes, Qwen Chat uses 3."
+   ]
+  },
+  {
+   "a": "poe@2026-10-12",
+   "b": "kimi@2026-10-12",
+   "out": [
+    "Poe shows 3 menu items outside the sidebar, Kimi shows 13.",
+    "Kimi's message box covers more of the screen than Poe's (8.6% vs 6.2%).",
+    "Poe's sidebar takes 5% of the screen width, Kimi shows no sidebar.",
+    "Poe uses 4 text sizes, Kimi uses 2."
+   ]
+  },
+  {
+   "a": "poe@2026-10-12",
+   "b": "pi@2026-10-12",
+   "out": [
+    "Poe shows 13 menu items, Pi shows 8.",
+    "Poe's message box covers more of the screen than Pi's (6.2% vs 4.5%).",
+    "Pi's sidebar is wider than Poe's (22% vs 5% of the screen width).",
+    "Pi shows a note about the AI's limits, Poe does not."
+   ]
+  },
+  {
+   "a": "poe@2026-10-12",
+   "b": "muse@2026-10-12",
+   "out": [
+    "Poe shows 13 menu items, Muse shows 9.",
+    "Poe's message box covers more of the screen than Muse's (6.2% vs 4.4%).",
+    "Poe uses 4 text sizes, Muse uses 1.",
+    "Poe's message box sits in the middle third of the screen, Muse's in the bottom third."
+   ]
+  },
+  {
+   "a": "poe@2026-10-12",
+   "b": "poe@2026-10-05",
+   "out": [
+    "Both show the same menu items.",
+    "Poe's and Poe's message boxes cover a similar share of the screen (6.2% vs 6.2%).",
+    "No data for Poe: clickable items, suggested prompts; No data for Poe: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "poe@2026-10-12",
+   "b": "poe@2026-09-28",
+   "out": [
+    "Poe's and Poe's message boxes cover a similar share of the screen (6.2% vs 6.2%).",
+    "Poe's and Poe's sidebars take a similar share of the screen width (5% vs 5%).",
+    "No data for Poe: menu items, clickable items, suggested prompts; No data for Poe: menu items, clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "qwen@2026-10-12",
+   "b": "chatgpt@2026-10-12",
+   "out": [
+    "Qwen Chat shows 12 menu items, ChatGPT shows 13.",
+    "ChatGPT's sidebar is wider than Qwen Chat's (27% vs 19% of the screen width).",
+    "Qwen Chat uses 3 text sizes, ChatGPT uses 4.",
+    "Qwen Chat was captured in light mode, ChatGPT in dark mode."
+   ]
+  },
+  {
+   "a": "qwen@2026-10-12",
+   "b": "claude@2026-10-12",
+   "out": [
+    "Qwen Chat shows 12 menu items, Claude shows 14.",
+    "Claude's message box covers more of the screen than Qwen Chat's (6.5% vs 4.3%).",
+    "Qwen Chat uses 3 text sizes, Claude uses 2.",
+    "Qwen Chat was captured in light mode, Claude in dark mode."
+   ]
+  },
+  {
+   "a": "qwen@2026-10-12",
+   "b": "gemini@2026-10-12",
+   "out": [
+    "Qwen Chat shows 12 menu items, Gemini shows 11.",
+    "Qwen Chat's sidebar is wider than Gemini's (19% vs 4% of the screen width).",
+    "Qwen Chat was captured in light mode, Gemini in dark mode.",
+    "No data for Qwen Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "qwen@2026-10-12",
+   "b": "perplexity@2026-10-12",
+   "out": [
+    "Qwen Chat shows 12 menu items, Perplexity shows 17.",
+    "Perplexity's message box covers more of the screen than Qwen Chat's (7.4% vs 4.3%).",
+    "Qwen Chat was captured in light mode, Perplexity in dark mode.",
+    "No data for Qwen Chat: clickable items, suggested prompts; No data for Perplexity: suggested prompts."
+   ]
+  },
+  {
+   "a": "qwen@2026-10-12",
+   "b": "copilot@2026-10-12",
+   "out": [
+    "Qwen Chat shows 12 menu items, Microsoft Copilot shows 14.",
+    "Qwen Chat was captured in light mode, Microsoft Copilot in dark mode.",
+    "No data for Qwen Chat: clickable items, suggested prompts; No data for Microsoft Copilot: suggested prompts."
+   ]
+  },
+  {
+   "a": "qwen@2026-10-12",
+   "b": "mistral@2026-10-12",
+   "out": [
+    "Qwen Chat shows 12 menu items, Le Chat shows 10.",
+    "Qwen Chat was captured in light mode, Le Chat in dark mode.",
+    "No data for Qwen Chat: clickable items, suggested prompts; No data for Le Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "qwen@2026-10-12",
+   "b": "grok@2026-10-12",
+   "out": [
+    "Qwen Chat shows 12 menu items, Grok shows 11.",
+    "Grok's message box covers more of the screen than Qwen Chat's (7.5% vs 4.3%).",
+    "Qwen Chat uses 3 text sizes, Grok uses 4.",
+    "Qwen Chat was captured in light mode, Grok in dark mode."
+   ]
+  },
+  {
+   "a": "qwen@2026-10-12",
+   "b": "deepseek@2026-10-12",
+   "out": [
+    "Qwen Chat shows 3 menu items outside the sidebar, DeepSeek shows 5.",
+    "DeepSeek's message box covers more of the screen than Qwen Chat's (9.5% vs 4.3%).",
+    "Qwen Chat's sidebar takes 19% of the screen width, DeepSeek shows no sidebar.",
+    "Qwen Chat was captured in light mode, DeepSeek in dark mode."
+   ]
+  },
+  {
+   "a": "qwen@2026-10-12",
+   "b": "meta-ai@2026-10-12",
+   "out": [
+    "No comparable data for Qwen Chat and Meta AI."
+   ]
+  },
+  {
+   "a": "qwen@2026-10-12",
+   "b": "manus@2026-10-12",
+   "out": [
+    "Qwen Chat shows 12 menu items, Manus shows 17.",
+    "Manus's message box covers more of the screen than Qwen Chat's (9% vs 4.3%).",
+    "Qwen Chat's sidebar is wider than Manus's (19% vs 4% of the screen width).",
+    "Qwen Chat was captured in light mode, Manus in dark mode."
+   ]
+  },
+  {
+   "a": "qwen@2026-10-12",
+   "b": "poe@2026-10-12",
+   "out": [
+    "Qwen Chat shows 12 menu items, Poe shows 13.",
+    "Poe's message box covers more of the screen than Qwen Chat's (6.2% vs 4.3%).",
+    "Qwen Chat's sidebar is wider than Poe's (19% vs 5% of the screen width).",
+    "Qwen Chat uses 3 text sizes, Poe uses 4."
+   ]
+  },
+  {
+   "a": "qwen@2026-10-12",
+   "b": "kimi@2026-10-12",
+   "out": [
+    "Qwen Chat shows 3 menu items outside the sidebar, Kimi shows 13.",
+    "Kimi's message box covers more of the screen than Qwen Chat's (8.6% vs 4.3%).",
+    "Qwen Chat's sidebar takes 19% of the screen width, Kimi shows no sidebar.",
+    "Qwen Chat uses 3 text sizes, Kimi uses 2."
+   ]
+  },
+  {
+   "a": "qwen@2026-10-12",
+   "b": "pi@2026-10-12",
+   "out": [
+    "Qwen Chat shows 12 menu items, Pi shows 8.",
+    "Qwen Chat uses 3 text sizes, Pi uses 4.",
+    "Pi shows a note about the AI's limits, Qwen Chat does not.",
+    "Qwen Chat was captured in light mode, Pi in dark mode."
+   ]
+  },
+  {
+   "a": "qwen@2026-10-12",
+   "b": "muse@2026-10-12",
+   "out": [
+    "Qwen Chat shows 12 menu items, Muse shows 9.",
+    "Qwen Chat's sidebar is wider than Muse's (19% vs 6% of the screen width).",
+    "Qwen Chat uses 3 text sizes, Muse uses 1.",
+    "Qwen Chat was captured in light mode, Muse in dark mode."
+   ]
+  },
+  {
+   "a": "qwen@2026-10-12",
+   "b": "qwen@2026-10-05",
+   "out": [
+    "A new Create item appears in the sidebar.",
+    "Qwen Chat's and Qwen Chat's message boxes cover a similar share of the screen (4.3% vs 4.3%).",
+    "No data for Qwen Chat: clickable items, suggested prompts; No data for Qwen Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "qwen@2026-10-12",
+   "b": "qwen@2026-09-28",
+   "out": [
+    "Qwen Chat's and Qwen Chat's message boxes cover a similar share of the screen (4.3% vs 4.3%).",
+    "Qwen Chat's and Qwen Chat's sidebars take a similar share of the screen width (19% vs 19%).",
+    "No data for Qwen Chat: menu items, clickable items, suggested prompts; No data for Qwen Chat: menu items, clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "kimi@2026-10-12",
+   "b": "chatgpt@2026-10-12",
+   "out": [
+    "Kimi shows 13 menu items outside the sidebar, ChatGPT shows 4.",
+    "Kimi's message box covers more of the screen than ChatGPT's (8.6% vs 3.9%).",
+    "ChatGPT's sidebar takes 27% of the screen width, Kimi shows no sidebar.",
+    "Kimi uses 2 text sizes, ChatGPT uses 4."
+   ]
+  },
+  {
+   "a": "kimi@2026-10-12",
+   "b": "claude@2026-10-12",
+   "out": [
+    "Kimi shows 13 menu items outside the sidebar, Claude shows 4.",
+    "Kimi's message box covers more of the screen than Claude's (8.6% vs 6.5%).",
+    "Claude's sidebar takes 23% of the screen width, Kimi shows no sidebar.",
+    "Kimi shows a note about the AI's limits, Claude does not."
+   ]
+  },
+  {
+   "a": "kimi@2026-10-12",
+   "b": "gemini@2026-10-12",
+   "out": [
+    "Kimi shows 13 menu items outside the sidebar, Gemini shows 4.",
+    "Kimi's message box covers more of the screen than Gemini's (8.6% vs 4.1%).",
+    "Gemini's sidebar takes 4% of the screen width, Kimi shows no sidebar.",
+    "Kimi uses 2 text sizes, Gemini uses 3."
+   ]
+  },
+  {
+   "a": "kimi@2026-10-12",
+   "b": "perplexity@2026-10-12",
+   "out": [
+    "Kimi shows 13 menu items outside the sidebar, Perplexity shows 6.",
+    "Kimi's message box covers more of the screen than Perplexity's (8.6% vs 7.4%).",
+    "Perplexity shows more clickable items than Kimi (~22 vs ~17).",
+    "Perplexity's sidebar takes 19% of the screen width, Kimi shows no sidebar."
+   ]
+  },
+  {
+   "a": "kimi@2026-10-12",
+   "b": "copilot@2026-10-12",
+   "out": [
+    "Kimi shows 13 menu items outside the sidebar, Microsoft Copilot shows 5.",
+    "Kimi's message box covers more of the screen than Microsoft Copilot's (8.6% vs 4.5%).",
+    "Microsoft Copilot shows more clickable items than Kimi (~23 vs ~17).",
+    "Microsoft Copilot's sidebar takes 20% of the screen width, Kimi shows no sidebar."
+   ]
+  },
+  {
+   "a": "kimi@2026-10-12",
+   "b": "mistral@2026-10-12",
+   "out": [
+    "Kimi shows 13 menu items outside the sidebar, Le Chat shows 2.",
+    "Kimi's message box covers more of the screen than Le Chat's (8.6% vs 4.2%).",
+    "Le Chat's sidebar takes 20% of the screen width, Kimi shows no sidebar.",
+    "Kimi uses 2 text sizes, Le Chat uses 3."
+   ]
+  },
+  {
+   "a": "kimi@2026-10-12",
+   "b": "grok@2026-10-12",
+   "out": [
+    "Kimi shows 13 menu items outside the sidebar, Grok shows 3.",
+    "Kimi's message box covers more of the screen than Grok's (8.6% vs 7.5%).",
+    "Grok shows more clickable items than Kimi (~23 vs ~17).",
+    "Grok's sidebar takes 20% of the screen width, Kimi shows no sidebar."
+   ]
+  },
+  {
+   "a": "kimi@2026-10-12",
+   "b": "deepseek@2026-10-12",
+   "out": [
+    "Kimi shows 13 menu items outside the sidebar, DeepSeek shows 5.",
+    "Kimi uses 2 text sizes, DeepSeek uses 3.",
+    "Kimi shows a note about the AI's limits, DeepSeek does not.",
+    "No data for Kimi: suggested prompts; No data for DeepSeek: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "kimi@2026-10-12",
+   "b": "meta-ai@2026-10-12",
+   "out": [
+    "No comparable data for Kimi and Meta AI."
+   ]
+  },
+  {
+   "a": "kimi@2026-10-12",
+   "b": "manus@2026-10-12",
+   "out": [
+    "Kimi shows 13 menu items outside the sidebar, Manus shows 5.",
+    "Manus shows more clickable items than Kimi (~33 vs ~17).",
+    "Manus's sidebar takes 4% of the screen width, Kimi shows no sidebar.",
+    "Kimi uses 2 text sizes, Manus uses 3."
+   ]
+  },
+  {
+   "a": "kimi@2026-10-12",
+   "b": "poe@2026-10-12",
+   "out": [
+    "Kimi shows 13 menu items outside the sidebar, Poe shows 3.",
+    "Kimi's message box covers more of the screen than Poe's (8.6% vs 6.2%).",
+    "Poe's sidebar takes 5% of the screen width, Kimi shows no sidebar.",
+    "Kimi uses 2 text sizes, Poe uses 4."
+   ]
+  },
+  {
+   "a": "kimi@2026-10-12",
+   "b": "qwen@2026-10-12",
+   "out": [
+    "Kimi shows 13 menu items outside the sidebar, Qwen Chat shows 3.",
+    "Kimi's message box covers more of the screen than Qwen Chat's (8.6% vs 4.3%).",
+    "Qwen Chat's sidebar takes 19% of the screen width, Kimi shows no sidebar.",
+    "Kimi uses 2 text sizes, Qwen Chat uses 3."
+   ]
+  },
+  {
+   "a": "kimi@2026-10-12",
+   "b": "pi@2026-10-12",
+   "out": [
+    "Kimi shows 13 menu items outside the sidebar, Pi shows 1.",
+    "Kimi's message box covers more of the screen than Pi's (8.6% vs 4.5%).",
+    "Kimi shows more clickable items than Pi (~17 vs ~12).",
+    "Pi's sidebar takes 22% of the screen width, Kimi shows no sidebar."
+   ]
+  },
+  {
+   "a": "kimi@2026-10-12",
+   "b": "muse@2026-10-12",
+   "out": [
+    "Kimi shows 13 menu items outside the sidebar, Muse shows 1.",
+    "Kimi's message box covers more of the screen than Muse's (8.6% vs 4.4%).",
+    "Kimi shows more clickable items than Muse (~17 vs ~12).",
+    "Muse's sidebar takes 6% of the screen width, Kimi shows no sidebar."
+   ]
+  },
+  {
+   "a": "kimi@2026-10-12",
+   "b": "kimi@2026-10-05",
+   "out": [
+    "Kimi uses 2 text sizes, Kimi uses 3.",
+    "Both show the same menu items outside the sidebar.",
+    "No data for Kimi: suggested prompts; No data for Kimi: suggested prompts."
+   ]
+  },
+  {
+   "a": "kimi@2026-10-12",
+   "b": "kimi@2026-09-28",
+   "out": [
+    "Kimi uses 2 text sizes, Kimi uses 3.",
+    "Kimi's and Kimi's message boxes cover a similar share of the screen (8.6% vs 8.6%).",
+    "No data for Kimi: menu items, suggested prompts; No data for Kimi: menu items, suggested prompts."
+   ]
+  },
+  {
+   "a": "pi@2026-10-12",
+   "b": "chatgpt@2026-10-12",
+   "out": [
+    "Pi shows 8 menu items, ChatGPT shows 13.",
+    "ChatGPT shows more clickable items than Pi (~19 vs ~12).",
+    "ChatGPT's sidebar is wider than Pi's (27% vs 22% of the screen width).",
+    "Pi shows a note about the AI's limits, ChatGPT does not."
+   ]
+  },
+  {
+   "a": "pi@2026-10-12",
+   "b": "claude@2026-10-12",
+   "out": [
+    "Pi shows 8 menu items, Claude shows 14.",
+    "Claude's message box covers more of the screen than Pi's (6.5% vs 4.5%).",
+    "Claude shows more clickable items than Pi (~18 vs ~12).",
+    "Pi uses 4 text sizes, Claude uses 2."
+   ]
+  },
+  {
+   "a": "pi@2026-10-12",
+   "b": "gemini@2026-10-12",
+   "out": [
+    "Pi shows 8 menu items, Gemini shows 11.",
+    "Gemini shows more clickable items than Pi (~15 vs ~12).",
+    "Pi's sidebar is wider than Gemini's (22% vs 4% of the screen width).",
+    "Pi uses 4 text sizes, Gemini uses 3."
+   ]
+  },
+  {
+   "a": "pi@2026-10-12",
+   "b": "perplexity@2026-10-12",
+   "out": [
+    "Pi shows 8 menu items, Perplexity shows 17.",
+    "Perplexity's message box covers more of the screen than Pi's (7.4% vs 4.5%).",
+    "Perplexity shows more clickable items than Pi (~22 vs ~12).",
+    "Pi uses 4 text sizes, Perplexity uses 3."
+   ]
+  },
+  {
+   "a": "pi@2026-10-12",
+   "b": "copilot@2026-10-12",
+   "out": [
+    "Pi shows 8 menu items, Microsoft Copilot shows 14.",
+    "Microsoft Copilot shows more clickable items than Pi (~23 vs ~12).",
+    "Pi uses 4 text sizes, Microsoft Copilot uses 3.",
+    "Pi shows a note about the AI's limits, Microsoft Copilot does not."
+   ]
+  },
+  {
+   "a": "pi@2026-10-12",
+   "b": "mistral@2026-10-12",
+   "out": [
+    "Pi shows 8 menu items, Le Chat shows 10.",
+    "Pi uses 4 text sizes, Le Chat uses 3.",
+    "Pi shows a note about the AI's limits, Le Chat does not.",
+    "Pi's message box sits in the bottom third of the screen, Le Chat's in the middle third."
+   ]
+  },
+  {
+   "a": "pi@2026-10-12",
+   "b": "grok@2026-10-12",
+   "out": [
+    "Pi shows 8 menu items, Grok shows 11.",
+    "Grok's message box covers more of the screen than Pi's (7.5% vs 4.5%).",
+    "Grok shows more clickable items than Pi (~23 vs ~12).",
+    "Pi shows a note about the AI's limits, Grok does not."
+   ]
+  },
+  {
+   "a": "pi@2026-10-12",
+   "b": "deepseek@2026-10-12",
+   "out": [
+    "Pi shows 1 menu item outside the sidebar, DeepSeek shows 5.",
+    "DeepSeek's message box covers more of the screen than Pi's (9.5% vs 4.5%).",
+    "Pi's sidebar takes 22% of the screen width, DeepSeek shows no sidebar.",
+    "Pi uses 4 text sizes, DeepSeek uses 3."
+   ]
+  },
+  {
+   "a": "pi@2026-10-12",
+   "b": "meta-ai@2026-10-12",
+   "out": [
+    "No comparable data for Pi and Meta AI."
+   ]
+  },
+  {
+   "a": "pi@2026-10-12",
+   "b": "manus@2026-10-12",
+   "out": [
+    "Pi shows 8 menu items, Manus shows 17.",
+    "Manus's message box covers more of the screen than Pi's (9% vs 4.5%).",
+    "Manus shows more clickable items than Pi (~33 vs ~12).",
+    "Pi shows no suggested prompts, Manus shows 3."
+   ]
+  },
+  {
+   "a": "pi@2026-10-12",
+   "b": "poe@2026-10-12",
+   "out": [
+    "Pi shows 8 menu items, Poe shows 13.",
+    "Poe's message box covers more of the screen than Pi's (6.2% vs 4.5%).",
+    "Pi's sidebar is wider than Poe's (22% vs 5% of the screen width).",
+    "Pi shows a note about the AI's limits, Poe does not."
+   ]
+  },
+  {
+   "a": "pi@2026-10-12",
+   "b": "qwen@2026-10-12",
+   "out": [
+    "Pi shows 8 menu items, Qwen Chat shows 12.",
+    "Pi uses 4 text sizes, Qwen Chat uses 3.",
+    "Pi shows a note about the AI's limits, Qwen Chat does not.",
+    "Pi was captured in dark mode, Qwen Chat in light mode."
+   ]
+  },
+  {
+   "a": "pi@2026-10-12",
+   "b": "kimi@2026-10-12",
+   "out": [
+    "Pi shows 1 menu item outside the sidebar, Kimi shows 13.",
+    "Kimi's message box covers more of the screen than Pi's (8.6% vs 4.5%).",
+    "Kimi shows more clickable items than Pi (~17 vs ~12).",
+    "Pi's sidebar takes 22% of the screen width, Kimi shows no sidebar."
+   ]
+  },
+  {
+   "a": "pi@2026-10-12",
+   "b": "muse@2026-10-12",
+   "out": [
+    "Pi shows 8 menu items, Muse shows 9.",
+    "Pi's sidebar is wider than Muse's (22% vs 6% of the screen width).",
+    "Pi uses 4 text sizes, Muse uses 1.",
+    "Pi shows a note about the AI's limits, Muse does not."
+   ]
+  },
+  {
+   "a": "pi@2026-10-12",
+   "b": "pi@2026-10-05",
+   "out": [
+    "Both show the same menu items.",
+    "Pi's and Pi's message boxes cover a similar share of the screen (4.5% vs 4.5%)."
+   ]
+  },
+  {
+   "a": "pi@2026-10-12",
+   "b": "pi@2026-09-28",
+   "out": [
+    "Pi's and Pi's message boxes cover a similar share of the screen (4.5% vs 4.5%).",
+    "Pi and Pi show about the same number of clickable items (~12 vs ~12).",
+    "No data for Pi: menu items; No data for Pi: menu items."
+   ]
+  },
+  {
+   "a": "muse@2026-10-12",
+   "b": "chatgpt@2026-10-12",
+   "out": [
+    "Muse shows 9 menu items, ChatGPT shows 13.",
+    "ChatGPT shows more clickable items than Muse (~19 vs ~12).",
+    "ChatGPT's sidebar is wider than Muse's (27% vs 6% of the screen width).",
+    "Muse uses 1 text size, ChatGPT uses 4."
+   ]
+  },
+  {
+   "a": "muse@2026-10-12",
+   "b": "claude@2026-10-12",
+   "out": [
+    "Muse shows 9 menu items, Claude shows 14.",
+    "Claude's message box covers more of the screen than Muse's (6.5% vs 4.4%).",
+    "Claude shows more clickable items than Muse (~18 vs ~12).",
+    "Claude's sidebar is wider than Muse's (23% vs 6% of the screen width)."
+   ]
+  },
+  {
+   "a": "muse@2026-10-12",
+   "b": "gemini@2026-10-12",
+   "out": [
+    "Muse shows 9 menu items, Gemini shows 11.",
+    "Gemini shows more clickable items than Muse (~15 vs ~12).",
+    "Muse uses 1 text size, Gemini uses 3.",
+    "Muse's message box sits in the bottom third of the screen, Gemini's in the middle third."
+   ]
+  },
+  {
+   "a": "muse@2026-10-12",
+   "b": "perplexity@2026-10-12",
+   "out": [
+    "Muse shows 9 menu items, Perplexity shows 17.",
+    "Perplexity's message box covers more of the screen than Muse's (7.4% vs 4.4%).",
+    "Perplexity shows more clickable items than Muse (~22 vs ~12).",
+    "Perplexity's sidebar is wider than Muse's (19% vs 6% of the screen width)."
+   ]
+  },
+  {
+   "a": "muse@2026-10-12",
+   "b": "copilot@2026-10-12",
+   "out": [
+    "Muse shows 9 menu items, Microsoft Copilot shows 14.",
+    "Microsoft Copilot shows more clickable items than Muse (~23 vs ~12).",
+    "Microsoft Copilot's sidebar is wider than Muse's (20% vs 6% of the screen width).",
+    "Muse uses 1 text size, Microsoft Copilot uses 3."
+   ]
+  },
+  {
+   "a": "muse@2026-10-12",
+   "b": "mistral@2026-10-12",
+   "out": [
+    "Muse shows 9 menu items, Le Chat shows 10.",
+    "Le Chat's sidebar is wider than Muse's (20% vs 6% of the screen width).",
+    "Muse uses 1 text size, Le Chat uses 3.",
+    "Muse's message box sits in the bottom third of the screen, Le Chat's in the middle third."
+   ]
+  },
+  {
+   "a": "muse@2026-10-12",
+   "b": "grok@2026-10-12",
+   "out": [
+    "Muse shows 9 menu items, Grok shows 11.",
+    "Grok's message box covers more of the screen than Muse's (7.5% vs 4.4%).",
+    "Grok shows more clickable items than Muse (~23 vs ~12).",
+    "Grok's sidebar is wider than Muse's (20% vs 6% of the screen width)."
+   ]
+  },
+  {
+   "a": "muse@2026-10-12",
+   "b": "deepseek@2026-10-12",
+   "out": [
+    "Muse shows 1 menu item outside the sidebar, DeepSeek shows 5.",
+    "DeepSeek's message box covers more of the screen than Muse's (9.5% vs 4.4%).",
+    "Muse's sidebar takes 6% of the screen width, DeepSeek shows no sidebar.",
+    "Muse uses 1 text size, DeepSeek uses 3."
+   ]
+  },
+  {
+   "a": "muse@2026-10-12",
+   "b": "meta-ai@2026-10-12",
+   "out": [
+    "No comparable data for Muse and Meta AI."
+   ]
+  },
+  {
+   "a": "muse@2026-10-12",
+   "b": "manus@2026-10-12",
+   "out": [
+    "Muse shows 9 menu items, Manus shows 17.",
+    "Manus's message box covers more of the screen than Muse's (9% vs 4.4%).",
+    "Manus shows more clickable items than Muse (~33 vs ~12).",
+    "Muse shows no suggested prompts, Manus shows 3."
+   ]
+  },
+  {
+   "a": "muse@2026-10-12",
+   "b": "poe@2026-10-12",
+   "out": [
+    "Muse shows 9 menu items, Poe shows 13.",
+    "Poe's message box covers more of the screen than Muse's (6.2% vs 4.4%).",
+    "Muse uses 1 text size, Poe uses 4.",
+    "Muse's message box sits in the bottom third of the screen, Poe's in the middle third."
+   ]
+  },
+  {
+   "a": "muse@2026-10-12",
+   "b": "qwen@2026-10-12",
+   "out": [
+    "Muse shows 9 menu items, Qwen Chat shows 12.",
+    "Qwen Chat's sidebar is wider than Muse's (19% vs 6% of the screen width).",
+    "Muse uses 1 text size, Qwen Chat uses 3.",
+    "Muse was captured in dark mode, Qwen Chat in light mode."
+   ]
+  },
+  {
+   "a": "muse@2026-10-12",
+   "b": "kimi@2026-10-12",
+   "out": [
+    "Muse shows 1 menu item outside the sidebar, Kimi shows 13.",
+    "Kimi's message box covers more of the screen than Muse's (8.6% vs 4.4%).",
+    "Kimi shows more clickable items than Muse (~17 vs ~12).",
+    "Muse's sidebar takes 6% of the screen width, Kimi shows no sidebar."
+   ]
+  },
+  {
+   "a": "muse@2026-10-12",
+   "b": "pi@2026-10-12",
+   "out": [
+    "Muse shows 9 menu items, Pi shows 8.",
+    "Pi's sidebar is wider than Muse's (22% vs 6% of the screen width).",
+    "Muse uses 1 text size, Pi uses 4.",
+    "Pi shows a note about the AI's limits, Muse does not."
+   ]
+  },
+  {
+   "a": "muse@2026-10-12",
+   "b": "muse@2026-10-05",
+   "out": [
+    "Muse's message box covers more of the screen than Muse's (4.4% vs 3.3%).",
+    "Both show the same menu items."
+   ]
+  },
+  {
+   "a": "muse@2026-10-12",
+   "b": "muse@2026-09-28",
+   "out": [
+    "Muse's message box covers more of the screen than Muse's (4.4% vs 3.3%).",
+    "Muse and Muse show about the same number of clickable items (~12 vs ~12).",
+    "No data for Muse: menu items; No data for Muse: menu items."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-10-05",
+   "b": "chatgpt@2026-10-12",
+   "out": [
+    "The sidebar item More is now labeled Explore.",
+    "The Upgrade item no longer appears in the top bar.",
+    "ChatGPT shows more clickable items than ChatGPT (~23 vs ~19).",
+    "ChatGPT shows 3 suggested prompts, ChatGPT shows none."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-10-05",
+   "b": "chatgpt@2026-09-28",
+   "out": [
+    "The sidebar item Scheduled is now labeled Tasks.",
+    "ChatGPT's and ChatGPT's message boxes cover a similar share of the screen (3.3% vs 3.3%)."
+   ]
+  },
+  {
+   "a": "claude@2026-10-05",
+   "b": "claude@2026-10-12",
+   "out": [
+    "Both show the same menu items.",
+    "Claude's and Claude's message boxes cover a similar share of the screen (6.5% vs 6.5%)."
+   ]
+  },
+  {
+   "a": "claude@2026-10-05",
+   "b": "claude@2026-09-28",
+   "out": [
+    "Claude's and Claude's message boxes cover a similar share of the screen (6.5% vs 6.5%).",
+    "Claude and Claude show about the same number of clickable items (~18 vs ~18).",
+    "No data for Claude: menu items; No data for Claude: menu items."
+   ]
+  },
+  {
+   "a": "gemini@2026-10-05",
+   "b": "gemini@2026-10-12",
+   "out": [
+    "The icon of a sidebar button changed (diamond icon → clock icon).",
+    "and 2 more menu changes."
+   ]
+  },
+  {
+   "a": "gemini@2026-10-05",
+   "b": "gemini@2026-09-28",
+   "out": [
+    "Gemini's and Gemini's message boxes cover a similar share of the screen (4.1% vs 4.1%).",
+    "Gemini and Gemini show about the same number of clickable items (~13 vs ~13).",
+    "No data for Gemini: menu items; No data for Gemini: menu items."
+   ]
+  },
+  {
+   "a": "perplexity@2026-10-05",
+   "b": "perplexity@2026-10-12",
+   "out": [
+    "The sidebar item Sessions is now labeled Recents.",
+    "Perplexity's and Perplexity's message boxes cover a similar share of the screen (7.4% vs 7.4%).",
+    "No data for Perplexity: suggested prompts; No data for Perplexity: suggested prompts."
+   ]
+  },
+  {
+   "a": "perplexity@2026-10-05",
+   "b": "perplexity@2026-09-28",
+   "out": [
+    "Perplexity's and Perplexity's message boxes cover a similar share of the screen (7.4% vs 7.4%).",
+    "Perplexity and Perplexity show about the same number of clickable items (~23 vs ~23).",
+    "No data for Perplexity: menu items, suggested prompts; No data for Perplexity: menu items, suggested prompts."
+   ]
+  },
+  {
+   "a": "copilot@2026-10-05",
+   "b": "copilot@2026-10-12",
+   "out": [
+    "Both show the same menu items.",
+    "Microsoft Copilot's and Microsoft Copilot's message boxes cover a similar share of the screen (4.5% vs 4.5%).",
+    "No data for Microsoft Copilot: suggested prompts; No data for Microsoft Copilot: suggested prompts."
+   ]
+  },
+  {
+   "a": "copilot@2026-10-05",
+   "b": "copilot@2026-09-28",
+   "out": [
+    "Microsoft Copilot's and Microsoft Copilot's message boxes cover a similar share of the screen (4.5% vs 4.8%).",
+    "Microsoft Copilot and Microsoft Copilot show about the same number of clickable items (~23 vs ~22).",
+    "No data for Microsoft Copilot: menu items, suggested prompts; No data for Microsoft Copilot: menu items, suggested prompts."
+   ]
+  },
+  {
+   "a": "mistral@2026-10-05",
+   "b": "mistral@2026-10-12",
+   "out": [
+    "Both show the same menu items.",
+    "Le Chat's and Le Chat's message boxes cover a similar share of the screen (4.2% vs 4.2%).",
+    "No data for Le Chat: clickable items, suggested prompts; No data for Le Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "mistral@2026-10-05",
+   "b": "mistral@2026-09-28",
+   "out": [
+    "The icon of a top bar button changed (bubble-clock icon → dashed bubble icon).",
+    "Le Chat's and Le Chat's message boxes cover a similar share of the screen (4.2% vs 4.2%).",
+    "No data for Le Chat: clickable items, suggested prompts; No data for Le Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "grok@2026-10-05",
+   "b": "grok@2026-10-12",
+   "out": [
+    "Grok's and Grok's message boxes cover a similar share of the screen (7.5% vs 7.5%).",
+    "Grok and Grok show about the same number of clickable items (~25 vs ~23).",
+    "No data for Grok: menu items; No data for Grok: menu items."
+   ]
+  },
+  {
+   "a": "grok@2026-10-05",
+   "b": "grok@2026-09-28",
+   "out": [
+    "Grok shows more clickable items than Grok (~25 vs ~22).",
+    "Grok's and Grok's message boxes cover a similar share of the screen (7.5% vs 7.5%).",
+    "No data for Grok: menu items; No data for Grok: menu items."
+   ]
+  },
+  {
+   "a": "deepseek@2026-10-05",
+   "b": "deepseek@2026-10-12",
+   "out": [
+    "Both show the same menu items outside the sidebar.",
+    "DeepSeek's and DeepSeek's message boxes cover a similar share of the screen (9.5% vs 9.5%).",
+    "No data for DeepSeek: clickable items, suggested prompts; No data for DeepSeek: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "deepseek@2026-10-05",
+   "b": "deepseek@2026-09-28",
+   "out": [
+    "DeepSeek's and DeepSeek's message boxes cover a similar share of the screen (9.5% vs 9.5%).",
+    "Neither DeepSeek nor DeepSeek shows a sidebar.",
+    "No data for DeepSeek: menu items, clickable items, suggested prompts; No data for DeepSeek: menu items, clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-10-05",
+   "b": "meta-ai@2026-10-12",
+   "out": [
+    "No comparable data for Meta AI and Meta AI."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-10-05",
+   "b": "meta-ai@2026-09-28",
+   "out": [
+    "Meta AI's and Meta AI's message boxes cover a similar share of the screen (9.8% vs 9.8%).",
+    "Meta AI's and Meta AI's sidebars take a similar share of the screen width (20% vs 20%).",
+    "No data for Meta AI: menu items, clickable items, suggested prompts; No data for Meta AI: menu items, clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "manus@2026-10-05",
+   "b": "manus@2026-10-12",
+   "out": [
+    "Manus shows menu items that Manus does not: an icon button (hand-mark icon) (sidebar).",
+    "Manus's and Manus's message boxes cover a similar share of the screen (9% vs 9%)."
+   ]
+  },
+  {
+   "a": "manus@2026-10-05",
+   "b": "manus@2026-09-28",
+   "out": [
+    "Manus's and Manus's message boxes cover a similar share of the screen (9% vs 9%).",
+    "Manus and Manus show about the same number of clickable items (~34 vs ~34).",
+    "No data for Manus: menu items; No data for Manus: menu items."
+   ]
+  },
+  {
+   "a": "poe@2026-10-05",
+   "b": "poe@2026-10-12",
+   "out": [
+    "Both show the same menu items.",
+    "Poe's and Poe's message boxes cover a similar share of the screen (6.2% vs 6.2%).",
+    "No data for Poe: clickable items, suggested prompts; No data for Poe: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "poe@2026-10-05",
+   "b": "poe@2026-09-28",
+   "out": [
+    "An icon button (slider icon) now appears in the input area.",
+    "Poe's and Poe's message boxes cover a similar share of the screen (6.2% vs 6.2%).",
+    "No data for Poe: clickable items, suggested prompts; No data for Poe: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "qwen@2026-10-05",
+   "b": "qwen@2026-10-12",
+   "out": [
+    "A new Create item appears in the sidebar.",
+    "Qwen Chat's and Qwen Chat's message boxes cover a similar share of the screen (4.3% vs 4.3%).",
+    "No data for Qwen Chat: clickable items, suggested prompts; No data for Qwen Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "qwen@2026-10-05",
+   "b": "qwen@2026-09-28",
+   "out": [
+    "Qwen Chat's and Qwen Chat's message boxes cover a similar share of the screen (4.3% vs 4.3%).",
+    "Qwen Chat's and Qwen Chat's sidebars take a similar share of the screen width (19% vs 19%).",
+    "No data for Qwen Chat: menu items, clickable items, suggested prompts; No data for Qwen Chat: menu items, clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "kimi@2026-10-05",
+   "b": "kimi@2026-10-12",
+   "out": [
+    "Kimi uses 3 text sizes, Kimi uses 2.",
+    "Both show the same menu items outside the sidebar.",
+    "No data for Kimi: suggested prompts; No data for Kimi: suggested prompts."
+   ]
+  },
+  {
+   "a": "kimi@2026-10-05",
+   "b": "kimi@2026-09-28",
+   "out": [
+    "Kimi's and Kimi's message boxes cover a similar share of the screen (8.6% vs 8.6%).",
+    "Kimi and Kimi show about the same number of clickable items (~17 vs ~17).",
+    "No data for Kimi: menu items, suggested prompts; No data for Kimi: menu items, suggested prompts."
+   ]
+  },
+  {
+   "a": "pi@2026-10-05",
+   "b": "pi@2026-10-12",
+   "out": [
+    "Both show the same menu items.",
+    "Pi's and Pi's message boxes cover a similar share of the screen (4.5% vs 4.5%)."
+   ]
+  },
+  {
+   "a": "pi@2026-10-05",
+   "b": "pi@2026-09-28",
+   "out": [
+    "Pi's and Pi's message boxes cover a similar share of the screen (4.5% vs 4.5%).",
+    "Pi and Pi show about the same number of clickable items (~12 vs ~12).",
+    "No data for Pi: menu items; No data for Pi: menu items."
+   ]
+  },
+  {
+   "a": "muse@2026-10-05",
+   "b": "muse@2026-10-12",
+   "out": [
+    "Muse's message box covers more of the screen than Muse's (4.4% vs 3.3%).",
+    "Both show the same menu items."
+   ]
+  },
+  {
+   "a": "muse@2026-10-05",
+   "b": "muse@2026-09-28",
+   "out": [
+    "Muse's and Muse's message boxes cover a similar share of the screen (3.3% vs 3.3%).",
+    "Muse and Muse show about the same number of clickable items (~12 vs ~12).",
+    "No data for Muse: menu items; No data for Muse: menu items."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-09-28",
+   "b": "chatgpt@2026-10-12",
+   "out": [
+    "ChatGPT shows menu items that ChatGPT does not: Tasks (sidebar), Explore (sidebar).",
+    "ChatGPT shows menu items that ChatGPT does not: Scheduled (sidebar), Projects (sidebar), More (sidebar) and 1 more.",
+    "ChatGPT shows more clickable items than ChatGPT (~23 vs ~19).",
+    "ChatGPT shows 3 suggested prompts, ChatGPT shows none."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-09-28",
+   "b": "chatgpt@2026-10-05",
+   "out": [
+    "The sidebar item Scheduled is now labeled Tasks.",
+    "ChatGPT's and ChatGPT's message boxes cover a similar share of the screen (3.3% vs 3.3%)."
+   ]
+  },
+  {
+   "a": "claude@2026-09-28",
+   "b": "claude@2026-10-12",
+   "out": [
+    "Claude's and Claude's message boxes cover a similar share of the screen (6.5% vs 6.5%).",
+    "Claude and Claude show about the same number of clickable items (~18 vs ~18).",
+    "No data for Claude: menu items; No data for Claude: menu items."
+   ]
+  },
+  {
+   "a": "claude@2026-09-28",
+   "b": "claude@2026-10-05",
+   "out": [
+    "Claude's and Claude's message boxes cover a similar share of the screen (6.5% vs 6.5%).",
+    "Claude and Claude show about the same number of clickable items (~18 vs ~18).",
+    "No data for Claude: menu items; No data for Claude: menu items."
+   ]
+  },
+  {
+   "a": "gemini@2026-09-28",
+   "b": "gemini@2026-10-12",
+   "out": [
+    "Gemini's and Gemini's message boxes cover a similar share of the screen (4.1% vs 4.1%).",
+    "Gemini and Gemini show about the same number of clickable items (~13 vs ~15).",
+    "No data for Gemini: menu items; No data for Gemini: menu items."
+   ]
+  },
+  {
+   "a": "gemini@2026-09-28",
+   "b": "gemini@2026-10-05",
+   "out": [
+    "Gemini's and Gemini's message boxes cover a similar share of the screen (4.1% vs 4.1%).",
+    "Gemini and Gemini show about the same number of clickable items (~13 vs ~13).",
+    "No data for Gemini: menu items; No data for Gemini: menu items."
+   ]
+  },
+  {
+   "a": "perplexity@2026-09-28",
+   "b": "perplexity@2026-10-12",
+   "out": [
+    "Perplexity's and Perplexity's message boxes cover a similar share of the screen (7.4% vs 7.4%).",
+    "Perplexity and Perplexity show about the same number of clickable items (~23 vs ~22).",
+    "No data for Perplexity: menu items, suggested prompts; No data for Perplexity: menu items, suggested prompts."
+   ]
+  },
+  {
+   "a": "perplexity@2026-09-28",
+   "b": "perplexity@2026-10-05",
+   "out": [
+    "Perplexity's and Perplexity's message boxes cover a similar share of the screen (7.4% vs 7.4%).",
+    "Perplexity and Perplexity show about the same number of clickable items (~23 vs ~23).",
+    "No data for Perplexity: menu items, suggested prompts; No data for Perplexity: menu items, suggested prompts."
+   ]
+  },
+  {
+   "a": "copilot@2026-09-28",
+   "b": "copilot@2026-10-12",
+   "out": [
+    "Microsoft Copilot's and Microsoft Copilot's message boxes cover a similar share of the screen (4.8% vs 4.5%).",
+    "Microsoft Copilot and Microsoft Copilot show about the same number of clickable items (~22 vs ~23).",
+    "No data for Microsoft Copilot: menu items, suggested prompts; No data for Microsoft Copilot: menu items, suggested prompts."
+   ]
+  },
+  {
+   "a": "copilot@2026-09-28",
+   "b": "copilot@2026-10-05",
+   "out": [
+    "Microsoft Copilot's and Microsoft Copilot's message boxes cover a similar share of the screen (4.8% vs 4.5%).",
+    "Microsoft Copilot and Microsoft Copilot show about the same number of clickable items (~22 vs ~23).",
+    "No data for Microsoft Copilot: menu items, suggested prompts; No data for Microsoft Copilot: menu items, suggested prompts."
+   ]
+  },
+  {
+   "a": "mistral@2026-09-28",
+   "b": "mistral@2026-10-12",
+   "out": [
+    "Le Chat's and Le Chat's message boxes cover a similar share of the screen (4.2% vs 4.2%).",
+    "Le Chat's and Le Chat's sidebars take a similar share of the screen width (20% vs 20%).",
+    "No data for Le Chat: menu items, clickable items, suggested prompts; No data for Le Chat: menu items, clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "mistral@2026-09-28",
+   "b": "mistral@2026-10-05",
+   "out": [
+    "The icon of a top bar button changed (bubble-clock icon → dashed bubble icon).",
+    "Le Chat's and Le Chat's message boxes cover a similar share of the screen (4.2% vs 4.2%).",
+    "No data for Le Chat: clickable items, suggested prompts; No data for Le Chat: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "grok@2026-09-28",
+   "b": "grok@2026-10-12",
+   "out": [
+    "Grok's and Grok's message boxes cover a similar share of the screen (7.5% vs 7.5%).",
+    "Grok and Grok show about the same number of clickable items (~22 vs ~23).",
+    "No data for Grok: menu items; No data for Grok: menu items."
+   ]
+  },
+  {
+   "a": "grok@2026-09-28",
+   "b": "grok@2026-10-05",
+   "out": [
+    "Grok shows more clickable items than Grok (~25 vs ~22).",
+    "Grok's and Grok's message boxes cover a similar share of the screen (7.5% vs 7.5%).",
+    "No data for Grok: menu items; No data for Grok: menu items."
+   ]
+  },
+  {
+   "a": "deepseek@2026-09-28",
+   "b": "deepseek@2026-10-12",
+   "out": [
+    "DeepSeek's and DeepSeek's message boxes cover a similar share of the screen (9.5% vs 9.5%).",
+    "Neither DeepSeek nor DeepSeek shows a sidebar.",
+    "No data for DeepSeek: menu items, clickable items, suggested prompts; No data for DeepSeek: menu items, clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "deepseek@2026-09-28",
+   "b": "deepseek@2026-10-05",
+   "out": [
+    "DeepSeek's and DeepSeek's message boxes cover a similar share of the screen (9.5% vs 9.5%).",
+    "Neither DeepSeek nor DeepSeek shows a sidebar.",
+    "No data for DeepSeek: menu items, clickable items, suggested prompts; No data for DeepSeek: menu items, clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-09-28",
+   "b": "meta-ai@2026-10-12",
+   "out": [
+    "No comparable data for Meta AI and Meta AI."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-09-28",
+   "b": "meta-ai@2026-10-05",
+   "out": [
+    "Meta AI's and Meta AI's message boxes cover a similar share of the screen (9.8% vs 9.8%).",
+    "Meta AI's and Meta AI's sidebars take a similar share of the screen width (20% vs 20%).",
+    "No data for Meta AI: menu items, clickable items, suggested prompts; No data for Meta AI: menu items, clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "manus@2026-09-28",
+   "b": "manus@2026-10-12",
+   "out": [
+    "Manus's and Manus's message boxes cover a similar share of the screen (9% vs 9%).",
+    "Manus and Manus show about the same number of clickable items (~34 vs ~33).",
+    "No data for Manus: menu items; No data for Manus: menu items."
+   ]
+  },
+  {
+   "a": "manus@2026-09-28",
+   "b": "manus@2026-10-05",
+   "out": [
+    "Manus's and Manus's message boxes cover a similar share of the screen (9% vs 9%).",
+    "Manus and Manus show about the same number of clickable items (~34 vs ~34).",
+    "No data for Manus: menu items; No data for Manus: menu items."
+   ]
+  },
+  {
+   "a": "poe@2026-09-28",
+   "b": "poe@2026-10-12",
+   "out": [
+    "Poe's and Poe's message boxes cover a similar share of the screen (6.2% vs 6.2%).",
+    "Poe's and Poe's sidebars take a similar share of the screen width (5% vs 5%).",
+    "No data for Poe: menu items, clickable items, suggested prompts; No data for Poe: menu items, clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "poe@2026-09-28",
+   "b": "poe@2026-10-05",
+   "out": [
+    "An icon button (slider icon) now appears in the input area.",
+    "Poe's and Poe's message boxes cover a similar share of the screen (6.2% vs 6.2%).",
+    "No data for Poe: clickable items, suggested prompts; No data for Poe: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "qwen@2026-09-28",
+   "b": "qwen@2026-10-12",
+   "out": [
+    "Qwen Chat's and Qwen Chat's message boxes cover a similar share of the screen (4.3% vs 4.3%).",
+    "Qwen Chat's and Qwen Chat's sidebars take a similar share of the screen width (19% vs 19%).",
+    "No data for Qwen Chat: menu items, clickable items, suggested prompts; No data for Qwen Chat: menu items, clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "qwen@2026-09-28",
+   "b": "qwen@2026-10-05",
+   "out": [
+    "Qwen Chat's and Qwen Chat's message boxes cover a similar share of the screen (4.3% vs 4.3%).",
+    "Qwen Chat's and Qwen Chat's sidebars take a similar share of the screen width (19% vs 19%).",
+    "No data for Qwen Chat: menu items, clickable items, suggested prompts; No data for Qwen Chat: menu items, clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "kimi@2026-09-28",
+   "b": "kimi@2026-10-12",
+   "out": [
+    "Kimi uses 3 text sizes, Kimi uses 2.",
+    "Kimi's and Kimi's message boxes cover a similar share of the screen (8.6% vs 8.6%).",
+    "No data for Kimi: menu items, suggested prompts; No data for Kimi: menu items, suggested prompts."
+   ]
+  },
+  {
+   "a": "kimi@2026-09-28",
+   "b": "kimi@2026-10-05",
+   "out": [
+    "Kimi's and Kimi's message boxes cover a similar share of the screen (8.6% vs 8.6%).",
+    "Kimi and Kimi show about the same number of clickable items (~17 vs ~17).",
+    "No data for Kimi: menu items, suggested prompts; No data for Kimi: menu items, suggested prompts."
+   ]
+  },
+  {
+   "a": "pi@2026-09-28",
+   "b": "pi@2026-10-12",
+   "out": [
+    "Pi's and Pi's message boxes cover a similar share of the screen (4.5% vs 4.5%).",
+    "Pi and Pi show about the same number of clickable items (~12 vs ~12).",
+    "No data for Pi: menu items; No data for Pi: menu items."
+   ]
+  },
+  {
+   "a": "pi@2026-09-28",
+   "b": "pi@2026-10-05",
+   "out": [
+    "Pi's and Pi's message boxes cover a similar share of the screen (4.5% vs 4.5%).",
+    "Pi and Pi show about the same number of clickable items (~12 vs ~12).",
+    "No data for Pi: menu items; No data for Pi: menu items."
+   ]
+  },
+  {
+   "a": "muse@2026-09-28",
+   "b": "muse@2026-10-12",
+   "out": [
+    "Muse's message box covers more of the screen than Muse's (4.4% vs 3.3%).",
+    "Muse and Muse show about the same number of clickable items (~12 vs ~12).",
+    "No data for Muse: menu items; No data for Muse: menu items."
+   ]
+  },
+  {
+   "a": "muse@2026-09-28",
+   "b": "muse@2026-10-05",
+   "out": [
+    "Muse's and Muse's message boxes cover a similar share of the screen (3.3% vs 3.3%).",
+    "Muse and Muse show about the same number of clickable items (~12 vs ~12).",
+    "No data for Muse: menu items; No data for Muse: menu items."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-10-12",
+   "b": "chatgpt@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "The sidebar item More is now labeled Explore.",
+    "The Upgrade item no longer appears in the top bar.",
+    "2026-10-05 shows more clickable items than 2026-10-12 (~23 vs ~19).",
+    "2026-10-12 shows no suggested prompts, 2026-10-05 shows 3."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-10-12",
+   "b": "chatgpt@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28 shows menu items that 2026-10-12 does not: Scheduled (sidebar), Projects (sidebar), More (sidebar) and 1 more.",
+    "2026-10-12 shows menu items that 2026-09-28 does not: Tasks (sidebar), Explore (sidebar).",
+    "2026-09-28 shows more clickable items than 2026-10-12 (~23 vs ~19).",
+    "2026-10-12 shows no suggested prompts, 2026-09-28 shows 3."
+   ]
+  },
+  {
+   "a": "claude@2026-10-12",
+   "b": "claude@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "Both show the same menu items.",
+    "2026-10-12's and 2026-10-05's message boxes cover a similar share of the screen (6.5% vs 6.5%)."
+   ]
+  },
+  {
+   "a": "claude@2026-10-12",
+   "b": "claude@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-12's and 2026-09-28's message boxes cover a similar share of the screen (6.5% vs 6.5%).",
+    "2026-10-12 and 2026-09-28 show about the same number of clickable items (~18 vs ~18).",
+    "No data for 2026-09-28: menu items."
+   ]
+  },
+  {
+   "a": "gemini@2026-10-12",
+   "b": "gemini@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "The icon of a sidebar button changed (diamond icon → clock icon).",
+    "and 2 more menu changes."
+   ]
+  },
+  {
+   "a": "gemini@2026-10-12",
+   "b": "gemini@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-12's and 2026-09-28's message boxes cover a similar share of the screen (4.1% vs 4.1%).",
+    "2026-10-12 and 2026-09-28 show about the same number of clickable items (~15 vs ~13).",
+    "No data for 2026-09-28: menu items."
+   ]
+  },
+  {
+   "a": "perplexity@2026-10-12",
+   "b": "perplexity@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "The sidebar item Sessions is now labeled Recents.",
+    "2026-10-12's and 2026-10-05's message boxes cover a similar share of the screen (7.4% vs 7.4%).",
+    "No data for 2026-10-12: suggested prompts; No data for 2026-10-05: suggested prompts."
+   ]
+  },
+  {
+   "a": "perplexity@2026-10-12",
+   "b": "perplexity@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-12's and 2026-09-28's message boxes cover a similar share of the screen (7.4% vs 7.4%).",
+    "2026-10-12 and 2026-09-28 show about the same number of clickable items (~22 vs ~23).",
+    "No data for 2026-10-12: suggested prompts; No data for 2026-09-28: menu items, suggested prompts."
+   ]
+  },
+  {
+   "a": "copilot@2026-10-12",
+   "b": "copilot@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "Both show the same menu items.",
+    "2026-10-12's and 2026-10-05's message boxes cover a similar share of the screen (4.5% vs 4.5%).",
+    "No data for 2026-10-12: suggested prompts; No data for 2026-10-05: suggested prompts."
+   ]
+  },
+  {
+   "a": "copilot@2026-10-12",
+   "b": "copilot@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-12's and 2026-09-28's message boxes cover a similar share of the screen (4.5% vs 4.8%).",
+    "2026-10-12 and 2026-09-28 show about the same number of clickable items (~23 vs ~22).",
+    "No data for 2026-10-12: suggested prompts; No data for 2026-09-28: menu items, suggested prompts."
+   ]
+  },
+  {
+   "a": "mistral@2026-10-12",
+   "b": "mistral@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "Both show the same menu items.",
+    "2026-10-12's and 2026-10-05's message boxes cover a similar share of the screen (4.2% vs 4.2%).",
+    "No data for 2026-10-12: clickable items, suggested prompts; No data for 2026-10-05: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "mistral@2026-10-12",
+   "b": "mistral@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-12's and 2026-09-28's message boxes cover a similar share of the screen (4.2% vs 4.2%).",
+    "2026-10-12's and 2026-09-28's sidebars take a similar share of the screen width (20% vs 20%).",
+    "No data for 2026-10-12: clickable items, suggested prompts; No data for 2026-09-28: menu items, clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "grok@2026-10-12",
+   "b": "grok@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "2026-10-12's and 2026-10-05's message boxes cover a similar share of the screen (7.5% vs 7.5%).",
+    "2026-10-12 and 2026-10-05 show about the same number of clickable items (~23 vs ~25).",
+    "No data for 2026-10-05: menu items."
+   ]
+  },
+  {
+   "a": "grok@2026-10-12",
+   "b": "grok@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-12's and 2026-09-28's message boxes cover a similar share of the screen (7.5% vs 7.5%).",
+    "2026-10-12 and 2026-09-28 show about the same number of clickable items (~23 vs ~22).",
+    "No data for 2026-09-28: menu items."
+   ]
+  },
+  {
+   "a": "deepseek@2026-10-12",
+   "b": "deepseek@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "Both show the same menu items outside the sidebar.",
+    "2026-10-12's and 2026-10-05's message boxes cover a similar share of the screen (9.5% vs 9.5%).",
+    "No data for 2026-10-12: clickable items, suggested prompts; No data for 2026-10-05: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "deepseek@2026-10-12",
+   "b": "deepseek@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-12's and 2026-09-28's message boxes cover a similar share of the screen (9.5% vs 9.5%).",
+    "Neither 2026-10-12 nor 2026-09-28 shows a sidebar.",
+    "No data for 2026-10-12: clickable items, suggested prompts; No data for 2026-09-28: menu items, clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-10-12",
+   "b": "meta-ai@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "No comparable data for 2026-10-12 and 2026-10-05."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-10-12",
+   "b": "meta-ai@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "No comparable data for 2026-10-12 and 2026-09-28."
+   ]
+  },
+  {
+   "a": "manus@2026-10-12",
+   "b": "manus@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "2026-10-05 shows menu items that 2026-10-12 does not: an icon button (hand-mark icon) (sidebar).",
+    "2026-10-12's and 2026-10-05's message boxes cover a similar share of the screen (9% vs 9%)."
+   ]
+  },
+  {
+   "a": "manus@2026-10-12",
+   "b": "manus@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-12's and 2026-09-28's message boxes cover a similar share of the screen (9% vs 9%).",
+    "2026-10-12 and 2026-09-28 show about the same number of clickable items (~33 vs ~34).",
+    "No data for 2026-09-28: menu items."
+   ]
+  },
+  {
+   "a": "poe@2026-10-12",
+   "b": "poe@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "Both show the same menu items.",
+    "2026-10-12's and 2026-10-05's message boxes cover a similar share of the screen (6.2% vs 6.2%).",
+    "No data for 2026-10-12: clickable items, suggested prompts; No data for 2026-10-05: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "poe@2026-10-12",
+   "b": "poe@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-12's and 2026-09-28's message boxes cover a similar share of the screen (6.2% vs 6.2%).",
+    "2026-10-12's and 2026-09-28's sidebars take a similar share of the screen width (5% vs 5%).",
+    "No data for 2026-10-12: clickable items, suggested prompts; No data for 2026-09-28: menu items, clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "qwen@2026-10-12",
+   "b": "qwen@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "A new Create item appears in the sidebar.",
+    "2026-10-12's and 2026-10-05's message boxes cover a similar share of the screen (4.3% vs 4.3%).",
+    "No data for 2026-10-12: clickable items, suggested prompts; No data for 2026-10-05: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "qwen@2026-10-12",
+   "b": "qwen@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-12's and 2026-09-28's message boxes cover a similar share of the screen (4.3% vs 4.3%).",
+    "2026-10-12's and 2026-09-28's sidebars take a similar share of the screen width (19% vs 19%).",
+    "No data for 2026-10-12: clickable items, suggested prompts; No data for 2026-09-28: menu items, clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "kimi@2026-10-12",
+   "b": "kimi@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "2026-10-12 uses 2 text sizes, 2026-10-05 uses 3.",
+    "Both show the same menu items outside the sidebar.",
+    "No data for 2026-10-12: suggested prompts; No data for 2026-10-05: suggested prompts."
+   ]
+  },
+  {
+   "a": "kimi@2026-10-12",
+   "b": "kimi@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-12 uses 2 text sizes, 2026-09-28 uses 3.",
+    "2026-10-12's and 2026-09-28's message boxes cover a similar share of the screen (8.6% vs 8.6%).",
+    "No data for 2026-10-12: suggested prompts; No data for 2026-09-28: menu items, suggested prompts."
+   ]
+  },
+  {
+   "a": "pi@2026-10-12",
+   "b": "pi@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "Both show the same menu items.",
+    "2026-10-12's and 2026-10-05's message boxes cover a similar share of the screen (4.5% vs 4.5%)."
+   ]
+  },
+  {
+   "a": "pi@2026-10-12",
+   "b": "pi@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-12's and 2026-09-28's message boxes cover a similar share of the screen (4.5% vs 4.5%).",
+    "2026-10-12 and 2026-09-28 show about the same number of clickable items (~12 vs ~12).",
+    "No data for 2026-09-28: menu items."
+   ]
+  },
+  {
+   "a": "muse@2026-10-12",
+   "b": "muse@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "2026-10-12's message box covers more of the screen than 2026-10-05's (4.4% vs 3.3%).",
+    "Both show the same menu items."
+   ]
+  },
+  {
+   "a": "muse@2026-10-12",
+   "b": "muse@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-12's message box covers more of the screen than 2026-09-28's (4.4% vs 3.3%).",
+    "2026-10-12 and 2026-09-28 show about the same number of clickable items (~12 vs ~12).",
+    "No data for 2026-09-28: menu items."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-10-05",
+   "b": "chatgpt@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "The sidebar item More is now labeled Explore.",
+    "The Upgrade item no longer appears in the top bar.",
+    "2026-10-05 shows more clickable items than 2026-10-12 (~23 vs ~19).",
+    "2026-10-05 shows 3 suggested prompts, 2026-10-12 shows none."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-10-05",
+   "b": "chatgpt@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "The sidebar item Scheduled is now labeled Tasks.",
+    "2026-10-05's and 2026-09-28's message boxes cover a similar share of the screen (3.3% vs 3.3%)."
+   ]
+  },
+  {
+   "a": "claude@2026-10-05",
+   "b": "claude@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "Both show the same menu items.",
+    "2026-10-05's and 2026-10-12's message boxes cover a similar share of the screen (6.5% vs 6.5%)."
+   ]
+  },
+  {
+   "a": "claude@2026-10-05",
+   "b": "claude@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-05's and 2026-09-28's message boxes cover a similar share of the screen (6.5% vs 6.5%).",
+    "2026-10-05 and 2026-09-28 show about the same number of clickable items (~18 vs ~18).",
+    "No data for 2026-09-28: menu items."
+   ]
+  },
+  {
+   "a": "gemini@2026-10-05",
+   "b": "gemini@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "The icon of a sidebar button changed (diamond icon → clock icon).",
+    "and 2 more menu changes."
+   ]
+  },
+  {
+   "a": "gemini@2026-10-05",
+   "b": "gemini@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-05's and 2026-09-28's message boxes cover a similar share of the screen (4.1% vs 4.1%).",
+    "2026-10-05 and 2026-09-28 show about the same number of clickable items (~13 vs ~13).",
+    "No data for 2026-09-28: menu items."
+   ]
+  },
+  {
+   "a": "perplexity@2026-10-05",
+   "b": "perplexity@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "The sidebar item Sessions is now labeled Recents.",
+    "2026-10-05's and 2026-10-12's message boxes cover a similar share of the screen (7.4% vs 7.4%).",
+    "No data for 2026-10-05: suggested prompts; No data for 2026-10-12: suggested prompts."
+   ]
+  },
+  {
+   "a": "perplexity@2026-10-05",
+   "b": "perplexity@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-05's and 2026-09-28's message boxes cover a similar share of the screen (7.4% vs 7.4%).",
+    "2026-10-05 and 2026-09-28 show about the same number of clickable items (~23 vs ~23).",
+    "No data for 2026-10-05: suggested prompts; No data for 2026-09-28: menu items, suggested prompts."
+   ]
+  },
+  {
+   "a": "copilot@2026-10-05",
+   "b": "copilot@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "Both show the same menu items.",
+    "2026-10-05's and 2026-10-12's message boxes cover a similar share of the screen (4.5% vs 4.5%).",
+    "No data for 2026-10-05: suggested prompts; No data for 2026-10-12: suggested prompts."
+   ]
+  },
+  {
+   "a": "copilot@2026-10-05",
+   "b": "copilot@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-05's and 2026-09-28's message boxes cover a similar share of the screen (4.5% vs 4.8%).",
+    "2026-10-05 and 2026-09-28 show about the same number of clickable items (~23 vs ~22).",
+    "No data for 2026-10-05: suggested prompts; No data for 2026-09-28: menu items, suggested prompts."
+   ]
+  },
+  {
+   "a": "mistral@2026-10-05",
+   "b": "mistral@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "Both show the same menu items.",
+    "2026-10-05's and 2026-10-12's message boxes cover a similar share of the screen (4.2% vs 4.2%).",
+    "No data for 2026-10-05: clickable items, suggested prompts; No data for 2026-10-12: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "mistral@2026-10-05",
+   "b": "mistral@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "The icon of a top bar button changed (bubble-clock icon → dashed bubble icon).",
+    "2026-10-05's and 2026-09-28's message boxes cover a similar share of the screen (4.2% vs 4.2%).",
+    "No data for 2026-10-05: clickable items, suggested prompts; No data for 2026-09-28: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "grok@2026-10-05",
+   "b": "grok@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "2026-10-05's and 2026-10-12's message boxes cover a similar share of the screen (7.5% vs 7.5%).",
+    "2026-10-05 and 2026-10-12 show about the same number of clickable items (~25 vs ~23).",
+    "No data for 2026-10-05: menu items."
+   ]
+  },
+  {
+   "a": "grok@2026-10-05",
+   "b": "grok@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-05 shows more clickable items than 2026-09-28 (~25 vs ~22).",
+    "2026-10-05's and 2026-09-28's message boxes cover a similar share of the screen (7.5% vs 7.5%).",
+    "No data for 2026-10-05: menu items; No data for 2026-09-28: menu items."
+   ]
+  },
+  {
+   "a": "deepseek@2026-10-05",
+   "b": "deepseek@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "Both show the same menu items outside the sidebar.",
+    "2026-10-05's and 2026-10-12's message boxes cover a similar share of the screen (9.5% vs 9.5%).",
+    "No data for 2026-10-05: clickable items, suggested prompts; No data for 2026-10-12: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "deepseek@2026-10-05",
+   "b": "deepseek@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-05's and 2026-09-28's message boxes cover a similar share of the screen (9.5% vs 9.5%).",
+    "Neither 2026-10-05 nor 2026-09-28 shows a sidebar.",
+    "No data for 2026-10-05: clickable items, suggested prompts; No data for 2026-09-28: menu items, clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-10-05",
+   "b": "meta-ai@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "No comparable data for 2026-10-05 and 2026-10-12."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-10-05",
+   "b": "meta-ai@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-05's and 2026-09-28's message boxes cover a similar share of the screen (9.8% vs 9.8%).",
+    "2026-10-05's and 2026-09-28's sidebars take a similar share of the screen width (20% vs 20%).",
+    "No data for 2026-10-05: clickable items, suggested prompts; No data for 2026-09-28: menu items, clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "manus@2026-10-05",
+   "b": "manus@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "2026-10-05 shows menu items that 2026-10-12 does not: an icon button (hand-mark icon) (sidebar).",
+    "2026-10-05's and 2026-10-12's message boxes cover a similar share of the screen (9% vs 9%)."
+   ]
+  },
+  {
+   "a": "manus@2026-10-05",
+   "b": "manus@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-05's and 2026-09-28's message boxes cover a similar share of the screen (9% vs 9%).",
+    "2026-10-05 and 2026-09-28 show about the same number of clickable items (~34 vs ~34).",
+    "No data for 2026-09-28: menu items."
+   ]
+  },
+  {
+   "a": "poe@2026-10-05",
+   "b": "poe@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "Both show the same menu items.",
+    "2026-10-05's and 2026-10-12's message boxes cover a similar share of the screen (6.2% vs 6.2%).",
+    "No data for 2026-10-05: clickable items, suggested prompts; No data for 2026-10-12: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "poe@2026-10-05",
+   "b": "poe@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "An icon button (slider icon) now appears in the input area.",
+    "2026-10-05's and 2026-09-28's message boxes cover a similar share of the screen (6.2% vs 6.2%).",
+    "No data for 2026-10-05: clickable items, suggested prompts; No data for 2026-09-28: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "qwen@2026-10-05",
+   "b": "qwen@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "A new Create item appears in the sidebar.",
+    "2026-10-05's and 2026-10-12's message boxes cover a similar share of the screen (4.3% vs 4.3%).",
+    "No data for 2026-10-05: clickable items, suggested prompts; No data for 2026-10-12: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "qwen@2026-10-05",
+   "b": "qwen@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-05's and 2026-09-28's message boxes cover a similar share of the screen (4.3% vs 4.3%).",
+    "2026-10-05's and 2026-09-28's sidebars take a similar share of the screen width (19% vs 19%).",
+    "No data for 2026-10-05: clickable items, suggested prompts; No data for 2026-09-28: menu items, clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "kimi@2026-10-05",
+   "b": "kimi@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "2026-10-05 uses 3 text sizes, 2026-10-12 uses 2.",
+    "Both show the same menu items outside the sidebar.",
+    "No data for 2026-10-05: suggested prompts; No data for 2026-10-12: suggested prompts."
+   ]
+  },
+  {
+   "a": "kimi@2026-10-05",
+   "b": "kimi@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-05's and 2026-09-28's message boxes cover a similar share of the screen (8.6% vs 8.6%).",
+    "2026-10-05 and 2026-09-28 show about the same number of clickable items (~17 vs ~17).",
+    "No data for 2026-10-05: suggested prompts; No data for 2026-09-28: menu items, suggested prompts."
+   ]
+  },
+  {
+   "a": "pi@2026-10-05",
+   "b": "pi@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "Both show the same menu items.",
+    "2026-10-05's and 2026-10-12's message boxes cover a similar share of the screen (4.5% vs 4.5%)."
+   ]
+  },
+  {
+   "a": "pi@2026-10-05",
+   "b": "pi@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-05's and 2026-09-28's message boxes cover a similar share of the screen (4.5% vs 4.5%).",
+    "2026-10-05 and 2026-09-28 show about the same number of clickable items (~12 vs ~12).",
+    "No data for 2026-09-28: menu items."
+   ]
+  },
+  {
+   "a": "muse@2026-10-05",
+   "b": "muse@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "2026-10-12's message box covers more of the screen than 2026-10-05's (4.4% vs 3.3%).",
+    "Both show the same menu items."
+   ]
+  },
+  {
+   "a": "muse@2026-10-05",
+   "b": "muse@2026-09-28",
+   "weekLabels": true,
+   "out": [
+    "2026-10-05's and 2026-09-28's message boxes cover a similar share of the screen (3.3% vs 3.3%).",
+    "2026-10-05 and 2026-09-28 show about the same number of clickable items (~12 vs ~12).",
+    "No data for 2026-09-28: menu items."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-09-28",
+   "b": "chatgpt@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "2026-10-12 shows menu items that 2026-09-28 does not: Tasks (sidebar), Explore (sidebar).",
+    "2026-09-28 shows menu items that 2026-10-12 does not: Scheduled (sidebar), Projects (sidebar), More (sidebar) and 1 more.",
+    "2026-09-28 shows more clickable items than 2026-10-12 (~23 vs ~19).",
+    "2026-09-28 shows 3 suggested prompts, 2026-10-12 shows none."
+   ]
+  },
+  {
+   "a": "chatgpt@2026-09-28",
+   "b": "chatgpt@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "The sidebar item Scheduled is now labeled Tasks.",
+    "2026-09-28's and 2026-10-05's message boxes cover a similar share of the screen (3.3% vs 3.3%)."
+   ]
+  },
+  {
+   "a": "claude@2026-09-28",
+   "b": "claude@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28's and 2026-10-12's message boxes cover a similar share of the screen (6.5% vs 6.5%).",
+    "2026-09-28 and 2026-10-12 show about the same number of clickable items (~18 vs ~18).",
+    "No data for 2026-09-28: menu items."
+   ]
+  },
+  {
+   "a": "claude@2026-09-28",
+   "b": "claude@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28's and 2026-10-05's message boxes cover a similar share of the screen (6.5% vs 6.5%).",
+    "2026-09-28 and 2026-10-05 show about the same number of clickable items (~18 vs ~18).",
+    "No data for 2026-09-28: menu items."
+   ]
+  },
+  {
+   "a": "gemini@2026-09-28",
+   "b": "gemini@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28's and 2026-10-12's message boxes cover a similar share of the screen (4.1% vs 4.1%).",
+    "2026-09-28 and 2026-10-12 show about the same number of clickable items (~13 vs ~15).",
+    "No data for 2026-09-28: menu items."
+   ]
+  },
+  {
+   "a": "gemini@2026-09-28",
+   "b": "gemini@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28's and 2026-10-05's message boxes cover a similar share of the screen (4.1% vs 4.1%).",
+    "2026-09-28 and 2026-10-05 show about the same number of clickable items (~13 vs ~13).",
+    "No data for 2026-09-28: menu items."
+   ]
+  },
+  {
+   "a": "perplexity@2026-09-28",
+   "b": "perplexity@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28's and 2026-10-12's message boxes cover a similar share of the screen (7.4% vs 7.4%).",
+    "2026-09-28 and 2026-10-12 show about the same number of clickable items (~23 vs ~22).",
+    "No data for 2026-09-28: menu items, suggested prompts; No data for 2026-10-12: suggested prompts."
+   ]
+  },
+  {
+   "a": "perplexity@2026-09-28",
+   "b": "perplexity@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28's and 2026-10-05's message boxes cover a similar share of the screen (7.4% vs 7.4%).",
+    "2026-09-28 and 2026-10-05 show about the same number of clickable items (~23 vs ~23).",
+    "No data for 2026-09-28: menu items, suggested prompts; No data for 2026-10-05: suggested prompts."
+   ]
+  },
+  {
+   "a": "copilot@2026-09-28",
+   "b": "copilot@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28's and 2026-10-12's message boxes cover a similar share of the screen (4.8% vs 4.5%).",
+    "2026-09-28 and 2026-10-12 show about the same number of clickable items (~22 vs ~23).",
+    "No data for 2026-09-28: menu items, suggested prompts; No data for 2026-10-12: suggested prompts."
+   ]
+  },
+  {
+   "a": "copilot@2026-09-28",
+   "b": "copilot@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28's and 2026-10-05's message boxes cover a similar share of the screen (4.8% vs 4.5%).",
+    "2026-09-28 and 2026-10-05 show about the same number of clickable items (~22 vs ~23).",
+    "No data for 2026-09-28: menu items, suggested prompts; No data for 2026-10-05: suggested prompts."
+   ]
+  },
+  {
+   "a": "mistral@2026-09-28",
+   "b": "mistral@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28's and 2026-10-12's message boxes cover a similar share of the screen (4.2% vs 4.2%).",
+    "2026-09-28's and 2026-10-12's sidebars take a similar share of the screen width (20% vs 20%).",
+    "No data for 2026-09-28: menu items, clickable items, suggested prompts; No data for 2026-10-12: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "mistral@2026-09-28",
+   "b": "mistral@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "The icon of a top bar button changed (bubble-clock icon → dashed bubble icon).",
+    "2026-09-28's and 2026-10-05's message boxes cover a similar share of the screen (4.2% vs 4.2%).",
+    "No data for 2026-09-28: clickable items, suggested prompts; No data for 2026-10-05: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "grok@2026-09-28",
+   "b": "grok@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28's and 2026-10-12's message boxes cover a similar share of the screen (7.5% vs 7.5%).",
+    "2026-09-28 and 2026-10-12 show about the same number of clickable items (~22 vs ~23).",
+    "No data for 2026-09-28: menu items."
+   ]
+  },
+  {
+   "a": "grok@2026-09-28",
+   "b": "grok@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "2026-10-05 shows more clickable items than 2026-09-28 (~25 vs ~22).",
+    "2026-09-28's and 2026-10-05's message boxes cover a similar share of the screen (7.5% vs 7.5%).",
+    "No data for 2026-09-28: menu items; No data for 2026-10-05: menu items."
+   ]
+  },
+  {
+   "a": "deepseek@2026-09-28",
+   "b": "deepseek@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28's and 2026-10-12's message boxes cover a similar share of the screen (9.5% vs 9.5%).",
+    "Neither 2026-09-28 nor 2026-10-12 shows a sidebar.",
+    "No data for 2026-09-28: menu items, clickable items, suggested prompts; No data for 2026-10-12: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "deepseek@2026-09-28",
+   "b": "deepseek@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28's and 2026-10-05's message boxes cover a similar share of the screen (9.5% vs 9.5%).",
+    "Neither 2026-09-28 nor 2026-10-05 shows a sidebar.",
+    "No data for 2026-09-28: menu items, clickable items, suggested prompts; No data for 2026-10-05: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-09-28",
+   "b": "meta-ai@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "No comparable data for 2026-09-28 and 2026-10-12."
+   ]
+  },
+  {
+   "a": "meta-ai@2026-09-28",
+   "b": "meta-ai@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28's and 2026-10-05's message boxes cover a similar share of the screen (9.8% vs 9.8%).",
+    "2026-09-28's and 2026-10-05's sidebars take a similar share of the screen width (20% vs 20%).",
+    "No data for 2026-09-28: menu items, clickable items, suggested prompts; No data for 2026-10-05: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "manus@2026-09-28",
+   "b": "manus@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28's and 2026-10-12's message boxes cover a similar share of the screen (9% vs 9%).",
+    "2026-09-28 and 2026-10-12 show about the same number of clickable items (~34 vs ~33).",
+    "No data for 2026-09-28: menu items."
+   ]
+  },
+  {
+   "a": "manus@2026-09-28",
+   "b": "manus@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28's and 2026-10-05's message boxes cover a similar share of the screen (9% vs 9%).",
+    "2026-09-28 and 2026-10-05 show about the same number of clickable items (~34 vs ~34).",
+    "No data for 2026-09-28: menu items."
+   ]
+  },
+  {
+   "a": "poe@2026-09-28",
+   "b": "poe@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28's and 2026-10-12's message boxes cover a similar share of the screen (6.2% vs 6.2%).",
+    "2026-09-28's and 2026-10-12's sidebars take a similar share of the screen width (5% vs 5%).",
+    "No data for 2026-09-28: menu items, clickable items, suggested prompts; No data for 2026-10-12: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "poe@2026-09-28",
+   "b": "poe@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "An icon button (slider icon) now appears in the input area.",
+    "2026-09-28's and 2026-10-05's message boxes cover a similar share of the screen (6.2% vs 6.2%).",
+    "No data for 2026-09-28: clickable items, suggested prompts; No data for 2026-10-05: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "qwen@2026-09-28",
+   "b": "qwen@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28's and 2026-10-12's message boxes cover a similar share of the screen (4.3% vs 4.3%).",
+    "2026-09-28's and 2026-10-12's sidebars take a similar share of the screen width (19% vs 19%).",
+    "No data for 2026-09-28: menu items, clickable items, suggested prompts; No data for 2026-10-12: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "qwen@2026-09-28",
+   "b": "qwen@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28's and 2026-10-05's message boxes cover a similar share of the screen (4.3% vs 4.3%).",
+    "2026-09-28's and 2026-10-05's sidebars take a similar share of the screen width (19% vs 19%).",
+    "No data for 2026-09-28: menu items, clickable items, suggested prompts; No data for 2026-10-05: clickable items, suggested prompts."
+   ]
+  },
+  {
+   "a": "kimi@2026-09-28",
+   "b": "kimi@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28 uses 3 text sizes, 2026-10-12 uses 2.",
+    "2026-09-28's and 2026-10-12's message boxes cover a similar share of the screen (8.6% vs 8.6%).",
+    "No data for 2026-09-28: menu items, suggested prompts; No data for 2026-10-12: suggested prompts."
+   ]
+  },
+  {
+   "a": "kimi@2026-09-28",
+   "b": "kimi@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28's and 2026-10-05's message boxes cover a similar share of the screen (8.6% vs 8.6%).",
+    "2026-09-28 and 2026-10-05 show about the same number of clickable items (~17 vs ~17).",
+    "No data for 2026-09-28: menu items, suggested prompts; No data for 2026-10-05: suggested prompts."
+   ]
+  },
+  {
+   "a": "pi@2026-09-28",
+   "b": "pi@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28's and 2026-10-12's message boxes cover a similar share of the screen (4.5% vs 4.5%).",
+    "2026-09-28 and 2026-10-12 show about the same number of clickable items (~12 vs ~12).",
+    "No data for 2026-09-28: menu items."
+   ]
+  },
+  {
+   "a": "pi@2026-09-28",
+   "b": "pi@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28's and 2026-10-05's message boxes cover a similar share of the screen (4.5% vs 4.5%).",
+    "2026-09-28 and 2026-10-05 show about the same number of clickable items (~12 vs ~12).",
+    "No data for 2026-09-28: menu items."
+   ]
+  },
+  {
+   "a": "muse@2026-09-28",
+   "b": "muse@2026-10-12",
+   "weekLabels": true,
+   "out": [
+    "2026-10-12's message box covers more of the screen than 2026-09-28's (4.4% vs 3.3%).",
+    "2026-09-28 and 2026-10-12 show about the same number of clickable items (~12 vs ~12).",
+    "No data for 2026-09-28: menu items."
+   ]
+  },
+  {
+   "a": "muse@2026-09-28",
+   "b": "muse@2026-10-05",
+   "weekLabels": true,
+   "out": [
+    "2026-09-28's and 2026-10-05's message boxes cover a similar share of the screen (3.3% vs 3.3%).",
+    "2026-09-28 and 2026-10-05 show about the same number of clickable items (~12 vs ~12).",
+    "No data for 2026-09-28: menu items."
+   ]
+  }
+ ]
+}

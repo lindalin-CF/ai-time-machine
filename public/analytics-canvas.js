@@ -50,18 +50,20 @@ const navList = (items) => {
 /**
  * Menu findings for two cards ({ label, slug, week, metrics }): { diff, same, missing }.
  * Same portal and the newer card's navChanges compare against the other card's week: one line per
- * recorded change. Otherwise both cards' navItems are compared, leaving out the sidebar when either
- * card's sidebar is collapsed, and leaving out items without text unless both cards record some
+ * recorded change, up to `changeLines` (more become the first lines and "and N more menu changes").
+ * Otherwise both cards' navItems are compared, leaving out the sidebar when either card's sidebar is
+ * collapsed, and leaving out items without text unless both cards record some
  * (analyses before guideline v1.5.1 have no icon_label, so their icon buttons are not listed).
  */
-function navFindings(a, b, A, B, ma, mb) {
+function navFindings(a, b, A, B, ma, mb, changeLines) {
   const samePortal = !!a.slug && a.slug === b.slug;
   if (samePortal && a.week && b.week && a.week !== b.week) {
     const [newer, olderWeek] = a.week > b.week ? [ma, b.week] : [mb, a.week];
     const nc = newer.navChanges;
     if (nc && nc.previousWeek === olderWeek && Array.isArray(nc.items) && nc.items.length) {
-      const diff = nc.items.length > NAV_CHANGE_LINES
-        ? [navChangeText(nc.items[0]), `and ${nc.items.length - 1} more menu changes.`]
+      const shown = changeLines - 1;
+      const diff = nc.items.length > changeLines
+        ? [...nc.items.slice(0, shown).map(navChangeText), `and ${nc.items.length - shown} more menu changes.`]
         : nc.items.map(navChangeText);
       return { diff, same: [], missing: [] };
     }
@@ -163,33 +165,82 @@ const RULES = [
   },
 ];
 
+const cardLabel = (c) => (c && c.label) || "this capture";
+
 /**
- * Up to 4 one-line findings comparing two cards ({ label, slug, week, metrics }). A field is compared
- * only when both cards have it. Menu findings come first, then differences in rule order; similarities
- * fill up to two lines. With room left, one line names the fields missing for either card ("No data").
+ * Every finding for two cards ({ label, slug, week, metrics }), sorted: { differences, similarities, missing }.
+ * A field is compared only when both cards have it. Differences: menu findings first, then rules in rule
+ * order; similarities: the same order. `missing` has one "No data for <card>: <fields>" phrase per card
+ * that lacks fields. Only the whitelisted metrics and the thresholds above are used. `navChangeLines` caps
+ * the recorded menu changes listed one by one (the Canvas box shows 2).
  */
-export function compareFindings(a, b) {
-  const A = (a && a.label) || "this capture", B = (b && b.label) || "this capture";
+export function findingLists(a, b, { navChangeLines = NAV_CHANGE_LINES } = {}) {
+  const A = cardLabel(a), B = cardLabel(b);
   const ma = (a && a.metrics) || {}, mb = (b && b.metrics) || {};
   const has = (m, k) => m[k] !== undefined && m[k] !== null;
-  const nav = navFindings(a || {}, b || {}, A, B, ma, mb);
-  const lines = [...nav.diff];
-  const same = [...nav.same];
+  const nav = navFindings(a || {}, b || {}, A, B, ma, mb, navChangeLines);
+  const differences = [...nav.diff];
+  const similarities = [...nav.same];
   for (const r of RULES) {
     if (!has(ma, r.key) || !has(mb, r.key)) continue;
     const x = ma[r.key], y = mb[r.key];
-    (r.differs(x, y) ? lines : same).push(r.text(A, B, x, y));
+    (r.differs(x, y) ? differences : similarities).push(r.text(A, B, x, y));
   }
-  if (!lines.length && !same.length) return [`No comparable data for ${A} and ${B}.`];
-  for (const s of same) { if (lines.length >= 2) break; lines.push(s); }
+  const missing = [[A, ma], [B, mb]]
+    .map(([label, m]) => [label, [...(nav.missing.includes(label) ? [MENU] : []), ...RULES.filter((r) => !has(m, r.key)).map((r) => r.name)]])
+    .filter(([, names]) => names.length)
+    .map(([label, names]) => `No data for ${label}: ${names.join(", ")}`);
+  return { differences, similarities, missing };
+}
+
+/**
+ * The Canvas comparison box: up to 4 one-line findings. Differences first; similarities fill up to two
+ * lines. With room left, one line names the fields missing for either card ("No data").
+ */
+export function compareFindings(a, b) {
+  const { differences, similarities, missing } = findingLists(a, b);
+  if (!differences.length && !similarities.length) return [`No comparable data for ${cardLabel(a)} and ${cardLabel(b)}.`];
+  const lines = [...differences];
+  for (const s of similarities) { if (lines.length >= 2) break; lines.push(s); }
   const out = lines.slice(0, 4);
-  if (out.length < 4) {
-    const missing = [[A, ma], [B, mb]]
-      .map(([label, m]) => [label, [...(nav.missing.includes(label) ? [MENU] : []), ...RULES.filter((r) => !has(m, r.key)).map((r) => r.name)]])
-      .filter(([, names]) => names.length);
-    if (missing.length) out.push(`${missing.map(([label, names]) => `No data for ${label}: ${names.join(", ")}`).join("; ")}.`);
-  }
+  if (out.length < 4 && missing.length) out.push(`${missing.join("; ")}.`);
   return out;
+}
+
+// ---- Table rows: Differences and Similarities (public/app.js) ---------------
+
+const TABLE_DIFFERENCES = 6;
+const TABLE_SIMILARITIES = 5;
+
+/**
+ * The Table's lists for two cards: every menu change, then the other differences, at most 6 lines (the
+ * last says "and N more differences" when there are more); at most 5 similarities. Null when the two
+ * cards have no field in common.
+ */
+export function tableFindings(a, b) {
+  const { differences, similarities } = findingLists(a, b, { navChangeLines: Infinity });
+  if (!differences.length && !similarities.length) return null;
+  const shown = TABLE_DIFFERENCES - 1;
+  return {
+    differences: differences.length > TABLE_DIFFERENCES
+      ? [...differences.slice(0, shown), `and ${differences.length - shown} more differences`]
+      : differences,
+    similarities: similarities.slice(0, TABLE_SIMILARITIES),
+  };
+}
+
+/**
+ * One Table cell's content for one list ("differences" | "similarities"): a muted heading ("vs Oct 5"),
+ * an optional muted note, then the bullet list, or a muted line when there is nothing to list.
+ * `findings` is tableFindings() output (null: not enough data). All text is escaped.
+ */
+export function findingsCellHTML(findings, kind, { heading = "", note = "" } = {}) {
+  const head = heading ? `<div class="an-cmp-head">${esc(heading)}</div>` : "";
+  const sub = note && findings ? `<div class="an-cmp-note">${esc(note)}</div>` : "";
+  if (!findings) return `${head}<div class="an-cmp-empty">Not enough data to compare</div>`;
+  const list = findings[kind];
+  if (!list.length) return `${head}${sub}<div class="an-cmp-empty">${kind === "differences" ? "No differences found" : "No similarities found"}</div>`;
+  return `${head}${sub}<ul class="an-cmp-list">${list.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>`;
 }
 
 // ---- layout geometry -------------------------------------------------------

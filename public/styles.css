@@ -881,10 +881,22 @@ html[data-view="compare"] .topnav-link[data-nav="compare"],html[data-view="notes
 .an-palette i{width:20px;height:20px;border-radius:5px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
 .an-tag{display:inline-block;padding:3px 9px;border-radius:999px;background:var(--cf-bg-300);border:1px solid var(--cf-border);font-family:var(--font-mono);font-size:11px;color:var(--cf-text)}
 .an-notes{color:var(--cf-text-soft);line-height:1.5;min-width:240px;max-width:340px;font-size:12.5px}
+/* Differences and Similarities rows (findingsCellHTML in public/analytics-canvas.js): "vs …" heading, then a bullet list. */
+.an-cmp{line-height:1.5;font-size:12.5px;min-width:200px}
+.an-cmp-head{font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;color:var(--cf-text-soft);margin-bottom:6px}
+.an-cmp-note{font-size:11.5px;color:var(--cf-text-soft);font-style:italic;margin:-2px 0 6px}
+.an-cmp-list{margin:0;padding-left:1.1em}
+.an-cmp-list li{margin:0 0 4px}
+.an-cmp-list li:last-child{margin-bottom:0}
+.an-cmp-list li::marker{color:var(--cf-text-soft)}
+.an-cmp-empty{color:var(--cf-text-soft)}
 .an-loading,.an-empty{padding:34px;text-align:center;color:var(--cf-text-soft);font-size:13px}
 @media(max-width:760px){
   .an-label{flex-basis:100%;padding-top:0}
   .an-notes{min-width:200px}
+  /* A cell spanning both columns is wider than the screen here (the table scrolls sideways): keep its text within
+     the visible width beside the sticky row label (page gutters 36px, table border 2px, row label 146px, cell padding 28px). */
+  .an-cmp--span .an-cmp-inner{max-width:calc(100vw - 212px)}
 }
 
 /* ---------- insights memo feed ---------- */
