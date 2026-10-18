@@ -15,6 +15,19 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "direct-view-links",
+    date: "2026-10-17",
+    time: "21:04",
+    title: "Links Open Straight to Their View",
+    subtitle: "Analytics, Collection and Notes links no longer show the homepage first",
+    bullets: [
+      { lead: "No flash", text: "A link to Analytics, Collection or Notes shows that page from the first moment, with a short loading state while the data arrives." },
+      { lead: "Canvas first", text: "Analytics now opens in Canvas, at 136% and centred on the cards; on narrow screens it still fits the cards to the screen." },
+      { lead: "Shared links unchanged", text: "A link with its own view or zoom still opens exactly as it was shared." },
+    ],
+    closing: "Switch to Table any time with the toggle above the results.",
+  },
+  {
     slug: "shareable-analytics",
     date: "2026-10-17",
     time: "20:25",

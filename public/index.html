@@ -6,6 +6,9 @@
   <script src="/consent.js" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script>document.documentElement.classList.add("js")</script>
+  <!-- Pick the view from the hash before anything paints, so #analytics, #collection and #notes links never flash the homepage.
+       styles.css shows only the matching view; route() in app.js keeps data-view in sync after that. Without JS the homepage shows. -->
+  <script>(function(h){h=location.hash.split("?")[0];document.documentElement.dataset.view=h==="#analytics"?"analytics":h==="#collection"?"collection":h==="#notes"||h==="#insights"?"notes":"gallery"})()</script>
   <title>AI Interface Library</title>
   <meta name="description" content="A weekly archive of AI product interfaces, analysed for layout, hierarchy and colour as a UI/UX design system." />
   <meta name="robots" content="max-image-preview:large" />
@@ -211,8 +214,8 @@
       </div>
       <div class="an-resultsbar">
         <div class="viewtoggle an-view" role="group" aria-label="Comparison view">
-          <button class="vt-btn active" type="button" data-anview="table" aria-pressed="true">Table</button>
-          <button class="vt-btn" type="button" data-anview="canvas" aria-pressed="false">Canvas</button>
+          <button class="vt-btn" type="button" data-anview="table" aria-pressed="false">Table</button>
+          <button class="vt-btn active" type="button" data-anview="canvas" aria-pressed="true">Canvas</button>
         </div>
         <div class="anc-tools" id="anCanvasTools" hidden>
           <div class="viewtoggle anc-zoom" role="group" aria-label="Zoom">
@@ -231,10 +234,11 @@
         </div>
       </div>
       <p class="anc-note an-canvas-note" id="anCanvasNote" hidden>Drag a card to move it, drag from a card's right dot to another card's left dot to compare them.</p>
-      <div class="analytics-table-wrap">
+      <div class="analytics-table-wrap" hidden>
         <div class="an-table-scroll" id="anTableWrap"></div>
       </div>
-      <div class="an-canvas-wrap" id="anCanvasWrap" hidden></div>
+      <!-- Canvas is the default view; shows "Loading…" until app.js has the data. -->
+      <div class="an-canvas-wrap" id="anCanvasWrap"><div class="an-loading">Loading…</div></div>
     </section>
     <!-- notes: hand-written notes on interface changes (posted with scripts/local-capture/post-note.mjs) -->
     <section id="insightsView" class="insights" hidden>

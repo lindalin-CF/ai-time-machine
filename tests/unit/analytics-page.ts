@@ -6,6 +6,8 @@ import type { Browser, Page } from 'playwright';
 const PUBLIC = new URL('../../public/', import.meta.url);
 const INDEX_HTML = readFileSync(new URL('index.html', PUBLIC), 'utf8').replace('<html lang="en"', '<html data-consent="not-required" lang="en"');
 const PNG = readFileSync(new URL('icons/chatgpt.png', PUBLIC));
+/** 16 x 10, the shape of a desktop capture (1280 x 800), so cards keep their height when it loads. */
+const SHOT_PNG = readFileSync(new URL('../fixtures/note-image.png', import.meta.url));
 
 /** Six weeks, newest first, so multi-week picks can reach the limit of four. */
 export const WEEKS = ['2026-09-28', '2026-09-21', '2026-09-07', '2026-08-24', '2026-08-17', '2026-08-10'];
@@ -22,12 +24,13 @@ const API: Record<string, unknown> = {
 };
 const captures = (week: string) => ({ week, label: `Week of ${week}`, captures: [cap('chatgpt', 'ChatGPT', week), cap('claude', 'Claude', week)] });
 
-type SiteOpts = { width?: number; hasTouch?: boolean; clipboard?: boolean; storage?: Record<string, string> };
+type SiteOpts = { width?: number; hasTouch?: boolean; clipboard?: boolean; storage?: Record<string, string>; initScript?: string; shotShaped?: boolean };
 
-/** The homepage at `hash` ("" for the gallery), loaded. `storage` is put in localStorage before the page runs. */
+/** The homepage at `hash` ("" for the gallery), loaded. `storage` is put in localStorage and `initScript` runs before the page does. */
 export async function openSite(browser: Browser, hash: string, opts: SiteOpts = {}): Promise<Page> {
   const context = await browser.newContext({ viewport: { width: opts.width ?? 1280, height: 900 }, hasTouch: opts.hasTouch });
   if (opts.clipboard) await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: 'https://site.test' });
+  if (opts.initScript) await context.addInitScript({ content: opts.initScript });
   if (opts.storage) await context.addInitScript((items) => { for (const [k, v] of Object.entries(items)) localStorage.setItem(k, v); }, opts.storage);
   await context.route('**/*', async (route) => {
     const url = new URL(route.request().url());
@@ -35,7 +38,7 @@ export async function openSite(browser: Browser, hash: string, opts: SiteOpts = 
     if (url.pathname === '/') return route.fulfill({ contentType: 'text/html', body: INDEX_HTML });
     if (url.pathname === '/api/captures') return route.fulfill({ json: captures(url.searchParams.get('week') || WEEKS[0]) });
     if (API[url.pathname]) return route.fulfill({ json: API[url.pathname] });
-    if (url.pathname.startsWith('/img/')) return route.fulfill({ contentType: 'image/png', body: PNG });
+    if (url.pathname.startsWith('/img/')) return route.fulfill({ contentType: 'image/png', body: opts.shotShaped ? SHOT_PNG : PNG });
     if (url.pathname.startsWith('/agents/')) return route.fulfill({ status: 404, body: '' });
     try {
       return route.fulfill({ contentType: url.pathname.endsWith('.css') ? 'text/css' : 'text/javascript', body: readFileSync(new URL(`.${url.pathname}`, PUBLIC)) });
@@ -47,9 +50,11 @@ export async function openSite(browser: Browser, hash: string, opts: SiteOpts = 
   return page;
 }
 
-/** The Analytics view in Table mode, ready to use. */
+/** The Analytics view switched from the default Canvas to Table, ready to use. */
 export async function openAnalytics(browser: Browser, opts: SiteOpts = {}): Promise<Page> {
   const page = await openSite(browser, '#analytics', opts);
+  await page.locator('#anCanvasWrap .anc-card img').first().waitFor();
+  await page.locator('[data-anview="table"]').click();
   await page.locator('#anTableWrap .an-table').waitFor();
   return page;
 }

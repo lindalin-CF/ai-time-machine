@@ -785,6 +785,14 @@ function initHeroOrbFollow() {
 }
 
 // ---- hero sub copy: design annotations on the keywords ---------------------
+// Started once, when the homepage is first shown: a link to another view keeps the hero hidden (and its
+// CSS animations unstarted) until the viewer goes to the homepage.
+let heroAnnotationsStarted = false;
+function startHeroAnnotations() {
+  if (heroAnnotationsStarted) return;
+  heroAnnotationsStarted = true;
+  initHeroAnnotations();
+}
 function initHeroAnnotations() {
   const sub = document.querySelector(".hero-sub");
   if (!sub) return;
@@ -1220,7 +1228,7 @@ const an = {
   device: "desktop",
   portals: new Set(),   // selected slugs to compare (portals mode)
   weeks: new Set(),     // selected weeks to compare (weeks mode)
-  view: "table",        // "table" | "canvas"
+  view: "canvas",       // "table" | "canvas"
   shared: null,         // canvas setup from a shared link, used by the next canvas of that selection
   inited: false,
 };
@@ -1624,6 +1632,8 @@ function route() {
   const hash = hashRoute(location.hash);
   const view = hash === "#collection" ? "collection" : hash === "#analytics" ? "analytics" : hash === "#notes" || hash === "#insights" ? "insights" : "gallery";
   const views = { gallery: "#galleryView", collection: "#collectionView", analytics: "#analyticsView", insights: "#insightsView" };
+  document.documentElement.dataset.view = view === "insights" ? "notes" : view;
+  if (view === "gallery") startHeroAnnotations();
   for (const [v, sel] of Object.entries(views)) {
     const el = $(sel);
     if (el) el.hidden = v !== view;
@@ -1647,5 +1657,5 @@ initDownloadAll();
 initDeviceToggle();
 initSearch();
 initHeroOrbFollow();
-initHeroAnnotations();
+if (document.documentElement.dataset.view === "gallery") startHeroAnnotations();
 boot().then(route);

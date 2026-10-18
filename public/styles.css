@@ -428,6 +428,13 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 /* ---------- top nav active + Collection one-pager ---------- */
 .topnav-link[data-nav]{cursor:pointer}
 .topnav-link.active{color:var(--cf-orange)}
+/* First paint: html[data-view] is set by the inline script in index.html's <head> from the hash, then kept in sync by
+   route() in app.js. It shows the matching view (and marks its nav link) before app.js has loaded any data. A view
+   hidden this way never runs the hero's CSS animations. */
+html[data-view="analytics"] #galleryView,html[data-view="collection"] #galleryView,html[data-view="notes"] #galleryView{display:none}
+html[data-view="analytics"] #analyticsView,html[data-view="collection"] #collectionView,html[data-view="notes"] #insightsView{display:block}
+html[data-view="gallery"] .topnav-link[data-nav="gallery"],html[data-view="collection"] .topnav-link[data-nav="collection"],
+html[data-view="analytics"] .topnav-link[data-nav="analytics"],html[data-view="notes"] .topnav-link[data-nav="insights"]{color:var(--cf-orange)}
 
 #collectionView{padding-top:6px}
 .collection-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin:6px 0 24px}

@@ -59,15 +59,17 @@ describe('shareable Analytics links (browser)', () => {
   beforeAll(async () => { browser = await chromium.launch(); });
   afterAll(async () => { await browser?.close(); });
 
-  it('defaults to the latest 2 weeks with no parameters, in Table and Canvas', async () => {
-    const page = await openAnalytics(browser);
+  it('defaults to the latest 2 weeks with no parameters, in Canvas and Table', async () => {
+    const page = await openSite(browser, '#analytics');
+    await page.locator('#anCanvasWrap .anc-card img').first().waitFor();
     expect(page.url()).toBe('https://site.test/#analytics');
     await page.locator('[data-mode="weeks"]').click();
-    await page.locator('#anTableWrap .an-table').waitFor();
+    await page.locator(`#anCanvasWrap .anc-card[data-id="${WEEKS[1]}"] img`).waitFor();
     expect(await page.locator('#anCount').textContent()).toBe('2 of 4 selected');
-    expect(await page.locator('#anTableWrap .an-colhead').count()).toBe(2);
-    await showCanvas(page);
     expect(await cardIds(page)).toEqual([WEEKS[0], WEEKS[1]]);
+    await page.locator('[data-anview="table"]').click();
+    await page.locator('#anTableWrap .an-table').waitFor();
+    expect(await page.locator('#anTableWrap .an-colhead').count()).toBe(2);
   });
 
   it('a link opens the same Over time canvas in a fresh browser, and never touches its saved layout', async () => {
@@ -143,12 +145,13 @@ describe('shareable Analytics links (browser)', () => {
 
   it('changing the URL does not re-render or scroll, and leaving Analytics before the update keeps the new hash', async () => {
     const page = await openAnalytics(browser);
+    await page.waitForTimeout(400); // the switch to Table has been written to the URL
     await page.locator('#analyticsView [data-andevice="mobile"]').click();
     await page.locator('#anTableWrap .an-shot--mobile').first().waitFor();
     // Scroll before the URL update (~300ms after the click) runs.
     await page.evaluate(() => window.scrollTo(0, 200));
     const table = await page.locator('#anTableWrap .an-table').elementHandle();
-    expect(new URL(page.url()).hash).toBe('#analytics');
+    expect(page.url()).not.toContain('device=mobile');
     await page.waitForTimeout(400);
     expect(page.url()).toBe('https://site.test/#analytics?view=table&mode=portals&week=2026-09-28&portals=chatgpt,claude&device=mobile');
     expect(await page.evaluate(() => scrollY)).toBe(200);

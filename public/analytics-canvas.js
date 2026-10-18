@@ -197,6 +197,8 @@ export function compareFindings(a, b) {
 const CARD_W = 280;
 const GAP = 260;
 export const ZOOM_MIN = 0.25, ZOOM_MAX = 2;
+/** Zoom a board opens at, centred on the cards, when nothing saved or linked sets one. Narrower boards fit instead. */
+const ZOOM_DEFAULT = 1.36, ZOOM_DEFAULT_MIN_WIDTH = 760;
 /** Pixels a press must travel before it drags; anything shorter is a click. */
 const DRAG_THRESHOLD = 3;
 
@@ -440,7 +442,8 @@ function mountBoard(root, cards, opts) {
     cam.k = nk;
     applyCam();
   }
-  function fit() {
+  /** Centre the cards and lines on the board, scaled to fit (at most 100%), or at zoom `k` when given. */
+  function fit(k) {
     const rects = [...cardEls.values(), ...[...edgeEls.values()].map((e) => e.box)].map((el) => {
       if (el.classList.contains("anc-box")) {
         const e = edgeEls.get(el.dataset.edge);
@@ -455,7 +458,8 @@ function mountBoard(root, cards, opts) {
     const x0 = Math.min(...rects.map((r) => r.x)), y0 = Math.min(...rects.map((r) => r.y));
     const x1 = Math.max(...rects.map((r) => r.x + r.w)), y1 = Math.max(...rects.map((r) => r.y + r.h));
     const pad = 40, bw = board.clientWidth, bh = board.clientHeight;
-    const k = clampZoom(Math.min(1, (bw - pad * 2) / (x1 - x0), (bh - pad * 2) / (y1 - y0)));
+    if (k === undefined) k = Math.min(1, (bw - pad * 2) / (x1 - x0), (bh - pad * 2) / (y1 - y0));
+    k = clampZoom(k);
     cam = { k, x: (bw - (x1 - x0) * k) / 2 - x0 * k, y: (bh - (y1 - y0) * k) / 2 - y0 * k };
     applyCam();
   }
@@ -632,10 +636,8 @@ function mountBoard(root, cards, opts) {
   placeCards();
   buildEdges();
   if (cam) applyCam();
-  else {
-    fit();
-    if (sharedZoom) zoomAt(sharedZoom, board.clientWidth / 2, board.clientHeight / 2);
-  }
+  else if (sharedZoom) fit(sharedZoom);
+  else fit(board.clientWidth >= ZOOM_DEFAULT_MIN_WIDTH ? ZOOM_DEFAULT : undefined);
   // Card heights settle once thumbnails load; reroute lines then.
   const onImg = () => routeEdges();
   world.querySelectorAll("img").forEach((img) => img.addEventListener("load", onImg));

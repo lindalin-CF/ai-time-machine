@@ -27,9 +27,9 @@ describe('analytics week dropdown (browser)', () => {
       const group = page.getByRole('group', { name: 'Compare', exact: true });
       expect(await group.locator('.vt-btn').evaluateAll((els) => els.map((b) => `${b.getAttribute('data-mode')}=${b.textContent!.trim()}`)))
         .toEqual(['portals=Across portals', 'weeks=Over time']);
-      expect(page.url()).toBe('https://site.test/#analytics');
+      expect(new URL(page.url()).hash.split('?')[0]).toBe('#analytics');
       await page.locator('[data-mode="weeks"]').click();
-      expect(page.url()).toBe('https://site.test/#analytics');
+      expect(new URL(page.url()).hash.split('?')[0]).toBe('#analytics');
     });
   });
 
