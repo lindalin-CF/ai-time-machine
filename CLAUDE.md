@@ -9,3 +9,7 @@ Screenshots are irreplaceable: a portal's UI for a given week can never be captu
 - **Never delete or overwrite anything in `~/AI-Surface-Archive/`.** Use a new timestamped name every time (`cp -n` / `mv -n`).
 - **Never overwrite a local original.** Write edited versions under new names (for example `redacted-v2.png`, `redacted-v3.png`), and never pass an original as the output of `redact.mjs` or any other script.
 - **To take a screenshot off the site, change what the site displays** (for example D1 data or the Worker's rendering), never remove the file from R2 or disk.
+
+## Deploying
+
+- Always commit and push to main before telling the user to deploy. The live site must never be ahead of git.
