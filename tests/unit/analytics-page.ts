@@ -11,11 +11,11 @@ const SHOT_PNG = readFileSync(new URL('../fixtures/note-image.png', import.meta.
 
 /** Six weeks, newest first, so multi-week picks can reach the limit of four. */
 export const WEEKS = ['2026-09-28', '2026-09-21', '2026-09-07', '2026-08-24', '2026-08-17', '2026-08-10'];
-const cap = (slug: string, portal: string, week = WEEKS[0], metrics: unknown = null) => ({
+const cap = (slug: string, portal: string, week = WEEKS[0], metrics: unknown = null, status = 'ok') => ({
   id: `${slug}-${week}`, slug, portal, company: 'Co', url: 'https://x/', brand: '#888888', week,
   image: `/img/shots/${week}/${slug}.png?v=1`, imageMobile: `/img/shots/${week}/${slug}.mobile.png?v=1`, hasMobile: true,
   width: 1280, height: 800, mobileWidth: 780, mobileHeight: 1688,
-  palette: [], analysis: '', analysisBy: 'pending', status: 'ok', capturedAt: `${week}T09:00:00Z`, metrics,
+  palette: [], analysis: '', analysisBy: 'pending', status, capturedAt: `${week}T09:00:00Z`, metrics,
 });
 const API: Record<string, unknown> = {
   '/api/stats': { screenshots: 2, portals: 2, weeks: 1 },
@@ -24,14 +24,14 @@ const API: Record<string, unknown> = {
 };
 type Portal = { slug: string; name: string; brand: string };
 const PORTALS: Portal[] = [{ slug: 'chatgpt', name: 'ChatGPT', brand: '#10a37f' }, { slug: 'claude', name: 'Claude', brand: '#d97757' }];
-const captures = (week: string, portals: Portal[], metrics: Record<string, unknown>) =>
-  ({ week, label: `Week of ${week}`, captures: portals.map((p) => cap(p.slug, p.name, week, metrics[`${p.slug}@${week}`] ?? null)) });
+const captures = (week: string, portals: Portal[], metrics: Record<string, unknown>, statuses: Record<string, string>) =>
+  ({ week, label: `Week of ${week}`, captures: portals.map((p) => cap(p.slug, p.name, week, metrics[`${p.slug}@${week}`] ?? null, statuses[`${p.slug}@${week}`] ?? 'ok')) });
 
 type SiteOpts = { width?: number; hasTouch?: boolean; clipboard?: boolean; storage?: Record<string, string>; initScript?: string; shotShaped?: boolean; weeks?: string[]; clock?: boolean; pages?: Record<string, string>;
-  portals?: Portal[]; metrics?: Record<string, unknown> };
+  portals?: Portal[]; metrics?: Record<string, unknown>; statuses?: Record<string, string> };
 
 /** The homepage at `hash` ("" for the gallery), loaded. `storage` is put in localStorage and `initScript` runs before the page does;
- * `weeks` (newest first) replaces the archived weeks, `portals` the products, and `metrics` (by "<slug>@<week>") gives captures their metrics. `pages` serves more HTML pages by path (for example a server-rendered portal page). `clock` installs Playwright's fake timers before the page runs (time still
+ * `weeks` (newest first) replaces the archived weeks, `portals` the products, and `metrics` (by "<slug>@<week>") gives captures their metrics; `statuses` (same keys) their status ('ok' by default). `pages` serves more HTML pages by path (for example a server-rendered portal page). `clock` installs Playwright's fake timers before the page runs (time still
  * flows until a test pauses it with pauseClock()). */
 export async function openSite(browser: Browser, hash: string, opts: SiteOpts = {}): Promise<Page> {
   const context = await browser.newContext({ viewport: { width: opts.width ?? 1280, height: 900 }, hasTouch: opts.hasTouch });
@@ -43,7 +43,7 @@ export async function openSite(browser: Browser, hash: string, opts: SiteOpts = 
     if (url.host !== 'site.test') return route.abort();
     if (url.pathname === '/') return route.fulfill({ contentType: 'text/html', body: INDEX_HTML });
     if (opts.pages?.[url.pathname]) return route.fulfill({ contentType: 'text/html', body: opts.pages[url.pathname] });
-    if (url.pathname === '/api/captures') return route.fulfill({ json: captures(url.searchParams.get('week') || WEEKS[0], opts.portals ?? PORTALS, opts.metrics ?? {}) });
+    if (url.pathname === '/api/captures') return route.fulfill({ json: captures(url.searchParams.get('week') || WEEKS[0], opts.portals ?? PORTALS, opts.metrics ?? {}, opts.statuses ?? {}) });
     if (url.pathname === '/api/portals' && opts.portals) return route.fulfill({ json: { portals: opts.portals } });
     if (url.pathname === '/api/weeks' && opts.weeks) return route.fulfill({ json: { weeks: opts.weeks.map((week) => ({ week, label: `Week of ${week}` })) } });
     if (API[url.pathname]) return route.fulfill({ json: API[url.pathname] });

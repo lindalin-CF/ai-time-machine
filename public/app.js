@@ -1517,7 +1517,36 @@ async function renderAnTable() {
   const wrap = $("#anTableWrap");
   wrap.innerHTML = `<div class="an-loading">Loading…</div>`;
   const { columns, empty } = await anColumns();
-  wrap.innerHTML = empty ? anEmpty(empty) : anTableHTML(columns);
+  if (empty) { wrap.innerHTML = anEmpty(empty); return; }
+  const slugs = [...new Set(columns.filter((c) => c.cap).map((c) => c.cap.slug))];
+  const latest = new Map(await Promise.all(slugs.map(async (slug) => [slug, await anLatestWeek(slug)])));
+  wrap.innerHTML = anTableHTML(columns, latest);
+}
+
+/**
+ * A portal's newest week with a successful capture, the week its page /portals/<slug> shows (src/db.ts,
+ * latestCaptureForPortal). Walks the archived weeks newest first through the cached week captures, so it is decided
+ * when the table renders and follows a newly added week. Null when the portal has no successful capture.
+ */
+async function anLatestWeek(slug) {
+  for (const { week } of state.weeks) {
+    try {
+      if ((await anCapturesFor(week)).some((c) => c.slug === slug && c.status === "ok")) return week;
+    } catch { return null; }
+  }
+  return null;
+}
+
+/**
+ * The PAGE row's link for a column: /portals/<slug> for the portal's latest captured week, /portals/<slug>/<week>
+ * for older ones. Only successful captures have a page.
+ */
+function anPageLink(c, latest) {
+  if (!c.cap || c.cap.status !== "ok") return "—";
+  const { slug, week } = c.cap;
+  const href = latest.get(slug) === week ? `/portals/${encodeURIComponent(slug)}` : `/portals/${encodeURIComponent(slug)}/${encodeURIComponent(week)}`;
+  const date = shortWeekLabel(week);
+  return `<a class="an-page-link" href="${esc(href)}" aria-label="${esc(`Open the ${c.portalName} page for the week of ${date}`)}">${esc(`${c.portalName} · ${date}`)} <span aria-hidden="true">→</span></a>`;
 }
 
 // Canvas view: the same selection as the table, always desktop screenshots (findings describe the desktop capture only).
@@ -1558,7 +1587,7 @@ function anCanvasKey() {
   return `anCanvas:v1:${an.mode}:${an.mode === "portals" ? an.week : an.portal}:${ids.sort().join(",")}`;
 }
 
-function anTableHTML(cols) {
+function anTableHTML(cols, latest = new Map()) {
   const head = `<tr><th class="an-rowhead"></th>${cols.map((c) =>
     `<th class="an-colhead">${c.icon ? `<span class="an-logo"><img alt="${esc(c.portalName)} logo"${sizeAttrs(iconSize(c.icon))} loading="lazy" src="${esc(iconUrl(c.icon))}" onerror="this.parentNode.remove()" /></span>` : ""}<span>${esc(c.label)}</span></th>`
   ).join("")}</tr>`;
@@ -1587,6 +1616,7 @@ function anTableHTML(cols) {
     return `<td>${t ? `<span class="an-tag">${t}</span>` : "—"}</td>`;
   })));
   rows.push(anRow("Captured", cols.map((c) => `<td>${c.cap ? esc(fmtDate(c.cap.capturedAt)) : "—"}</td>`)));
+  rows.push(anRow("Page", cols.map((c) => `<td>${anPageLink(c, latest)}</td>`)));
   rows.push(anRow("Design notes", cols.map((c) => `<td class="an-notes">${c.cap ? esc(displayedAnalysis(c.cap)) : "—"}</td>`)));
 
   return `<table class="an-table"><thead>${head}</thead><tbody>${rows.join("")}</tbody></table>`;

@@ -894,6 +894,11 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
 .an-cmp-list li:last-child{margin-bottom:0}
 .an-cmp-list li::marker{color:var(--cf-text-soft)}
 .an-cmp-empty{color:var(--cf-text-soft)}
+/* PAGE row: a link to each column's portal page, styled like the Compare button on portal pages (src/portal-page.ts). */
+.an-page-link{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid #d9cebd;border-radius:8px;background:#f5f1e9;color:#cc501e;
+  font:600 12.5px/1.2 var(--font-sans);text-decoration:none;white-space:nowrap}
+.an-page-link:hover{background:#ded4c6}
+.an-page-link:focus-visible{outline:2px solid #eb622c;outline-offset:2px}
 .an-loading,.an-empty{padding:34px;text-align:center;color:var(--cf-text-soft);font-size:13px}
 @media(max-width:760px){
   .an-label{flex-basis:100%;padding-top:0}

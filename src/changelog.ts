@@ -15,6 +15,18 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "table-page-links",
+    date: "2026-10-18",
+    time: "17:27",
+    title: "Open Product Pages From the Table",
+    subtitle: "Each column in Compare's Table links to its product page",
+    bullets: [
+      { lead: "Page row", text: "Under Captured, a button such as \"Gemini · Oct 5, 2026\" opens that product's page for that week." },
+      { lead: "Latest week", text: "The newest captured week opens the product's main page; older weeks open their own weekly page." },
+    ],
+    closing: "Open Compare, switch to Table and use the Page row.",
+  },
+  {
     slug: "notes-replaced-by-changelog",
     date: "2026-10-18",
     time: "17:27",
