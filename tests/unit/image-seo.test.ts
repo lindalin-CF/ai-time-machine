@@ -109,7 +109,7 @@ describe('wording', () => {
   it('writes the week out in words', () => {
     expect(weekInWords('2026-09-21')).toBe('September 21, 2026');
     expect(weekInWords('2026-08-03')).toBe('August 3, 2026');
-    expect(shotAlt('ChatGPT', 'mobile', '2026-09-21')).toBe('ChatGPT mobile interface, week of September 21, 2026');
+    expect(shotAlt('ChatGPT', 'mobile', '2026-09-21')).toBe('ChatGPT UI screenshot, mobile, week of September 21, 2026');
   });
   it('app.js uses the same wording as src/format.ts', () => {
     const src = APP_JS.match(/const MONTHS = [\s\S]*?\nfunction shotAlt\(portal, device, week\) \{[\s\S]*?\n\}/)![0];
@@ -155,27 +155,27 @@ describe('portal and weekly pages', () => {
 
   it('titles and describes the portal page', async () => {
     const h = await html('/portals/chatgpt');
-    expect(h).toContain('<title>ChatGPT interface screenshots — weekly UI history | AI Interface Library</title>');
-    expect(h).toContain('<meta name="description" content="Weekly screenshots of the ChatGPT interface by OpenAI, on desktop and mobile, with a short design analysis of each week. Latest: week of September 21, 2026." />');
+    expect(h).toContain('<title>ChatGPT UI screenshots &amp; interface changes, week by week | AI Interface Library</title>');
+    expect(h).toContain('<meta name="description" content="Weekly ChatGPT UI screenshots, desktop and mobile, with interface design analysis. Latest: week of September 21, 2026." />');
   });
 
   it('titles and describes a weekly page', async () => {
     const h = await html('/portals/chatgpt/2026-09-07');
-    expect(h).toContain('<title>ChatGPT interface — week of September 7, 2026 | AI Interface Library</title>');
-    expect(h).toContain('<meta name="description" content="Screenshots of the ChatGPT interface by OpenAI from the week of September 7, 2026, on desktop and mobile, with a short design analysis." />');
+    expect(h).toContain('<title>ChatGPT UI — week of September 7, 2026 | AI Interface Library</title>');
+    expect(h).toContain('<meta name="description" content="ChatGPT UI screenshots by OpenAI from the week of September 7, 2026, on desktop and mobile, with a short design analysis of the interface." />');
   });
 
   it('gives each screenshot a descriptive alt and its real size', async () => {
     const h = await html('/portals/chatgpt/2026-09-21');
-    expect(h).toContain(`<img src="/img/shots/2026-09-21/chatgpt.local.png?v=${v('2026-09-21')}" alt="ChatGPT desktop interface, week of September 21, 2026" width="1280" height="800" loading="eager" />`);
-    expect(h).toContain(`<img src="/img/shots/2026-09-21/chatgpt.mobile.local.png?v=${v('2026-09-21')}" alt="ChatGPT mobile interface, week of September 21, 2026" width="786" height="1700" loading="lazy" />`);
+    expect(h).toContain(`<img src="/img/shots/2026-09-21/chatgpt.local.png?v=${v('2026-09-21')}" alt="ChatGPT UI screenshot, desktop, week of September 21, 2026" width="1280" height="800" loading="eager" />`);
+    expect(h).toContain(`<img src="/img/shots/2026-09-21/chatgpt.mobile.local.png?v=${v('2026-09-21')}" alt="ChatGPT UI screenshot, mobile, week of September 21, 2026" width="786" height="1700" loading="lazy" />`);
     for (const img of h.match(/<img [^>]*>/g)!) expect(img).toMatch(/ width="\d+" height="\d+"/);
   });
 
   it('falls back to the capture size when a mobile screenshot cannot be measured', async () => {
     t.r2.delete('shots/2026-09-21/claude.mobile.local.png');
     const h = await html('/portals/claude');
-    expect(h).toContain('alt="Claude mobile interface, week of September 21, 2026" width="780" height="1688"');
+    expect(h).toContain('alt="Claude UI screenshot, mobile, week of September 21, 2026" width="780" height="1688"');
   });
 });
 
@@ -228,12 +228,12 @@ describe('API sizes', () => {
 });
 
 describe('homepage meta description', () => {
-  it('matches the hero subtitle and says nothing about landing pages', () => {
-    // The full sentence lives in the hero's .sr-only span; the visible copy is split into animated word spans.
-    const sub = INDEX_HTML.match(/<p class="hero-sub">\s*<span class="sr-only">([^<]*)<\/span>/)![1];
-    for (const tag of ['name="description"', 'property="og:description"', 'name="twitter:description"']) {
-      expect(INDEX_HTML).toContain(`<meta ${tag} content="${sub}" />`);
+  it('is the same for meta, og and twitter, names the products, and says nothing about landing pages', () => {
+    const d = INDEX_HTML.match(/<meta name="description" content="([^"]*)" \/>/)![1];
+    for (const tag of ['property="og:description"', 'name="twitter:description"']) {
+      expect(INDEX_HTML).toContain(`<meta ${tag} content="${d}" />`);
     }
+    for (const word of ['screenshots', 'ChatGPT', 'Claude', 'Gemini', 'desktop and mobile', 'UI changes']) expect(d).toContain(word);
     expect(INDEX_HTML).not.toMatch(/landing page/i);
   });
 });
@@ -280,8 +280,8 @@ describe('homepage images in the browser', () => {
   it('cards: descriptive alt and real sizes, desktop and mobile, and logos named', async () => {
     const page = await open();
     expect(await imgs(page, '.card .shot img')).toEqual([
-      { alt: 'ChatGPT desktop interface, week of September 21, 2026', width: '1280', height: '800', src: `/img/shots/2026-09-21/chatgpt.local.png?v=${v('2026-09-21')}` },
-      { alt: 'Claude desktop interface, week of September 21, 2026', width: '1280', height: '800', src: `/img/shots/2026-09-21/claude.local.png?v=${v('2026-09-21')}` },
+      { alt: 'ChatGPT UI screenshot, desktop, week of September 21, 2026', width: '1280', height: '800', src: `/img/shots/2026-09-21/chatgpt.local.png?v=${v('2026-09-21')}` },
+      { alt: 'Claude UI screenshot, desktop, week of September 21, 2026', width: '1280', height: '800', src: `/img/shots/2026-09-21/claude.local.png?v=${v('2026-09-21')}` },
     ]);
     expect((await imgs(page, '.card .brand-logo img')).map((i) => [i.alt, i.width, i.height])).toEqual([['ChatGPT logo', '64', '64'], ['Claude logo', '64', '64']]);
     await everyImgHasASize(page);
@@ -289,8 +289,8 @@ describe('homepage images in the browser', () => {
     await page.locator('#gallery [data-device="mobile"], [data-device="mobile"]').first().click();
     await page.waitForFunction(() => document.querySelector('.card .shot img')?.getAttribute('alt')?.includes('mobile'));
     expect((await imgs(page, '.card .shot img')).map((i) => [i.alt, i.width, i.height])).toEqual([
-      ['ChatGPT mobile interface, week of September 21, 2026', '786', '1700'],
-      ['Claude mobile interface, week of September 21, 2026', '780', '1688'],
+      ['ChatGPT UI screenshot, mobile, week of September 21, 2026', '786', '1700'],
+      ['Claude UI screenshot, mobile, week of September 21, 2026', '780', '1688'],
     ]);
     await everyImgHasASize(page);
     await page.context().close();

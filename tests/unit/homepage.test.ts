@@ -6,16 +6,19 @@ const html = readFileSync(new URL('../../public/index.html', import.meta.url), '
 
 describe('homepage (public/index.html)', () => {
   it('uses the new site name only', () => {
-    expect(html).toContain('<title>AI Interface Library</title>');
+    expect(html).toContain('<title>AI Interface Library — weekly UI screenshots of ChatGPT, Claude, Gemini &amp; more</title>');
+    expect(html).toContain('<meta property="og:title" content="AI Interface Library — weekly UI screenshots of ChatGPT, Claude, Gemini &amp; more" />');
     expect(html).toContain('<meta property="og:site_name" content="AI Interface Library" />');
     expect(html).not.toContain('AI Surface Library');
     expect(html).not.toContain('AI Surface');
   });
 
-  it('uses the same subtitle in the hero and the og/twitter descriptions', () => {
+  it('keeps the hero subtitle and uses the search description for meta, og and twitter', () => {
     const SUBTITLE = 'A weekly archive of AI product interfaces, analysed for layout, hierarchy and colour as a UI/UX design system.';
-    expect(html).toContain(`<meta property="og:description" content="${SUBTITLE}" />`);
-    expect(html).toContain(`<meta name="twitter:description" content="${SUBTITLE}" />`);
+    const DESCRIPTION = 'Weekly screenshots of AI chatbot interfaces — ChatGPT, Claude, Gemini, Perplexity, Copilot and more — on desktop and mobile, with design analysis and UI changes week by week.';
+    for (const tag of ['name="description"', 'property="og:description"', 'name="twitter:description"']) {
+      expect(html).toContain(`<meta ${tag} content="${DESCRIPTION}" />`);
+    }
     // The hero joins the last two words with &nbsp; so they never wrap apart (::first-line stops text-wrap:pretty working).
     const hero = html.match(/<p class="hero-sub">\s*([\s\S]*?)\s*<\/p>/)![1];
     expect(hero).toContain('design&nbsp;system.');

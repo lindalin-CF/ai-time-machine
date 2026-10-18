@@ -40,7 +40,7 @@ function weekInWords(week) {
   return month ? `${month} ${Number(m[3])}, ${m[1]}` : week;
 }
 function shotAlt(portal, device, week) {
-  return `${portal} ${device} interface, week of ${weekInWords(week)}`;
+  return `${portal} UI screenshot, ${device}, week of ${weekInWords(week)}`;
 }
 // Small display copy of a screenshot via Cloudflare Image Transformations (enabled only on the production zone).
 // onerror=redirect falls back to the original if a transformation fails or the monthly quota runs out.

@@ -15,6 +15,19 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "ui-change-timeline",
+    date: "2026-10-17",
+    time: "21:43",
+    title: "How Each Product's UI Changed",
+    subtitle: "Every product page now lists its menu changes, week by week",
+    bullets: [
+      { lead: "Change timeline", text: "Under the latest screenshots, each product page lists the weeks its menu changed, newest first, such as \"Scheduled renamed to Tasks\". Each week links to its own page." },
+      { lead: "Other names", text: "Products known by more than one name show it under the title, for example \"Le Chat by Mistral AI · also called LeChat\"." },
+      { lead: "Clearer titles", text: "Page titles, descriptions and image text now say plainly that these are UI screenshots, on desktop and mobile." },
+    ],
+    closing: "Open any product page and scroll past the screenshots to see its timeline.",
+  },
+  {
     slug: "direct-view-links",
     date: "2026-10-17",
     time: "21:04",

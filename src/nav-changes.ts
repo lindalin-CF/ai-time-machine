@@ -20,12 +20,28 @@ export function navChangeSentence(c: NavChange): string {
   return `the ${c.previous} item no longer appears in the ${c.region}.`;
 }
 
+/** One change as a short phrase for a timeline line, e.g. "Scheduled renamed to Tasks" or "Upgrade removed from the top bar". */
+export function navChangePhrase(c: NavChange): string {
+  const p = (() => {
+    if (c.change === "icon_changed") return `${c.region} button icon changed (${c.previous} → ${c.current})`;
+    if (c.icon) {
+      return c.change === "added"
+        ? `icon button (${c.current}) added to the ${c.region}`
+        : `icon button (${c.previous}) removed from the ${c.region}`;
+    }
+    if (c.change === "renamed") return `${c.previous} renamed to ${c.current}`;
+    if (c.change === "added") return `${c.current} added to the ${c.region}`;
+    return `${c.previous} removed from the ${c.region}`;
+  })();
+  return p[0].toUpperCase() + p.slice(1);
+}
+
 /** A menu item as shown in text: its name, or "an icon button (clock icon)" for an item without text. */
 export function navItemName(it: NavItem): string {
   return it.icon ? `an icon button (${it.label})` : it.label;
 }
 
-export type ChangeEntry = { slug: string; name: string; week: string; previousWeek: string; sentence: string; publishedAt: string | null };
+export type ChangeEntry = { slug: string; name: string; week: string; previousWeek: string; sentence: string; phrase: string; publishedAt: string | null };
 
 /**
  * Every recorded menu change in published analyses, newest week first (portal order within a week).
@@ -38,7 +54,7 @@ export function changeEntries(rows: PublishedCapture[]): ChangeEntry[] {
     const nc = captureMetrics(r)?.navChanges;
     if (!nc) continue;
     for (const c of nc.items) {
-      out.push({ slug: r.slug, name: r.name, week: r.week, previousWeek: nc.previousWeek, sentence: navChangeSentence(c), publishedAt: r.analysis_published_at });
+      out.push({ slug: r.slug, name: r.name, week: r.week, previousWeek: nc.previousWeek, sentence: navChangeSentence(c), phrase: navChangePhrase(c), publishedAt: r.analysis_published_at });
     }
   }
   // Stable sort keeps portal order (and each analysis's own order) within a week.

@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { handleChanges, handleHowWeAnalyze, handleLicense, handlePortalPage, handleSitemap } from '../../src/portal-page';
+import { handleChanges, handleHowWeAnalyze, handleLicense, handlePortalPage, handleSitemap, hubTitle, hubDescription, PORTAL_ALIASES } from '../../src/portal-page';
 import { handleLlmsTxt, handleLlmsFullTxt } from '../../src/aeo';
 import { handleHomepage, homepageJsonLd } from '../../src/homepage';
-import { navChangeSentence } from '../../src/nav-changes';
+import { navChangeSentence, navChangePhrase } from '../../src/nav-changes';
 import { makeEnv } from './fake-env';
 // @ts-expect-error -- plain browser module without type declarations
 import { compareFindings } from '../../public/analytics-canvas.js';
@@ -252,7 +252,7 @@ describe('structured data', () => {
     const [site, dataset] = blocks[0]['@graph'];
     expect(site).toEqual({
       '@type': 'WebSite', name: 'AI Interface Library', url: `${ORIGIN}/`,
-      description: 'A weekly archive of AI product interfaces, analysed for layout, hierarchy and colour as a UI/UX design system.',
+      description: 'Weekly screenshots of AI chatbot interfaces — ChatGPT, Claude, Gemini, Perplexity, Copilot and more — on desktop and mobile, with design analysis and UI changes week by week.',
       inLanguage: 'en', publisher: { '@type': 'Person', name: 'Linda' },
     });
     expect(dataset['@type']).toBe('Dataset');
@@ -298,5 +298,89 @@ describe('/license', () => {
     expect(INDEX_HTML).toContain('&copy; 2026 AI Interface Library. Analyses licensed under CC BY 4.0 &middot; <a href="/license">License</a> &middot; ');
     expect(INDEX_HTML).not.toContain('All rights reserved');
     expect(await (await handleSitemap(t.env)).text()).toMatch(new RegExp(`<loc>${ORIGIN}/license</loc>\\s*<lastmod>2026-10-10</lastmod>`));
+  });
+});
+
+describe('portal hub search wording', () => {
+  const html = async (path: string) => (await get(handlePortalPage, path)).text();
+  const title = (h: string) => h.match(/<title>([^<]*)<\/title>/)![1];
+  const description = (h: string) => h.match(/<meta name="description" content="([^"]*)"/)![1];
+  const addLeChat = () => {
+    t.db.exec(`INSERT INTO portals (slug, name, company, url, brand, sort_order) VALUES ('mistral', 'Le Chat', 'Mistral AI', 'https://chat.mistral.ai/', '#fa520f', 5)`);
+    addCapture('mistral', 'Le Chat', 'Mistral AI', '2026-10-05', analysis('mistral', '2026-10-05', [], []));
+  };
+
+  it('hub and weekly titles and the hub description say "UI"', async () => {
+    const hub = await html('/portals/chatgpt');
+    expect(title(hub)).toBe('ChatGPT UI screenshots &amp; interface changes, week by week | AI Interface Library');
+    expect(description(hub)).toBe('Weekly ChatGPT UI screenshots, desktop and mobile, with interface design analysis and how the ChatGPT UI changed. Latest: week of October 5, 2026.');
+    expect(title(await html('/portals/chatgpt/2026-10-05'))).toBe('ChatGPT UI — week of October 5, 2026 | AI Interface Library');
+  });
+
+  it('titles stay at 70 characters or fewer before the brand, and hub descriptions at 155 or fewer, for every portal', () => {
+    const seed = readFileSync(new URL('../../seed.sql', import.meta.url), 'utf8');
+    const portals = [...seed.matchAll(/INSERT INTO portals \([^)]*\) VALUES \('([^']+)','([^']+)'/g)].map((m) => ({ slug: m[1], name: m[2] }));
+    expect(portals.length).toBeGreaterThan(10);
+    for (const { slug, name } of portals) {
+      expect(hubTitle(name).length).toBeLessThanOrEqual(70);
+      expect(`${name} UI — week of September 28, 2026`.length).toBeLessThanOrEqual(70);
+      const d = hubDescription(name, PORTAL_ALIASES[slug] ?? [], true, '2026-09-28');
+      expect(d.length).toBeLessThanOrEqual(155);
+      for (const word of ['UI', 'interface', 'screenshots', 'desktop and mobile', `how the ${name} UI changed`]) expect(d).toContain(word);
+    }
+    // A name long enough to pass 70 drops "& interface changes".
+    expect(hubTitle('A Very Long Portal Name For Testing')).toBe('A Very Long Portal Name For Testing UI screenshots, week by week');
+  });
+
+  it('aliases: at most 2 each, the first in the hub description and the subtitle, all in the product alternateName', async () => {
+    for (const list of Object.values(PORTAL_ALIASES)) expect(list.length).toBeLessThanOrEqual(2);
+    addLeChat();
+    const hub = await html('/portals/mistral');
+    expect(hub).toContain('<h1>Le Chat</h1>\n      <p class="meta">Le Chat by Mistral AI · also called LeChat &middot; captured week of October 5, 2026</p>');
+    expect(description(hub)).toContain('Also called LeChat.');
+    expect(title(hub)).not.toContain('LeChat');
+    const about = jsonLd(hub)[0]['@graph'].find((n: any) => n['@type'] === 'Article').about;
+    expect(about).toEqual({ '@type': 'SoftwareApplication', name: 'Le Chat', alternateName: ['LeChat', 'Mistral Le Chat'], publisher: { '@type': 'Organization', name: 'Mistral AI' } });
+    // No alias: the meta line and the product are unchanged.
+    expect(await html('/portals/chatgpt')).toContain('<p class="meta">OpenAI &middot; captured week of October 5, 2026</p>');
+  });
+
+  it('the hub timeline lists ChatGPT\'s Scheduled → Tasks change under the screenshots and links to that week', async () => {
+    const hub = await html('/portals/chatgpt');
+    expect(hub).toContain([
+      '      <section class="timeline"><h2>How the ChatGPT UI changed</h2>',
+      '        <ul>',
+      '          <li><a href="/portals/chatgpt/2026-10-05">October 5, 2026</a> — Scheduled renamed to Tasks</li>',
+      '        </ul>',
+      '      </section>',
+    ].join('\n'));
+    expect(hub.indexOf('class="shots"')).toBeLessThan(hub.indexOf('class="timeline"'));
+    expect(hub.indexOf('class="timeline"')).toBeLessThan(hub.indexOf('class="analysis"'));
+    expect(hub).not.toContain('Test week'); // system-test week left out
+    for (const leak of LEAKS) expect(hub).not.toContain(leak);
+    expect(await html('/portals/chatgpt/2026-10-05')).not.toContain('class="timeline"'); // hub only
+  });
+
+  it('a portal without recorded changes says so, and its description leaves out "changed"', async () => {
+    const hub = await html('/portals/claude');
+    expect(hub).toContain('<h2>How the Claude UI changed</h2>\n        <p>No menu changes have been recorded for Claude yet.</p>');
+    expect(description(hub)).not.toContain('changed');
+  });
+
+  it('the hub Markdown has the same timeline; weekly Markdown does not', async () => {
+    const md = await (await get(handlePortalPage, '/portals/chatgpt.md')).text();
+    expect(md).toContain(['## How the ChatGPT UI changed', '', `- [October 5, 2026](${ORIGIN}/portals/chatgpt/2026-10-05) — Scheduled renamed to Tasks`, '', '## Screenshots'].join('\n'));
+    expect(await (await get(handlePortalPage, '/portals/claude.md')).text()).toContain('## How the Claude UI changed\n\nNo menu changes have been recorded for Claude yet.');
+    expect(await (await get(handlePortalPage, '/portals/chatgpt/2026-10-05.md')).text()).not.toContain('UI changed');
+  });
+
+  it('words every kind of change as a short phrase', () => {
+    const c = (change: string, previous: string | null, current: string | null, region = 'sidebar', icon?: true) => navChangePhrase({ change, previous, current, region, ...(icon ? { icon } : {}) } as any);
+    expect(c('renamed', 'Scheduled', 'Tasks')).toBe('Scheduled renamed to Tasks');
+    expect(c('added', null, 'Create')).toBe('Create added to the sidebar');
+    expect(c('removed', 'Upgrade', null, 'top bar')).toBe('Upgrade removed from the top bar');
+    expect(c('added', null, 'slider icon', 'input area', true)).toBe('Icon button (slider icon) added to the input area');
+    expect(c('removed', 'clock icon', null, 'top bar', true)).toBe('Icon button (clock icon) removed from the top bar');
+    expect(c('icon_changed', 'bubble-clock icon', 'dashed bubble icon', 'top bar')).toBe('Top bar button icon changed (bubble-clock icon → dashed bubble icon)');
   });
 });

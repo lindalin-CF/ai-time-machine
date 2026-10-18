@@ -53,11 +53,52 @@ const FOOTER_LEGAL = `      <div class="legal">&copy; 2026 AI Interface Library.
         </form>
       </dialog>`;
 
+/**
+ * Other names people search for a portal by (at most 2, most used first). The first shows in the hub
+ * description and under the h1; all go into the product's JSON-LD alternateName.
+ */
+export const PORTAL_ALIASES: Record<string, string[]> = {
+  mistral: ["LeChat", "Mistral Le Chat"],
+  qwen: ["QwenChat"],
+  copilot: ["Copilot"],
+};
+
+const BRAND = " | AI Interface Library";
+/** Search results show about this many characters of a description. */
+const DESCRIPTION_SHOWN = 155;
+
+/** Hub title before the brand: "ChatGPT UI screenshots & interface changes, week by week", shortened past 70 characters. */
+export function hubTitle(name: string): string {
+  const full = `${name} UI screenshots & interface changes, week by week`;
+  return full.length <= 70 ? full : `${name} UI screenshots, week by week`;
+}
+
+/** Hub description: what the page shows, the first alias, and the latest week when it still fits. */
+export function hubDescription(name: string, aliases: string[], changed: boolean, latestWeek: string | null): string {
+  let d = `Weekly ${name} UI screenshots, desktop and mobile, with interface design analysis${changed ? ` and how the ${name} UI changed` : ""}.`;
+  if (aliases[0]) d += ` Also called ${aliases[0]}.`;
+  const latest = latestWeek ? ` Latest: week of ${weekInWords(latestWeek)}.` : "";
+  return latest && (d + latest).length <= DESCRIPTION_SHOWN ? d + latest : d;
+}
+
+/** One timeline line per week with menu changes, newest first: the week and its changes as short phrases. */
+export type TimelineWeek = { week: string; phrases: string[] };
+
+function timelineWeeks(entries: ChangeEntry[]): TimelineWeek[] {
+  const out: TimelineWeek[] = [];
+  for (const e of entries) { // already newest week first
+    const last = out.at(-1);
+    if (last && last.week === e.week) last.phrases.push(e.phrase);
+    else out.push({ week: e.week, phrases: [e.phrase] });
+  }
+  return out;
+}
+
 export type PreviewImage = { url: string; width: number; height: number; alt: string };
 
 export const FEED_URL = `${ORIGIN}/feed.xml`;
 /** Channel description: the same as the homepage's meta description. */
-export const FEED_DESCRIPTION = "A weekly archive of AI product interfaces, analysed for layout, hierarchy and colour as a UI/UX design system.";
+export const FEED_DESCRIPTION = "Weekly screenshots of AI chatbot interfaces — ChatGPT, Claude, Gemini, Perplexity, Copilot and more — on desktop and mobile, with design analysis and UI changes week by week.";
 
 /** The site-wide link preview (public/og-image.png), used where a page has no screenshot of its own. */
 export const SITE_PREVIEW: PreviewImage = { url: `${ORIGIN}/og-image.png`, width: 1200, height: 630, alt: "AI Interface Library" };
@@ -115,6 +156,9 @@ ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts
     .desktop{flex:1 1 560px}.mobile{flex:0 1 240px}
     figcaption{font-size:.85rem;color:#6b6257;margin-top:6px}
     .analysis{white-space:pre-line;margin:32px 0}
+    .timeline{margin:32px 0}
+    .timeline ul{padding-left:1.25em;margin:0}
+    .timeline li{margin:0 0 6px}
     .method{font-size:.85rem;color:#6b6257}
     .howto h2{font-size:1.25rem;margin:32px 0 8px}
     .howto ul{padding-left:1.25em}
@@ -208,12 +252,12 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
   const analysis = cap && isPublishedAnalysis(cap) ? cap.analysis.trim() : "";
   // Weekly pages with a published analysis describe it in its own words (meta, og and twitter).
   const summary = weekParam !== null && cap ? summaryDescription(cap) : null;
-  const description = summary ?? shortText(
-    weekParam !== null
-      ? `Screenshots of the ${name} interface by ${portal.company} from the week of ${weekInWords(weekParam)}, on desktop and mobile, with a short design analysis. ${analysis}`
-      : `Weekly screenshots of the ${name} interface by ${portal.company}, on desktop and mobile, with a short design analysis of each week.${cap ? ` Latest: week of ${weekInWords(cap.week)}.` : ""} ${analysis}`,
-    300
-  );
+  const aliases = PORTAL_ALIASES[slug] ?? [];
+  // The hub's "How the <Name> UI changed" timeline: recorded menu changes of this portal only.
+  const timeline = weekParam === null ? timelineWeeks((await changes(env)).filter((e) => e.slug === slug)) : [];
+  const description = weekParam === null
+    ? hubDescription(name, aliases, timeline.length > 0, cap?.week ?? null)
+    : summary ?? shortText(`${name} UI screenshots by ${portal.company} from the week of ${weekInWords(weekParam)}, on desktop and mobile, with a short design analysis of the interface. ${analysis}`, 300);
 
   let shots = "";
   const shotImages: { device: "Desktop" | "Mobile"; url: string; alt: string; width: number; height: number }[] = []; // also described in JSON-LD and Markdown
@@ -240,16 +284,24 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
   if (latestWeek && !isLatest) navLinks.push(`<a href="/portals/${esc(slug)}">Latest (${esc(latestWeek)})</a>`);
   const weekNav = navLinks.length ? `      <nav class="weeknav" aria-label="${esc(name)} weekly captures">${navLinks.join(" ")}</nav>\n` : "";
 
+  const timelineHtml = weekParam !== null ? "" : `      <section class="timeline"><h2>How the ${esc(name)} UI changed</h2>
+${timeline.length
+    ? `        <ul>\n${timeline.map((w) => `          <li><a href="/portals/${esc(slug)}/${esc(w.week)}">${esc(weekInWords(w.week))}</a> \u2014 ${esc(w.phrases.join("; "))}</li>`).join("\n")}\n        </ul>`
+    : `        <p>No menu changes have been recorded for ${esc(name)} yet.</p>`}
+      </section>\n`;
+
+  // "Le Chat by Mistral AI · also called LeChat" for portals with an alias, otherwise just the company.
+  const byline = aliases[0] ? `${name} by ${portal.company} \u00b7 also called ${aliases[0]}` : portal.company;
   const body = `    <main>
       <h1>${esc(name)}</h1>
-      <p class="meta">${esc(portal.company)}${cap ? ` &middot; captured week of ${esc(weekInWords(cap.week))}` : ""}</p>
+      <p class="meta">${esc(byline)}${cap ? ` &middot; captured week of ${esc(weekInWords(cap.week))}` : ""}</p>
 ${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screenshots">\n${shots}      </section>
-      <section class="analysis"><h2>Design analysis</h2><p>${esc(displayedAnalysis(cap))}</p><p class="method"><a href="/how-we-analyze">How this analysis is made</a></p></section>` : `      <p>No captures yet for ${esc(name)}.</p>`}
+${timelineHtml}      <section class="analysis"><h2>Design analysis</h2><p>${esc(displayedAnalysis(cap))}</p><p class="method"><a href="/how-we-analyze">How this analysis is made</a></p></section>` : `      <p>No captures yet for ${esc(name)}.</p>\n${timelineHtml.replace(/\n$/, "")}`}
     </main>`;
 
   if (markdown) {
     const md = portalMarkdown({
-      name, company: portal.company, canonical, cap,
+      name, company: portal.company, canonical, cap, timeline: weekParam === null ? timeline : null, slug,
       shots: shotImages.map((img) => ({ device: img.device, url: img.url.startsWith("/") ? `${ORIGIN}${img.url}` : img.url })),
     });
     const headers: Record<string, string> = { ...MARKDOWN_HEADERS, "cache-control": "public, max-age=3600", link: `<${canonical}>; rel="canonical"` };
@@ -290,7 +342,7 @@ ${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screens
         datePublished: cap.analysis_published_at,
         dateModified: cap.analysis_published_at,
         ...(image ? { image: image.url } : {}),
-        about: { "@type": "SoftwareApplication", name, publisher: { "@type": "Organization", name: portal.company } },
+        about: { "@type": "SoftwareApplication", name, ...(aliases.length ? { alternateName: aliases } : {}), publisher: { "@type": "Organization", name: portal.company } },
       }] : []),
     ],
   };
@@ -299,9 +351,7 @@ ${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screens
     consent: consentMode(request),
     image,
     jsonLd,
-    title: weekParam !== null
-      ? `${name} interface — week of ${weekInWords(weekParam)} | AI Interface Library`
-      : `${name} interface screenshots — weekly UI history | AI Interface Library`,
+    title: (weekParam !== null ? `${name} UI \u2014 week of ${weekInWords(weekParam)}` : hubTitle(name)) + BRAND,
     description,
     canonical,
     markdown: `${canonical}.md`,
@@ -678,9 +728,13 @@ ${list}
 }
 
 /** Markdown version of a portal page: the same facts as the HTML page, plus its menu items and menu changes. */
-function portalMarkdown(o: { name: string; company: string; canonical: string; cap: CaptureRow | null; shots: { device: string; url: string }[] }): string {
+function portalMarkdown(o: { name: string; slug: string; company: string; canonical: string; cap: CaptureRow | null; timeline: TimelineWeek[] | null; shots: { device: string; url: string }[] }): string {
   const lines = [`# ${o.name}`, "", `- Company: ${o.company}`];
-  if (!o.cap) return [...lines, `- Page: ${o.canonical}`, "", `No captures yet for ${o.name}.`, ""].join("\n");
+  // Hub only: the same "How the <Name> UI changed" list as the HTML page.
+  const timeline = o.timeline === null ? [] : [`## How the ${o.name} UI changed`, "", ...(o.timeline.length
+    ? o.timeline.map((w) => `- [${weekInWords(w.week)}](${ORIGIN}/portals/${o.slug}/${w.week}) \u2014 ${w.phrases.join("; ")}`)
+    : [`No menu changes have been recorded for ${o.name} yet.`]), ""];
+  if (!o.cap) return [...lines, `- Page: ${o.canonical}`, "", `No captures yet for ${o.name}.`, "", ...timeline].join("\n");
   const cap = o.cap;
   lines.push(`- Week: week of ${weekInWords(cap.week)} (${cap.week})`, `- Page: ${o.canonical}`, "", "## Design analysis", "", displayedAnalysis(cap), "");
 
@@ -704,6 +758,6 @@ function portalMarkdown(o: { name: string; company: string; canonical: string; c
   } else {
     lines.push("No menu comparison for this week.");
   }
-  lines.push("", "## Screenshots", "", ...(o.shots.length ? o.shots.map((s) => `- ${s.device}: ${s.url}`) : ["No screenshots."]), "");
+  lines.push("", ...timeline, "## Screenshots", "", ...(o.shots.length ? o.shots.map((s) => `- ${s.device}: ${s.url}`) : ["No screenshots."]), "");
   return lines.join("\n");
 }

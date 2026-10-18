@@ -7,7 +7,7 @@ import { makeEnv } from './fake-env';
 
 const INDEX_HTML = readFileSync(new URL('../../public/index.html', import.meta.url), 'utf8');
 const ORIGIN = 'https://ai-portal-library.dev';
-const DESCRIPTION = 'A weekly archive of AI product interfaces, analysed for layout, hierarchy and colour as a UI/UX design system.';
+const DESCRIPTION = 'Weekly screenshots of AI chatbot interfaces — ChatGPT, Claude, Gemini, Perplexity, Copilot and more — on desktop and mobile, with design analysis and UI changes week by week.';
 
 let t: ReturnType<typeof makeEnv>;
 

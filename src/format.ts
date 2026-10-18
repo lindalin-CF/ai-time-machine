@@ -11,7 +11,7 @@ export function weekInWords(week: string): string {
   return month ? `${month} ${Number(m[3])}, ${m[1]}` : week;
 }
 
-/** Alt text for a weekly screenshot: "ChatGPT desktop interface, week of September 21, 2026". */
+/** Alt text for a weekly screenshot: "ChatGPT UI screenshot, desktop, week of September 21, 2026". */
 export function shotAlt(portal: string, device: "desktop" | "mobile", week: string): string {
-  return `${portal} ${device} interface, week of ${weekInWords(week)}`;
+  return `${portal} UI screenshot, ${device}, week of ${weekInWords(week)}`;
 }

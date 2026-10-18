@@ -167,6 +167,6 @@ describe('system-test weeks (migration 0007)', () => {
     expect(html).toContain(`<h2>Design analysis</h2><p>${NOTE}</p>`);
     const meta = html.match(/<meta name="description" content="([^"]*)"/)![1];
     expect(meta).not.toContain('system testing');
-    expect(meta).toBe('Screenshots of the Claude interface by Anthropic from the week of August 3, 2026, on desktop and mobile, with a short design analysis.');
+    expect(meta).toBe('Claude UI screenshots by Anthropic from the week of August 3, 2026, on desktop and mobile, with a short design analysis of the interface.');
   });
 });

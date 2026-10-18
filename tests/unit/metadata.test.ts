@@ -119,7 +119,7 @@ describe('robots and link previews', () => {
     expect(meta(html, 'og:image')).toBe(`${ORIGIN}/img/shots/2026-09-07/chatgpt.local.png?v=${v('2026-09-13T16:59:51.824Z')}`);
     expect(meta(html, 'og:image:width')).toBe('1280');
     expect(meta(html, 'og:image:height')).toBe('800');
-    expect(meta(html, 'og:image:alt')).toBe('ChatGPT desktop interface, week of September 7, 2026');
+    expect(meta(html, 'og:image:alt')).toBe('ChatGPT UI screenshot, desktop, week of September 7, 2026');
     expect(meta(html, 'twitter:card')).toBe('summary_large_image');
     expect(meta(html, 'twitter:image')).toBe(meta(html, 'og:image'));
     // The preview image is the screenshot shown on the page, with the same alt.
@@ -129,7 +129,7 @@ describe('robots and link previews', () => {
   it('a portal hub previews its latest week', async () => {
     const html = await portal('/portals/chatgpt');
     expect(meta(html, 'og:image')).toBe(`${ORIGIN}/img/shots/2026-09-21/chatgpt.local.png?v=${v('2026-09-25T15:12:37.969Z')}`);
-    expect(meta(html, 'og:image:alt')).toBe('ChatGPT desktop interface, week of September 21, 2026');
+    expect(meta(html, 'og:image:alt')).toBe('ChatGPT UI screenshot, desktop, week of September 21, 2026');
   });
 
   it('pages without a screenshot keep the site preview image', async () => {
@@ -163,7 +163,7 @@ describe('weekly page descriptions', () => {
   const setSentences = (id: string, sentences: string[]) =>
     t.db.prepare(`UPDATE captures SET analysis_json = ?, analysis = ? WHERE id = ?`).run(JSON.stringify({ summary_sentences: sentences.map((text) => ({ text })) }), sentences.join(' '), id);
   const OPENING = SUMMARY_SENTENCES[0];
-  const CURRENT = /^Screenshots of the ChatGPT interface by OpenAI from the week of September 21, 2026/;
+  const CURRENT = /^ChatGPT UI screenshots by OpenAI from the week of September 21, 2026/;
 
   it('skips the fixed opening and uses the sentences after it, as many as fit under 160 characters', async () => {
     expect(OPENING).toMatch(FIXED_SUMMARY_OPENING);
@@ -189,7 +189,7 @@ describe('weekly page descriptions', () => {
   it('keeps the current description when the summary is only the fixed opening', async () => {
     setSentences('chatgpt-2026-09-21', [OPENING]);
     expect(meta(await portal('/portals/chatgpt/2026-09-21'), 'description')).toMatch(CURRENT);
-    expect(meta(await portal('/portals/claude/2026-09-21'), 'description')).toMatch(/^Screenshots of the Claude interface/); // seeded that way
+    expect(meta(await portal('/portals/claude/2026-09-21'), 'description')).toMatch(/^Claude UI screenshots by Anthropic/); // seeded that way
   });
 
   it('does not skip a first sentence that is not the fixed opening', async () => {
@@ -203,11 +203,11 @@ describe('weekly page descriptions', () => {
   });
 
   it('keeps the current description without a published analysis, and on portal hubs', async () => {
-    expect(meta(await portal('/portals/chatgpt/2026-09-07'), 'description')).toBe('Screenshots of the ChatGPT interface by OpenAI from the week of September 7, 2026, on desktop and mobile, with a short design analysis.');
+    expect(meta(await portal('/portals/chatgpt/2026-09-07'), 'description')).toBe('ChatGPT UI screenshots by OpenAI from the week of September 7, 2026, on desktop and mobile, with a short design analysis of the interface.');
     t.db.exec(`UPDATE captures SET analysis_by = 'pending' WHERE id = 'chatgpt-2026-09-21'`);
     expect(meta(await portal('/portals/chatgpt/2026-09-21'), 'description')).toMatch(CURRENT);
     t.db.exec(`UPDATE captures SET analysis_by = 'guideline-v1.3' WHERE id = 'chatgpt-2026-09-21'`);
-    expect(meta(await portal('/portals/chatgpt'), 'description')).toMatch(/^Weekly screenshots of the ChatGPT interface by OpenAI/);
+    expect(meta(await portal('/portals/chatgpt'), 'description')).toMatch(/^Weekly ChatGPT UI screenshots, desktop and mobile/);
   });
 });
 
@@ -239,7 +239,7 @@ describe('JSON-LD', () => {
   it('homepage (static fallback): a WebSite with name, URL, description, language and publisher', () => {
     expect(jsonLd(INDEX_HTML)).toEqual([{
       '@context': 'https://schema.org', '@type': 'WebSite', name: 'AI Interface Library', url: `${ORIGIN}/`,
-      description: 'A weekly archive of AI product interfaces, analysed for layout, hierarchy and colour as a UI/UX design system.',
+      description: 'Weekly screenshots of AI chatbot interfaces — ChatGPT, Claude, Gemini, Perplexity, Copilot and more — on desktop and mobile, with design analysis and UI changes week by week.',
       inLanguage: 'en', publisher: { '@type': 'Person', name: 'Linda' },
     }]);
     expect(INDEX_HTML).toContain('<link rel="canonical" href="https://ai-portal-library.dev/" />');
