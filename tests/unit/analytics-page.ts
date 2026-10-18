@@ -1,4 +1,4 @@
-// Opens the homepage (gallery or #analytics) in Playwright with the static files from public/ and a mocked API,
+// Opens the homepage (gallery or #compare) in Playwright with the static files from public/ and a mocked API,
 // for the Analytics canvas browser tests. Nothing leaves the test host.
 import { readFileSync } from 'node:fs';
 import type { Browser, Page } from 'playwright';
@@ -54,7 +54,7 @@ export async function openSite(browser: Browser, hash: string, opts: SiteOpts = 
 
 /** The Analytics view switched from the default Canvas to Table, ready to use. */
 export async function openAnalytics(browser: Browser, opts: SiteOpts = {}): Promise<Page> {
-  const page = await openSite(browser, '#analytics', opts);
+  const page = await openSite(browser, '#compare', opts);
   await page.locator('#anCanvasWrap .anc-card img').first().waitFor();
   await page.locator('[data-anview="table"]').click();
   await page.locator('#anTableWrap .an-table').waitFor();

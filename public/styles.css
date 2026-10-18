@@ -172,6 +172,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 }
 .hero-sub .tag.orange{background:var(--cf-orange)}
 .hero-sub .kw-layout .tag{left:auto;right:-6px}
+.hero-sub .w.ls .tag{left:-2px;right:auto} /* keyword starts a line (marked by app.js): keep its tag inside the panel */
 .hero-sub .box{inset:-3px -6px -2px;border:1.5px solid var(--cf-orange)}
 .hero-sub .box i{position:absolute;width:6px;height:6px;box-sizing:border-box;background:var(--cf-bg-100);border:1.5px solid var(--cf-orange)}
 .hero-sub .box i:nth-child(1){top:-3.75px;left:-3.75px}
@@ -431,10 +432,10 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 /* First paint: html[data-view] is set by the inline script in index.html's <head> from the hash, then kept in sync by
    route() in app.js. It shows the matching view (and marks its nav link) before app.js has loaded any data. A view
    hidden this way never runs the hero's CSS animations. */
-html[data-view="analytics"] #galleryView,html[data-view="collection"] #galleryView,html[data-view="notes"] #galleryView{display:none}
-html[data-view="analytics"] #analyticsView,html[data-view="collection"] #collectionView,html[data-view="notes"] #insightsView{display:block}
+html[data-view="compare"] #galleryView,html[data-view="collection"] #galleryView,html[data-view="notes"] #galleryView{display:none}
+html[data-view="compare"] #analyticsView,html[data-view="collection"] #collectionView,html[data-view="notes"] #insightsView{display:block}
 html[data-view="gallery"] .topnav-link[data-nav="gallery"],html[data-view="collection"] .topnav-link[data-nav="collection"],
-html[data-view="analytics"] .topnav-link[data-nav="analytics"],html[data-view="notes"] .topnav-link[data-nav="insights"]{color:var(--cf-orange)}
+html[data-view="compare"] .topnav-link[data-nav="compare"],html[data-view="notes"] .topnav-link[data-nav="insights"]{color:var(--cf-orange)}
 
 #collectionView{padding-top:6px}
 .collection-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin:6px 0 24px}
@@ -981,8 +982,9 @@ html[data-view="analytics"] .topnav-link[data-nav="analytics"],html[data-view="n
 @media(max-width:760px){
   #analyticsView .an-wp-btn{font-size:12px} /* the toggle buttons' size at this width */
 }
-@media(max-width:820px){
-  /* Below about 800px the three controls no longer fit side by side at their natural width, so row 1
+@media(max-width:880px){
+  /* Below about 840px the three controls ("Across products | Week by week" is the widest) no longer fit
+     side by side at their natural width, so row 1
      stacks into one full-width column (all three stay the same width); the count and Clear wrap below. */
   #analyticsView .an-primary{grid-auto-flow:row;flex-basis:100%}
 }

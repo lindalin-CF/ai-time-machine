@@ -15,6 +15,18 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "analytics-is-now-compare",
+    date: "2026-10-18",
+    time: "13:51",
+    title: "Analytics Is Now Compare",
+    subtitle: "A clearer name for the page where you compare products",
+    bullets: [
+      { lead: "New name", text: "Analytics is now Compare, and its two modes are Across products and Week by week." },
+      { lead: "Old links still work", text: "Links to #analytics, including shared setups, open Compare exactly as they were shared." },
+    ],
+    closing: "Open Compare from the top bar.",
+  },
+  {
     slug: "ui-change-timeline",
     date: "2026-10-17",
     time: "21:43",

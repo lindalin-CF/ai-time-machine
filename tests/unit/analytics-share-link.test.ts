@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { chromium, type Browser, type Page } from 'playwright';
 import { WEEKS, openAnalytics, openSite, showCanvas } from './analytics-page';
 
-// Shareable Analytics links (public/analytics-share.js): a canvas set up in one browser opens the same
+// Shareable Compare links (public/analytics-share.js): a canvas set up in one browser opens the same
 // in a fresh one, from the URL alone.
 
 const KEY = `anCanvas:v1:weeks:chatgpt:${[WEEKS[0], WEEKS[1]].sort().join(',')}`;
@@ -54,15 +54,15 @@ async function zoomTo(page: Page, k: number) {
   throw new Error('zoom did not settle');
 }
 
-describe('shareable Analytics links (browser)', () => {
+describe('shareable Compare links (browser)', () => {
   let browser: Browser;
   beforeAll(async () => { browser = await chromium.launch(); });
   afterAll(async () => { await browser?.close(); });
 
   it('defaults to the latest 2 weeks with no parameters, in Canvas and Table', async () => {
-    const page = await openSite(browser, '#analytics');
+    const page = await openSite(browser, '#compare');
     await page.locator('#anCanvasWrap .anc-card img').first().waitFor();
-    expect(page.url()).toBe('https://site.test/#analytics');
+    expect(page.url()).toBe('https://site.test/#compare');
     await page.locator('[data-mode="weeks"]').click();
     await page.locator(`#anCanvasWrap .anc-card[data-id="${WEEKS[1]}"] img`).waitFor();
     expect(await page.locator('#anCount').textContent()).toBe('2 of 4 selected');
@@ -98,7 +98,7 @@ describe('shareable Analytics links (browser)', () => {
     expect(before.boxes[0].head).toBe('Sep 21, 2026 → Sep 28, 2026');
 
     const url = page.url();
-    expect(url).toMatch(/^https:\/\/site\.test\/#analytics\?view=canvas&mode=time&portal=chatgpt&weeks=2026-09-28,2026-09-21&device=desktop&zoom=1\.28&pan=-?\d+,-?\d+&layout=[A-Za-z0-9_-]+$/);
+    expect(url).toMatch(/^https:\/\/site\.test\/#compare\?view=canvas&mode=time&portal=chatgpt&weeks=2026-09-28,2026-09-21&device=desktop&zoom=1\.28&pan=-?\d+,-?\d+&layout=[A-Za-z0-9_-]+$/);
     expect(await page.evaluate(() => history.length)).toBe(historyLength); // replaceState only
 
     // Copy link copies that URL and says so for 2 seconds.
@@ -143,7 +143,7 @@ describe('shareable Analytics links (browser)', () => {
     expect(saved.pos[WEEKS[0]]).toEqual({ x: after.cards[0].x, y: after.cards[0].y });
   });
 
-  it('changing the URL does not re-render or scroll, and leaving Analytics before the update keeps the new hash', async () => {
+  it('changing the URL does not re-render or scroll, and leaving Compare before the update keeps the new hash', async () => {
     const page = await openAnalytics(browser);
     await page.waitForTimeout(400); // the switch to Table has been written to the URL
     await page.locator('#analyticsView [data-andevice="mobile"]').click();
@@ -153,7 +153,7 @@ describe('shareable Analytics links (browser)', () => {
     const table = await page.locator('#anTableWrap .an-table').elementHandle();
     expect(page.url()).not.toContain('device=mobile');
     await page.waitForTimeout(400);
-    expect(page.url()).toBe('https://site.test/#analytics?view=table&mode=portals&week=2026-09-28&portals=chatgpt,claude&device=mobile');
+    expect(page.url()).toBe('https://site.test/#compare?view=table&mode=portals&week=2026-09-28&portals=chatgpt,claude&device=mobile');
     expect(await page.evaluate(() => scrollY)).toBe(200);
     expect(await table!.evaluate((el) => el.isConnected)).toBe(true); // not re-rendered
 
@@ -163,8 +163,8 @@ describe('shareable Analytics links (browser)', () => {
     expect(new URL(page.url()).hash).toBe('#notes');
   });
 
-  it('an old #analytics link and a link with unknown values both fall back to defaults', async () => {
-    const page = await openSite(browser, '#analytics?view=canvas&mode=time&portal=nope&weeks=1999-01-01,<b>x</b>&zoom=99&layout=%%%');
+  it('a link with unknown values falls back to defaults', async () => {
+    const page = await openSite(browser, '#compare?view=canvas&mode=time&portal=nope&weeks=1999-01-01,<b>x</b>&zoom=99&layout=%%%');
     await page.locator('#anCanvasWrap .anc-card img').first().waitFor();
     expect(await cardIds(page)).toEqual([WEEKS[0], WEEKS[1]]);
     expect(await page.locator('#anPortals .chip[aria-selected="true"]').allTextContents()).toEqual(['ChatGPT']);
@@ -190,12 +190,12 @@ describe('Copy link in Table and Canvas (browser)', () => {
   };
 
   it('in Table, copies the table setup, and the link opens the same Table', async () => {
-    const page = await openSite(browser, '#analytics', { clipboard: true, weeks: OCT });
+    const page = await openSite(browser, '#compare', { clipboard: true, weeks: OCT });
     await page.locator('#anCanvasWrap .anc-card img').first().waitFor();
     await page.locator('[data-anview="table"]').click();
     await page.locator('#anTableWrap .an-table').waitFor();
     const url = await copy(page);
-    expect(url).toBe(`${ORIGIN}#analytics?view=table&mode=portals&week=2026-10-12&portals=chatgpt,claude&device=desktop`);
+    expect(url).toBe(`${ORIGIN}#compare?view=table&mode=portals&week=2026-10-12&portals=chatgpt,claude&device=desktop`);
     expect(page.url()).toBe(url);
 
     const fresh = await openSite(browser, new URL(url).hash, { weeks: OCT });
@@ -209,7 +209,7 @@ describe('Copy link in Table and Canvas (browser)', () => {
   });
 
   it('a change copied right away (within 300ms) is in the link, in Table and in Canvas', async () => {
-    const page = await openSite(browser, '#analytics', { clipboard: true, weeks: OCT });
+    const page = await openSite(browser, '#compare', { clipboard: true, weeks: OCT });
     await page.locator('#anCanvasWrap .anc-card img').first().waitFor();
     await page.locator('[data-anview="table"]').click();
     await page.locator('#anTableWrap .an-table').waitFor();
@@ -220,7 +220,7 @@ describe('Copy link in Table and Canvas (browser)', () => {
     await page.locator('#anShare').click();
     expect(Date.now() - t).toBeLessThan(300);
     await expect.poll(() => label(page)).toBe('Link copied');
-    expect(await clipboard(page)).toBe(`${ORIGIN}#analytics?view=table&mode=portals&week=2026-10-12&portals=chatgpt,claude&device=mobile`);
+    expect(await clipboard(page)).toBe(`${ORIGIN}#compare?view=table&mode=portals&week=2026-10-12&portals=chatgpt,claude&device=mobile`);
 
     await page.locator('#analyticsView [data-andevice="desktop"]').click();
     await page.locator('[data-anview="canvas"]').click();
@@ -235,7 +235,7 @@ describe('Copy link in Table and Canvas (browser)', () => {
   });
 
   it.each([[1280], [390]])('at %ipx Copy link is visible at the right end of the Table/Canvas row in both views', async (width) => {
-    const page = await openSite(browser, '#analytics', { width });
+    const page = await openSite(browser, '#compare', { width });
     await page.locator('#anCanvasWrap .anc-card img').first().waitFor();
     const place = () => page.evaluate(() => {
       const r = (sel: string) => document.querySelector(sel)!.getBoundingClientRect();

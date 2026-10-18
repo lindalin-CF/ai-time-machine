@@ -37,7 +37,7 @@ describe('analytics controls (browser)', () => {
       expect(r.overflow).toBe(false);
     };
 
-    it.each([[1280], [1024], [821]])('at %ipx: Compare, Week and Device sit side by side with one width and height', async (width) => {
+    it.each([[1280], [1024], [881]])('at %ipx: Compare, Week and Device sit side by side with one width and height', async (width) => {
       const page = await openAnalytics(browser, { width });
       const r = await row1(page);
       expectEqual(r);
@@ -47,7 +47,7 @@ describe('analytics controls (browser)', () => {
       expectEqual(await row1(page));
     });
 
-    it.each([[820], [600], [390]])('at %ipx: row 1 stacks into equal full-width controls and nothing overflows', async (width) => {
+    it.each([[880], [600], [390]])('at %ipx: row 1 stacks into equal full-width controls and nothing overflows', async (width) => {
       const page = await openAnalytics(browser, { width });
       const r = await row1(page);
       expectEqual(r);
@@ -59,8 +59,8 @@ describe('analytics controls (browser)', () => {
     it('row 1 width is the widest natural width among the three (no fixed pixel width)', async () => {
       const page = await openAnalytics(browser);
       const before = await row1(page);
-      // Make Device wider than "Across portals | Over time"; the other two follow it.
-      await page.addStyleTag({ content: '#analyticsView .an-device .vt-btn{letter-spacing:.6em}' });
+      // Make Device wider than "Across products | Week by week"; the other two follow it.
+      await page.addStyleTag({ content: '#analyticsView .an-device .vt-btn{letter-spacing:1em}' });
       const after = await row1(page);
       expect(after.widths[2]).toBeGreaterThan(before.widths[2] + 10);
       expectEqual(after);
@@ -208,7 +208,7 @@ describe('analytics controls (browser)', () => {
       expect(p).toMatchObject({ below: false, clearAfterCount: true, chipsFullWidth: true, chipsBelow: true, overflow: false });
     });
 
-    it.each([[820], [390], [320]])('at %ipx: wraps below row 1 on the right without overflowing', async (width) => {
+    it.each([[880], [390], [320]])('at %ipx: wraps below row 1 on the right without overflowing', async (width) => {
       const page = await openAnalytics(browser, { width });
       const p = await place(page);
       expect(p.rightGap).toBeCloseTo(0, 0);

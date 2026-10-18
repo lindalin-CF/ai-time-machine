@@ -1,12 +1,15 @@
-// Shareable Analytics links: the whole Analytics setup lives in the hash after #analytics, e.g.
-//   #analytics?view=canvas&mode=time&portal=chatgpt&weeks=2026-10-12,2026-10-05&device=desktop&zoom=1.28&pan=12,-40&layout=<base64url>
-// mode=time is Over time (one portal, several weeks; "weeks" in app.js), mode=portals is Across portals
-// (one week, several portals). Nothing is sent to the server. Everything read back is validated against
+// Shareable Compare links: the whole Compare setup lives in the hash after #compare, e.g.
+//   #compare?view=canvas&mode=time&portal=chatgpt&weeks=2026-10-12,2026-10-05&device=desktop&zoom=1.28&pan=12,-40&layout=<base64url>
+// mode=time is Week by week (one portal, several weeks; "weeks" in app.js), mode=portals is Across products
+// (one week, several portals). Compare was called Analytics: #analytics links, already shared, still open it
+// (compareHash() rewrites them). Nothing is sent to the server. Everything read back is validated against
 // the portals and weeks the site actually has.
 
 import { ZOOM_MIN, ZOOM_MAX } from "./analytics-canvas.js";
 
-const ROUTE = "#analytics";
+const ROUTE = "#compare";
+/** Compare's old route, kept working forever for links already shared. */
+const OLD_ROUTE = "#analytics";
 /** Longest layout string accepted from a URL; a full board of four cards and six lines is a few hundred characters. */
 const LAYOUT_MAX_CHARS = 4000;
 /** Card positions and pan are kept within this many pixels of the origin. */
@@ -71,7 +74,7 @@ export function decodeLayout(s, isId = () => true) {
 const list = (v) => v.map(encodeURIComponent).join(",");
 
 /**
- * The hash for an Analytics setup. s: { view, mode ("portals" | "weeks"), portal, weeks[], week, portals[],
+ * The hash for a Compare setup. s: { view, mode ("portals" | "weeks"), portal, weeks[], week, portals[],
  * device, canvas: { pos, edges, cam: {x, y, k}, ids } | null }. Canvas fields are written only for the Canvas view.
  */
 export function buildAnalyticsHash(s) {
@@ -96,19 +99,26 @@ export function buildAnalyticsHash(s) {
   return `${ROUTE}?${parts.join("&")}`;
 }
 
-/** The route part of a hash: "#analytics?view=…" → "#analytics". */
+/** The route part of a hash: "#compare?view=…" → "#compare". */
 export function hashRoute(hash) {
   const i = String(hash || "").indexOf("?");
   return i < 0 ? String(hash || "") : hash.slice(0, i);
 }
 
+/** An old #analytics hash as #compare, keeping its setup: "#analytics?view=…" → "#compare?view=…". Other hashes are returned unchanged. */
+export function compareHash(hash) {
+  hash = String(hash || "");
+  return hashRoute(hash) === OLD_ROUTE ? ROUTE + hash.slice(OLD_ROUTE.length) : hash;
+}
+
 /**
- * Read an Analytics setup back from a hash. known: { portals: slugs[], weeks: weeks[] (newest first), max }.
- * Returns null when the hash has no parameters (old #analytics links: defaults and localStorage apply).
+ * Read a Compare setup back from a hash. known: { portals: slugs[], weeks: weeks[] (newest first), max }.
+ * Returns null when the hash has no parameters (plain #compare links: defaults and localStorage apply).
  * Otherwise returns only the fields that passed validation; a field left out keeps its default.
  * `canvas` is set for the Canvas view: { layout: {pos, edges} | null, zoom: number | null, pan: [x, y] | null }.
  */
 export function parseAnalyticsHash(hash, known) {
+  hash = compareHash(hash);
   if (hashRoute(hash) !== ROUTE) return null;
   const query = hash.slice(ROUTE.length + 1);
   if (!query) return null;

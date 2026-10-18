@@ -13,15 +13,15 @@ describe('homepage (public/index.html)', () => {
     expect(html).not.toContain('AI Surface');
   });
 
-  it('keeps the hero subtitle and uses the search description for meta, og and twitter', () => {
-    const SUBTITLE = 'A weekly archive of AI product interfaces, analysed for layout, hierarchy and colour as a UI/UX design system.';
+  it('has the new hero subtitle and keeps the search description for meta, og and twitter', () => {
+    const SUBTITLE = 'Find UI references from AI products, updated weekly, and compare layout, hierarchy and colour for your next design.';
     const DESCRIPTION = 'Weekly screenshots of AI chatbot interfaces — ChatGPT, Claude, Gemini, Perplexity, Copilot and more — on desktop and mobile, with design analysis and UI changes week by week.';
     for (const tag of ['name="description"', 'property="og:description"', 'name="twitter:description"']) {
       expect(html).toContain(`<meta ${tag} content="${DESCRIPTION}" />`);
     }
     // The hero joins the last two words with &nbsp; so they never wrap apart (::first-line stops text-wrap:pretty working).
     const hero = html.match(/<p class="hero-sub">\s*([\s\S]*?)\s*<\/p>/)![1];
-    expect(hero).toContain('design&nbsp;system.');
+    expect(hero).toContain('next&nbsp;design.');
     // Screen readers get the sentence from .sr-only; the animated word spans are aria-hidden.
     expect(hero.match(/<span class="sr-only">([^<]*)<\/span>/)![1]).toBe(SUBTITLE);
     // The visible words, minus their keyword annotations, must spell the same sentence.
@@ -34,6 +34,16 @@ describe('homepage (public/index.html)', () => {
       .replace(/\s+/g, ' ')
       .trim();
     expect(visible).toBe(SUBTITLE);
+    // Each word's --c is its character offset in the sentence (the word-in delay is timed from it).
+    const offsets = [...hero.matchAll(/<span class="w" style="--c:(\d+)">(.*?)<\/span>\s*(?=<span class="w"|<\/span>\s*$)/gs)]
+      .map((m) => [Number(m[1]), m[2].replace(/<span class="ann[\s\S]*?<\/span><\/span>|<[^>]+>/g, '').replace(/&nbsp;/g, ' ')]);
+    expect(offsets.length).toBe(17);
+    for (const [c, word] of offsets) expect(SUBTITLE.slice(c as number, (c as number) + (word as string).length)).toBe(word);
+    // The three annotated keywords, in order.
+    expect([...hero.matchAll(/class="kw (kw-[a-z]+)">(\w+)/g)].map((m) => `${m[1]}:${m[2]}`)).toEqual(['kw-layout:layout', 'kw-hier:hierarchy', 'kw-colour:colour']);
+    expect(hero).toContain('Layout · 4 × 3 grid');
+    expect(hero).toContain('H1 92 · Body 28');
+    expect(hero).toContain('#EB622C');
     expect(html).not.toMatch(/visual\s+design\s+system/i);
     expect(html).not.toContain('A living reference');
   });

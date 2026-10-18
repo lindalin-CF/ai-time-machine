@@ -3,7 +3,7 @@ import { chromium, type Browser, type Page } from 'playwright';
 import { openAnalytics, openSite, showCanvas } from './analytics-page';
 
 // The gallery's Desktop/Mobile toggle (syncToggles in public/app.js) keeps the gallery and collection
-// buttons in step, and leaves every other .vt-btn (Analytics Mode/Device/View, canvas zoom) alone.
+// buttons in step, and leaves every other .vt-btn (Compare Mode/Device/View, canvas zoom) alone.
 
 describe('gallery device toggle and other toggles (browser)', () => {
   let browser: Browser;
@@ -38,14 +38,14 @@ describe('gallery device toggle and other toggles (browser)', () => {
   // The Compare, Device and View toggles (not Clear selection or the canvas zoom buttons).
   const anToggles = '#analyticsView .viewtoggle:not(.anc-zoom) .vt-btn';
 
-  it('Analytics loads with Across portals, Desktop and Table highlighted, as the HTML marks them', async () => {
+  it('Compare loads with Across products, Desktop and Table highlighted, as the HTML marks them', async () => {
     const page = await openAnalytics(browser);
     expect(await buttons(page, anToggles)).toEqual([
-      'Across portals*:true', 'Over time:false', 'Desktop*:true', 'Mobile:false', 'Table*:true', 'Canvas:false',
+      'Across products*:true', 'Week by week:false', 'Desktop*:true', 'Mobile:false', 'Table*:true', 'Canvas:false',
     ]);
   });
 
-  it('the gallery toggle leaves the Analytics and canvas buttons alone', async () => {
+  it('the gallery toggle leaves the Compare and canvas buttons alone', async () => {
     const page = await openAnalytics(browser);
     await showCanvas(page);
     const before = await buttons(page, '#analyticsView .vt-btn');

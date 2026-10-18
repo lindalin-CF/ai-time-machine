@@ -22,14 +22,14 @@ describe('analytics week dropdown (browser)', () => {
   const settle = (page: Page) => page.waitForFunction(() => !document.querySelector('#anTableWrap .an-loading'));
 
   describe('wording', () => {
-    it('labels the Compare toggle Across portals and Over time; state values are unchanged', async () => {
+    it('labels the mode toggle Across products and Week by week; state values are unchanged', async () => {
       const page = await openAnalytics(browser);
       const group = page.getByRole('group', { name: 'Compare', exact: true });
       expect(await group.locator('.vt-btn').evaluateAll((els) => els.map((b) => `${b.getAttribute('data-mode')}=${b.textContent!.trim()}`)))
-        .toEqual(['portals=Across portals', 'weeks=Over time']);
-      expect(new URL(page.url()).hash.split('?')[0]).toBe('#analytics');
+        .toEqual(['portals=Across products', 'weeks=Week by week']);
+      expect(new URL(page.url()).hash.split('?')[0]).toBe('#compare');
       await page.locator('[data-mode="weeks"]').click();
-      expect(new URL(page.url()).hash.split('?')[0]).toBe('#analytics');
+      expect(new URL(page.url()).hash.split('?')[0]).toBe('#compare');
     });
   });
 

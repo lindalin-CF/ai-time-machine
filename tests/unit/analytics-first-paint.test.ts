@@ -3,8 +3,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { chromium, type Browser, type Page } from 'playwright';
 import { WEEKS, openSite } from './analytics-page';
 
-// Links to #analytics, #collection and #notes show that view from the first paint (html[data-view], set by the
-// inline script in index.html's <head>), never the homepage; Analytics opens in Canvas at 136%.
+// Links to #compare, #collection and #notes show that view from the first paint (html[data-view], set by the
+// inline script in index.html's <head>), never the homepage; Compare opens in Canvas at 136%.
 
 /**
  * Runs before the page: on every DOM change and every animation frame, records which views are visible and
@@ -45,10 +45,10 @@ describe('first paint of view links (browser)', () => {
   beforeAll(async () => { browser = await chromium.launch(); });
   afterAll(async () => { await browser?.close(); });
 
-  const SHARED = `#analytics?view=canvas&mode=portals&week=${WEEKS[0]}&portals=chatgpt,claude`;
+  const SHARED = `#compare?view=canvas&mode=portals&week=${WEEKS[0]}&portals=chatgpt,claude`;
   it.each([
-    [SHARED, '#analyticsView', 'analytics', '#anCanvasWrap .anc-card img'],
-    ['#analytics', '#analyticsView', 'analytics', '#anCanvasWrap .anc-card img'],
+    [SHARED, '#analyticsView', 'compare', '#anCanvasWrap .anc-card img'],
+    ['#compare', '#analyticsView', 'compare', '#anCanvasWrap .anc-card img'],
     ['#collection', '#collectionView', 'collection', '.topnav-link.active'],
     ['#notes', '#insightsView', 'insights', '.topnav-link.active'],
   ])('%s never shows the homepage and marks its nav link from the start', async (hash, view, nav, ready) => {
@@ -78,7 +78,7 @@ describe('first paint of view links (browser)', () => {
   });
 
   it('navigating keeps html[data-view] in sync, and the hero starts when the homepage is first shown', async () => {
-    const page = await openSite(browser, '#analytics');
+    const page = await openSite(browser, '#compare');
     await page.locator('#anCanvasWrap .anc-card img').first().waitFor();
     const viewIs = (v: string) => page.waitForFunction((v) => document.documentElement.dataset.view === v, v);
     await page.locator('.topnav-link[data-nav="collection"]').click();
@@ -105,20 +105,20 @@ describe('first paint of view links (browser)', () => {
       if (url.pathname === '/styles.css') return route.fulfill({ contentType: 'text/css', body: css });
       return route.fulfill({ status: 404, body: '' });
     });
-    await page.goto('https://site.test/#analytics');
+    await page.goto('https://site.test/#compare');
     expect(await page.locator('#galleryView').isVisible()).toBe(true);
     expect(await page.locator('#analyticsView').isVisible()).toBe(false);
     await context.close();
   });
 });
 
-describe('Analytics defaults (browser)', () => {
+describe('Compare defaults (browser)', () => {
   let browser: Browser;
   beforeAll(async () => { browser = await chromium.launch(); });
   afterAll(async () => { await browser?.close(); });
 
   it('opens in Canvas at 136%, centred on the cards (1280px)', async () => {
-    const page = await openSite(browser, '#analytics', { shotShaped: true });
+    const page = await openSite(browser, '#compare', { shotShaped: true });
     await page.locator('#anCanvasWrap .anc-card img').first().waitFor();
     expect(await pressed(page, 'canvas')).toBe('true');
     expect(await pressed(page, 'table')).toBe('false');
@@ -134,21 +134,21 @@ describe('Analytics defaults (browser)', () => {
     expect(Math.abs(off.y)).toBeLessThanOrEqual(2);
     // Nothing changed yet, so nothing is written to the URL.
     await page.waitForTimeout(400);
-    expect(page.url()).toBe('https://site.test/#analytics');
+    expect(page.url()).toBe('https://site.test/#compare');
     // Fit still fits (at most 100%).
     await page.locator('[data-zoom="fit"]').click();
     expect(parseInt((await pct(page))!, 10)).toBeLessThanOrEqual(100);
   });
 
   it('a board narrower than 760px fits as before (800px window)', async () => {
-    const page = await openSite(browser, '#analytics', { width: 800 });
+    const page = await openSite(browser, '#compare', { width: 800 });
     await page.locator('#anCanvasWrap .anc-board .anc-card img').first().waitFor();
     expect(await page.locator('.anc-board').evaluate((el) => el.clientWidth)).toBeLessThan(760);
     expect(parseInt((await pct(page))!, 10)).toBeLessThanOrEqual(100);
   });
 
   it('at 390px Canvas shows the stacked cards, as before', async () => {
-    const page = await openSite(browser, '#analytics', { width: 390 });
+    const page = await openSite(browser, '#compare', { width: 390 });
     await page.locator('#anCanvasWrap .anc-card--stack img').first().waitFor();
     expect(await pressed(page, 'canvas')).toBe('true');
     expect(await page.locator('.anc-board').count()).toBe(0);
@@ -156,18 +156,18 @@ describe('Analytics defaults (browser)', () => {
   });
 
   it('a link with view=table opens Table, and zoom=1.28 opens at 128%', async () => {
-    const table = await openSite(browser, `#analytics?view=table&mode=portals&week=${WEEKS[0]}&portals=chatgpt,claude&device=desktop`);
+    const table = await openSite(browser, `#compare?view=table&mode=portals&week=${WEEKS[0]}&portals=chatgpt,claude&device=desktop`);
     await table.locator('#anTableWrap .an-table').waitFor();
     expect(await pressed(table, 'table')).toBe('true');
     expect(await table.locator('#anCanvasWrap').isVisible()).toBe(false);
 
-    const zoomed = await openSite(browser, `#analytics?view=canvas&mode=portals&week=${WEEKS[0]}&portals=chatgpt,claude&device=desktop&zoom=1.28`);
+    const zoomed = await openSite(browser, `#compare?view=canvas&mode=portals&week=${WEEKS[0]}&portals=chatgpt,claude&device=desktop&zoom=1.28`);
     await zoomed.locator('#anCanvasWrap .anc-card img').first().waitFor();
     expect(await pct(zoomed)).toBe('128%');
   });
 
   it('a link with zoom and pan opens at exactly that zoom and pan; zoom without pan is centred on the cards', async () => {
-    const base = `#analytics?view=canvas&mode=portals&week=${WEEKS[0]}&portals=chatgpt,claude&device=desktop`;
+    const base = `#compare?view=canvas&mode=portals&week=${WEEKS[0]}&portals=chatgpt,claude&device=desktop`;
     const world = (page: Page) => page.locator('.anc-world').evaluate((el) => (el as HTMLElement).style.transform);
     const exact = await openSite(browser, `${base}&zoom=1.36&pan=16,182`, { shotShaped: true });
     await exact.locator('#anCanvasWrap .anc-card img').first().waitFor();

@@ -6,9 +6,10 @@
   <script src="/consent.js" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script>document.documentElement.classList.add("js")</script>
-  <!-- Pick the view from the hash before anything paints, so #analytics, #collection and #notes links never flash the homepage.
+  <!-- Pick the view from the hash before anything paints, so #compare, #collection and #notes links never flash the homepage.
+       #analytics (Compare's old name, in links already shared) becomes #compare here, keeping its "?" setup.
        styles.css shows only the matching view; route() in app.js keeps data-view in sync after that. Without JS the homepage shows. -->
-  <script>(function(h){h=location.hash.split("?")[0];document.documentElement.dataset.view=h==="#analytics"?"analytics":h==="#collection"?"collection":h==="#notes"||h==="#insights"?"notes":"gallery"})()</script>
+  <script>(function(h,i){h=location.hash;i=h.indexOf("?");if((i<0?h:h.slice(0,i))==="#analytics")history.replaceState(history.state,"","#compare"+(i<0?"":h.slice(i)));h=location.hash.split("?")[0];document.documentElement.dataset.view=h==="#compare"?"compare":h==="#collection"?"collection":h==="#notes"||h==="#insights"?"notes":"gallery"})()</script>
   <title>AI Interface Library — weekly UI screenshots of ChatGPT, Claude, Gemini &amp; more</title>
   <meta name="description" content="Weekly screenshots of AI chatbot interfaces — ChatGPT, Claude, Gemini, Perplexity, Copilot and more — on desktop and mobile, with design analysis and UI changes week by week." />
   <meta name="robots" content="max-image-preview:large" />
@@ -48,7 +49,7 @@
     <nav class="topnav">
       <a href="#" class="topnav-link" data-nav="gallery">Library</a>
       <a href="#collection" class="topnav-link" data-nav="collection">Collection</a>
-      <a href="#analytics" class="topnav-link" data-nav="analytics">Analytics</a>
+      <a href="#compare" class="topnav-link" data-nav="compare">Compare</a>
       <a href="#notes" class="topnav-link" data-nav="insights">Notes</a>
     </nav>
   </header>
@@ -69,25 +70,25 @@
               <span class="title-mask"><span class="title-line">Library</span></span>
             </h1>
             <p class="hero-sub">
-              <span class="sr-only">A weekly archive of AI product interfaces, analysed for layout, hierarchy and colour as a UI/UX design system.</span>
+              <span class="sr-only">Find UI references from AI products, updated weekly, and compare layout, hierarchy and colour for your next design.</span>
               <span aria-hidden="true">
-              <span class="w" style="--c:0">A</span>
-              <span class="w" style="--c:2">weekly</span>
-              <span class="w" style="--c:9">archive</span>
-              <span class="w" style="--c:17">of</span>
-              <span class="w" style="--c:20">AI</span>
-              <span class="w" style="--c:23">product</span>
-              <span class="w" style="--c:31">interfaces,</span>
-              <span class="w" style="--c:43">analysed</span>
-              <span class="w" style="--c:52">for</span>
-              <span class="w" style="--c:56"><span class="kw kw-layout">layout<span class="ann box" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="ann tag orange" aria-hidden="true">Layout · 4 × 3 grid</span></span>,</span>
-              <span class="w" style="--c:64"><span class="kw kw-hier">hierarchy<span class="ann rule" aria-hidden="true"></span><span class="ann tag" aria-hidden="true"><span class="bars"><b></b><b></b><b></b></span>H1 92 · Body 28</span></span></span>
-              <span class="w" style="--c:74">and</span>
-              <span class="w" style="--c:78"><span class="kw kw-colour">colour<span class="ann rule o" aria-hidden="true"></span><span class="ann tag orange" aria-hidden="true"><span class="sw"></span>#EB622C</span></span></span>
-              <span class="w" style="--c:85">as</span>
-              <span class="w" style="--c:88">a</span>
-              <span class="w" style="--c:90">UI/UX</span>
-              <span class="w" style="--c:96">design&nbsp;system.</span>
+              <span class="w" style="--c:0">Find</span>
+              <span class="w" style="--c:5">UI</span>
+              <span class="w" style="--c:8">references</span>
+              <span class="w" style="--c:19">from</span>
+              <span class="w" style="--c:24">AI</span>
+              <span class="w" style="--c:27">products,</span>
+              <span class="w" style="--c:37">updated</span>
+              <span class="w" style="--c:45">weekly,</span>
+              <span class="w" style="--c:53">and</span>
+              <span class="w" style="--c:57">compare</span>
+              <span class="w" style="--c:65"><span class="kw kw-layout">layout<span class="ann box" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="ann tag orange" aria-hidden="true">Layout · 4 × 3 grid</span></span>,</span>
+              <span class="w" style="--c:73"><span class="kw kw-hier">hierarchy<span class="ann rule" aria-hidden="true"></span><span class="ann tag" aria-hidden="true"><span class="bars"><b></b><b></b><b></b></span>H1 92 · Body 28</span></span></span>
+              <span class="w" style="--c:83">and</span>
+              <span class="w" style="--c:87"><span class="kw kw-colour">colour<span class="ann rule o" aria-hidden="true"></span><span class="ann tag orange" aria-hidden="true"><span class="sw"></span>#EB622C</span></span></span>
+              <span class="w" style="--c:94">for</span>
+              <span class="w" style="--c:98">your</span>
+              <span class="w" style="--c:103">next&nbsp;design.</span>
               </span>
             </p>
           </div>
@@ -181,18 +182,18 @@
       <div class="collection-grid" id="collectionGrid" aria-live="polite"></div>
     </section>
 
-    <!-- analytics: compare AI surface UIs side by side -->
+    <!-- compare (the view was called Analytics; its ids and classes keep that name): AI surface UIs side by side -->
     <section id="analyticsView" class="analytics" hidden>
       <div class="analytics-head">
-        <h1 class="analytics-title">Analytics</h1>
-        <p class="analytics-sub">Compare AI surface UIs side by side — brand colour, palette, tone and design notes. Compare different portals in one week, or track how a single portal changes across weeks.</p>
+        <h1 class="analytics-title">Compare</h1>
+        <p class="analytics-sub">Compare AI product UIs side by side, or see how one product changes week by week.</p>
       </div>
       <div class="analytics-controls">
         <div class="an-bar an-bar--top">
           <div class="an-primary">
             <div class="viewtoggle an-mode" role="group" aria-label="Compare">
-              <button class="vt-btn active" type="button" data-mode="portals" aria-pressed="true">Across portals</button>
-              <button class="vt-btn" type="button" data-mode="weeks" aria-pressed="false">Over time</button>
+              <button class="vt-btn active" type="button" data-mode="portals" aria-pressed="true">Across products</button>
+              <button class="vt-btn" type="button" data-mode="weeks" aria-pressed="false">Week by week</button>
             </div>
             <span id="anWeekLabel" hidden>Week</span>
             <div class="an-week" id="anWeek"></div>

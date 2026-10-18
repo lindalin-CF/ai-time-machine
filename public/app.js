@@ -1,6 +1,6 @@
 // AI Surface Library — front-end controller
 import { anCanvasState, mountAnCanvas, unmountAnCanvas } from "./analytics-canvas.js";
-import { buildAnalyticsHash, hashRoute, parseAnalyticsHash } from "./analytics-share.js";
+import { buildAnalyticsHash, compareHash, hashRoute, parseAnalyticsHash } from "./analytics-share.js";
 import { weekPick } from "./analytics-weekpick.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -824,10 +824,16 @@ function initHeroAnnotations() {
 
   // ::first-line doesn't reach into the inline-block word spans, so mark the
   // first line's words ourselves to keep it in the darker text colour.
+  // Also mark words that start a line: a keyword there anchors its tag to its
+  // left edge, so a right-aligned tag (layout) can't run off the panel.
   const markFirstLine = () => {
     if (!words.length) return;
     const top = words[0].offsetTop;
-    words.forEach((w) => w.classList.toggle("l1", Math.abs(w.offsetTop - top) < 2));
+    const left = words[0].offsetLeft;
+    words.forEach((w) => {
+      w.classList.toggle("l1", Math.abs(w.offsetTop - top) < 2);
+      w.classList.toggle("ls", Math.abs(w.offsetLeft - left) < 2);
+    });
   };
   markFirstLine();
   // fonts.ready can resolve before the web font is even requested; loadingdone
@@ -1220,7 +1226,7 @@ function initManualSnapshots() {
 }
 
 // ---- hash routing: #collection <-> gallery --------------------------------
-// ---- analytics: compare AI surface UIs side by side ------------------------
+// ---- compare (#compare; called Analytics before): AI surface UIs side by side ----
 const an = {
   mode: "portals",      // "portals" (one week, many portals) | "weeks" (one portal, many weeks)
   week: null,           // context week for portals mode
@@ -1326,7 +1332,7 @@ function enterAnalytics() {
     );
     $("#anShare").addEventListener("click", anCopyLink);
   }
-  // A link with a setup (#analytics?…) replaces the current one, unless it is the URL this page wrote itself
+  // A link with a setup (#compare?…) replaces the current one, unless it is the URL this page wrote itself
   // (coming back to it from another view): then the setup on screen already matches it.
   if (location.hash !== anWrittenHash) {
     const shared = parseAnalyticsHash(location.hash, {
@@ -1338,7 +1344,7 @@ function enterAnalytics() {
   renderAnalytics();
 }
 
-// ---- shareable links: the setup lives in the hash after #analytics (public/analytics-share.js) ----
+// ---- shareable links: the setup lives in the hash after #compare (public/analytics-share.js) ----
 function anApplyShared(s) {
   for (const k of ["view", "mode", "portal", "week", "device"]) if (s[k]) an[k] = s[k];
   if (s.weeks) an.weeks = new Set(s.weeks);
@@ -1363,7 +1369,7 @@ let anHashTimer = 0;
 /** Write the current setup to the URL. replaceState fires no hashchange, so nothing re-renders or scrolls. */
 function anWriteHash() {
   clearTimeout(anHashTimer);
-  if (hashRoute(location.hash) !== "#analytics") return; // left Analytics before the timer ran
+  if (hashRoute(location.hash) !== "#compare") return; // left Compare before the timer ran
   const board = an.view === "canvas" ? anCanvasState() : null;
   // No board (still loading, or the stacked narrow view): keep a link's canvas setup in the URL.
   const pending = an.shared && an.shared.key === anCanvasKey() ? an.shared : null;
@@ -1437,7 +1443,7 @@ function anChip(v, label, on, brand) {
 function renderAnalytics() {
   const portalsMode = an.mode === "portals";
   const weekOptions = state.weeks.map((w) => ({ value: w.week, label: shortWeekLabel(w.week) }));
-  // Across portals: one week, several portals. Over time: one portal, several weeks.
+  // Across products: one week, several portals. Week by week: one portal, several weeks.
   $("#anWeekLabel").textContent = portalsMode ? "Week" : "Weeks";
   weekPick($("#anWeek"), portalsMode
     ? {
@@ -1625,13 +1631,17 @@ async function loadInsights() {
   }
 }
 
-// ---- hash routing: gallery / collection / analytics / notes -----------------
+// ---- hash routing: gallery / collection / compare / notes -------------------
 // The notes view is shown at #notes; #insights (its old name) still opens it so old links keep working.
+// #analytics (Compare's old name) is rewritten to #compare, keeping its setup; the inline script in
+// index.html does the same before first paint.
 function route() {
-  // #analytics may carry a shared setup after "?" (public/analytics-share.js).
+  const fixed = compareHash(location.hash);
+  if (fixed !== location.hash) history.replaceState(history.state, "", fixed);
+  // #compare may carry a shared setup after "?" (public/analytics-share.js).
   const hash = hashRoute(location.hash);
-  const view = hash === "#collection" ? "collection" : hash === "#analytics" ? "analytics" : hash === "#notes" || hash === "#insights" ? "insights" : "gallery";
-  const views = { gallery: "#galleryView", collection: "#collectionView", analytics: "#analyticsView", insights: "#insightsView" };
+  const view = hash === "#collection" ? "collection" : hash === "#compare" ? "compare" : hash === "#notes" || hash === "#insights" ? "insights" : "gallery";
+  const views = { gallery: "#galleryView", collection: "#collectionView", compare: "#analyticsView", insights: "#insightsView" };
   document.documentElement.dataset.view = view === "insights" ? "notes" : view;
   if (view === "gallery") startHeroAnnotations();
   for (const [v, sel] of Object.entries(views)) {
@@ -1642,7 +1652,7 @@ function route() {
     a.classList.toggle("active", a.dataset.nav === view)
   );
   if (view === "collection") renderCollection();
-  if (view === "analytics") enterAnalytics();
+  if (view === "compare") enterAnalytics();
   if (view === "insights") loadInsights();
   window.scrollTo(0, 0);
 }
