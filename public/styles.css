@@ -47,7 +47,9 @@ img{display:block;max-width:100%;height:auto} /* height:auto keeps width/height 
 .wordmark-dot{width:9px;height:9px;border-radius:50%;background:var(--cf-orange);box-shadow:0 0 0 4px rgba(255,102,51,.14)}
 .topnav{display:flex;align-items:center;gap:20px}
 .topnav-link{font-size:13px;color:var(--cf-text-soft);font-weight:500;transition:color .15s}
-.topnav-link:hover{color:var(--cf-orange-ink)}
+/* Orange marks only the current page: hover darkens the text instead, and only where a pointer really hovers
+   (on touch screens :hover sticks to the last link tapped, which made a second link look current). */
+@media(hover:hover){.topnav-link:hover{color:var(--cf-text)}}
 
 main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 
@@ -432,10 +434,12 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 /* First paint: html[data-view] is set by the inline script in index.html's <head> from the hash, then kept in sync by
    route() in app.js. It shows the matching view (and marks its nav link) before app.js has loaded any data. A view
    hidden this way never runs the hero's CSS animations. */
-html[data-view="compare"] #galleryView,html[data-view="collection"] #galleryView,html[data-view="notes"] #galleryView{display:none}
-html[data-view="compare"] #analyticsView,html[data-view="collection"] #collectionView,html[data-view="notes"] #insightsView{display:block}
+html[data-view="compare"] #galleryView,html[data-view="collection"] #galleryView{display:none}
+html[data-view="compare"] #analyticsView,html[data-view="collection"] #collectionView{display:block}
+/* #notes and #insights links: the <head> script is sending the browser to /changelog. */
+html[data-view="leaving"] body{visibility:hidden}
 html[data-view="gallery"] .topnav-link[data-nav="gallery"],html[data-view="collection"] .topnav-link[data-nav="collection"],
-html[data-view="compare"] .topnav-link[data-nav="compare"],html[data-view="notes"] .topnav-link[data-nav="insights"]{color:var(--cf-orange)}
+html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange)}
 
 #collectionView{padding-top:6px}
 .collection-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin:6px 0 24px}
@@ -899,18 +903,8 @@ html[data-view="compare"] .topnav-link[data-nav="compare"],html[data-view="notes
   .an-cmp--span .an-cmp-inner{max-width:calc(100vw - 212px)}
 }
 
-/* ---------- insights memo feed ---------- */
-#insightsView{padding-top:6px}
-.insights-head{margin:6px 0 18px}
-.insights-title{font-family:var(--font-sans);font-weight:700;font-size:clamp(30px,5vw,44px);letter-spacing:-.03em;line-height:1.02;margin:0 0 8px}
-.insights-sub{margin:0;max-width:66ch;color:var(--cf-text-soft);font-size:14.5px;line-height:1.5}
-.insights-list{display:flex;flex-direction:column;gap:14px}
-.insight-card{background:var(--cf-bg-100);border:1px solid var(--cf-border);border-radius:14px;padding:16px;box-shadow:0 10px 24px -20px rgba(66,50,23,.32)}
-.insight-meta{font-family:var(--font-mono);font-size:11px;color:var(--cf-text-soft);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}.insight-card h2{font-size:20px;line-height:1.1;letter-spacing:-.03em;margin:0 0 6px}.insight-card p{margin:0;color:var(--cf-text-soft);line-height:1.45}
-.insight-media{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:12px}.insight-thumb{border:1px solid var(--cf-border);border-radius:10px;overflow:hidden;background:var(--cf-bg-300);cursor:zoom-in;padding:0}.insight-thumb img{display:block;width:100%;height:auto;aspect-ratio:16/10;object-fit:cover;object-position:top center}
-.insight-empty{padding:34px;text-align:center;color:var(--cf-text-soft);border:1px dashed var(--cf-border-strong);border-radius:14px;background:var(--cf-bg-100)}
-@media(max-width:760px){.topnav{gap:10px}.topnav-link{font-size:11.5px}.insight-media{grid-template-columns:1fr 1fr}}
-@media(max-width:420px){.wordmark{max-width:38vw}.topnav{gap:8px}.topnav-link{font-size:11px}.insight-media{grid-template-columns:1fr}}
+@media(max-width:760px){.topnav{gap:10px}.topnav-link{font-size:11.5px}}
+@media(max-width:420px){.wordmark{max-width:38vw}.topnav{gap:8px}.topnav-link{font-size:11px}}
 
 /* ---------- analytics: canvas view (public/analytics-canvas.js) ---------- */
 .an-view{flex:0 0 auto}

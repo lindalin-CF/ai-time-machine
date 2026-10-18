@@ -296,14 +296,4 @@ describe('homepage images in the browser', () => {
     await page.context().close();
   });
 
-  it('notes: thumbnails carry their size, and the lightbox takes the size and alt of the image it opens', async () => {
-    const page = await open();
-    await page.goto('https://site.test/#notes');
-    await page.waitForSelector('.insight-thumb img');
-    expect(await imgs(page, '.insight-thumb img')).toEqual([{ alt: 'A note image 1', width: '1200', height: '630', src: `/img/insights/n1-0.png?v=${Date.parse('2026-09-13T10:00:00Z')}` }]);
-    await page.locator('.insight-thumb').click();
-    expect((await imgs(page, '.lb-img'))[0]).toMatchObject({ alt: 'A note image 1', width: '1200', height: '630' });
-    await everyImgHasASize(page);
-    await page.context().close();
-  });
 });

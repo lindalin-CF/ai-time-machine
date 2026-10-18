@@ -1626,68 +1626,31 @@ function anFindingRows(cols) {
   return [row("differences", "Differences", cells), row("similarities", "Similarities", cells)];
 }
 
-// ---- insights: manual memo feed -------------------------------------------
-function renderInsightsList(items) {
-  const list = $("#insightsList");
-  if (!list) return;
-  if (!items.length) {
-    list.innerHTML = `<div class="insight-empty">No notes yet.</div>`;
-    return;
-  }
-  list.innerHTML = items.map((it) => {
-    const imgs = it.images || [];
-    const media = imgs.length ? `
-      <div class="insight-media">
-        ${imgs.map((src, i) => `
-          <button class="insight-thumb" type="button" data-full="${esc(src)}" data-title="${esc(it.title)}" data-file="insight-${esc(it.id)}-${i}">
-            <img src="${esc(thumbUrl(src))}" alt="${esc(it.title)} image ${i + 1}"${sizeAttrs((it.sizes || [])[i])} loading="lazy" />
-          </button>`).join("")}
-      </div>` : "";
-    return `
-      <article class="insight-card">
-        <div class="insight-meta">${esc(fmtDate(it.createdAt))}</div>
-        <h2>${esc(it.title)}</h2>
-        <p>${esc(it.description || "No description")}</p>
-        ${media}
-      </article>`;
-  }).join("");
-}
-
-async function loadInsights() {
-  const list = $("#insightsList");
-  if (!list) return;
-  list.innerHTML = `<div class="insight-empty">Loading notes…</div>`;
-  try {
-    const data = await getJSON('/api/insights');
-    renderInsightsList(data.insights || []);
-  } catch {
-    list.innerHTML = `<div class="insight-empty">Notes are not ready yet.</div>`;
-  }
-}
-
-// ---- hash routing: gallery / collection / compare / notes -------------------
-// The notes view is shown at #notes; #insights (its old name) still opens it so old links keep working.
-// #analytics (Compare's old name) is rewritten to #compare, keeping its setup; the inline script in
-// index.html does the same before first paint.
+// ---- hash routing: gallery / collection / compare ---------------------------
+// #analytics (Compare's old name) is rewritten to #compare, keeping its setup. #notes and #insights (the Notes
+// view, retired on 2026-10-18) go to /changelog. The inline script in index.html does both before first paint.
 function route() {
+  if (/^#(notes|insights)$/.test(hashRoute(location.hash))) { location.replace("/changelog"); return; }
   const fixed = compareHash(location.hash);
   if (fixed !== location.hash) history.replaceState(history.state, "", fixed);
   // #compare may carry a shared setup after "?" (public/analytics-share.js).
   const hash = hashRoute(location.hash);
-  const view = hash === "#collection" ? "collection" : hash === "#compare" ? "compare" : hash === "#notes" || hash === "#insights" ? "insights" : "gallery";
-  const views = { gallery: "#galleryView", collection: "#collectionView", compare: "#analyticsView", insights: "#insightsView" };
-  document.documentElement.dataset.view = view === "insights" ? "notes" : view;
+  const view = hash === "#collection" ? "collection" : hash === "#compare" ? "compare" : "gallery";
+  const views = { gallery: "#galleryView", collection: "#collectionView", compare: "#analyticsView" };
+  document.documentElement.dataset.view = view;
   if (view === "gallery") startHeroAnnotations();
   for (const [v, sel] of Object.entries(views)) {
     const el = $(sel);
     if (el) el.hidden = v !== view;
   }
-  document.querySelectorAll(".topnav-link[data-nav]").forEach((a) =>
-    a.classList.toggle("active", a.dataset.nav === view)
-  );
+  // Exactly one link is current: the one for this view (Changelog is a separate page, never current here).
+  document.querySelectorAll(".topnav-link[data-nav]").forEach((a) => {
+    const on = a.dataset.nav === view;
+    a.classList.toggle("active", on);
+    if (on) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+  });
   if (view === "collection") renderCollection();
   if (view === "compare") enterAnalytics();
-  if (view === "insights") loadInsights();
   window.scrollTo(0, 0);
 }
 window.addEventListener("hashchange", route);

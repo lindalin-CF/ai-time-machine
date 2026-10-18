@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
 import { CONSENT_COUNTRIES, consentRequired } from '../../src/consent';
-import { handleHowWeAnalyze, handlePortalPage, handlePrivacy, handleSitemap } from '../../src/portal-page';
+import { handleHowWeAnalyze, handlePortalPage, handlePrivacy, handleSitemap, siteHeader } from '../../src/portal-page';
 import { handleHomepage } from '../../src/homepage';
 import { handleApi } from '../../src/api';
 import { makeEnv } from './fake-env';
@@ -158,7 +158,7 @@ describe('/privacy', () => {
   it('uses the /how-we-analyze template, with its own title and canonical URL', () => {
     expect(html).toContain('<title>Privacy | AI Interface Library</title>');
     expect(html).toContain(`<link rel="canonical" href="${ORIGIN}/privacy" />`);
-    expect(html).toContain('<header><a href="/">&larr; AI Interface Library</a></header>');
+    expect(html).toContain(siteHeader()); // the site's top bar, no item current
     expect(html).toContain('<main class="howto">');
     expect(html).not.toContain('noindex');
   });

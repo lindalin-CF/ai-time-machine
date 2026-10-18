@@ -128,7 +128,24 @@ export function jsonLdScript(data: unknown): string {
   return `  <script type="application/ld+json">${JSON.stringify(data).replace(/</g, "\\u003c")}</script>\n`;
 }
 
-function page(opts: { title: string; description: string; canonical?: string; noindex?: boolean; image?: PreviewImage; jsonLd?: unknown; markdown?: string; head?: string; consent: ConsentMode; body: string }): string {
+/**
+ * The site's top bar, the same as the homepage's (public/index.html): wordmark, then Library · Collection · Compare ·
+ * Changelog. Only `current` is marked as the current page (orange, aria-current); the homepage views are hashes on /.
+ */
+export function siteHeader(current?: "changelog"): string {
+  const links: [string, string, string][] = [["gallery", "/", "Library"], ["collection", "/#collection", "Collection"], ["compare", "/#compare", "Compare"], ["changelog", "/changelog", "Changelog"]];
+  const nav = links.map(([key, href, label]) => key === current
+    ? `<a href="${href}" class="topnav-link active" aria-current="page">${label}</a>`
+    : `<a href="${href}" class="topnav-link">${label}</a>`).join("\n        ");
+  return `    <header class="topbar">
+      <a class="wordmark" href="/"><span class="wordmark-dot" aria-hidden="true"></span><span class="wordmark-text">AI Interface Library</span></a>
+      <nav class="topnav" aria-label="Site">
+        ${nav}
+      </nav>
+    </header>`;
+}
+
+function page(opts: { title: string; description: string; canonical?: string; noindex?: boolean; image?: PreviewImage; jsonLd?: unknown; markdown?: string; head?: string; consent: ConsentMode; current?: "changelog"; body: string }): string {
   return `<!doctype html>
 <html lang="en" data-consent="${opts.consent}">
 <head>
@@ -142,11 +159,21 @@ function page(opts: { title: string; description: string; canonical?: string; no
 ${opts.canonical ? socialMeta(opts.title, opts.description, opts.canonical, opts.image ?? SITE_PREVIEW) : ""}${opts.jsonLd ? jsonLdScript(opts.jsonLd) : ""}  <link rel="alternate" type="application/rss+xml" title="AI Interface Library" href="${FEED_URL}" />
 ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts.markdown)}" />\n` : ""}
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/fonts/fonts.css" />
   <style>
     body{margin:0;font:16px/1.6 system-ui,-apple-system,Segoe UI,sans-serif;background:#f4efe8;color:#231f1a}
     .wrap{max-width:1000px;margin:0 auto;padding:24px 16px}
     a{color:inherit}
-    header a{font-weight:600;text-decoration:none}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;font-family:'Space Grotesk','Inter',system-ui,-apple-system,sans-serif}
+    .wordmark{display:inline-flex;align-items:center;gap:9px;min-width:0;font-size:14px;font-weight:700;letter-spacing:.02em;text-decoration:none}
+    .wordmark-dot{flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:#eb622c;box-shadow:0 0 0 4px rgba(255,102,51,.14)}
+    .wordmark-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .topnav{display:flex;gap:20px;flex:0 0 auto;white-space:nowrap}
+    .topnav-link{font-size:13px;font-weight:500;color:#6b6257;text-decoration:none}
+    .topnav-link.active{color:#eb622c}
+    @media (hover:hover){.topnav-link:not(.active):hover{color:#231f1a}}
+    @media (max-width:760px){.wordmark{font-size:12px}.topnav{gap:14px}.topnav-link{font-size:12px}}
+    @media (max-width:420px){.topbar{gap:8px}.wordmark{font-size:11px;gap:7px}.topnav{gap:8px}.topnav-link{font-size:11px}} /* the homepage's values at this width */
     h1{font-size:2rem;margin:24px 0 4px}
     .meta{color:#6b6257;margin:0 0 24px}
     .shots{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
@@ -187,7 +214,7 @@ ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts
 ${opts.head ?? ""}</head>
 <body>
   <div class="wrap">
-    <header><a href="/">&larr; AI Interface Library</a></header>
+${siteHeader(opts.current)}
 ${opts.body}
     <footer>Independent personal project. Not affiliated with any of the companies featured.
 ${FOOTER_LEGAL}
@@ -233,8 +260,7 @@ export function compareWeeks(curWeek: string | null, prevWeek: string | null, ne
  * Portal pages with a Compare button: it sits at the right end of the week links' row (on its own line, left-aligned,
  * when the row wraps). Styled like the active Desktop/Mobile toggle on the homepage (.vt-btn.active in public/styles.css).
  */
-const COMPARE_HEAD = `  <link rel="stylesheet" href="/fonts/fonts.css" />
-  <style>
+const COMPARE_HEAD = `  <style>
     .weeknav-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;margin:0 0 24px}
     .weeknav-row.solo{justify-content:flex-end}
     .weeknav-row .weeknav{margin:0}
@@ -362,7 +388,7 @@ ${timelineHtml}      <section class="analysis"><h2>Design analysis</h2><p>${esc(
   // Structured data: the breadcrumb trail (names as shown on the page) and each screenshot shown.
   const hubUrl = `${ORIGIN}/portals/${slug}`;
   const crumbs = [
-    { name: "AI Interface Library", item: `${ORIGIN}/` }, // the header link back to the homepage
+    { name: "AI Interface Library", item: `${ORIGIN}/` }, // the header's wordmark, back to the homepage
     { name, item: hubUrl },
     ...(weekParam !== null ? [{ name: `Week of ${weekInWords(weekParam)}`, item: canonical }] : []),
   ];
@@ -492,8 +518,7 @@ export function handleLicense(request: Request): Response {
 export const CHANGELOG_URL = `${ORIGIN}/changelog`;
 
 /** Changelog layout: date column with a dot on a connecting line, entry on the right; the date stacks above the title on phones. Colors match page(); the accent is the homepage's orange. */
-const CHANGELOG_HEAD = `  <link rel="stylesheet" href="/fonts/fonts.css" />
-  <style>
+const CHANGELOG_HEAD = `  <style>
     .changelog{font-family:'Space Grotesk','Inter',system-ui,-apple-system,sans-serif}
     .changelog .meta{font-size:1.05rem}
     .cl{list-style:none;margin:56px 0 0;padding:0}
@@ -564,6 +589,7 @@ export function handleChangelog(request: Request): Response {
     description: "Decisions and releases for AI Interface Library, newest first.",
     canonical: CHANGELOG_URL,
     head: CHANGELOG_HEAD,
+    current: "changelog",
     body: `    <main class="changelog">
       <h1>Changelog</h1>
       <p class="meta">Decisions and releases for AI Interface Library.</p>

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { handleHowWeAnalyze, handlePortalPage, handleSitemap } from '../../src/portal-page';
+import { handleHowWeAnalyze, handlePortalPage, handleSitemap, siteHeader } from '../../src/portal-page';
 import { makeEnv } from './fake-env';
 import { expectFooterDialogs } from './footer-dialogs';
 
@@ -23,7 +23,7 @@ describe('/how-we-analyze', () => {
   });
 
   it('uses the portal page template, header and footer', () => {
-    expect(html).toContain('<header><a href="/">&larr; AI Interface Library</a></header>');
+    expect(html).toContain(siteHeader()); // the site's top bar, no item current
     expect(html).toContain('Independent personal project. Not affiliated with any of the companies featured.');
     expectFooterDialogs(html);
   });

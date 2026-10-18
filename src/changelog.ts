@@ -15,6 +15,18 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "notes-replaced-by-changelog",
+    date: "2026-10-18",
+    time: "17:27",
+    title: "Notes Replaced by Changelog",
+    subtitle: "The top bar now links to the Changelog",
+    bullets: [
+      { lead: "New tab", text: "The top bar reads Library, Collection, Compare and Changelog, on every page of the site." },
+      { lead: "Old links", text: "Links to the Notes view open the Changelog." },
+    ],
+    closing: "Click Changelog in the top bar.",
+  },
+  {
     slug: "table-differences-similarities",
     date: "2026-10-18",
     time: "17:27",

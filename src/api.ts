@@ -294,6 +294,8 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     return json({ ok: true, id, description, images: nextKeys.map((k) => `/img/${k}?v=${v}`) });
   }
   // Notes feed (stored in the insights table), posted with scripts/local-capture/post-note.mjs.
+  // The site's Notes view was retired on 2026-10-18 (the nav links to /changelog instead, and #notes links redirect
+  // there). These endpoints, the insights table and the R2 insights/ images are kept for the archived notes.
   if (path === "/api/insights" && request.method === "GET") {
     const rows = await env.DB.prepare(
       `SELECT id, title, description, images, created_at FROM insights ORDER BY created_at DESC LIMIT 80`

@@ -160,12 +160,12 @@ describe('shareable Compare links (browser)', () => {
     expect(await page.evaluate(() => scrollY)).toBe(200);
     expect(await table!.evaluate((el) => el.isConnected)).toBe(true); // not re-rendered
 
-    // Leave for Notes while the update for this change is still pending: it must not overwrite #notes.
+    // Leave for Collection while the update for this change is still pending: it must not overwrite #collection.
     await page.locator('#analyticsView [data-andevice="desktop"]').click();
-    await page.locator('.topnav-link[data-nav="insights"], a[href="#notes"]').first().click();
-    await page.waitForFunction(() => document.documentElement.dataset.view === 'notes');
+    await page.locator('.topnav-link[data-nav="collection"]').click();
+    await page.waitForFunction(() => document.documentElement.dataset.view === 'collection');
     await page.clock.runFor(400);
-    expect(new URL(page.url()).hash).toBe('#notes');
+    expect(new URL(page.url()).hash).toBe('#collection');
   });
 
   it('a link with unknown values falls back to defaults', async () => {

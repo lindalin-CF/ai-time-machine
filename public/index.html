@@ -6,10 +6,11 @@
   <script src="/consent.js" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script>document.documentElement.classList.add("js")</script>
-  <!-- Pick the view from the hash before anything paints, so #compare, #collection and #notes links never flash the homepage.
+  <!-- Pick the view from the hash before anything paints, so #compare and #collection links never flash the homepage.
        #analytics (Compare's old name, in links already shared) becomes #compare here, keeping its "?" setup.
+       #notes and #insights (the retired Notes view) go to /changelog; the page stays hidden until it leaves.
        styles.css shows only the matching view; route() in app.js keeps data-view in sync after that. Without JS the homepage shows. -->
-  <script>(function(h,i){h=location.hash;i=h.indexOf("?");if((i<0?h:h.slice(0,i))==="#analytics")history.replaceState(history.state,"","#compare"+(i<0?"":h.slice(i)));h=location.hash.split("?")[0];document.documentElement.dataset.view=h==="#compare"?"compare":h==="#collection"?"collection":h==="#notes"||h==="#insights"?"notes":"gallery"})()</script>
+  <script>(function(h,i){h=location.hash;i=h.indexOf("?");if((i<0?h:h.slice(0,i))==="#analytics")history.replaceState(history.state,"","#compare"+(i<0?"":h.slice(i)));h=location.hash.split("?")[0];if(h==="#notes"||h==="#insights"){document.documentElement.dataset.view="leaving";location.replace("/changelog");return}document.documentElement.dataset.view=h==="#compare"?"compare":h==="#collection"?"collection":"gallery"})()</script>
   <title>AI Interface Library — weekly UI screenshots of ChatGPT, Claude, Gemini &amp; more</title>
   <meta name="description" content="Weekly screenshots of AI chatbot interfaces — ChatGPT, Claude, Gemini, Perplexity, Copilot and more — on desktop and mobile, with design analysis and UI changes week by week." />
   <meta name="robots" content="max-image-preview:large" />
@@ -50,7 +51,7 @@
       <a href="#" class="topnav-link" data-nav="gallery">Library</a>
       <a href="#collection" class="topnav-link" data-nav="collection">Collection</a>
       <a href="#compare" class="topnav-link" data-nav="compare">Compare</a>
-      <a href="#notes" class="topnav-link" data-nav="insights">Notes</a>
+      <a href="/changelog" class="topnav-link" data-nav="changelog">Changelog</a>
     </nav>
   </header>
 
@@ -243,15 +244,6 @@
       </div>
       <!-- Canvas is the default view; shows "Loading…" until app.js has the data. -->
       <div class="an-canvas-wrap" id="anCanvasWrap"><div class="an-loading">Loading…</div></div>
-    </section>
-    <!-- notes: hand-written notes on interface changes (posted with scripts/local-capture/post-note.mjs) -->
-    <section id="insightsView" class="insights" hidden>
-      <div class="insights-head">
-        <h1 class="insights-title">Notes</h1>
-        <p class="insights-sub">Short notes on what changed across AI product interfaces, written by hand.</p>
-      </div>
-
-      <div class="insights-list" id="insightsList" aria-live="polite"></div>
     </section>
 
   </main>

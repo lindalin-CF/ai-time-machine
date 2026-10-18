@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { chromium, type Browser, type Page } from 'playwright';
 import { WEEKS, frames, openSite, probe } from './analytics-page';
 
-// Links to #compare, #collection and #notes show that view from the first paint (html[data-view], set by the
+// Links to #compare and #collection show that view from the first paint (html[data-view], set by the
 // inline script in index.html's <head>), never the homepage; Compare opens in Canvas at 136%.
 
 const HERO_ANIMATIONS = ['title-rise', 'word-in', 'grid-draw', 'orb-flow', 'ann-tag', 'ann-box', 'ann-rule', 'ann-sw'];
@@ -22,7 +22,6 @@ describe('first paint of view links (browser)', () => {
     [SHARED, '#analyticsView', 'compare', '#anCanvasWrap .anc-card img'],
     ['#compare', '#analyticsView', 'compare', '#anCanvasWrap .anc-card img'],
     ['#collection', '#collectionView', 'collection', '.topnav-link.active'],
-    ['#notes', '#insightsView', 'insights', '.topnav-link.active'],
   ])('%s never shows the homepage and marks its nav link from the start', async (hash, view, nav, ready) => {
     const page = await openSite(browser, hash, { initScript: probe(view, nav) });
     await page.locator(ready).first().waitFor();
@@ -34,7 +33,7 @@ describe('first paint of view links (browser)', () => {
     // The first frames come before app.js has the data (route() not run yet).
     expect(log[0].routed).toBe(false);
     if (view === '#analyticsView') expect(log[0].loading).toBe(true);
-    expect(await page.evaluate(() => document.documentElement.dataset.view)).toBe(nav === 'insights' ? 'notes' : nav);
+    expect(await page.evaluate(() => document.documentElement.dataset.view)).toBe(nav);
     expect(await heroAnimations(page)).toEqual([]);
     expect(await page.locator('.hero-sub').evaluate((el) => el.classList.contains('annot'))).toBe(false);
   });

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { handlePortalPage } from '../../src/portal-page';
+import { handlePortalPage, siteHeader } from '../../src/portal-page';
 import { makeEnv } from './fake-env';
 import { expectFooterDialogs, LEGAL_LINE } from './footer-dialogs';
 
@@ -27,7 +27,7 @@ describe.each(PAGES)('portal page %s', (path) => {
   it('uses the new site name only', () => {
     expect(html).toContain('AI Interface Library');
     expect(html).not.toContain('AI Surface Library');
-    expect(html).toContain('<header><a href="/">&larr; AI Interface Library</a></header>');
+    expect(html).toContain(siteHeader()); // the site's top bar, no item current
   });
 
   it('keeps the footer sentence and adds the copyright line', () => {

@@ -41,7 +41,6 @@ describe('portal page Compare button', () => {
     expect(cta(html)).toBe(`<a class="compare-cta" href="${href(WEEKS[0], WEEKS[1])}" aria-label="Compare ChatGPT week by week">Compare <span class="arrow" aria-hidden="true">&rarr;</span></a>`);
     expect(html).toMatch(/<div class="weeknav-row">\s*<nav class="weeknav" aria-label="ChatGPT weekly captures">[\s\S]*?<\/nav>\s*<a class="compare-cta"[^>]*>[\s\S]*?<\/a>\s*<\/div>/);
     expect(html).toMatch(/<p class="meta">OpenAI &middot; captured week of [^<]+<\/p>\n/); // the meta line is back to itself
-    expect(html).toContain('<link rel="stylesheet" href="/fonts/fonts.css" />'); // Space Grotesk
   });
 
   it('on the latest week\'s page: latest and previous week too', async () => {
@@ -59,7 +58,6 @@ describe('portal page Compare button', () => {
       const html = await render(t.env, path);
       expect(html, path).not.toContain('compare-cta');
       expect(html, path).not.toContain('weeknav-row');
-      expect(html, path).not.toContain('/fonts/fonts.css');
     }
   });
 

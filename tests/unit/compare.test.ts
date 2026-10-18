@@ -31,7 +31,7 @@ describe('Compare (browser)', () => {
   it('the nav shows Compare, active, and the page is titled Compare', async () => {
     const page = await openSite(browser, '#compare');
     await cardsReady(page);
-    expect(await page.locator('.topnav-link').allTextContents()).toEqual(['Library', 'Collection', 'Compare', 'Notes']);
+    expect(await page.locator('.topnav-link').allTextContents()).toEqual(['Library', 'Collection', 'Compare', 'Changelog']);
     const link = page.locator('.topnav-link[data-nav="compare"]');
     expect(await link.getAttribute('href')).toBe('#compare');
     expect(await page.locator('.topnav-link.active').allTextContents()).toEqual(['Compare']);
@@ -74,7 +74,7 @@ describe('Compare (browser)', () => {
   });
 
   it('following an #analytics link from another view also lands on #compare with its setup', async () => {
-    const page = await openSite(browser, '#notes');
+    const page = await openSite(browser, '#collection');
     await page.locator('.topnav-link.active').waitFor();
     await page.evaluate((s) => { location.hash = `#analytics?${s}`; }, SETUP);
     await cardsReady(page);

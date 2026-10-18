@@ -284,7 +284,7 @@ describe('JSON-LD', () => {
       const crumbs = graph[0].itemListElement;
       for (const c of crumbs) expect(text, c.name).toContain(c.name.toLowerCase());
       expect(html).toContain(`<h1>${crumbs[1].name}</h1>`);
-      expect(html).toContain(`<a href="/">&larr; ${crumbs[0].name}</a>`);
+      expect(html).toContain(`<a class="wordmark" href="/"><span class="wordmark-dot" aria-hidden="true"></span><span class="wordmark-text">${crumbs[0].name}</span></a>`); // the top bar's wordmark
       expect(crumbs.at(-1).item).toBe(html.match(/<link rel="canonical" href="([^"]+)" \/>/)![1]);
 
       // ImageObjects: exactly the screenshots on the page, same URL, caption = alt, same size.

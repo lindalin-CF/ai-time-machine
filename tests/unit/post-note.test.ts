@@ -21,10 +21,9 @@ function fakeFetch(status: number, body: unknown) {
 }
 
 describe('the public page has no posting form', () => {
-  it('has no form, token field, file input or Post button in the notes section', () => {
-    const section = html.match(/<section id="insightsView"[\s\S]*?<\/section>/)![0];
-    expect(section).not.toMatch(/<form|<input|type="password"|Upload token|Attach images|Post update/);
-    expect(appJs).not.toContain('/api/insights/upload');
+  it('has no token field, file input or Post button for notes (the Notes view is retired; notes are posted with this script)', () => {
+    expect(html).not.toMatch(/type="password"|type="file"|Upload token|Attach images|Post update/);
+    expect(appJs).not.toContain('/api/insights');
   });
 });
 
