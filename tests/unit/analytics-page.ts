@@ -24,10 +24,11 @@ const API: Record<string, unknown> = {
 };
 const captures = (week: string) => ({ week, label: `Week of ${week}`, captures: [cap('chatgpt', 'ChatGPT', week), cap('claude', 'Claude', week)] });
 
-type SiteOpts = { width?: number; hasTouch?: boolean; clipboard?: boolean; storage?: Record<string, string>; initScript?: string; shotShaped?: boolean; weeks?: string[] };
+type SiteOpts = { width?: number; hasTouch?: boolean; clipboard?: boolean; storage?: Record<string, string>; initScript?: string; shotShaped?: boolean; weeks?: string[]; clock?: boolean };
 
 /** The homepage at `hash` ("" for the gallery), loaded. `storage` is put in localStorage and `initScript` runs before the page does;
- * `weeks` (newest first) replaces the archived weeks. */
+ * `weeks` (newest first) replaces the archived weeks. `clock` installs Playwright's fake timers before the page runs (time still
+ * flows until a test pauses it with pauseClock()). */
 export async function openSite(browser: Browser, hash: string, opts: SiteOpts = {}): Promise<Page> {
   const context = await browser.newContext({ viewport: { width: opts.width ?? 1280, height: 900 }, hasTouch: opts.hasTouch });
   if (opts.clipboard) await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: 'https://site.test' });
@@ -47,9 +48,17 @@ export async function openSite(browser: Browser, hash: string, opts: SiteOpts = 
     } catch { return route.fulfill({ status: 404, body: '' }); }
   });
   const page = await context.newPage();
+  if (opts.clock) await page.clock.install();
   await page.goto(`https://site.test/${hash}`);
   await page.waitForLoadState('load');
   return page;
+}
+
+/** Stop the page's timers (setTimeout, requestAnimationFrame); after this only page.clock.runFor() moves them on.
+ * The page's fake time keeps running until pauseAt() arrives, so it jumps 10s ahead to stay in the future (a target in
+ * the past throws); timers due by then fire first. Call it once earlier changes have settled. Needs { clock: true } in openSite. */
+export async function pauseClock(page: Page): Promise<void> {
+  await page.clock.pauseAt(await page.evaluate(() => Date.now()) + 10_000);
 }
 
 /** The Analytics view switched from the default Canvas to Table, ready to use. */

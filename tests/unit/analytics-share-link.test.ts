@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { chromium, type Browser, type Page } from 'playwright';
-import { WEEKS, openAnalytics, openSite, showCanvas } from './analytics-page';
+import { WEEKS, openAnalytics, openSite, pauseClock, showCanvas } from './analytics-page';
 
 // Shareable Compare links (public/analytics-share.js): a canvas set up in one browser opens the same
 // in a fresh one, from the URL alone.
@@ -144,22 +144,27 @@ describe('shareable Compare links (browser)', () => {
   });
 
   it('changing the URL does not re-render or scroll, and leaving Compare before the update keeps the new hash', async () => {
-    const page = await openAnalytics(browser);
-    await page.waitForTimeout(400); // the switch to Table has been written to the URL
+    // Fake timers: the URL update (300ms after a change) runs only when the test moves the clock on.
+    const page = await openAnalytics(browser, { clock: true });
+    await page.waitForFunction(() => location.hash.includes('view=table')); // the switch to Table has been written to the URL
+    await pauseClock(page);
     await page.locator('#analyticsView [data-andevice="mobile"]').click();
     await page.locator('#anTableWrap .an-shot--mobile').first().waitFor();
-    // Scroll before the URL update (~300ms after the click) runs.
+    // Scroll before the URL update runs.
     await page.evaluate(() => window.scrollTo(0, 200));
     const table = await page.locator('#anTableWrap .an-table').elementHandle();
+    await page.clock.runFor(299);
     expect(page.url()).not.toContain('device=mobile');
-    await page.waitForTimeout(400);
+    await page.clock.runFor(1);
     expect(page.url()).toBe('https://site.test/#compare?view=table&mode=portals&week=2026-09-28&portals=chatgpt,claude&device=mobile');
     expect(await page.evaluate(() => scrollY)).toBe(200);
     expect(await table!.evaluate((el) => el.isConnected)).toBe(true); // not re-rendered
 
+    // Leave for Notes while the update for this change is still pending: it must not overwrite #notes.
     await page.locator('#analyticsView [data-andevice="desktop"]').click();
     await page.locator('.topnav-link[data-nav="insights"], a[href="#notes"]').first().click();
-    await page.waitForTimeout(400);
+    await page.waitForFunction(() => document.documentElement.dataset.view === 'notes');
+    await page.clock.runFor(400);
     expect(new URL(page.url()).hash).toBe('#notes');
   });
 
@@ -209,27 +214,27 @@ describe('Copy link in Table and Canvas (browser)', () => {
   });
 
   it('a change copied right away (within 300ms) is in the link, in Table and in Canvas', async () => {
-    const page = await openSite(browser, '#compare', { clipboard: true, weeks: OCT });
+    // Fake timers, paused: the 300ms URL update can't run between the change and Copy link, whatever the machine's speed.
+    const page = await openSite(browser, '#compare', { clipboard: true, weeks: OCT, clock: true });
     await page.locator('#anCanvasWrap .anc-card img').first().waitFor();
     await page.locator('[data-anview="table"]').click();
     await page.locator('#anTableWrap .an-table').waitFor();
-    await page.waitForTimeout(400);
+    await page.waitForFunction(() => location.hash.includes('view=table'));
 
-    let t = Date.now();
+    await pauseClock(page);
     await page.locator('#analyticsView [data-andevice="mobile"]').click();
     await page.locator('#anShare').click();
-    expect(Date.now() - t).toBeLessThan(300);
     await expect.poll(() => label(page)).toBe('Link copied');
     expect(await clipboard(page)).toBe(`${ORIGIN}#compare?view=table&mode=portals&week=2026-10-12&portals=chatgpt,claude&device=mobile`);
+    await page.clock.resume();
 
     await page.locator('#analyticsView [data-andevice="desktop"]').click();
     await page.locator('[data-anview="canvas"]').click();
     await page.locator('#anCanvasWrap .anc-board .anc-card img').first().waitFor();
-    await page.waitForTimeout(400);
-    t = Date.now();
+    await page.waitForFunction(() => location.hash.includes('view=canvas') && location.hash.includes('device=desktop'));
+    await pauseClock(page);
     await page.locator('[data-zoom="in"]').click();
     await page.locator('#anShare').click();
-    expect(Date.now() - t).toBeLessThan(300);
     await expect.poll(() => clipboard(page)).toContain('&zoom=1.63&');
     expect(await page.locator('.anc-zoom-pct').textContent()).toBe('163%');
   });
