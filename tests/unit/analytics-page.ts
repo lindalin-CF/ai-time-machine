@@ -22,9 +22,13 @@ const API: Record<string, unknown> = {
 };
 const captures = (week: string) => ({ week, label: `Week of ${week}`, captures: [cap('chatgpt', 'ChatGPT', week), cap('claude', 'Claude', week)] });
 
-/** The homepage at `hash` ("" for the gallery), loaded. */
-export async function openSite(browser: Browser, hash: string, opts: { width?: number; hasTouch?: boolean } = {}): Promise<Page> {
+type SiteOpts = { width?: number; hasTouch?: boolean; clipboard?: boolean; storage?: Record<string, string> };
+
+/** The homepage at `hash` ("" for the gallery), loaded. `storage` is put in localStorage before the page runs. */
+export async function openSite(browser: Browser, hash: string, opts: SiteOpts = {}): Promise<Page> {
   const context = await browser.newContext({ viewport: { width: opts.width ?? 1280, height: 900 }, hasTouch: opts.hasTouch });
+  if (opts.clipboard) await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: 'https://site.test' });
+  if (opts.storage) await context.addInitScript((items) => { for (const [k, v] of Object.entries(items)) localStorage.setItem(k, v); }, opts.storage);
   await context.route('**/*', async (route) => {
     const url = new URL(route.request().url());
     if (url.host !== 'site.test') return route.abort();
@@ -44,7 +48,7 @@ export async function openSite(browser: Browser, hash: string, opts: { width?: n
 }
 
 /** The Analytics view in Table mode, ready to use. */
-export async function openAnalytics(browser: Browser, opts: { width?: number; hasTouch?: boolean } = {}): Promise<Page> {
+export async function openAnalytics(browser: Browser, opts: SiteOpts = {}): Promise<Page> {
   const page = await openSite(browser, '#analytics', opts);
   await page.locator('#anTableWrap .an-table').waitFor();
   return page;

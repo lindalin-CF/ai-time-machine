@@ -2,7 +2,8 @@
 // Each line carries a box of short findings built only from the whitelisted `metrics` that
 // /api/captures already returns (src/capture-metrics.ts), including the N1 navigation item names
 // (navItems, navChanges). Nothing here writes to the server;
-// card positions and lines are kept per viewer in localStorage.
+// card positions and lines are kept per viewer in localStorage, or come from a shared link
+// (public/analytics-share.js).
 
 const esc = (s) =>
   String(s ?? "").replace(/[&<>"']/g, (c) =>
@@ -195,7 +196,7 @@ export function compareFindings(a, b) {
 
 const CARD_W = 280;
 const GAP = 260;
-const ZOOM_MIN = 0.25, ZOOM_MAX = 2;
+export const ZOOM_MIN = 0.25, ZOOM_MAX = 2;
 /** Pixels a press must travel before it drags; anything shorter is a click. */
 const DRAG_THRESHOLD = 3;
 
@@ -240,8 +241,11 @@ let current = null; // { destroy() } of the mounted view
 /**
  * Render the canvas (or, on narrow screens, the stacked fallback) into `root`.
  * cards: [{ id, label, sub, src, alt, size: {width, height}, file, metrics }]
- * opts:  { storageKey, thumbUrl(src, width), tools, note } — tools holds the zoom group and reset
- *        button, note the drag instructions; both are shown only while the board is mounted.
+ * opts:  { storageKey, thumbUrl(src, width), tools, note, shared, onChange } — tools holds the zoom group
+ *        and reset button, note the drag instructions; both are shown only while the board is mounted.
+ *        shared: the setup from a link ({ layout: {pos, edges} | null, zoom, pan: [x, y] }); when set, it is
+ *        used instead of localStorage, and localStorage is left alone until the viewer changes something.
+ *        onChange() runs after every change the viewer makes (drag, pan, zoom, lines, reset).
  */
 export function mountAnCanvas(root, cards, opts) {
   if (current) current.destroy();
@@ -253,7 +257,15 @@ export function mountAnCanvas(root, cards, opts) {
   };
   narrow.addEventListener("change", draw);
   draw();
-  current = { destroy() { narrow.removeEventListener("change", draw); if (view) view.destroy(); } };
+  current = {
+    destroy() { narrow.removeEventListener("change", draw); if (view) view.destroy(); },
+    state() { return view && view.state ? view.state() : null; },
+  };
+}
+
+/** The mounted board's { ids, pos, edges, cam }, or null (no board, or the stacked narrow view). */
+export function anCanvasState() {
+  return current ? current.state() : null;
 }
 
 export function unmountAnCanvas() {
@@ -291,11 +303,21 @@ function mountStack(root, cards, opts) {
 function mountBoard(root, cards, opts) {
   const ids = cards.map((c) => c.id);
   const byId = new Map(cards.map((c) => [c.id, c]));
-  const stored = load(opts.storageKey);
+  const shared = opts.shared || null;
+  const stored = shared ? null : load(opts.storageKey);
   const pos = defaultLayout(ids);
   let edges = defaultEdges(ids);
   let cam = null;
-  if (stored && typeof stored === "object") {
+  let sharedZoom = null; // a link's zoom without a pan: applied around the centre after fitting
+  if (shared) {
+    const l = shared.layout;
+    if (l) {
+      for (const id of ids) if (l.pos[id]) pos[id] = { x: l.pos[id].x, y: l.pos[id].y };
+      edges = l.edges.filter((e) => byId.has(e[0]) && byId.has(e[1]) && e[0] !== e[1]);
+    }
+    if (shared.pan) cam = { x: shared.pan[0], y: shared.pan[1], k: clampZoom(shared.zoom || 1) };
+    else if (shared.zoom) sharedZoom = shared.zoom;
+  } else if (stored && typeof stored === "object") {
     for (const id of ids) {
       const p = stored.pos && stored.pos[id];
       if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) pos[id] = { x: p.x, y: p.y };
@@ -336,7 +358,13 @@ function mountBoard(root, cards, opts) {
   let selected = null; // pair key of the selected line
   const edgeEls = new Map(); // pair key -> { path, hit, box }
 
-  const persist = () => save(opts.storageKey, { pos, edges, cam });
+  // A link's setup becomes this viewer's own (saved) on their first change; until then localStorage is untouched.
+  let adopt = !!shared;
+  const notify = () => {
+    if (adopt) { adopt = false; save(opts.storageKey, { pos, edges, cam }); }
+    if (opts.onChange) opts.onChange();
+  };
+  const persist = () => { save(opts.storageKey, { pos, edges, cam }); adopt = false; notify(); };
 
   function placeCards() {
     for (const [id, el] of cardEls) el.style.transform = `translate(${pos[id].x}px, ${pos[id].y}px)`;
@@ -487,11 +515,13 @@ function mountBoard(root, cards, opts) {
       cam.x = drag.cx + e.clientX - drag.sx;
       cam.y = drag.cy + e.clientY - drag.sy;
       applyCam();
+      notify();
     } else if (drag.type === "card") {
       const p = worldPoint(e);
       pos[drag.id] = { x: p.x - drag.dx, y: p.y - drag.dy };
       cardEls.get(drag.id).style.transform = `translate(${pos[drag.id].x}px, ${pos[drag.id].y}px)`;
       routeEdges();
+      notify();
     } else if (drag.type === "connect") {
       const a = handlePoint(drag.id, drag.side);
       const p = worldPoint(e);
@@ -552,6 +582,7 @@ function mountBoard(root, cards, opts) {
     // Pinch sends small deltas, a mouse wheel notch about 100; clamp so one notch is a modest step.
     const dy = Math.max(-50, Math.min(50, e.deltaY));
     zoomAt(cam.k * Math.exp(-dy * 0.006), p.x, p.y);
+    notify();
   }
   // Safari reports trackpad pinch as gesture events.
   let gestureStart = 1;
@@ -560,6 +591,7 @@ function mountBoard(root, cards, opts) {
     e.preventDefault();
     const p = boardPoint(e);
     zoomAt(gestureStart * e.scale, p.x, p.y);
+    notify();
   }
   function onToolClick(e) {
     const z = e.target.closest("[data-zoom]");
@@ -579,6 +611,8 @@ function mountBoard(root, cards, opts) {
       placeCards();
       buildEdges();
       fit();
+      adopt = false; // a reset clears the saved layout, as it does without a link
+      notify();
     }
   }
 
@@ -597,12 +631,17 @@ function mountBoard(root, cards, opts) {
 
   placeCards();
   buildEdges();
-  if (cam) applyCam(); else fit();
+  if (cam) applyCam();
+  else {
+    fit();
+    if (sharedZoom) zoomAt(sharedZoom, board.clientWidth / 2, board.clientHeight / 2);
+  }
   // Card heights settle once thumbnails load; reroute lines then.
   const onImg = () => routeEdges();
   world.querySelectorAll("img").forEach((img) => img.addEventListener("load", onImg));
 
   return {
+    state() { return { ids, pos: { ...pos }, edges: edges.map((e) => [...e]), cam: { ...cam } }; },
     destroy() {
       board.removeEventListener("wheel", onWheel);
       board.removeEventListener("gesturestart", onGestureStart);

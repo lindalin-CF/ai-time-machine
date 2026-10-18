@@ -15,6 +15,19 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "shareable-analytics",
+    date: "2026-10-17",
+    time: "20:25",
+    title: "Shareable Analytics Links",
+    subtitle: "Send someone exactly the comparison you are looking at",
+    bullets: [
+      { lead: "Copy link", text: "The link keeps the mode, portals, weeks, device, view, zoom, card positions and the lines between cards." },
+      { lead: "Your layout stays yours", text: "Opening a link shows its setup without replacing the layout you saved." },
+      { lead: "Two weeks by default", text: "Over time now starts with the latest 2 weeks." },
+    ],
+    closing: "Set up a canvas, click Copy link next to the zoom controls, and share it.",
+  },
+  {
     slug: "avatar-mask",
     date: "2026-10-16",
     time: "23:26",

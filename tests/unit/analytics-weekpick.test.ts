@@ -139,18 +139,21 @@ describe('analytics week dropdown (browser)', () => {
       const page = await openAnalytics(browser);
       await weekMode(page);
       expect(await btn(page).getAttribute('aria-haspopup')).toBe('menu');
-      expect(await current(page)).toBe('3 weeks');
-      expect(await page.getByRole('button', { name: 'Weeks 3 weeks' }).count()).toBe(1);
-      expect(await tableWeeks(page)).toEqual(WEEKS.slice(0, 3));
+      expect(await current(page)).toBe('2 weeks');
+      expect(await page.getByRole('button', { name: 'Weeks 2 weeks' }).count()).toBe(1);
+      expect(await tableWeeks(page)).toEqual(WEEKS.slice(0, 2));
       await btn(page).click();
       expect(await page.getByRole('menu').getByRole('menuitemcheckbox').allTextContents()).toEqual(LABELS);
-      expect(await page.locator('#analyticsView [role="menuitemcheckbox"][aria-checked="true"]').allTextContents()).toEqual(LABELS.slice(0, 3));
+      expect(await page.locator('#analyticsView [role="menuitemcheckbox"][aria-checked="true"]').allTextContents()).toEqual(LABELS.slice(0, 2));
     });
 
     it('stays open while picking, disables the rest at 4, and re-enables them when one is unchecked', async () => {
       const page = await openAnalytics(browser);
       await weekMode(page);
       await btn(page).click();
+      await page.getByRole('menuitemcheckbox', { name: 'Sep 7, 2026' }).click();
+      expect(await isOpen(page)).toBe(true);
+      expect(await current(page)).toBe('3 weeks');
       await page.getByRole('menuitemcheckbox', { name: 'Aug 17, 2026' }).click();
       expect(await isOpen(page)).toBe(true);
       expect(await current(page)).toBe('4 weeks');
@@ -177,8 +180,12 @@ describe('analytics week dropdown (browser)', () => {
       await page.keyboard.press('End');
       await page.keyboard.press(' ');
       expect(await isOpen(page)).toBe(true);
-      expect(await current(page)).toBe('4 weeks');
+      expect(await current(page)).toBe('3 weeks');
       expect(await active(page)).toBe('Aug 10, 2026');
+      await page.keyboard.press('ArrowUp');
+      await page.keyboard.press('Enter');
+      expect(await current(page)).toBe('4 weeks');
+      // At the limit, an unchecked week cannot be added.
       await page.keyboard.press('ArrowUp');
       await page.keyboard.press('Enter');
       expect(await current(page)).toBe('4 weeks');
@@ -191,7 +198,7 @@ describe('analytics week dropdown (browser)', () => {
       const page = await openAnalytics(browser);
       await weekMode(page);
       await btn(page).click();
-      for (const name of LABELS.slice(0, 3)) await page.getByRole('menuitemcheckbox', { name }).click();
+      for (const name of LABELS.slice(0, 2)) await page.getByRole('menuitemcheckbox', { name }).click();
       expect(await current(page)).toBe('Pick weeks');
       await settle(page);
       expect(await page.locator('#anTableWrap .an-empty').textContent()).toBe('Pick a portal and at least one week to compare.');

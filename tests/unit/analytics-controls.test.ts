@@ -151,12 +151,13 @@ describe('analytics controls (browser)', () => {
       const page = await openAnalytics(browser);
       await page.locator('[data-mode="weeks"]').click();
       expect(await selectedChips(page)).toEqual(['ChatGPT']);
-      expect(await count(page)).toBe('3 of 4 selected');
+      expect(await count(page)).toBe('2 of 4 selected');
       await page.locator('#anPortals .chip[data-v="claude"]').click();
       expect(await selectedChips(page)).toEqual(['Claude']);
-      expect(await count(page)).toBe('3 of 4 selected');
+      expect(await count(page)).toBe('2 of 4 selected');
 
       await page.locator('#analyticsView .an-wp-btn').click();
+      await page.getByRole('menuitemcheckbox', { name: 'Sep 7, 2026' }).click();
       await page.getByRole('menuitemcheckbox', { name: 'Aug 17, 2026' }).click();
       expect(await count(page)).toBe('4 of 4 selected');
       await page.locator('.analytics-title').click();

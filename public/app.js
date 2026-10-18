@@ -1,5 +1,6 @@
 // AI Surface Library — front-end controller
-import { mountAnCanvas, unmountAnCanvas } from "./analytics-canvas.js";
+import { anCanvasState, mountAnCanvas, unmountAnCanvas } from "./analytics-canvas.js";
+import { buildAnalyticsHash, hashRoute, parseAnalyticsHash } from "./analytics-share.js";
 import { weekPick } from "./analytics-weekpick.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -1220,6 +1221,7 @@ const an = {
   portals: new Set(),   // selected slugs to compare (portals mode)
   weeks: new Set(),     // selected weeks to compare (weeks mode)
   view: "table",        // "table" | "canvas"
+  shared: null,         // canvas setup from a shared link, used by the next canvas of that selection
   inited: false,
 };
 const AN_MAX = 4;       // cap columns for readability
@@ -1281,44 +1283,125 @@ function enterAnalytics() {
     an.week = state.weeks[0]?.week || null;
     an.portal = state.portals[0]?.slug || null;
     an.portals = new Set(state.portals.slice(0, 2).map((p) => p.slug));
-    an.weeks = new Set(state.weeks.slice(0, Math.min(3, AN_MAX)).map((w) => w.week));
+    an.weeks = new Set(state.weeks.slice(0, Math.min(2, AN_MAX)).map((w) => w.week));
     an.inited = true;
     // Static mode/device toggles bind once.
     const view = $("#analyticsView");
     view.querySelectorAll(".an-mode .vt-btn").forEach((b) =>
       b.addEventListener("click", () => {
         an.mode = b.dataset.mode;
-        view.querySelectorAll(".an-mode .vt-btn").forEach((x) => {
-          const on = x === b; x.classList.toggle("active", on); x.setAttribute("aria-pressed", String(on));
-        });
+        anSyncToggles();
         renderAnalytics();
+        anChanged();
       })
     );
     view.querySelectorAll(".an-device .vt-btn").forEach((b) =>
       b.addEventListener("click", () => {
         an.device = b.dataset.andevice;
-        view.querySelectorAll(".an-device .vt-btn").forEach((x) => {
-          const on = x === b; x.classList.toggle("active", on); x.setAttribute("aria-pressed", String(on));
-        });
+        anSyncToggles();
         renderAnalytics();
+        anChanged();
       })
     );
     $("#anClear").addEventListener("click", () => {
       (an.mode === "portals" ? an.portals : an.weeks).clear();
       renderAnalytics();
+      anChanged();
     });
     view.querySelectorAll(".an-view .vt-btn").forEach((b) =>
       b.addEventListener("click", () => {
         an.view = b.dataset.anview;
-        view.querySelectorAll(".an-view .vt-btn").forEach((x) => {
-          const on = x === b; x.classList.toggle("active", on); x.setAttribute("aria-pressed", String(on));
-        });
-        anSyncDevice();
+        anSyncToggles();
         renderAnalytics();
+        anChanged();
       })
     );
+    $("#anShare").addEventListener("click", anCopyLink);
   }
+  // A link with a setup (#analytics?…) replaces the current one, unless it is the URL this page wrote itself
+  // (coming back to it from another view): then the setup on screen already matches it.
+  if (location.hash !== anWrittenHash) {
+    const shared = parseAnalyticsHash(location.hash, {
+      portals: state.portals.map((p) => p.slug), weeks: state.weeks.map((w) => w.week), max: AN_MAX,
+    });
+    if (shared) anApplyShared(shared);
+  }
+  anSyncToggles();
   renderAnalytics();
+}
+
+// ---- shareable links: the setup lives in the hash after #analytics (public/analytics-share.js) ----
+function anApplyShared(s) {
+  for (const k of ["view", "mode", "portal", "week", "device"]) if (s[k]) an[k] = s[k];
+  if (s.weeks) an.weeks = new Set(s.weeks);
+  if (s.portals) an.portals = new Set(s.portals);
+  // The canvas from a link is used only for the selection in that link.
+  an.shared = s.canvas ? { ...s.canvas, key: anCanvasKey() } : null;
+}
+
+/** Mode, device and view buttons follow `an`. */
+function anSyncToggles() {
+  const view = $("#analyticsView");
+  const sync = (sel, attr, value) => view.querySelectorAll(`${sel} .vt-btn`).forEach((x) => {
+    const on = x.dataset[attr] === value; x.classList.toggle("active", on); x.setAttribute("aria-pressed", String(on));
+  });
+  sync(".an-mode", "mode", an.mode);
+  sync(".an-view", "anview", an.view);
+  anSyncDevice();
+}
+
+let anWrittenHash = null;
+let anHashTimer = 0;
+/** Write the current setup to the URL. replaceState fires no hashchange, so nothing re-renders or scrolls. */
+function anWriteHash() {
+  clearTimeout(anHashTimer);
+  if (hashRoute(location.hash) !== "#analytics") return; // left Analytics before the timer ran
+  const board = an.view === "canvas" ? anCanvasState() : null;
+  // No board (still loading, or the stacked narrow view): keep a link's canvas setup in the URL.
+  const pending = an.shared && an.shared.key === anCanvasKey() ? an.shared : null;
+  const canvas = board || (pending && {
+    pos: pending.layout ? pending.layout.pos : null,
+    edges: pending.layout ? pending.layout.edges : [],
+    cam: { k: pending.zoom, x: pending.pan && pending.pan[0], y: pending.pan && pending.pan[1] },
+  });
+  const hash = buildAnalyticsHash({
+    view: an.view, mode: an.mode, portal: an.portal, week: an.week, device: an.device,
+    weeks: state.weeks.map((w) => w.week).filter((w) => an.weeks.has(w)),
+    portals: state.portals.map((p) => p.slug).filter((p) => an.portals.has(p)),
+    canvas,
+  });
+  anWrittenHash = hash;
+  if (location.hash !== hash) history.replaceState(history.state, "", hash);
+}
+/** The viewer changed the setup: update the URL, at most every 300ms while dragging. A link's canvas
+ * setup stays in use (for example across Table and back) until the viewer changes the selection or the board. */
+function anChanged() {
+  if (an.shared && an.shared.key !== anCanvasKey()) an.shared = null;
+  clearTimeout(anHashTimer);
+  anHashTimer = setTimeout(anWriteHash, 300);
+}
+
+async function anCopyLink() {
+  anWriteHash();
+  const label = $("#anShare .anc-share-label");
+  const show = (text) => {
+    label.textContent = text;
+    clearTimeout(label._t);
+    label._t = setTimeout(() => { label.textContent = "Copy link"; }, 2000);
+  };
+  try {
+    await navigator.clipboard.writeText(location.href);
+    show("Link copied");
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = location.href;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { show(document.execCommand("copy") ? "Link copied" : "Copy failed"); } catch { show("Copy failed"); }
+    ta.remove();
+  }
 }
 
 // Canvas compares desktop screenshots only (findings come from the desktop analysis): there, Mobile is
@@ -1351,13 +1434,13 @@ function renderAnalytics() {
   weekPick($("#anWeek"), portalsMode
     ? {
       options: weekOptions, selected: an.week ? [an.week] : [], multi: false, labelledBy: "anWeekLabel",
-      onChange: (week) => { an.week = week; renderAnalytics(); },
+      onChange: (week) => { an.week = week; renderAnalytics(); anChanged(); },
     }
     : {
       // Multi select keeps its menu open, so only the count and the comparison re-render on each pick.
       options: weekOptions, selected: state.weeks.map((w) => w.week).filter((w) => an.weeks.has(w)), multi: true, max: AN_MAX,
       labelledBy: "anWeekLabel",
-      onChange: (weeks) => { an.weeks = new Set(weeks); anSyncSelection(); renderAnContent(); },
+      onChange: (weeks) => { an.weeks = new Set(weeks); anSyncSelection(); renderAnContent(); anChanged(); },
     });
   const chips = $("#anPortals");
   chips.setAttribute("aria-label", portalsMode ? "Portals" : "Portal");
@@ -1371,6 +1454,7 @@ function renderAnalytics() {
       else if (an.portals.has(v)) an.portals.delete(v);
       else if (an.portals.size < AN_MAX) an.portals.add(v);
       renderAnalytics();
+      anChanged();
     })
   );
   anSyncSelection();
@@ -1445,10 +1529,19 @@ async function renderAnCanvas() {
     file: c.cap ? `${c.cap.slug || "shot"}-${c.cap.week || ""}` : "",
     metrics: c.cap && c.cap.metrics ? c.cap.metrics : null,
   }));
-  const context = an.mode === "portals" ? an.week : an.portal;
-  const storageKey = `anCanvas:v1:${an.mode}:${context}:${columns.map((c) => c.key).sort().join(",")}`;
+  const storageKey = anCanvasKey();
+  const shared = an.shared && an.shared.key === storageKey ? an.shared : null;
   wrap.innerHTML = "";
-  mountAnCanvas(wrap, cards, { storageKey, thumbUrl, tools: $("#anCanvasTools"), note: $("#anCanvasNote") });
+  mountAnCanvas(wrap, cards, { storageKey, thumbUrl, tools: $("#anCanvasTools"), note: $("#anCanvasNote"), shared,
+    onChange: () => { an.shared = null; anChanged(); } });
+}
+
+/** localStorage key of the canvas for the current selection (the ids are the cards anColumns returns). */
+function anCanvasKey() {
+  const ids = an.mode === "portals"
+    ? state.portals.map((p) => p.slug).filter((p) => an.portals.has(p))
+    : state.weeks.map((w) => w.week).filter((w) => an.weeks.has(w));
+  return `anCanvas:v1:${an.mode}:${an.mode === "portals" ? an.week : an.portal}:${ids.sort().join(",")}`;
 }
 
 function anTableHTML(cols) {
@@ -1527,7 +1620,8 @@ async function loadInsights() {
 // ---- hash routing: gallery / collection / analytics / notes -----------------
 // The notes view is shown at #notes; #insights (its old name) still opens it so old links keep working.
 function route() {
-  const hash = location.hash;
+  // #analytics may carry a shared setup after "?" (public/analytics-share.js).
+  const hash = hashRoute(location.hash);
   const view = hash === "#collection" ? "collection" : hash === "#analytics" ? "analytics" : hash === "#notes" || hash === "#insights" ? "insights" : "gallery";
   const views = { gallery: "#galleryView", collection: "#collectionView", analytics: "#analyticsView", insights: "#insightsView" };
   for (const [v, sel] of Object.entries(views)) {

@@ -904,6 +904,8 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 /* Icon button, square and as tall as the zoom group: a zoom button is one text line (1lh) plus 6px padding
    top and bottom, inside the group's 3px padding and 1px border, so 1lh + 20px (follows the loaded font). */
 .anc-reset{background:var(--cf-bg-300);border:1px solid var(--cf-border);width:calc(1lh + 20px);height:calc(1lh + 20px);padding:0;justify-content:center}
+/* Same height and surface as the reset button, with a label; wide enough for "Link copied" so it does not resize. */
+.anc-share{background:var(--cf-bg-300);border:1px solid var(--cf-border);height:calc(1lh + 20px);padding:0 12px;gap:6px;justify-content:center;min-width:8.5em;white-space:nowrap}
 .anc-board{position:relative;height:min(70vh,620px);overflow:hidden;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
   background-color:var(--cf-bg-100);background-image:radial-gradient(var(--cf-border) 1px,transparent 1px);background-size:20px 20px}
 .anc-board:focus-visible{outline:2px solid var(--cf-orange);outline-offset:-2px}
