@@ -89,13 +89,16 @@ describe('analytics controls (browser)', () => {
         const bar = document.querySelector('#analyticsView .an-resultsbar')!.getBoundingClientRect();
         const view = document.querySelector('#analyticsView .an-view')!.getBoundingClientRect();
         const tools = document.querySelector('#anCanvasTools')!.getBoundingClientRect();
+        const share = document.querySelector('#anShare')!.getBoundingClientRect();
         const note = document.querySelector('#anCanvasNote')!.getBoundingClientRect();
         const board = document.querySelector('.anc-board')!.getBoundingClientRect();
         const controls = document.querySelector('#analyticsView .analytics-controls')!.getBoundingClientRect();
-        return { viewLeft: view.left - bar.left, toolsRight: bar.right - tools.right, sameRow: Math.abs(view.top - tools.top) < 1,
+        return { viewLeft: view.left - bar.left, toolsRight: share.left - tools.right, shareRight: bar.right - share.right,
+          sameRow: Math.abs(view.top - tools.top) < 1 && Math.abs(view.top - share.top) < 1,
           order: controls.bottom <= bar.top && bar.bottom <= note.top && note.bottom <= board.top };
       });
-      expect(pos).toEqual({ viewLeft: 0, toolsRight: 0, sameRow: true, order: true });
+      // The tools sit at the right end, followed by Copy link 8px after them.
+      expect(pos).toEqual({ viewLeft: 0, toolsRight: 8, shareRight: 0, sameRow: true, order: true });
       expect(await page.locator('.anc-board .anc-zoom, .an-canvas-wrap [data-reset]').count()).toBe(0);
       await page.locator('[data-anview="table"]').click();
       expect(await shown(page, '#anCanvasTools')).toBe(false);

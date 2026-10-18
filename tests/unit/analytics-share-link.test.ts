@@ -173,3 +173,81 @@ describe('shareable Analytics links (browser)', () => {
     expect(await page.locator('#analyticsView b').count()).toBe(0);
   });
 });
+
+describe('Copy link in Table and Canvas (browser)', () => {
+  let browser: Browser;
+  beforeAll(async () => { browser = await chromium.launch(); });
+  afterAll(async () => { await browser?.close(); });
+
+  const OCT = ['2026-10-12', ...WEEKS];
+  const ORIGIN = 'https://site.test/';
+  const label = (page: Page) => page.locator('#anShare .anc-share-label').textContent();
+  const clipboard = (page: Page) => page.evaluate(() => navigator.clipboard.readText());
+  const copy = async (page: Page) => {
+    await page.locator('#anShare').click();
+    await expect.poll(() => label(page)).toBe('Link copied');
+    return clipboard(page);
+  };
+
+  it('in Table, copies the table setup, and the link opens the same Table', async () => {
+    const page = await openSite(browser, '#analytics', { clipboard: true, weeks: OCT });
+    await page.locator('#anCanvasWrap .anc-card img').first().waitFor();
+    await page.locator('[data-anview="table"]').click();
+    await page.locator('#anTableWrap .an-table').waitFor();
+    const url = await copy(page);
+    expect(url).toBe(`${ORIGIN}#analytics?view=table&mode=portals&week=2026-10-12&portals=chatgpt,claude&device=desktop`);
+    expect(page.url()).toBe(url);
+
+    const fresh = await openSite(browser, new URL(url).hash, { weeks: OCT });
+    await fresh.locator('#anTableWrap .an-table').waitFor();
+    expect(await fresh.locator('.an-view [data-anview="table"]').getAttribute('aria-pressed')).toBe('true');
+    expect(await fresh.locator('.an-mode [data-mode="portals"]').getAttribute('aria-pressed')).toBe('true');
+    expect(await fresh.locator('.an-device [data-andevice="desktop"]').getAttribute('aria-pressed')).toBe('true');
+    expect(await fresh.locator('#anWeek .an-wp-current').textContent()).toBe('Oct 12, 2026');
+    expect(await fresh.locator('#anPortals .chip[aria-selected="true"]').allTextContents()).toEqual(['ChatGPT', 'Claude']);
+    expect(await fresh.locator('#anTableWrap .an-colhead').allTextContents()).toEqual(['ChatGPT', 'Claude']);
+  });
+
+  it('a change copied right away (within 300ms) is in the link, in Table and in Canvas', async () => {
+    const page = await openSite(browser, '#analytics', { clipboard: true, weeks: OCT });
+    await page.locator('#anCanvasWrap .anc-card img').first().waitFor();
+    await page.locator('[data-anview="table"]').click();
+    await page.locator('#anTableWrap .an-table').waitFor();
+    await page.waitForTimeout(400);
+
+    let t = Date.now();
+    await page.locator('#analyticsView [data-andevice="mobile"]').click();
+    await page.locator('#anShare').click();
+    expect(Date.now() - t).toBeLessThan(300);
+    await expect.poll(() => label(page)).toBe('Link copied');
+    expect(await clipboard(page)).toBe(`${ORIGIN}#analytics?view=table&mode=portals&week=2026-10-12&portals=chatgpt,claude&device=mobile`);
+
+    await page.locator('#analyticsView [data-andevice="desktop"]').click();
+    await page.locator('[data-anview="canvas"]').click();
+    await page.locator('#anCanvasWrap .anc-board .anc-card img').first().waitFor();
+    await page.waitForTimeout(400);
+    t = Date.now();
+    await page.locator('[data-zoom="in"]').click();
+    await page.locator('#anShare').click();
+    expect(Date.now() - t).toBeLessThan(300);
+    await expect.poll(() => clipboard(page)).toContain('&zoom=1.63&');
+    expect(await page.locator('.anc-zoom-pct').textContent()).toBe('163%');
+  });
+
+  it.each([[1280], [390]])('at %ipx Copy link is visible at the right end of the Table/Canvas row in both views', async (width) => {
+    const page = await openSite(browser, '#analytics', { width });
+    await page.locator('#anCanvasWrap .anc-card img').first().waitFor();
+    const place = () => page.evaluate(() => {
+      const r = (sel: string) => document.querySelector(sel)!.getBoundingClientRect();
+      const bar = r('#analyticsView .an-resultsbar'), view = r('#analyticsView .an-view'), share = r('#anShare');
+      return { right: Math.round(bar.right - share.right), sameRow: Math.abs(view.top - share.top) < 1, inView: share.left >= 0 && share.right <= innerWidth };
+    });
+    expect(await page.locator('#anShare').isVisible()).toBe(true);
+    expect(await place()).toEqual({ right: 0, sameRow: true, inView: true });
+    await page.locator('[data-anview="table"]').click();
+    await page.locator('#anTableWrap .an-table').waitFor();
+    expect(await page.locator('#anShare').isVisible()).toBe(true);
+    expect(await page.locator('#anCanvasTools').isVisible()).toBe(false);
+    expect(await place()).toEqual({ right: 0, sameRow: true, inView: true });
+  });
+});

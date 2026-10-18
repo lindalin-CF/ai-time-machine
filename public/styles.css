@@ -901,10 +901,12 @@ html[data-view="analytics"] .topnav-link[data-nav="analytics"],html[data-view="n
 
 /* ---------- analytics: canvas view (public/analytics-canvas.js) ---------- */
 .an-view{flex:0 0 auto}
-.an-view .vt-btn:focus-visible,.an-canvas-wrap .vt-btn:focus-visible,.anc-tools .vt-btn:focus-visible,.anc-box-x:focus-visible{outline:2px solid var(--cf-orange);outline-offset:2px}
+.an-view .vt-btn:focus-visible,.an-canvas-wrap .vt-btn:focus-visible,.anc-tools .vt-btn:focus-visible,.anc-share:focus-visible,.anc-box-x:focus-visible{outline:2px solid var(--cf-orange);outline-offset:2px}
 .an-canvas-wrap{border:1px solid var(--cf-border);border-radius:14px;overflow:hidden;background:var(--cf-bg-100)}
 .anc-note{margin:0;color:var(--cf-text-soft);font-size:12.5px;line-height:1.4;min-width:0;overflow-wrap:anywhere}
 .anc-tools{display:flex;align-items:center;gap:8px}
+/* Right end of the Table/Canvas row: canvas tools (Canvas only), then Copy link (both views), 8px apart like the tools. */
+.an-resultsbar-end{display:flex;align-items:center;gap:8px;margin-left:auto}
 .anc-zoom{align-items:center}
 .anc-zoom .vt-btn{min-width:30px;justify-content:center}
 .anc-zoom-pct{min-width:44px;text-align:center;font-family:var(--font-mono);font-size:11px;color:var(--cf-text-soft)}

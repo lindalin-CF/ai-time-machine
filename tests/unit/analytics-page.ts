@@ -24,9 +24,10 @@ const API: Record<string, unknown> = {
 };
 const captures = (week: string) => ({ week, label: `Week of ${week}`, captures: [cap('chatgpt', 'ChatGPT', week), cap('claude', 'Claude', week)] });
 
-type SiteOpts = { width?: number; hasTouch?: boolean; clipboard?: boolean; storage?: Record<string, string>; initScript?: string; shotShaped?: boolean };
+type SiteOpts = { width?: number; hasTouch?: boolean; clipboard?: boolean; storage?: Record<string, string>; initScript?: string; shotShaped?: boolean; weeks?: string[] };
 
-/** The homepage at `hash` ("" for the gallery), loaded. `storage` is put in localStorage and `initScript` runs before the page does. */
+/** The homepage at `hash` ("" for the gallery), loaded. `storage` is put in localStorage and `initScript` runs before the page does;
+ * `weeks` (newest first) replaces the archived weeks. */
 export async function openSite(browser: Browser, hash: string, opts: SiteOpts = {}): Promise<Page> {
   const context = await browser.newContext({ viewport: { width: opts.width ?? 1280, height: 900 }, hasTouch: opts.hasTouch });
   if (opts.clipboard) await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: 'https://site.test' });
@@ -37,6 +38,7 @@ export async function openSite(browser: Browser, hash: string, opts: SiteOpts = 
     if (url.host !== 'site.test') return route.abort();
     if (url.pathname === '/') return route.fulfill({ contentType: 'text/html', body: INDEX_HTML });
     if (url.pathname === '/api/captures') return route.fulfill({ json: captures(url.searchParams.get('week') || WEEKS[0]) });
+    if (url.pathname === '/api/weeks' && opts.weeks) return route.fulfill({ json: { weeks: opts.weeks.map((week) => ({ week, label: `Week of ${week}` })) } });
     if (API[url.pathname]) return route.fulfill({ json: API[url.pathname] });
     if (url.pathname.startsWith('/img/')) return route.fulfill({ contentType: 'image/png', body: opts.shotShaped ? SHOT_PNG : PNG });
     if (url.pathname.startsWith('/agents/')) return route.fulfill({ status: 404, body: '' });

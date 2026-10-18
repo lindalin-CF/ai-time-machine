@@ -37,6 +37,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       { lead: "Copy link", text: "The link keeps the mode, portals, weeks, device, view, zoom, card positions and the lines between cards." },
       { lead: "Your layout stays yours", text: "Opening a link shows its setup without replacing the layout you saved." },
       { lead: "Two weeks by default", text: "Over time now starts with the latest 2 weeks." },
+      { lead: "Works in Table too", text: "Copy link sits at the right end of the Table/Canvas row in both views, on desktop and mobile." },
     ],
     closing: "Set up a canvas, click Copy link next to the zoom controls, and share it.",
   },
