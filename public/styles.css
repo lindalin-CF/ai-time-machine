@@ -331,8 +331,8 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .analysis-method:hover{color:var(--cf-text)}
 .analysis-method[hidden]{display:none}
 .card-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:6px}
-.palette{display:flex;gap:0}
-.palette i{width:20px;height:20px;display:block}
+.palette{display:flex;gap:0;min-width:0}
+.palette i{width:20px;height:20px;display:block;flex:0 1 auto}
 .palette i:first-child{border-radius:6px 0 0 6px}
 .palette i:last-child{border-radius:0 6px 6px 0}
 .by{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--cf-text-soft)}
@@ -405,7 +405,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .card-link::after{content:"";position:absolute;inset:0;z-index:0}
 .card-link:focus-visible{outline:none}
 .card-link:focus-visible::after{outline:2px solid var(--cf-orange);outline-offset:-2px;border-radius:inherit}
-.card .visit,.card .analysis-toggle,.card .analysis-method,.card .manual-open{position:relative;z-index:1}
+.card .visit,.card .analysis-toggle,.card .analysis-method,.card .manual-open,.card .details-link{position:relative;z-index:1}
 
 .lb{position:fixed;inset:0;z-index:120;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px}
 .lb[hidden]{display:none}
@@ -713,6 +713,17 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
 }
 .manual-open:hover{background:var(--cf-bg-300);color:var(--cf-text)}
 .manual-open:focus-visible{outline:2px solid #eb622c;outline-offset:2px}
+/* Card footer: "…" (manual snapshots) then Details (the card's portal page), at the right end. */
+.card-actions{margin-left:auto;flex:none;display:flex;align-items:center;gap:8px}
+.card-actions .manual-open{margin-left:0}
+.details-link{
+  display:inline-flex;align-items:center;gap:6px;box-sizing:border-box;height:32px;padding:0 11px;
+  border:1px solid var(--cf-border);border-radius:8px;background:var(--cf-bg-100);color:var(--cf-orange-ink);
+  font-family:var(--font-sans);font-size:12.5px;font-weight:600;line-height:1;text-decoration:none;white-space:nowrap;
+  transition:background .15s;
+}
+.details-link:hover{background:var(--cf-bg-300)}
+.details-link:focus-visible{outline:2px solid #eb622c;outline-offset:2px}
 .manual-modal{position:fixed;inset:0;z-index:95;display:grid;place-items:center;padding:24px}
 .manual-modal[hidden]{display:none}
 .manual-backdrop{position:absolute;inset:0;background:rgba(30,18,8,.68);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}

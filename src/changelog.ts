@@ -15,6 +15,18 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "card-details-link",
+    date: "2026-10-18",
+    time: "19:48",
+    title: "Details Button on Every Card",
+    subtitle: "A clear way from a Library card to its product page",
+    bullets: [
+      { lead: "Details →", text: "Each card ends with a Details button that opens the product's page for that week, the same page as the product name." },
+      { lead: "Next to …", text: "It sits just right of the … button, which still opens that product's manual snapshots." },
+    ],
+    closing: "Click Details → at the bottom right of any card in the Library.",
+  },
+  {
     slug: "card-more-button",
     date: "2026-10-18",
     time: "19:39",

@@ -30,7 +30,7 @@ describe('gallery card "…" button (browser)', () => {
     expect(await page.locator('#grid').textContent()).not.toContain('View more');
   });
 
-  it('is a quiet 32 x 32 outlined button at the right end of the footer', async () => {
+  it('is a quiet 32 x 32 outlined button, just before Details at the right end of the footer', async () => {
     for (const width of [1280, 390]) {
       const page = await openSite(browser, '', { width });
       const btn = await firstButton(page);
@@ -41,9 +41,9 @@ describe('gallery card "…" button (browser)', () => {
         const pal = b.closest('.card-foot')!.querySelector('.palette')!.getBoundingClientRect();
         const icon = b.querySelector('svg')!.getBoundingClientRect();
         return { w: r.width, h: r.height, icon: icon.width, bg: cs.backgroundColor, border: cs.borderTopWidth + ' ' + cs.borderTopStyle,
-          radius: cs.borderTopLeftRadius, rightGap: Math.round(foot.right - r.right), overlap: pal.right > r.left };
+          radius: cs.borderTopLeftRadius, beforeDetails: Math.round(b.closest('.card-foot')!.querySelector('.details-link')!.getBoundingClientRect().left - r.right), overlap: pal.right > r.left };
       });
-      expect(s).toEqual({ w: 32, h: 32, icon: 18, bg: 'rgba(0, 0, 0, 0)', border: '1px solid', radius: '8px', rightGap: 0, overlap: false });
+      expect(s).toEqual({ w: 32, h: 32, icon: 18, bg: 'rgba(0, 0, 0, 0)', border: '1px solid', radius: '8px', beforeDetails: 8, overlap: false });
     }
   });
 

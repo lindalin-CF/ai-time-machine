@@ -420,9 +420,12 @@ function card(c) {
       </button>
       <div class="card-foot">
         <div class="palette">${palette}</div>
-        <button class="manual-open" type="button" data-slug="${esc(c.slug)}" data-portal="${esc(c.portal)}" aria-label="More snapshots for ${esc(c.portal)}" title="More snapshots for ${esc(c.portal)}" aria-haspopup="dialog">
-          <svg viewBox="0 0 18 18" width="18" height="18" aria-hidden="true"><circle cx="3.5" cy="9" r="1.25" fill="currentColor"/><circle cx="9" cy="9" r="1.25" fill="currentColor"/><circle cx="14.5" cy="9" r="1.25" fill="currentColor"/></svg>
-        </button>
+        <div class="card-actions">
+          <button class="manual-open" type="button" data-slug="${esc(c.slug)}" data-portal="${esc(c.portal)}" aria-label="More snapshots for ${esc(c.portal)}" title="More snapshots for ${esc(c.portal)}" aria-haspopup="dialog">
+            <svg viewBox="0 0 18 18" width="18" height="18" aria-hidden="true"><circle cx="3.5" cy="9" r="1.25" fill="currentColor"/><circle cx="9" cy="9" r="1.25" fill="currentColor"/><circle cx="14.5" cy="9" r="1.25" fill="currentColor"/></svg>
+          </button>
+          <a class="details-link" href="${esc(portalHref(c))}" aria-label="Details for ${esc(c.portal)}, week of ${esc(shortWeekLabel(c.week || state.week))}">Details <span class="arrow" aria-hidden="true">&rarr;</span></a>
+        </div>
       </div>
     </div>
   </article>`;
