@@ -1039,3 +1039,32 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
 #analyticsView .an-wp-item[aria-checked="true"] .an-wp-check{background:var(--cf-orange);border-color:var(--cf-orange)}
 #analyticsView .an-wp-item[aria-checked="true"] .an-wp-check::after{content:"";width:7px;height:4px;margin-top:-2px;
   border-left:2px solid var(--cf-bg-100);border-bottom:2px solid var(--cf-bg-100);transform:rotate(-45deg)}
+
+/* ---------- phone top-bar menu (public/site-menu.js; the server pages repeat this in src/portal-page.ts) ---------- */
+/* Hidden behind the button only once html.js is set (inline <head> script), so the first paint is already collapsed
+   and, without JS, the links wrap onto a second row instead. html.menu-open shows the panel and locks page scroll. */
+.topnav-toggle{display:none}
+@media(max-width:640px){
+  html:not(.js) .topbar{flex-wrap:wrap;row-gap:6px}
+  html:not(.js) .topnav{width:100%;margin-left:0;flex-wrap:wrap;justify-content:flex-start}
+  html.js .wordmark{max-width:none}
+  html.js .topnav-toggle{
+    display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;margin-left:auto;
+    width:40px;height:40px;padding:0;border:1px solid var(--cf-border);border-radius:8px;
+    background:transparent;color:var(--cf-text);cursor:pointer;
+  }
+  html.js .topnav-toggle:hover,html.js .topnav-toggle:active{background:var(--cf-bg-300)}
+  html.js .topnav-toggle:focus-visible{outline:2px solid #eb622c;outline-offset:2px}
+  .topnav-toggle[aria-expanded="true"] .topnav-toggle-open,.topnav-toggle[aria-expanded="false"] .topnav-toggle-close{display:none}
+  html.js .topnav{
+    position:absolute;top:100%;left:0;right:0;margin:0;
+    flex-direction:column;align-items:stretch;gap:0;white-space:normal;
+    background:var(--cf-bg-100);border-bottom:1px solid var(--cf-border);box-shadow:0 16px 32px -20px rgba(66,50,23,.4);
+    opacity:0;transform:translateY(-6px);visibility:hidden;
+    transition:opacity .15s ease,transform .15s ease,visibility 0s linear .15s;
+  }
+  html.menu-open .topnav{opacity:1;transform:none;visibility:visible;transition:opacity .15s ease,transform .15s ease,visibility 0s}
+  html.js .topnav-link{display:flex;align-items:center;height:48px;padding:0 16px;font-size:13px}
+  html.menu-open{overflow:hidden}
+}
+@media(max-width:640px) and (prefers-reduced-motion:reduce){html.js .topnav{transition:none}}

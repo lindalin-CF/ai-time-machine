@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { chromium, type Browser, type Page } from 'playwright';
-import { handleChangelog, handleHowWeAnalyze, handleLicense, handlePortalPage, handlePrivacy, siteHeader } from '../../src/portal-page';
+import { MENU_BUTTON, handleChangelog, handleHowWeAnalyze, handleLicense, handlePortalPage, handlePrivacy, siteHeader } from '../../src/portal-page';
 import { makeEnv } from './fake-env';
 import { openSite } from './analytics-page';
 
@@ -15,7 +15,7 @@ const ORANGES = ['rgb(235, 98, 44)', 'rgb(204, 80, 30)'];
 
 describe('top bar markup', () => {
   it('the homepage lists Library, Collection, Compare and Changelog, with no Notes', () => {
-    const nav = INDEX_HTML.match(/<nav class="topnav">([\s\S]*?)<\/nav>/)![1];
+    const nav = INDEX_HTML.match(/<nav class="topnav" id="site-nav" aria-label="Site">([\s\S]*?)<\/nav>/)![1];
     expect([...nav.matchAll(/<a href="([^"]+)" class="topnav-link" data-nav="([^"]+)">([^<]+)<\/a>/g)].map((m) => [m[1], m[2], m[3]])).toEqual([
       ['#', 'gallery', 'Library'], ['#collection', 'collection', 'Collection'], ['#compare', 'compare', 'Compare'], ['/changelog', 'changelog', 'Changelog'],
     ]);
@@ -34,7 +34,7 @@ describe('top bar markup', () => {
       ['/portals/nope (404)', await (await handlePortalPage(req('/portals/nope'), t.env)).text()],
     ];
     for (const [path, html] of pages) {
-      const nav = html.match(/<nav class="topnav" aria-label="Site">([\s\S]*?)<\/nav>/)?.[1] ?? '';
+      const nav = html.match(/<nav class="topnav" id="site-nav" aria-label="Site">([\s\S]*?)<\/nav>/)?.[1] ?? '';
       expect([...nav.matchAll(/<a href="([^"]+)"[^>]*>([^<]+)<\/a>/g)].map((m) => `${m[2]} ${m[1]}`), path)
         .toEqual(['Library /', 'Collection /#collection', 'Compare /#compare', 'Changelog /changelog']);
       expect((nav.match(/aria-current="page"/g) ?? []).length, path).toBe(path === '/changelog' ? 1 : 0);
@@ -42,6 +42,13 @@ describe('top bar markup', () => {
       expect(html, path).not.toMatch(/>\s*Notes\s*</);
     }
     expect(siteHeader('changelog')).toContain('<a href="/changelog" class="topnav-link active" aria-current="page">Changelog</a>');
+  });
+
+  it('the homepage and the server pages share the same menu button, right before the nav it controls', () => {
+    expect(MENU_BUTTON).toMatch(/^<button type="button" class="topnav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="site-nav">/);
+    expect(INDEX_HTML).toContain(`${MENU_BUTTON}\n    <nav class="topnav" id="site-nav"`);
+    expect(siteHeader()).toMatch(/<\/button>\s*<nav class="topnav" id="site-nav"/);
+    expect(siteHeader()).toContain(MENU_BUTTON);
   });
 });
 
@@ -130,6 +137,7 @@ describe('top bar in the browser', () => {
     const page = await openSite(browser, '#compare', { hasTouch: touch, width: touch ? 390 : 1280 });
     await page.locator('#anCanvasWrap .anc-card img').first().waitFor();
     const collection = page.locator('.topnav-link[data-nav="collection"]');
+    if (touch) await page.locator('.topnav-toggle').tap(); // phones reach the links through the menu
     if (touch) await collection.tap(); else await collection.click(); // the pointer stays on Collection
     await page.waitForFunction(() => document.documentElement.dataset.view === 'collection');
     await page.goBack();

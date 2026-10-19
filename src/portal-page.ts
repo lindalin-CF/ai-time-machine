@@ -128,6 +128,9 @@ export function jsonLdScript(data: unknown): string {
   return `  <script type="application/ld+json">${JSON.stringify(data).replace(/</g, "\\u003c")}</script>\n`;
 }
 
+/** The top bar's menu button for phones (≤ 640px; public/site-menu.js). public/index.html carries the same markup. */
+export const MENU_BUTTON = `<button type="button" class="topnav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="site-nav"><svg class="topnav-toggle-open" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 5.5h14M3 10h14M3 14.5h14"/></svg><svg class="topnav-toggle-close" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg></button>`;
+
 /**
  * The site's top bar, the same as the homepage's (public/index.html): wordmark, then Library · Collection · Compare ·
  * Changelog. Only `current` is marked as the current page (orange, aria-current); the homepage views are hashes on /.
@@ -139,7 +142,8 @@ export function siteHeader(current?: "changelog"): string {
     : `<a href="${href}" class="topnav-link">${label}</a>`).join("\n        ");
   return `    <header class="topbar">
       <a class="wordmark" href="/"><span class="wordmark-dot" aria-hidden="true"></span><span class="wordmark-text">AI Interface Library</span></a>
-      <nav class="topnav" aria-label="Site">
+      ${MENU_BUTTON}
+      <nav class="topnav" id="site-nav" aria-label="Site">
         ${nav}
       </nav>
     </header>`;
@@ -153,6 +157,8 @@ function page(opts: { title: string; description: string; canonical?: string; no
   <!-- Analytics load only as public/consent.js allows (region, stored choice, Global Privacy Control). -->
   <script src="/consent.js" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- html.js: on phones the top-bar links sit behind the menu button from the first paint; without JS they stay visible. -->
+  <script>document.documentElement.classList.add("js")</script>
   <title>${esc(opts.title)}</title>
   <meta name="description" content="${esc(opts.description)}" />
   <meta name="robots" content="${opts.noindex ? "noindex" : "max-image-preview:large"}" />
@@ -174,6 +180,23 @@ ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts
     @media (hover:hover){.topnav-link:not(.active):hover{color:#231f1a}}
     @media (max-width:760px){.wordmark{font-size:12px}.topnav{gap:14px}.topnav-link{font-size:12px}}
     @media (max-width:420px){.topbar{gap:8px}.wordmark{font-size:11px;gap:7px}.topnav{gap:8px}.topnav-link{font-size:11px}} /* the homepage's values at this width */
+    /* Phones: the menu button and panel, as on the homepage (public/styles.css), with this page's colours as fallbacks. */
+    .topnav-toggle{display:none}
+    @media (max-width:640px){
+      html:not(.js) .topbar{flex-wrap:wrap}
+      html:not(.js) .topnav{width:100%;flex-wrap:wrap}
+      html.js .topbar{position:relative;z-index:10}
+      html.js .topnav-toggle{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:40px;height:40px;padding:0;border:1px solid var(--cf-border,#d8cfc2);border-radius:8px;background:transparent;color:var(--cf-text,#231f1a);cursor:pointer}
+      html.js .topnav-toggle:hover,html.js .topnav-toggle:active{background:var(--cf-bg-300,#ded4c6)}
+      html.js .topnav-toggle:focus-visible{outline:2px solid #eb622c;outline-offset:2px}
+      .topnav-toggle[aria-expanded="true"] .topnav-toggle-open,.topnav-toggle[aria-expanded="false"] .topnav-toggle-close{display:none}
+      /* Full width: the bar sits inside .wrap's 16px side padding. */
+      html.js .topnav{position:absolute;top:calc(100% + 8px);left:-16px;right:-16px;flex-direction:column;gap:0;white-space:normal;background:var(--cf-bg-100,#f5f1e9);border-bottom:1px solid var(--cf-border,#d8cfc2);box-shadow:0 16px 32px -20px rgba(35,31,26,.35);opacity:0;transform:translateY(-6px);visibility:hidden;transition:opacity .15s ease,transform .15s ease,visibility 0s linear .15s}
+      html.menu-open .topnav{opacity:1;transform:none;visibility:visible;transition:opacity .15s ease,transform .15s ease,visibility 0s}
+      html.js .topnav-link{display:flex;align-items:center;height:48px;padding:0 16px;font-size:13px}
+      html.menu-open{overflow:hidden}
+    }
+    @media (max-width:640px) and (prefers-reduced-motion:reduce){html.js .topnav{transition:none}}
     h1{font-size:2rem;margin:24px 0 4px}
     .meta{color:#6b6257;margin:0 0 24px}
     .shots{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
@@ -221,6 +244,7 @@ ${FOOTER_LEGAL}
     </footer>
   </div>
   <script src="/footer-dialogs.js" defer></script>
+  <script src="/site-menu.js" defer></script>
 </body>
 </html>`;
 }

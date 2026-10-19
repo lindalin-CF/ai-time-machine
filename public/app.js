@@ -1697,4 +1697,6 @@ initDeviceToggle();
 initSearch();
 initHeroOrbFollow();
 if (document.documentElement.dataset.view === "gallery") startHeroAnnotations();
+// The phone menu can open before route() runs: name the current item for screen readers now (CSS already colours it).
+document.querySelector(`.topnav-link[data-nav="${document.documentElement.dataset.view}"]`)?.setAttribute("aria-current", "page");
 boot().then(route);

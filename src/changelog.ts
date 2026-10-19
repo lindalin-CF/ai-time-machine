@@ -15,6 +15,19 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "phone-menu",
+    date: "2026-10-18",
+    time: "20:12",
+    title: "Menu Button on Phones",
+    subtitle: "On small screens the top bar keeps Library, Collection, Compare and Changelog behind one button",
+    bullets: [
+      { lead: "One tap", text: "The menu button at the top right opens the four pages as a list with larger tap targets. The current page is marked in orange." },
+      { lead: "Closing", text: "Choosing a page, tapping outside the list or pressing Esc closes it." },
+      { lead: "Wider screens", text: "On tablets and computers the links stay in the top bar as before." },
+    ],
+    closing: "Open the site on a phone and tap the menu button at the top right.",
+  },
+  {
     slug: "card-details-link",
     date: "2026-10-18",
     time: "19:48",

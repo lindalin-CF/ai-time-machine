@@ -27,14 +27,14 @@ const PORTALS: Portal[] = [{ slug: 'chatgpt', name: 'ChatGPT', brand: '#10a37f' 
 const captures = (week: string, portals: Portal[], metrics: Record<string, unknown>, statuses: Record<string, string>) =>
   ({ week, label: `Week of ${week}`, captures: portals.map((p) => cap(p.slug, p.name, week, metrics[`${p.slug}@${week}`] ?? null, statuses[`${p.slug}@${week}`] ?? 'ok')) });
 
-type SiteOpts = { width?: number; hasTouch?: boolean; clipboard?: boolean; storage?: Record<string, string>; initScript?: string; shotShaped?: boolean; weeks?: string[]; clock?: boolean; pages?: Record<string, string>;
+type SiteOpts = { width?: number; hasTouch?: boolean; javaScriptEnabled?: boolean; reducedMotion?: 'reduce' | 'no-preference'; clipboard?: boolean; storage?: Record<string, string>; initScript?: string; shotShaped?: boolean; weeks?: string[]; clock?: boolean; pages?: Record<string, string>;
   portals?: Portal[]; metrics?: Record<string, unknown>; statuses?: Record<string, string> };
 
 /** The homepage at `hash` ("" for the gallery), loaded. `storage` is put in localStorage and `initScript` runs before the page does;
  * `weeks` (newest first) replaces the archived weeks, `portals` the products, and `metrics` (by "<slug>@<week>") gives captures their metrics; `statuses` (same keys) their status ('ok' by default). `pages` serves more HTML pages by path (for example a server-rendered portal page). `clock` installs Playwright's fake timers before the page runs (time still
  * flows until a test pauses it with pauseClock()). */
 export async function openSite(browser: Browser, hash: string, opts: SiteOpts = {}): Promise<Page> {
-  const context = await browser.newContext({ viewport: { width: opts.width ?? 1280, height: 900 }, hasTouch: opts.hasTouch });
+  const context = await browser.newContext({ viewport: { width: opts.width ?? 1280, height: 900 }, hasTouch: opts.hasTouch, javaScriptEnabled: opts.javaScriptEnabled, reducedMotion: opts.reducedMotion });
   if (opts.clipboard) await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: 'https://site.test' });
   if (opts.initScript) await context.addInitScript({ content: opts.initScript });
   if (opts.storage) await context.addInitScript((items) => { for (const [k, v] of Object.entries(items)) localStorage.setItem(k, v); }, opts.storage);

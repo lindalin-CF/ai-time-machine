@@ -5,6 +5,7 @@
   <!-- Analytics load only as /consent.js allows. The Worker adds data-consent to <html> per request (src/consent.ts); never put it in this file. -->
   <script src="/consent.js" defer></script>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- html.js: CSS may hide what needs JS, e.g. the top-bar links behind the menu button on phones (/site-menu.js), from the first paint. -->
   <script>document.documentElement.classList.add("js")</script>
   <!-- Pick the view from the hash before anything paints, so #compare and #collection links never flash the homepage.
        #analytics (Compare's old name, in links already shared) becomes #compare here, keeping its "?" setup.
@@ -47,7 +48,8 @@
     <a class="wordmark" href="/">
       <span class="wordmark-dot"></span><span class="wordmark-text">AI Interface Library</span>
     </a>
-    <nav class="topnav">
+    <button type="button" class="topnav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="site-nav"><svg class="topnav-toggle-open" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 5.5h14M3 10h14M3 14.5h14"/></svg><svg class="topnav-toggle-close" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg></button>
+    <nav class="topnav" id="site-nav" aria-label="Site">
       <a href="#" class="topnav-link" data-nav="gallery">Library</a>
       <a href="#collection" class="topnav-link" data-nav="collection">Collection</a>
       <a href="#compare" class="topnav-link" data-nav="compare">Compare</a>
@@ -280,5 +282,6 @@
   <script src="/app.js" type="module"></script>
   <script src="/voice.js" type="module"></script>
   <script src="/footer-dialogs.js" defer></script>
+  <script src="/site-menu.js" defer></script>
 </body>
 </html>
