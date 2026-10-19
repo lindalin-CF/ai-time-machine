@@ -705,14 +705,14 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
   .week-menu{min-width:142px}
 }
 
-/* ---------- manual snapshots modal (View more) ---------- */
+/* ---------- manual snapshots modal (… button on each card) ---------- */
 .manual-open{
-  margin-left:auto;display:inline-flex;align-items:center;gap:7px;border:none;cursor:pointer;
-  background:var(--cf-bg-300);color:var(--cf-text);font-family:var(--font-sans);
-  font-size:12.5px;font-weight:600;padding:8px 11px;border-radius:9px;
-  transition:background .15s,color .15s,transform .15s;
+  margin-left:auto;flex:none;display:inline-grid;place-items:center;width:32px;height:32px;padding:0;
+  border:1px solid var(--cf-border);border-radius:8px;background:transparent;color:var(--cf-text-soft);
+  cursor:pointer;transition:background .15s,color .15s;
 }
-.manual-open:hover{background:var(--cf-orange);color:#fff;transform:translateY(-1px)}
+.manual-open:hover{background:var(--cf-bg-300);color:var(--cf-text)}
+.manual-open:focus-visible{outline:2px solid #eb622c;outline-offset:2px}
 .manual-modal{position:fixed;inset:0;z-index:95;display:grid;place-items:center;padding:24px}
 .manual-modal[hidden]{display:none}
 .manual-backdrop{position:absolute;inset:0;background:rgba(30,18,8,.68);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}

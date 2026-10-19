@@ -420,9 +420,8 @@ function card(c) {
       </button>
       <div class="card-foot">
         <div class="palette">${palette}</div>
-        <button class="manual-open" type="button" data-slug="${esc(c.slug)}" data-portal="${esc(c.portal)}" aria-label="View more snapshots for ${esc(c.portal)}">
-          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v14H6.5A2.5 2.5 0 0 0 4 19.5v-14Zm2.5-.5A.5.5 0 0 0 6 5.5v10.09c.17-.04.34-.07.5-.08H18V5H6.5ZM6.5 17A.5.5 0 0 0 6 17.5v1a.5.5 0 0 0 .5.5H20v-2H6.5Z"/></svg>
-          <span>View more</span>
+        <button class="manual-open" type="button" data-slug="${esc(c.slug)}" data-portal="${esc(c.portal)}" aria-label="More snapshots for ${esc(c.portal)}" title="More snapshots for ${esc(c.portal)}" aria-haspopup="dialog">
+          <svg viewBox="0 0 18 18" width="18" height="18" aria-hidden="true"><circle cx="3.5" cy="9" r="1.25" fill="currentColor"/><circle cx="9" cy="9" r="1.25" fill="currentColor"/><circle cx="14.5" cy="9" r="1.25" fill="currentColor"/></svg>
         </button>
       </div>
     </div>

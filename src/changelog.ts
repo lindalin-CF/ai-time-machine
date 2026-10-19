@@ -15,6 +15,18 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "card-more-button",
+    date: "2026-10-18",
+    time: "19:39",
+    title: "Clearer More Snapshots Button",
+    subtitle: "The View more button on each card is now a small … button",
+    bullets: [
+      { lead: "Why", text: "Testers read \"View more\" as a link to the product's page. The new button only opens that product's manual snapshots." },
+      { lead: "Same snapshots", text: "It opens the same Manual observations window, with the same snapshots and upload." },
+    ],
+    closing: "Click … at the bottom right of any card in the Library.",
+  },
+  {
     slug: "table-page-links",
     date: "2026-10-18",
     time: "17:27",
