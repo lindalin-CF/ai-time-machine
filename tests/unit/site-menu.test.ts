@@ -23,6 +23,11 @@ const closed = async (page: Page) => {
   expect(await toggle(page).getAttribute('aria-expanded')).toBe('false');
   expect(await page.evaluate(() => document.documentElement.classList.contains('menu-open'))).toBe(false);
 };
+/** The styles a scroll lock would change, on html and body (computed, plus any inline style). */
+const rootStyles = (page: Page) => page.evaluate(() => [document.documentElement, document.body].map((el) => {
+  const s = getComputedStyle(el);
+  return { overflow: s.overflow, position: s.position, top: s.top, paddingRight: s.paddingRight, touchAction: s.touchAction, inline: el.getAttribute('style') };
+}));
 const noSideScroll = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
 
 describe('phone menu (browser)', () => {
@@ -56,8 +61,6 @@ describe('phone menu (browser)', () => {
     expect(panel.width).toBe(PHONE); // full width
     expect(panel.y).toBeGreaterThanOrEqual(bar.y + bar.height - 1); // under the bar
     for (const box of await links(page).evaluateAll((els) => els.map((a) => a.getBoundingClientRect().height))) expect(box).toBeCloseTo(48, 2);
-    // The page behind doesn't scroll while the menu is open.
-    expect(await page.evaluate(() => getComputedStyle(document.documentElement).overflow)).toBe('hidden');
     expect(await noSideScroll(page)).toBe(true);
     await page.context().close();
   });
@@ -69,7 +72,44 @@ describe('phone menu (browser)', () => {
     await page.waitForFunction(() => document.documentElement.dataset.view === 'compare');
     expect(await page.locator('#analyticsView').isVisible()).toBe(true);
     await closed(page);
-    expect(await page.evaluate(() => getComputedStyle(document.documentElement).overflow)).not.toBe('hidden');
+    await page.context().close();
+  });
+
+  it.each(['wheel', 'swipe'])('the page behind keeps scrolling while the menu is open (%s), and the menu stays open', async (how) => {
+    const page = await openSite(browser, '', { width: PHONE, hasTouch: how === 'swipe' });
+    await page.waitForTimeout(300);
+    const before = await rootStyles(page);
+    if (how === 'swipe') await toggle(page).tap(); else await toggle(page).click();
+    await expect.poll(() => visibleLinks(page)).toHaveLength(4);
+    expect(await rootStyles(page)).toEqual(before); // no overflow, position or padding change on html or body
+    if (how === 'wheel') {
+      await page.mouse.move(200, 600);
+      await page.mouse.wheel(0, 600);
+    } else {
+      // A real touch drag from below the panel, finger moving up 600px.
+      const cdp = await page.context().newCDPSession(page);
+      await cdp.send('Input.synthesizeScrollGesture', { x: 200, y: 750, yDistance: -600, gestureSourceType: 'touch', speed: 1200 });
+    }
+    await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThanOrEqual(590);
+    expect(await toggle(page).getAttribute('aria-expanded')).toBe('true');
+    expect(await visibleLinks(page)).toHaveLength(4);
+    expect(await rootStyles(page)).toEqual(before);
+    // The panel is still attached under the sticky bar.
+    const bar = (await page.locator('.topbar').boundingBox())!;
+    const panel = (await page.locator('#site-nav').boundingBox())!;
+    expect(bar.y).toBe(0);
+    expect(Math.abs(panel.y - (bar.y + bar.height))).toBeLessThan(1.5);
+    // A plain tap outside still closes it, and doesn't also press the card link under it.
+    const url = page.url();
+    const pressed = await page.evaluate(() => document.elementFromPoint(200, 700)?.closest('a, button')?.outerHTML.slice(0, 40) ?? '');
+    expect(pressed).not.toBe(''); // there is something to press there
+    if (how === 'swipe') await page.touchscreen.tap(200, 700); else await page.mouse.click(200, 700);
+    await closed(page);
+    await page.waitForTimeout(200);
+    expect(page.url()).toBe(url);
+    expect(page.context().pages()).toHaveLength(1);
+    expect(await page.evaluate(() => (document.querySelector('.lb') as HTMLElement | null)?.hidden ?? true)).toBe(true); // no lightbox
+    expect(await page.locator('dialog[open]').count()).toBe(0);
     await page.context().close();
   });
 
@@ -80,6 +120,15 @@ describe('phone menu (browser)', () => {
     await page.keyboard.press('Escape');
     await closed(page);
     expect(await page.evaluate(() => document.activeElement?.classList.contains('topnav-toggle'))).toBe(true);
+    await page.context().close();
+  });
+
+  it('tabbing out of the menu closes it', async () => {
+    const page = await openSite(browser, '', { width: PHONE });
+    await openMenu(page);
+    await page.locator('.topnav-link[data-nav="changelog"]').focus();
+    await page.keyboard.press('Tab');
+    await closed(page);
     await page.context().close();
   });
 

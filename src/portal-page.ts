@@ -194,7 +194,6 @@ ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts
       html.js .topnav{position:absolute;top:calc(100% + 8px);left:-16px;right:-16px;flex-direction:column;gap:0;white-space:normal;background:var(--cf-bg-100,#f5f1e9);border-bottom:1px solid var(--cf-border,#d8cfc2);box-shadow:0 16px 32px -20px rgba(35,31,26,.35);opacity:0;transform:translateY(-6px);visibility:hidden;transition:opacity .15s ease,transform .15s ease,visibility 0s linear .15s}
       html.menu-open .topnav{opacity:1;transform:none;visibility:visible;transition:opacity .15s ease,transform .15s ease,visibility 0s}
       html.js .topnav-link{display:flex;align-items:center;height:48px;padding:0 16px;font-size:13px}
-      html.menu-open{overflow:hidden}
     }
     @media (max-width:640px) and (prefers-reduced-motion:reduce){html.js .topnav{transition:none}}
     h1{font-size:2rem;margin:24px 0 4px}

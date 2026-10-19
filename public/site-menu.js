@@ -1,7 +1,7 @@
 // Top-bar menu on phones (≤ 640px), shared by the homepage and the server-rendered pages (siteHeader in src/portal-page.ts).
 // CSS hides the nav behind the menu button only once html.js is set (inline <head> script), so without JS the links stay visible.
-// Open: html.menu-open (shows the panel, locks page scroll). Closes on a link tap, a tap outside, Esc (focus back to the
-// button), focus leaving the menu, or the window growing past 640px.
+// Open: html.menu-open shows the panel; the page behind keeps scrolling. Closes on a link tap, a tap outside (a click,
+// so a scroll or swipe never counts), Esc (focus back to the button), focus leaving the menu, or the window growing past 640px.
 (() => {
   const btn = document.querySelector(".topnav-toggle");
   const nav = btn && document.getElementById(btn.getAttribute("aria-controls"));
@@ -28,6 +28,9 @@
     set(false);
     btn.focus();
   });
-  document.addEventListener("focusin", (e) => { if (isOpen() && !btn.contains(e.target) && !nav.contains(e.target)) set(false); });
+  // Tabbing out closes it. Focus from a press (:focus-visible is false) is left to the click rule above, so that tap is still swallowed.
+  document.addEventListener("focusin", (e) => {
+    if (isOpen() && !btn.contains(e.target) && !nav.contains(e.target) && e.target.matches?.(":focus-visible")) set(false);
+  });
   phone.addEventListener("change", () => { if (!phone.matches) set(false); });
 })();

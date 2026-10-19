@@ -1042,7 +1042,8 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
 
 /* ---------- phone top-bar menu (public/site-menu.js; the server pages repeat this in src/portal-page.ts) ---------- */
 /* Hidden behind the button only once html.js is set (inline <head> script), so the first paint is already collapsed
-   and, without JS, the links wrap onto a second row instead. html.menu-open shows the panel and locks page scroll. */
+   and, without JS, the links wrap onto a second row instead. html.menu-open shows the panel; the page behind keeps scrolling,
+   and the panel moves with the sticky bar. */
 .topnav-toggle{display:none}
 @media(max-width:640px){
   html:not(.js) .topbar{flex-wrap:wrap;row-gap:6px}
@@ -1065,6 +1066,5 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
   }
   html.menu-open .topnav{opacity:1;transform:none;visibility:visible;transition:opacity .15s ease,transform .15s ease,visibility 0s}
   html.js .topnav-link{display:flex;align-items:center;height:48px;padding:0 16px;font-size:13px}
-  html.menu-open{overflow:hidden}
 }
 @media(max-width:640px) and (prefers-reduced-motion:reduce){html.js .topnav{transition:none}}
