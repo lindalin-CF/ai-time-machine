@@ -51,14 +51,14 @@ describe('gallery card Details link (browser)', () => {
       const cs = getComputedStyle(a);
       return { h: a.getBoundingClientRect().height, display: cs.display, align: cs.alignItems, gap: cs.columnGap, pad: `${cs.paddingLeft} ${cs.paddingRight}`,
         border: `${cs.borderTopWidth} ${cs.borderTopStyle} ${cs.borderTopColor}`, radius: cs.borderTopLeftRadius, bg: cs.backgroundColor, color: cs.color,
-        font: `${cs.fontFamily.split(',')[0]} ${cs.fontWeight} ${cs.fontSize}`, underline: cs.textDecorationLine };
+        font: `${cs.fontFamily.split(',')[0]} ${cs.fontWeight} ${cs.fontSize}`, underline: cs.textDecorationLine, shadow: cs.boxShadow };
     });
     // Declared inline-flex; as a flex item of .card-actions the browser blockifies it, so it computes to flex.
     expect(await page.evaluate(() => [...document.styleSheets].flatMap((sh) => [...sh.cssRules] as CSSStyleRule[])
       .find((r) => r.selectorText === '.details-link')!.style.display)).toBe('inline-flex');
     expect(await style()).toEqual({ h: 32, display: 'flex', align: 'center', gap: '6px', pad: '11px 11px',
       border: '1px solid rgb(217, 206, 189)', radius: '8px', bg: 'rgb(245, 241, 233)', color: 'rgb(204, 80, 30)',
-      font: '"Space Grotesk" 600 12.5px', underline: 'none' });
+      font: '"Space Grotesk" 600 12.5px', underline: 'none', shadow: 'rgba(66, 50, 23, 0.12) 0px 1px 3px 0px' });
 
     await link.hover();
     await page.waitForTimeout(250);

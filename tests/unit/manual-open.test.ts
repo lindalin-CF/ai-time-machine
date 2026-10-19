@@ -41,9 +41,9 @@ describe('gallery card "…" button (browser)', () => {
         const pal = b.closest('.card-foot')!.querySelector('.palette')!.getBoundingClientRect();
         const icon = b.querySelector('svg')!.getBoundingClientRect();
         return { w: r.width, h: r.height, icon: icon.width, bg: cs.backgroundColor, border: cs.borderTopWidth + ' ' + cs.borderTopStyle,
-          radius: cs.borderTopLeftRadius, beforeDetails: Math.round(b.closest('.card-foot')!.querySelector('.details-link')!.getBoundingClientRect().left - r.right), overlap: pal.right > r.left };
+          radius: cs.borderTopLeftRadius, shadow: cs.boxShadow, beforeDetails: Math.round(b.closest('.card-foot')!.querySelector('.details-link')!.getBoundingClientRect().left - r.right), overlap: pal.right > r.left };
       });
-      expect(s).toEqual({ w: 32, h: 32, icon: 18, bg: 'rgba(0, 0, 0, 0)', border: '1px solid', radius: '8px', beforeDetails: 8, overlap: false });
+      expect(s).toEqual({ w: 32, h: 32, icon: 18, bg: 'rgba(0, 0, 0, 0)', border: '1px solid', radius: '8px', shadow: 'none', beforeDetails: 8, overlap: false });
     }
   });
 

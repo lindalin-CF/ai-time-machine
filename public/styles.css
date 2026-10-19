@@ -720,7 +720,7 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
   display:inline-flex;align-items:center;gap:6px;box-sizing:border-box;height:32px;padding:0 11px;
   border:1px solid var(--cf-border);border-radius:8px;background:var(--cf-bg-100);color:var(--cf-orange-ink);
   font-family:var(--font-sans);font-size:12.5px;font-weight:600;line-height:1;text-decoration:none;white-space:nowrap;
-  transition:background .15s;
+  box-shadow:0 1px 3px rgba(66,50,23,.12);transition:background .15s;
 }
 .details-link:hover{background:var(--cf-bg-300)}
 .details-link:focus-visible{outline:2px solid #eb622c;outline-offset:2px}
