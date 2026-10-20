@@ -318,6 +318,17 @@ export function edgeCurve(x0, y0, x3, y3, cardH = 0) {
 
 const pairKey = (a, b) => [a, b].sort().join("\u0000");
 
+/** Box offsets from their line's midpoint, kept only for lines in `edges`, as whole pixels. */
+function cleanOffsets(raw, edges) {
+  const out = {};
+  if (!raw || typeof raw !== "object") return out;
+  for (const [a, b] of edges) {
+    const k = pairKey(a, b), o = Object.hasOwn(raw, k) ? raw[k] : null;
+    if (o && Number.isFinite(o.dx) && Number.isFinite(o.dy) && (o.dx || o.dy)) out[k] = { dx: Math.round(o.dx), dy: Math.round(o.dy) };
+  }
+  return out;
+}
+
 function load(key) {
   try { return JSON.parse(localStorage.getItem(key) || "null"); } catch { return null; }
 }
@@ -337,7 +348,7 @@ let current = null; // { destroy() } of the mounted view
  * cards: [{ id, label, sub, src, alt, size: {width, height}, file, metrics }]
  * opts:  { storageKey, thumbUrl(src, width), tools, note, shared, onChange } — tools holds the zoom group
  *        and reset button, note the drag instructions; both are shown only while the board is mounted.
- *        shared: the setup from a link ({ layout: {pos, edges} | null, zoom, pan: [x, y] }); when set, it is
+ *        shared: the setup from a link ({ layout: {pos, edges, offsets?} | null, zoom, pan: [x, y] }); when set, it is
  *        used instead of localStorage, and localStorage is left alone until the viewer changes something.
  *        onChange() runs after every change the viewer makes (drag, pan, zoom, lines, reset).
  */
@@ -357,7 +368,7 @@ export function mountAnCanvas(root, cards, opts) {
   };
 }
 
-/** The mounted board's { ids, pos, edges, cam }, or null (no board, or the stacked narrow view). */
+/** The mounted board's { ids, pos, edges, offsets, cam }, or null (no board, or the stacked narrow view). */
 export function anCanvasState() {
   return current ? current.state() : null;
 }
@@ -401,6 +412,7 @@ function mountBoard(root, cards, opts) {
   const stored = shared ? null : load(opts.storageKey);
   const pos = defaultLayout(ids);
   let edges = defaultEdges(ids);
+  let boxOffset = {}; // pair key -> { dx, dy }: where the viewer moved a line's box, relative to the line's midpoint
   let cam = null;
   let sharedZoom = null; // a link's zoom without a pan: applied around the centre after fitting
   if (shared) {
@@ -408,6 +420,7 @@ function mountBoard(root, cards, opts) {
     if (l) {
       for (const id of ids) if (l.pos[id]) pos[id] = { x: l.pos[id].x, y: l.pos[id].y };
       edges = l.edges.filter((e) => byId.has(e[0]) && byId.has(e[1]) && e[0] !== e[1]);
+      boxOffset = cleanOffsets(l.offsets, edges);
     }
     if (shared.pan) cam = { x: shared.pan[0], y: shared.pan[1], k: clampZoom(shared.zoom || 1) };
     else if (shared.zoom) sharedZoom = shared.zoom;
@@ -419,6 +432,7 @@ function mountBoard(root, cards, opts) {
     if (Array.isArray(stored.edges)) {
       edges = stored.edges.filter((e) => Array.isArray(e) && byId.has(e[0]) && byId.has(e[1]) && e[0] !== e[1]);
     }
+    boxOffset = cleanOffsets(stored.offsets, edges);
     const v = stored.cam;
     if (v && Number.isFinite(v.x) && Number.isFinite(v.y) && Number.isFinite(v.k)) cam = { x: v.x, y: v.y, k: clampZoom(v.k) };
   }
@@ -455,10 +469,10 @@ function mountBoard(root, cards, opts) {
   // A link's setup becomes this viewer's own (saved) on their first change; until then localStorage is untouched.
   let adopt = !!shared;
   const notify = () => {
-    if (adopt) { adopt = false; save(opts.storageKey, { pos, edges, cam }); }
+    if (adopt) { adopt = false; save(opts.storageKey, { pos, edges, offsets: boxOffset, cam }); }
     if (opts.onChange) opts.onChange();
   };
-  const persist = () => { save(opts.storageKey, { pos, edges, cam }); adopt = false; notify(); };
+  const persist = () => { save(opts.storageKey, { pos, edges, offsets: boxOffset, cam }); adopt = false; notify(); };
 
   function placeCards() {
     for (const [id, el] of cardEls) el.style.transform = `translate(${pos[id].x}px, ${pos[id].y}px)`;
@@ -491,13 +505,19 @@ function mountBoard(root, cards, opts) {
     markSelected();
     routeEdges();
   }
+  /** A line's path and the centre of its box: the curve's midpoint plus the box's offset. */
+  function edgeGeometry(k, e) {
+    const a = handlePoint(e.from, "out"), b = handlePoint(e.to, "in");
+    const { d, mid } = edgeCurve(a.x, a.y, b.x, b.y, Math.max(a.h, b.h));
+    const o = boxOffset[k] || { dx: 0, dy: 0 };
+    return { d, cx: mid[0] + o.dx, cy: mid[1] + o.dy };
+  }
   function routeEdges() {
-    for (const e of edgeEls.values()) {
-      const a = handlePoint(e.from, "out"), b = handlePoint(e.to, "in");
-      const { d, mid } = edgeCurve(a.x, a.y, b.x, b.y, Math.max(a.h, b.h));
+    for (const [k, e] of edgeEls) {
+      const { d, cx, cy } = edgeGeometry(k, e);
       e.path.setAttribute("d", d);
       e.hit.setAttribute("d", d);
-      e.box.style.transform = `translate(${mid[0]}px, ${mid[1]}px) translate(-50%, -50%)`;
+      e.box.style.transform = `translate(${cx}px, ${cy}px) translate(-50%, -50%)`;
     }
   }
   function markSelected() {
@@ -509,6 +529,7 @@ function mountBoard(root, cards, opts) {
   }
   function removeEdge(k) {
     edges = edges.filter(([a, b]) => pairKey(a, b) !== k);
+    delete boxOffset[k];
     if (selected === k) selected = null;
     buildEdges();
     persist();
@@ -539,10 +560,8 @@ function mountBoard(root, cards, opts) {
   function fit(k, top = false) {
     const rects = [...cardEls.values(), ...[...edgeEls.values()].map((e) => e.box)].map((el) => {
       if (el.classList.contains("anc-box")) {
-        const e = edgeEls.get(el.dataset.edge);
-        const a = handlePoint(e.from, "out"), b = handlePoint(e.to, "in");
-        const { mid } = edgeCurve(a.x, a.y, b.x, b.y, Math.max(a.h, b.h));
-        return { x: mid[0] - el.offsetWidth / 2, y: mid[1] - el.offsetHeight / 2, w: el.offsetWidth, h: el.offsetHeight };
+        const { cx, cy } = edgeGeometry(el.dataset.edge, edgeEls.get(el.dataset.edge));
+        return { x: cx - el.offsetWidth / 2, y: cy - el.offsetHeight / 2, w: el.offsetWidth, h: el.offsetHeight };
       }
       const p = pos[el.dataset.id];
       return { x: p.x, y: p.y, w: el.offsetWidth, h: el.offsetHeight };
@@ -565,7 +584,7 @@ function mountBoard(root, cards, opts) {
     return { x: (p.x - cam.x) / cam.k, y: (p.y - cam.y) / cam.k };
   };
 
-  // ---- pointer interactions: drag card, pan, connect ----
+  // ---- pointer interactions: drag card or box, pan, connect ----
   let drag = null;
   let moved = false; // true once a press has travelled far enough to count as a drag
   let start = null;
@@ -577,6 +596,7 @@ function mountBoard(root, cards, opts) {
     start = { x: e.clientX, y: e.clientY };
     const handle = e.target.closest(".anc-handle");
     const cardEl = e.target.closest(".anc-card");
+    const boxEl = e.target.closest(".anc-box");
     const hit = e.target.closest("[data-edge]");
     if (handle && cardEl) {
       drag = { type: "connect", id: cardEl.dataset.id, side: handle.dataset.handle };
@@ -585,6 +605,11 @@ function mountBoard(root, cards, opts) {
       const p = worldPoint(e);
       drag = { type: "card", id: cardEl.dataset.id, dx: p.x - pos[cardEl.dataset.id].x, dy: p.y - pos[cardEl.dataset.id].y };
       cardEl.classList.add("is-dragging");
+    } else if (boxEl) {
+      // Selecting the line happens on click, so a press that never moves still just selects it.
+      const k = boxEl.dataset.edge, o = boxOffset[k] || { dx: 0, dy: 0 }, p = worldPoint(e);
+      drag = { type: "box", key: k, sx: p.x - o.dx, sy: p.y - o.dy };
+      boxEl.classList.add("is-dragging");
     } else if (hit) {
       selected = hit.dataset.edge;
       markSelected();
@@ -619,6 +644,11 @@ function mountBoard(root, cards, opts) {
       cardEls.get(drag.id).style.transform = `translate(${pos[drag.id].x}px, ${pos[drag.id].y}px)`;
       routeEdges();
       notify();
+    } else if (drag.type === "box") {
+      const p = worldPoint(e);
+      boxOffset[drag.key] = { dx: Math.round(p.x - drag.sx), dy: Math.round(p.y - drag.sy) };
+      routeEdges();
+      notify();
     } else if (drag.type === "connect") {
       const a = handlePoint(drag.id, drag.side);
       const p = worldPoint(e);
@@ -626,8 +656,12 @@ function mountBoard(root, cards, opts) {
       ghost.setAttribute("d", d);
     }
   }
+  function dropStyle(d) {
+    if (d.type === "card") cardEls.get(d.id).classList.remove("is-dragging");
+    else if (d.type === "box" && edgeEls.has(d.key)) edgeEls.get(d.key).box.classList.remove("is-dragging");
+  }
   function endDrag() {
-    if (drag && drag.type === "card") cardEls.get(drag.id).classList.remove("is-dragging");
+    if (drag) dropStyle(drag);
     drag = null;
     board.classList.remove("is-panning", "is-connecting");
     ghost.setAttribute("d", "");
@@ -638,7 +672,7 @@ function mountBoard(root, cards, opts) {
     drag = null;
     board.classList.remove("is-panning", "is-connecting");
     if (board.hasPointerCapture(e.pointerId)) board.releasePointerCapture(e.pointerId);
-    if (d.type === "card") cardEls.get(d.id).classList.remove("is-dragging");
+    dropStyle(d);
     if (d.type === "connect") {
       ghost.setAttribute("d", "");
       const target = document.elementFromPoint(e.clientX, e.clientY);
@@ -704,6 +738,7 @@ function mountBoard(root, cards, opts) {
       forget(opts.storageKey);
       Object.assign(pos, defaultLayout(ids));
       edges = defaultEdges(ids);
+      boxOffset = {};
       selected = null;
       placeCards();
       buildEdges();
@@ -737,7 +772,7 @@ function mountBoard(root, cards, opts) {
   world.querySelectorAll("img").forEach((img) => img.addEventListener("load", onImg));
 
   return {
-    state() { return { ids, pos: { ...pos }, edges: edges.map((e) => [...e]), cam: { ...cam } }; },
+    state() { return { ids, pos: { ...pos }, edges: edges.map((e) => [...e]), offsets: { ...boxOffset }, cam: { ...cam } }; },
     destroy() {
       board.removeEventListener("wheel", onWheel);
       board.removeEventListener("gesturestart", onGestureStart);

@@ -988,7 +988,8 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
 .anc-handle--out{right:-8px}
 .anc-handle:hover,.anc-board.is-connecting .anc-handle--in{border-color:var(--cf-orange);background:rgba(235,98,44,.12)}
 .anc-box{position:absolute;left:0;top:0;width:230px;padding:8px 10px 10px;background:var(--cf-bg-200);border:1px solid var(--cf-border);
-  border-radius:var(--radius-sm);box-shadow:var(--shadow-sm);cursor:pointer}
+  border-radius:var(--radius-sm);box-shadow:var(--shadow-sm);cursor:grab}
+.anc-box.is-dragging{cursor:grabbing;border-color:var(--cf-border-strong);z-index:2}
 .anc-box.is-selected{border-color:var(--cf-orange)}
 .anc-box-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;font-family:var(--font-mono);
   font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--cf-text-soft)}

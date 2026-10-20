@@ -15,6 +15,19 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "canvas-movable-findings",
+    date: "2026-10-19",
+    time: "21:35",
+    title: "Movable Findings Boxes",
+    subtitle: "On the Compare canvas, the findings box between two cards can now be dragged out of the way",
+    bullets: [
+      { lead: "Drag it", text: "Press on a findings box and drag it anywhere. A click still selects its line, and × still removes it." },
+      { lead: "It follows the line", text: "When you move a card, the box moves with its line and keeps the spot you gave it." },
+      { lead: "Saved and shared", text: "Moved boxes are kept with the rest of your layout and in Copy link links. Reset puts them back in the middle of their lines." },
+    ],
+    closing: "Open Compare in Canvas and drag a findings box.",
+  },
+  {
     slug: "compare-device-first",
     date: "2026-10-19",
     time: "21:19",

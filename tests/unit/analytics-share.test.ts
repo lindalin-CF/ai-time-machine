@@ -53,6 +53,34 @@ describe('encodeLayout / decodeLayout', () => {
     const s = btoa(JSON.stringify(raw)).replace(/=+$/, '');
     expect(decodeLayout(s)).toEqual({ pos: { a: { x: 100000, y: -100000 }, b: { x: 0, y: 0 } }, edges: [['a', 'b']] });
   });
+
+  const key = (a: string, b: string) => [a, b].sort().join('\u0000');
+
+  it('round-trips moved boxes as whole-pixel offsets, and writes none for boxes at the midpoint', () => {
+    const layout = {
+      pos: { a: { x: 0, y: 0 }, b: { x: 500, y: 0 }, c: { x: 1000, y: 0 } },
+      edges: [['a', 'b'], ['c', 'a']],
+      offsets: { [key('a', 'b')]: { dx: 40.6, dy: -120.2 }, [key('a', 'c')]: { dx: 0, dy: 0 } },
+    };
+    const s = encodeLayout(layout, ['a', 'b', 'c']);
+    expect(JSON.parse(atob(s.replace(/-/g, '+').replace(/_/g, '/'))).e).toEqual([[0, 1, 41, -120], [2, 0]]);
+    expect(decodeLayout(s)).toEqual({ pos: layout.pos, edges: layout.edges, offsets: { [key('a', 'b')]: { dx: 41, dy: -120 } } });
+  });
+
+  it('decodes an old link without offsets as before (no offsets field)', () => {
+    const s = btoa(JSON.stringify({ p: [['a', 0, 0], ['b', 500, 0]], e: [[0, 1]] })).replace(/=+$/, '');
+    expect(decodeLayout(s)).toEqual({ pos: { a: { x: 0, y: 0 }, b: { x: 500, y: 0 } }, edges: [['a', 'b']] });
+  });
+
+  it('ignores malformed offsets and clamps huge ones', () => {
+    const raw = { p: [['a', 0, 0], ['b', 0, 0], ['c', 0, 0]], e: [[0, 1, 1e12, -1e12], [0, 2, 'x', 5], [1, 2, 7]] };
+    const s = btoa(JSON.stringify(raw)).replace(/=+$/, '');
+    expect(decodeLayout(s)).toEqual({
+      pos: { a: { x: 0, y: 0 }, b: { x: 0, y: 0 }, c: { x: 0, y: 0 } },
+      edges: [['a', 'b'], ['a', 'c'], ['b', 'c']],
+      offsets: { [key('a', 'b')]: { dx: 100000, dy: -100000 } },
+    });
+  });
 });
 
 describe('buildAnalyticsHash / parseAnalyticsHash', () => {

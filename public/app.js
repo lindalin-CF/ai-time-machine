@@ -1378,6 +1378,7 @@ function anWriteHash() {
   const canvas = board || (pending && {
     pos: pending.layout ? pending.layout.pos : null,
     edges: pending.layout ? pending.layout.edges : [],
+    offsets: pending.layout ? pending.layout.offsets : null,
     cam: { k: pending.zoom, x: pending.pan && pending.pan[0], y: pending.pan && pending.pan[1] },
   });
   const hash = buildAnalyticsHash({

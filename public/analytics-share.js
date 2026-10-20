@@ -12,7 +12,7 @@ const ROUTE = "#compare";
 const OLD_ROUTE = "#analytics";
 /** Longest layout string accepted from a URL; a full board of four cards and six lines is a few hundred characters. */
 const LAYOUT_MAX_CHARS = 4000;
-/** Card positions and pan are kept within this many pixels of the origin. */
+/** Card positions, box offsets and pan are kept within this many pixels of the origin. */
 const COORD_MAX = 100000;
 
 function toBase64Url(text) {
@@ -28,22 +28,30 @@ function fromBase64Url(s) {
 
 const clampCoord = (n) => Math.max(-COORD_MAX, Math.min(COORD_MAX, Math.round(n)));
 
+const pairKey = (a, b) => [a, b].sort().join("\u0000");
+
 /**
  * Cards and lines on the board as a short URL-safe string: base64url of {"p":[[id,x,y],…],"e":[[i,j],…]},
- * where each line is a pair of indexes into p (from, to). Positions are whole pixels. Only cards in `ids`
- * and lines between two of them are kept.
+ * where each line is a pair of indexes into p (from, to). A line whose box was moved off the line's midpoint
+ * has the offset after them, [i,j,dx,dy] (links from before box offsets have none). Positions and offsets are
+ * whole pixels. Only cards in `ids` and lines between two of them are kept. `offsets` is keyed like the
+ * canvas's lines (the two ids, sorted, joined by U+0000).
  */
-export function encodeLayout({ pos, edges }, ids) {
+export function encodeLayout({ pos, edges, offsets }, ids) {
   const keep = ids.filter((id) => pos[id] && Number.isFinite(pos[id].x) && Number.isFinite(pos[id].y));
   const index = new Map(keep.map((id, i) => [id, i]));
   const p = keep.map((id) => [id, clampCoord(pos[id].x), clampCoord(pos[id].y)]);
-  const e = (edges || []).filter(([a, b]) => index.has(a) && index.has(b) && a !== b).map(([a, b]) => [index.get(a), index.get(b)]);
+  const e = (edges || []).filter(([a, b]) => index.has(a) && index.has(b) && a !== b).map(([a, b]) => {
+    const o = offsets && Object.hasOwn(offsets, pairKey(a, b)) ? offsets[pairKey(a, b)] : null;
+    const dx = o && Number.isFinite(o.dx) ? clampCoord(o.dx) : 0, dy = o && Number.isFinite(o.dy) ? clampCoord(o.dy) : 0;
+    return dx || dy ? [index.get(a), index.get(b), dx, dy] : [index.get(a), index.get(b)];
+  });
   return toBase64Url(JSON.stringify({ p, e }));
 }
 
 /**
- * The layout back from encodeLayout: { pos, edges }, keeping only ids that pass `isId`. Returns null when
- * the string is not a layout or holds no usable card.
+ * The layout back from encodeLayout: { pos, edges }, plus `offsets` (by line key) when any box was moved,
+ * keeping only ids that pass `isId`. Returns null when the string is not a layout or holds no usable card.
  */
 export function decodeLayout(s, isId = () => true) {
   if (typeof s !== "string" || !s || s.length > LAYOUT_MAX_CHARS || /[^A-Za-z0-9_-]/.test(s)) return null;
@@ -59,6 +67,7 @@ export function decodeLayout(s, isId = () => true) {
     if (id) pos[id] = { x: clampCoord(item[1]), y: clampCoord(item[2]) };
   }
   const edges = [];
+  const offsets = {};
   const seen = new Set();
   for (const item of Array.isArray(data.e) ? data.e : []) {
     if (!Array.isArray(item) || !Number.isInteger(item[0]) || !Number.isInteger(item[1])) continue;
@@ -67,15 +76,20 @@ export function decodeLayout(s, isId = () => true) {
     if (!a || !b || a === b || seen.has(key)) continue;
     seen.add(key);
     edges.push([a, b]);
+    if (Number.isFinite(item[2]) && Number.isFinite(item[3])) {
+      const dx = clampCoord(item[2]), dy = clampCoord(item[3]);
+      if (dx || dy) offsets[key] = { dx, dy };
+    }
   }
-  return Object.keys(pos).length ? { pos, edges } : null;
+  if (!Object.keys(pos).length) return null;
+  return Object.keys(offsets).length ? { pos, edges, offsets } : { pos, edges };
 }
 
 const list = (v) => v.map(encodeURIComponent).join(",");
 
 /**
  * The hash for a Compare setup. s: { view, mode ("portals" | "weeks"), portal, weeks[], week, portals[],
- * device, canvas: { pos, edges, cam: {x, y, k}, ids } | null }. Canvas fields are written only for the Canvas view.
+ * device, canvas: { pos, edges, offsets, cam: {x, y, k}, ids } | null }. Canvas fields are written only for the Canvas view.
  */
 export function buildAnalyticsHash(s) {
   const parts = [`view=${s.view === "canvas" ? "canvas" : "table"}`];
@@ -115,7 +129,7 @@ export function compareHash(hash) {
  * Read a Compare setup back from a hash. known: { portals: slugs[], weeks: weeks[] (newest first), max }.
  * Returns null when the hash has no parameters (plain #compare links: defaults and localStorage apply).
  * Otherwise returns only the fields that passed validation; a field left out keeps its default.
- * `canvas` is set for the Canvas view: { layout: {pos, edges} | null, zoom: number | null, pan: [x, y] | null }.
+ * `canvas` is set for the Canvas view: { layout: {pos, edges, offsets?} | null, zoom: number | null, pan: [x, y] | null }.
  */
 export function parseAnalyticsHash(hash, known) {
   hash = compareHash(hash);
