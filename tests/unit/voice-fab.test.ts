@@ -42,14 +42,15 @@ describe('voice guide button (browser)', () => {
   const tipVisible = (p: Page) => p.locator('.voice-fab .vf-tip').evaluate((el) => getComputedStyle(el).visibility === 'visible');
   const settle = (p: Page) => p.waitForTimeout(200); // tooltip fade
 
-  it.each([[390], [1280]])('at %ipx: a 52px orange circle in the bottom-right corner, 22px from the edges', async (width) => {
+  // Phones (≤ 640px): 48px, 16px from the edges; wider screens: 52px, 22px from the edges.
+  it.each([[390, 48, 16], [1280, 52, 22]])('at %ipx: a %ipx orange circle in the bottom-right corner, %ipx from the edges', async (width, size, edge) => {
     const page = await open(width);
     const fab = page.getByRole('button', { name: 'Talk to the library' });
     const box = (await fab.boundingBox())!;
-    expect(box.width).toBe(52);
-    expect(box.height).toBe(52);
-    expect(box.x + box.width).toBeCloseTo(width - 22, 0);
-    expect(box.y + box.height).toBeCloseTo(800 - 22, 0);
+    expect(box.width).toBe(size);
+    expect(box.height).toBe(size);
+    expect(box.x + box.width).toBeCloseTo(width - edge, 0);
+    expect(box.y + box.height).toBeCloseTo(800 - edge, 0);
     const style = await fab.evaluate((el) => {
       const s = getComputedStyle(el);
       return { radius: s.borderRadius, bg: s.backgroundColor, text: el.textContent?.trim(), svg: !!el.querySelector('svg') };
@@ -60,6 +61,16 @@ describe('voice guide button (browser)', () => {
     expect(style.svg).toBe(true);
     expect(style.text).toBe('Talk to the library'); // only the (aria-hidden) tooltip text
     await page.context().close();
+  });
+
+  it('on phones the page leaves room below its content for the button', async () => {
+    const page = await open(390);
+    const pad = (p: Page) => p.evaluate(() => [getComputedStyle(document.body).paddingBottom, getComputedStyle(document.documentElement).scrollPaddingBottom]);
+    expect(await pad(page)).toEqual(['80px', '80px']); // 48px button + 16px edge + 16px gap
+    await page.context().close();
+    const wide = await open(1280);
+    expect(await pad(wide)).toEqual(['0px', 'auto']);
+    await wide.context().close();
   });
 
   it('shows the tooltip on hover and hides it when the pointer leaves', async () => {

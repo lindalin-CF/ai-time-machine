@@ -57,8 +57,9 @@ style.textContent = `
   width:52px;height:52px;padding:0;border:none;border-radius:50%;cursor:pointer;color:#fff;
   background:var(--cf-orange,#ff6633);
   box-shadow:0 6px 22px -8px rgba(217,79,34,.7),0 2px 6px rgba(82,16,0,.18);
-  transition:transform .15s ease,box-shadow .15s ease}
-.voice-fab:hover{transform:translateY(-1px);box-shadow:0 10px 26px -8px rgba(217,79,34,.8)}
+  transition:transform .15s ease-out,box-shadow .15s ease-out}
+.voice-fab:hover{box-shadow:0 10px 26px -8px rgba(217,79,34,.8)}
+@media (hover:hover) and (pointer:fine){.voice-fab:hover{transform:translateY(-1px)}}
 .voice-fab:active{transform:translateY(0)}
 .voice-fab:focus-visible{outline:3px solid var(--cf-text,#521000);outline-offset:3px}
 .voice-fab svg{display:block;width:24px;height:24px}
@@ -66,7 +67,7 @@ style.textContent = `
   padding:6px 10px;border-radius:8px;white-space:nowrap;pointer-events:none;
   font-family:var(--font-sans);font-weight:600;font-size:13px;line-height:1.2;
   background:var(--cf-text,#521000);color:var(--cf-bg-100,#fffdfa);
-  opacity:0;visibility:hidden;transition:opacity .12s ease,visibility .12s}
+  opacity:0;visibility:hidden;transition:opacity .15s ease-out,visibility .15s}
 .voice-fab:hover .vf-tip,.voice-fab:focus-visible .vf-tip{opacity:1;visibility:visible}
 .voice-fab.tip-dismissed .vf-tip{opacity:0;visibility:hidden}
 
@@ -74,13 +75,13 @@ style.textContent = `
   background:var(--cf-bg-100,#fffdfa);border:1px solid var(--cf-border-strong,#e0c3a8);
   border-radius:var(--radius,14px);box-shadow:0 20px 50px -20px rgba(82,16,0,.4);
   font-family:var(--font-sans);color:var(--cf-text,#521000);overflow:hidden;
-  opacity:0;transform:translateY(8px) scale(.98);pointer-events:none;transition:opacity .16s ease,transform .16s ease}
+  opacity:0;transform:translateY(8px) scale(.98);pointer-events:none;transition:opacity .16s ease-out,transform .16s ease-out}
 .voice-panel.open{opacity:1;transform:none;pointer-events:auto}
 
 .vp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:13px 15px;border-bottom:1px solid var(--cf-border,#ebd5c1);background:var(--cf-bg-200,#faf5ee)}
 .vp-title{display:flex;align-items:center;gap:9px;font-weight:600;font-size:14px}
-.vp-orb{width:12px;height:12px;border-radius:50%;background:#b9a894;transition:background .2s,box-shadow .2s}
+.vp-orb{width:12px;height:12px;border-radius:50%;background:#b9a894;transition:background-color .2s ease-out,box-shadow .2s ease-out}
 .vp-orb.listening{background:#2fae66;box-shadow:0 0 0 4px rgba(47,174,102,.18)}
 .vp-orb.thinking{background:var(--accent-blue,#0055dc);box-shadow:0 0 0 4px rgba(0,85,220,.18)}
 .vp-orb.speaking{background:var(--cf-orange,#ff6633);box-shadow:0 0 0 4px rgba(255,102,51,.22);animation:vpPulse 1s ease-in-out infinite}
@@ -103,13 +104,13 @@ style.textContent = `
 .vp-btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;
   padding:10px 12px;border-radius:10px;border:1px solid var(--cf-border-strong,#e0c3a8);
   background:var(--cf-bg-100,#fffdfa);color:var(--cf-text,#521000);font-family:var(--font-sans);
-  font-weight:600;font-size:13px;cursor:pointer;transition:background .12s,border-color .12s}
+  font-weight:600;font-size:13px;cursor:pointer;transition:background-color .15s ease-out,border-color .15s ease-out}
 .vp-btn:hover{background:var(--cf-bg-300,#f0e7db)}
 .vp-btn.primary{background:var(--cf-orange,#ff6633);border-color:var(--cf-orange,#ff6633);color:#fff}
 .vp-btn.primary:hover{background:var(--cf-orange-ink,#d94f22)}
 .vp-btn.danger{color:#a3320f;border-color:#f3c4b3;background:#fdeae4}
 .vp-btn[disabled]{opacity:.5;cursor:not-allowed}
-.vp-beta{font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;
+.vp-beta{font-family:var(--font-mono);font-size:12px;letter-spacing:.04em;text-transform:uppercase;
   color:var(--cf-text-soft,#8a5a3c);border:1px solid var(--cf-border,#ebd5c1);border-radius:6px;padding:2px 6px}
 .vp-textrow{display:flex;gap:8px;padding:0 15px 12px}
 .vp-textrow input{flex:1;min-width:0;padding:10px 12px;border-radius:10px;
@@ -119,7 +120,7 @@ style.textContent = `
   box-shadow:0 0 0 3px rgba(255,102,51,.15)}
 .vp-textrow #vpSend{flex:0 0 auto;padding:10px 16px}
 .vp-msg a{color:inherit;text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere}
-.vp-heard{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;opacity:.8;margin-bottom:2px}
+.vp-heard{display:block;font-family:var(--font-mono);font-size:12px;letter-spacing:.04em;text-transform:uppercase;opacity:.8;margin-bottom:2px}
 
 .vp-suggest{padding:0 15px 10px}
 .vp-chips{display:flex;flex-wrap:wrap;gap:6px}
@@ -132,6 +133,16 @@ style.textContent = `
   font-family:var(--font-sans);font-size:12.5px;font-weight:600;color:var(--cf-text-soft,#8a5a3c);text-decoration:underline}
 .vp-suggest.collapsible .vp-suggest-toggle{display:inline-block}
 .vp-suggest.collapsible:not(.expanded) .vp-chips{display:none}
+/* Phones: a 48px button 16px from the edges, and room below the page so it never covers the last content.
+   scroll-padding keeps a focused field above it too. The consent bar (public/consent.js) adds its own height. */
+@media (max-width:640px){
+  .voice-fab{width:48px;height:48px;right:16px;bottom:16px}
+  .voice-fab svg{width:22px;height:22px}
+  .voice-panel{right:16px;bottom:72px;max-width:calc(100vw - 32px)}
+  body:has(> .voice-fab){padding-bottom:80px}
+  html:has(body > .voice-fab){scroll-padding-bottom:80px}
+  html.consent-bar-open body:has(> .voice-fab){padding-bottom:calc(var(--consent-bar-h,0px) + 80px)}
+}
 @media (max-width:560px){
   .vp-chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;padding-bottom:4px;-webkit-overflow-scrolling:touch}
   .vp-chip{white-space:nowrap}

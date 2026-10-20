@@ -194,7 +194,8 @@ describe('analytics controls (browser)', () => {
         rightGap: panel.right - pad - sel.right,
         below: sel.top >= mode.bottom,
         clearAfterCount: clear.left >= count.right,
-        chipsFullWidth: Math.abs(chips.width - (panel.width - 2 * pad)) < 1,
+        // Phones (≤ 640px): the chips scroll sideways in one row that runs to the panel's borders.
+        chipsFullWidth: Math.abs(chips.width - (innerWidth <= 640 ? panel.width - 2 : panel.width - 2 * pad)) < 1,
         chipsBelow: chips.top >= Math.max(sel.bottom, device.bottom),
         overflow: document.documentElement.scrollWidth > window.innerWidth,
       };
@@ -206,6 +207,16 @@ describe('analytics controls (browser)', () => {
       expect(p.centred).toBeLessThan(1);
       expect(p.rightGap).toBeCloseTo(0, 0);
       expect(p).toMatchObject({ below: false, clearAfterCount: true, chipsFullWidth: true, chipsBelow: true, overflow: false });
+    });
+
+    it.each([[390], [320]])('at %ipx: the products sit in one row that scrolls sideways', async (width) => {
+      const page = await openAnalytics(browser, { width });
+      const r = await page.locator('#anPortals').evaluate((el) => {
+        const tops = new Set([...el.querySelectorAll('.chip')].map((c) => Math.round(c.getBoundingClientRect().top)));
+        const cs = getComputedStyle(el);
+        return { rows: tops.size, wrap: cs.flexWrap, overflowX: cs.overflowX };
+      });
+      expect(r).toEqual({ rows: 1, wrap: 'nowrap', overflowX: 'auto' });
     });
 
     it.each([[880], [390], [320]])('at %ipx: wraps below row 1 on the right without overflowing', async (width) => {

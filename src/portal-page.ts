@@ -165,37 +165,43 @@ function page(opts: { title: string; description: string; canonical?: string; no
 ${opts.canonical ? socialMeta(opts.title, opts.description, opts.canonical, opts.image ?? SITE_PREVIEW) : ""}${opts.jsonLd ? jsonLdScript(opts.jsonLd) : ""}  <link rel="alternate" type="application/rss+xml" title="AI Interface Library" href="${FEED_URL}" />
 ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts.markdown)}" />\n` : ""}
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <!-- Body text font (all weights in one file): fetch it before CSS discovers it, as the homepage does. -->
+  <link rel="preload" href="/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/fonts/fonts.css" />
   <style>
-    body{margin:0;font:16px/1.6 system-ui,-apple-system,Segoe UI,sans-serif;background:#f4efe8;color:#231f1a}
+    /* The homepage's fonts (public/styles.css --font-sans, --font-mono): Space Grotesk for text, headings and controls. */
+    body{margin:0;font:16px/1.6 'Space Grotesk','Inter',system-ui,-apple-system,sans-serif;background:#f4efe8;color:#231f1a}
+    :where(a,button,summary,[tabindex]):focus-visible{outline:2px solid #eb622c;outline-offset:2px}
     .wrap{max-width:1000px;margin:0 auto;padding:24px 16px}
     a{color:inherit}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;font-family:'Space Grotesk','Inter',system-ui,-apple-system,sans-serif}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
     .wordmark{display:inline-flex;align-items:center;gap:9px;min-width:0;font-size:14px;font-weight:700;letter-spacing:.02em;text-decoration:none}
     .wordmark-dot{flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:#eb622c;box-shadow:0 0 0 4px rgba(255,102,51,.14)}
     .wordmark-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .topnav{display:flex;gap:20px;flex:0 0 auto;white-space:nowrap}
-    .topnav-link{font-size:13px;font-weight:500;color:#6b6257;text-decoration:none}
+    /* A 32px-tall hit area; the negative margin keeps the bar's height as it was. */
+    .topnav-link{display:inline-flex;align-items:center;min-height:32px;margin-block:-6px;font-size:13px;font-weight:500;color:#6b6257;text-decoration:none;transition:color .15s ease-out}
     .topnav-link.active{color:#eb622c}
     @media (hover:hover){.topnav-link:not(.active):hover{color:#231f1a}}
     @media (max-width:760px){.wordmark{font-size:12px}.topnav{gap:14px}.topnav-link{font-size:12px}}
-    @media (max-width:420px){.topbar{gap:8px}.wordmark{font-size:11px;gap:7px}.topnav{gap:8px}.topnav-link{font-size:11px}} /* the homepage's values at this width */
+    @media (max-width:420px){.topbar{gap:8px}.wordmark{font-size:12px;gap:7px}.topnav{gap:8px}.topnav-link{font-size:11px}} /* the homepage's values at this width */
     /* Phones: the menu button and panel, as on the homepage (public/styles.css), with this page's colours as fallbacks. */
     .topnav-toggle{display:none}
     @media (max-width:640px){
       html:not(.js) .topbar{flex-wrap:wrap}
       html:not(.js) .topnav{width:100%;flex-wrap:wrap}
       html.js .topbar{position:relative;z-index:10}
-      html.js .topnav-toggle{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:40px;height:40px;padding:0;border:1px solid var(--cf-border,#d8cfc2);border-radius:8px;background:transparent;color:var(--cf-text,#231f1a);cursor:pointer}
+      html.js .topnav-toggle{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:40px;height:40px;padding:0;border:1px solid var(--cf-border,#d8cfc2);border-radius:8px;background:transparent;color:var(--cf-text,#231f1a);cursor:pointer;transition:background-color .15s ease-out,transform 160ms ease-out}
       html.js .topnav-toggle:hover,html.js .topnav-toggle:active{background:var(--cf-bg-300,#ded4c6)}
       html.js .topnav-toggle:focus-visible{outline:2px solid #eb622c;outline-offset:2px}
       .topnav-toggle[aria-expanded="true"] .topnav-toggle-open,.topnav-toggle[aria-expanded="false"] .topnav-toggle-close{display:none}
       /* Full width: the bar sits inside .wrap's 16px side padding. */
-      html.js .topnav{position:absolute;top:calc(100% + 8px);left:-16px;right:-16px;flex-direction:column;gap:0;white-space:normal;background:var(--cf-bg-100,#f5f1e9);border-bottom:1px solid var(--cf-border,#d8cfc2);box-shadow:0 16px 32px -20px rgba(35,31,26,.35);opacity:0;transform:translateY(-6px);visibility:hidden;transition:opacity .15s ease,transform .15s ease,visibility 0s linear .15s}
-      html.menu-open .topnav{opacity:1;transform:none;visibility:visible;transition:opacity .15s ease,transform .15s ease,visibility 0s}
-      html.js .topnav-link{display:flex;align-items:center;height:48px;padding:0 16px;font-size:13px}
+      html.js .topnav{position:absolute;top:calc(100% + 8px);left:-16px;right:-16px;flex-direction:column;gap:0;white-space:normal;background:var(--cf-bg-100,#f5f1e9);border-bottom:1px solid var(--cf-border,#d8cfc2);box-shadow:0 16px 32px -20px rgba(35,31,26,.35);opacity:0;transform:translateY(-6px);visibility:hidden;transition:opacity .15s ease-out,transform .15s ease-out,visibility 0s linear .15s}
+      html.menu-open .topnav{opacity:1;transform:none;visibility:visible;transition:opacity .15s ease-out,transform .15s ease-out,visibility 0s}
+      html.js .topnav-link{display:flex;align-items:center;height:48px;margin:0;padding:0 16px;font-size:13px}
     }
     @media (max-width:640px) and (prefers-reduced-motion:reduce){html.js .topnav{transition:none}}
+    @media (max-width:640px) and (prefers-reduced-motion:no-preference){html.js .topnav-toggle:active{transform:scale(.97)}}
     h1{font-size:2rem;margin:24px 0 4px}
     .meta{color:#6b6257;margin:0 0 24px}
     .shots{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
@@ -227,7 +233,7 @@ ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts
     .site-dialog-close{font:inherit;padding:8px 16px;border:1px solid #d8cfc2;border-radius:8px;background:#f4efe8;color:#231f1a;cursor:pointer}
     .site-dialog-close:hover{border-color:#6b6257}
     .contact-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
-    .contact-address{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.95rem;padding:6px 10px;border:1px solid #d8cfc2;border-radius:8px;background:#f4efe8;user-select:all;overflow-wrap:anywhere}
+    .contact-address{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.95rem;padding:6px 10px;border:1px solid #d8cfc2;border-radius:8px;background:#f4efe8;user-select:all;overflow-wrap:anywhere}
     .contact-copy{font:inherit;font-size:.9rem;min-width:5.5em;padding:6px 12px;border:1px solid #d8cfc2;border-radius:8px;background:#fffdf9;color:#231f1a;cursor:pointer}
     .contact-copy:hover{border-color:#6b6257}
     .contact-mail{display:inline-flex;align-items:center;padding:8px 16px;border-radius:8px;background:#231f1a;color:#fffdf9;text-decoration:none}
@@ -288,8 +294,10 @@ const COMPARE_HEAD = `  <style>
     .weeknav-row.solo{justify-content:flex-end}
     .weeknav-row .weeknav{margin:0}
     .compare-cta{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid #d9cebd;border-radius:8px;background:#f5f1e9;color:#cc501e;
-      font:600 12.5px/1.2 'Space Grotesk','Inter',system-ui,-apple-system,sans-serif;text-decoration:none;white-space:nowrap;box-shadow:0 1px 3px rgba(66,50,23,.12)}
+      font:600 12.5px/1.2 'Space Grotesk','Inter',system-ui,-apple-system,sans-serif;text-decoration:none;white-space:nowrap;box-shadow:0 1px 3px rgba(66,50,23,.12);
+      transition:background-color .15s ease-out,transform 160ms ease-out}
     .compare-cta:hover{background:#ded4c6}
+    @media (prefers-reduced-motion:no-preference){.compare-cta:active{transform:scale(.97)}}
     .compare-cta:focus-visible{outline:2px solid #eb622c;outline-offset:2px}
   </style>
 `;
@@ -540,12 +548,12 @@ export function handleLicense(request: Request): Response {
 
 export const CHANGELOG_URL = `${ORIGIN}/changelog`;
 
-/** Changelog layout: date column with a dot on a connecting line, entry on the right; the date stacks above the title on phones. Colors match page(); the accent is the homepage's orange. */
+/** Changelog layout: date column with a dot on a connecting line, entry on the right; the date stacks above the title on phones. The page title is larger than the entry titles. Colors match page(); the accent is the homepage's orange. */
 const CHANGELOG_HEAD = `  <style>
-    .changelog{font-family:'Space Grotesk','Inter',system-ui,-apple-system,sans-serif}
+    .changelog h1{font-size:48px;line-height:1.05;letter-spacing:-.03em}
     .changelog .meta{font-size:1.05rem}
     .cl{list-style:none;margin:56px 0 0;padding:0}
-    .cl-entry{position:relative;display:grid;grid-template-columns:220px minmax(0,1fr);padding-bottom:96px;scroll-margin-top:24px}
+    .cl-entry{position:relative;display:grid;grid-template-columns:220px minmax(0,1fr);padding-bottom:64px;scroll-margin-top:24px}
     .cl-entry:last-child{padding-bottom:0}
     .cl-entry::before{content:"";position:absolute;left:0;top:8px;width:9px;height:9px;border-radius:50%;background:#eb622c;box-shadow:0 0 0 4px #f4efe8;z-index:1}
     .cl-entry:not(:last-child)::after{content:"";position:absolute;left:4px;top:12px;bottom:-12px;width:1px;background:#d8cfc2}
@@ -553,7 +561,7 @@ const CHANGELOG_HEAD = `  <style>
     .cl-date{font-weight:700;line-height:1.6}
     .cl-time{font-size:.85rem;color:#6b6257}
     .cl-body{font-size:18px;line-height:1.6;min-width:0}
-    .cl-body h2{font-size:40px;line-height:1.1;letter-spacing:-.03em;font-weight:700;margin:0;overflow-wrap:anywhere}
+    .cl-body h2{font-size:32px;line-height:1.15;letter-spacing:-.02em;font-weight:700;margin:0;overflow-wrap:anywhere}
     .cl-anchor{margin-left:12px;font-size:18px;font-weight:600;letter-spacing:0;color:#cc501e;text-decoration:none;vertical-align:middle}
     .cl-anchor:hover,.cl-anchor:focus-visible{text-decoration:underline}
     .cl-copied{margin-left:8px;font-size:.8rem;font-weight:500;letter-spacing:0;color:#6b6257;vertical-align:middle}
@@ -564,9 +572,10 @@ const CHANGELOG_HEAD = `  <style>
     .cl-body p{margin:0}
     @media (max-width:720px){
       .cl{margin-top:40px}
-      .cl-entry{grid-template-columns:minmax(0,1fr);padding-left:24px;padding-bottom:72px}
+      .cl-entry{grid-template-columns:minmax(0,1fr);padding-left:24px;padding-bottom:56px}
       .cl-when{flex-direction:row;flex-wrap:wrap;align-items:baseline;gap:0 10px;padding:0;margin-bottom:8px}
-      .cl-body h2{font-size:30px}
+      .changelog h1{font-size:40px}
+      .cl-body h2{font-size:26px}
     }
   </style>
 `;

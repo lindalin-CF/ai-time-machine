@@ -15,6 +15,22 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "design-polish",
+    date: "2026-10-19",
+    time: "19:43",
+    title: "Design Polish",
+    subtitle: "Small fixes across the site, most of them for phones",
+    bullets: [
+      { lead: "Compare on phones", text: "The Table shows one card per product or week, with the differences and similarities between the cards. The product buttons sit in one row that scrolls sideways, so the results start on the first screen." },
+      { lead: "Shorter comparisons", text: "Under a heading such as \"Oct 12, 2026 vs Oct 5, 2026\", findings no longer repeat both dates, for example \"The newer week shows no suggested prompts; the older shows 3.\" The Canvas boxes keep the full names." },
+      { lead: "Canvas", text: "The board opens with the cards near its top instead of below empty space." },
+      { lead: "Chat button", text: "On phones it is a little smaller and the page leaves room below it, so it no longer covers the last content." },
+      { lead: "Buttons and text", text: "Buttons shrink slightly while pressed (not with reduced motion), every control shows an orange ring on keyboard focus, small labels are easier to read, and the disabled Mobile option in Canvas stays readable and says why on hover." },
+      { lead: "Every page", text: "Product pages, this Changelog and the other pages use the homepage's fonts, and the cookie banner uses the site's colours." },
+    ],
+    closing: "Open Compare on a phone and switch to Table.",
+  },
+  {
     slug: "phone-menu",
     date: "2026-10-18",
     time: "20:12",

@@ -31,7 +31,7 @@ describe('Compare Table: PAGE row (browser)', () => {
 
   const open = async (setup: string, opts: { weeks?: string[]; statuses?: Record<string, string>; width?: number } = {}) => {
     const page = await openSite(browser, `#compare?view=table&${setup}`, { weeks: opts.weeks ?? WEEKS, portals: PORTALS, statuses: opts.statuses, width: opts.width });
-    await page.locator('#anTableWrap .an-table').waitFor();
+    await page.locator('#anTableWrap').locator('.an-table, .an-mstack').first().waitFor(); // stacked cards at 640px and below
     return page;
   };
 
@@ -101,16 +101,30 @@ describe('Compare Table: PAGE row (browser)', () => {
       font: '600 12.5px "Space Grotesk"', padding: '6px 11px', underline: 'none', outline: 'none' };
     expect(await look()).toEqual(base);
     await link.hover();
+    await link.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished))); // 150ms fade
     expect(await look()).toEqual({ ...base, bg: 'rgb(222, 212, 198)' });
     await page.mouse.move(0, 0);
     await link.focus();
     await page.keyboard.press('Shift+Tab');
     await page.keyboard.press('Tab'); // keyboard focus, so :focus-visible applies
+    await link.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
     expect(await look()).toEqual({ ...base, outline: '2px solid rgb(235, 98, 44) 2px' });
     await page.context().close();
   });
 
-  it.each([1280, 390])('at %ipx every button can be seen in full (scrolling the table sideways at narrow widths)', async (width) => {
+  it('at 390px each card has its Page link, seen in full', async () => {
+    const page = await open(`mode=time&portal=gemini&weeks=${WEEKS[0]},${WEEKS[1]}&device=desktop`, { width: 390 });
+    const links = await page.locator('.an-mcard').evaluateAll((cards) => cards.map((c) => {
+      const field = [...c.querySelectorAll('.an-mfield')].find((f) => f.querySelector('dt')!.textContent === 'Page')!;
+      const a = field.querySelector('a')!, b = a.getBoundingClientRect();
+      return { href: a.getAttribute('href'), inViewport: b.left >= 0 && b.right <= innerWidth };
+    }));
+    expect(links).toEqual([{ href: '/portals/gemini', inViewport: true }, { href: '/portals/gemini/2026-10-05', inViewport: true }]);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+    await page.context().close();
+  });
+
+  it.each([1280])('at %ipx every button can be seen in full (scrolling the table sideways at narrow widths)', async (width) => {
     const page = await open(`mode=time&portal=gemini&weeks=${WEEKS[0]},${WEEKS[1]}&device=desktop`, { width });
     for (const link of await page.locator('.an-page-link').all()) {
       await link.scrollIntoViewIfNeeded();

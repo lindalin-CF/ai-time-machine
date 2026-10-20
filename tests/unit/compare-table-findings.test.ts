@@ -54,7 +54,7 @@ describe('Compare Table: Differences and Similarities (browser)', () => {
       expect(r.cells[0].head).toBe('Oct 12, 2026 vs Oct 5, 2026');
     }
     expect(diff.cells[0].items.slice(0, 2)).toEqual(['The sidebar item More is now labeled Explore.', 'The Upgrade item no longer appears in the top bar.']);
-    expect(same.cells[0].items).toContain('Oct 12, 2026 and Oct 5, 2026 were both captured in dark mode.');
+    expect(same.cells[0].items).toContain('Both were captured in dark mode.'); // the heading names the weeks
     expect(same.cells[0].items.length).toBeLessThanOrEqual(5);
     await page.context().close();
   });
@@ -78,7 +78,7 @@ describe('Compare Table: Differences and Similarities (browser)', () => {
       expect(r.cells.map((c) => c.head)).toEqual([null, 'vs ChatGPT', 'vs ChatGPT']);
       expect(r.cells[0].empty).toBe('Compared against this');
     }
-    expect(rows[1].cells[1].items).toContain('Claude shows 14 menu items, ChatGPT shows 13.');
+    expect(rows[1].cells[1].items).toContain('Claude shows 14 menu items; ChatGPT shows 13.');
     await page.context().close();
   });
 
@@ -103,17 +103,48 @@ describe('Compare Table: Differences and Similarities (browser)', () => {
     await mobile.context().close();
   });
 
-  it('at 390px the spanning cell\'s text stays within the visible table, and the page does not scroll sideways', async () => {
-    const page = await open(`mode=time&portal=chatgpt&weeks=${WEEKS[0]},${WEEKS[1]}&device=desktop`, 390);
-    const r = await page.evaluate(() => {
-      const scroller = document.querySelector('#anTableWrap')!.getBoundingClientRect();
-      const label = document.querySelector('.an-cmp-row .an-rowhead')!.getBoundingClientRect();
-      return [...document.querySelectorAll('.an-cmp--span .an-cmp-inner')].map((el) => {
-        const b = el.getBoundingClientRect();
-        return { left: b.left >= label.right, right: b.right <= scroller.right, overflow: document.documentElement.scrollWidth > innerWidth };
-      });
-    });
-    expect(r).toEqual([{ left: true, right: true, overflow: false }, { left: true, right: true, overflow: false }]);
+  /** The phone layout: each card's title and fields, and each comparison's heading and lists, in page order. */
+  const stack = (page: Page) => page.locator('#anTableWrap .an-mstack').evaluate((el) => [...el.children].map((c) => c.classList.contains('an-mcard')
+    ? { card: c.querySelector('.an-mcard-head')!.textContent, fields: [...c.querySelectorAll('.an-mfield dt')].map((d) => d.textContent), shot: !!c.querySelector('.an-shot img') }
+    : { vs: c.querySelector('.an-mcmp-head')!.textContent, kinds: [...c.querySelectorAll('.an-mcmp-kind')].map((k) => k.textContent), items: [...c.querySelectorAll('li')].map((li) => li.textContent) }));
+  const openPhone = async (setup: string) => {
+    const page = await openSite(browser, `#compare?view=table&${setup}`, { weeks: WEEKS, portals: PORTALS, metrics: METRICS, width: 390 });
+    await page.locator('#anTableWrap .an-mstack').waitFor();
+    return page;
+  };
+
+  it('at 390px: one card per week with the findings between them, and nothing scrolls sideways', async () => {
+    const page = await openPhone(`mode=time&portal=chatgpt&weeks=${WEEKS[0]},${WEEKS[1]}&device=desktop`);
+    expect(await page.locator('#anTableWrap .an-table').count()).toBe(0);
+    const s = await stack(page);
+    const fields = ['Brand colour', 'Palette', 'Tone', 'Colour temp.', 'Captured', 'Page', 'Design notes'];
+    expect(s.map((x) => ('card' in x ? x.card : x.vs))).toEqual(['Oct 12, 2026', 'Oct 12, 2026 vs Oct 5, 2026', 'Oct 5, 2026']);
+    expect(s[0]).toMatchObject({ fields, shot: true });
+    expect(s[1]).toMatchObject({ kinds: ['Differences', 'Similarities'] });
+    expect((s[1] as { items: string[] }).items).toContain('Both were captured in dark mode.');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+    await page.context().close();
+  });
+
+  it('at 390px, three products: each one\'s findings against the first sit just before its card', async () => {
+    const page = await openPhone(`mode=portals&week=${WEEKS[0]}&portals=chatgpt,claude,gemini&device=desktop`);
+    expect((await stack(page)).map((x) => ('card' in x ? x.card : x.vs))).toEqual(['ChatGPT', 'Claude vs ChatGPT', 'Claude', 'Gemini vs ChatGPT', 'Gemini']);
+    await page.context().close();
+  });
+
+  it('at 390px, three weeks: each week\'s findings against the next older one sit between their cards', async () => {
+    const page = await openPhone(`mode=time&portal=chatgpt&weeks=${WEEKS.join(',')}&device=desktop`);
+    expect((await stack(page)).map((x) => ('card' in x ? x.card : x.vs)))
+      .toEqual(['Oct 12, 2026', 'Oct 12, 2026 vs Oct 5, 2026', 'Oct 5, 2026', 'Oct 5, 2026 vs Sep 28, 2026', 'Sep 28, 2026']);
+    await page.context().close();
+  });
+
+  it('switches between the table and the cards when the width crosses 640px', async () => {
+    const page = await open(`mode=time&portal=chatgpt&weeks=${WEEKS[0]},${WEEKS[1]}&device=desktop`);
+    await page.setViewportSize({ width: 390, height: 900 });
+    await page.locator('#anTableWrap .an-mstack').waitFor();
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.locator('#anTableWrap .an-table').waitFor();
     await page.context().close();
   });
 

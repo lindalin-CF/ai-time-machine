@@ -97,12 +97,12 @@ export async function pauseClock(page: Page): Promise<void> {
   await page.clock.pauseAt(await page.evaluate(() => Date.now()) + 10_000);
 }
 
-/** The Analytics view switched from the default Canvas to Table, ready to use. */
+/** The Analytics view switched from the default Canvas to Table (stacked cards at 640px and below), ready to use. */
 export async function openAnalytics(browser: Browser, opts: SiteOpts = {}): Promise<Page> {
   const page = await openSite(browser, '#compare', opts);
   await page.locator('#anCanvasWrap .anc-card img').first().waitFor();
   await page.locator('[data-anview="table"]').click();
-  await page.locator('#anTableWrap .an-table').waitFor();
+  await page.locator('#anTableWrap').locator('.an-table, .an-mstack').first().waitFor();
   return page;
 }
 

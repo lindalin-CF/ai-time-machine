@@ -100,18 +100,24 @@
   // ---- consent bar ----------------------------------------------------------
   const style = document.createElement("style");
   style.textContent = `
+/* The site's look on every page (server pages have no --cf-* tokens, so the fallbacks are the homepage's values):
+   cream bar, Space Grotesk, 8px-radius buttons in the site orange. Accept and Decline look the same, so neither is
+   pushed (equal choice, as consent rules ask). */
 .consent-bar{position:fixed;left:0;right:0;bottom:0;z-index:100;box-sizing:border-box;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 20px;
-  padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--cf-border-strong,#d8cfc2);
-  background:var(--cf-bg-100,#fffdf9);color:var(--cf-text,#231f1a);font:15px/1.5 var(--font-sans,system-ui,-apple-system,Segoe UI,sans-serif);
-  box-shadow:0 -8px 24px -16px rgba(35,31,26,.35)}
+  padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--cf-border,#d9cebd);
+  background:var(--cf-bg-100,#f5f1e9);color:var(--cf-text,#423217);font:15px/1.5 var(--font-sans,'Space Grotesk','Inter',system-ui,-apple-system,sans-serif);
+  box-shadow:0 -8px 24px -16px rgba(66,50,23,.35)}
 .consent-bar[hidden]{display:none}
 .consent-bar p{margin:0;flex:1 1 320px;max-width:720px}
 .consent-bar a{color:inherit;text-decoration:underline}
 .consent-status{display:block;margin-top:2px;font-size:13px;opacity:.8}
 .consent-actions{display:flex;gap:10px;flex:0 1 auto}
-.consent-btn{flex:1 1 0;min-width:112px;min-height:44px;padding:10px 18px;border:1px solid var(--cf-text,#231f1a);border-radius:8px;
-  background:var(--cf-bg-100,#fffdf9);color:var(--cf-text,#231f1a);font:inherit;font-weight:600;cursor:pointer}
-.consent-btn:hover{background:var(--cf-bg-200,#f4efe8)}
+/* #c84e1d: the site orange just deep enough for white 15px text (4.6:1); the brighter #eb622c is only 3.3:1. */
+.consent-btn{flex:1 1 0;min-width:112px;min-height:44px;padding:10px 18px;border:1px solid #c84e1d;border-radius:8px;
+  background:#c84e1d;color:#fff;font:inherit;font-weight:600;cursor:pointer;
+  transition:background-color .15s ease-out,border-color .15s ease-out,transform 160ms ease-out}
+.consent-btn:hover{background:#b8461a;border-color:#b8461a}
+@media (prefers-reduced-motion:no-preference){.consent-btn:active{transform:scale(.97)}}
 .consent-btn:focus-visible,.consent-bar a:focus-visible{outline:2px solid var(--cf-orange,#eb622c);outline-offset:2px}
 @media (max-width:480px){.consent-actions{flex:1 1 100%}}
 html.consent-bar-open body{padding-bottom:var(--consent-bar-h,0px)}

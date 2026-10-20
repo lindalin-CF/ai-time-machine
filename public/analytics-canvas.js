@@ -54,8 +54,9 @@ const navList = (items) => {
  * Otherwise both cards' navItems are compared, leaving out the sidebar when either card's sidebar is
  * collapsed, and leaving out items without text unless both cards record some
  * (analyses before guideline v1.5.1 have no icon_label, so their icon buttons are not listed).
+ * `brief`: the Table's wording, under a "<A> vs <B>" heading (see briefText below).
  */
-function navFindings(a, b, A, B, ma, mb, changeLines) {
+function navFindings(a, b, A, B, ma, mb, changeLines, brief = false) {
   const samePortal = !!a.slug && a.slug === b.slug;
   if (samePortal && a.week && b.week && a.week !== b.week) {
     const [newer, olderWeek] = a.week > b.week ? [ma, b.week] : [mb, a.week];
@@ -80,9 +81,10 @@ function navFindings(a, b, A, B, ma, mb, changeLines) {
   const onlyA = ia.filter((it) => !kb.has(navKey(it))), onlyB = ib.filter((it) => !ka.has(navKey(it)));
   if (!onlyA.length && !onlyB.length) return { diff: [], same: [`Both show the same ${MENU}${where}.`], missing: [] };
   if (!samePortal) {
-    return ia.length === ib.length
-      ? { diff: [], same: [`${A} and ${B} each show ${word(ia.length, "menu item", MENU)}${where}.`], missing: [] }
-      : { diff: [`${A} shows ${word(ia.length, "menu item", MENU)}${where}, ${B} shows ${ib.length}.`], same: [], missing: [] };
+    if (ia.length === ib.length) {
+      return { diff: [], same: [brief ? `Both show ${word(ia.length, "menu item", MENU)}${where}.` : `${A} and ${B} each show ${word(ia.length, "menu item", MENU)}${where}.`], missing: [] };
+    }
+    return { diff: [`${A} shows ${word(ia.length, "menu item", MENU)}${where}${brief ? ";" : ","} ${B} shows ${ib.length}.`], same: [], missing: [] };
   }
   const diff = [];
   if (onlyB.length) diff.push(`${B} shows ${MENU} that ${A} does not: ${navList(onlyB)}.`);
@@ -165,6 +167,36 @@ const RULES = [
   },
 ];
 
+/**
+ * The Table's wording for each rule, used under a "<A> vs <B>" heading, so a line need not repeat both full names
+ * or dates: similarities start with "Both" / "Neither", differences name each side once ("The newer week shows no
+ * suggested prompts; the older shows 3."). A2 and B2 are the short second mention ("the older" for "the older week").
+ */
+const BRIEF = {
+  inputAreaPct: (A, B, a, b) => Math.abs(a - b) < 1
+    ? `Both message boxes cover about ${fmtPct(Math.round((a + b) / 2) || Math.round((a + b) * 5) / 10)} of the screen.`
+    : null,
+  clickableApprox: (A, B, a, b) => Math.abs(a - b) < 3 ? `Both show about the same number of clickable items (~${a} vs ~${b}).` : null,
+  suggestedPrompts: (A, B, a, b, A2, B2) => a === b
+    ? (a === 0 ? "Neither shows suggested prompts." : `Both show ${word(a, "suggested prompt", "suggested prompts")}.`)
+    : `${A} shows ${a === 0 ? "no suggested prompts" : word(a, "suggested prompt", "suggested prompts")}; ${B2} shows ${b === 0 ? "none" : b}.`,
+  sidebarPct: (A, B, a, b) => {
+    if (a === 0 && b === 0) return "Neither shows a sidebar.";
+    if (a === 0 || b === 0) return null;
+    return Math.abs(a - b) < 5 ? `Both sidebars take a similar share of the screen width (${fmtPct(a)} vs ${fmtPct(b)}).` : null;
+  },
+  textSizes: (A, B, a, b, A2, B2) => a === b
+    ? `Both use ${word(a, "text size", "text sizes")}.`
+    : `${A} uses ${word(a, "text size", "text sizes")}; ${B2} uses ${b}.`,
+  aiNote: (A, B, a, b, A2, B2) => a === b
+    ? (a ? "Both show a note about the AI's limits." : "Neither shows a note about the AI's limits.")
+    : `${a ? A : B} shows a note about the AI's limits; ${a ? B2 : A2} does not.`,
+  colorScheme: (A, B, a, b, A2, B2) => a === b ? `Both were captured in ${a} mode.` : `${A} was captured in ${a} mode; ${B2} in ${b} mode.`,
+};
+/** A rule's line in the Table's wording, or in the Canvas wording where the brief one has nothing shorter to say. */
+const briefText = (r, A, B, a, b, A2, B2) => (BRIEF[r.key] && BRIEF[r.key](A, B, a, b, A2, B2)) || r.text(A, B, a, b);
+const capFirst = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
 const cardLabel = (c) => (c && c.label) || "this capture";
 
 /**
@@ -172,19 +204,27 @@ const cardLabel = (c) => (c && c.label) || "this capture";
  * A field is compared only when both cards have it. Differences: menu findings first, then rules in rule
  * order; similarities: the same order. `missing` has one "No data for <card>: <fields>" phrase per card
  * that lacks fields. Only the whitelisted metrics and the thresholds above are used. `navChangeLines` caps
- * the recorded menu changes listed one by one (the Canvas box shows 2).
+ * the recorded menu changes listed one by one (the Canvas box shows 2). `brief` gives the Table's wording (BRIEF above).
  */
-export function findingLists(a, b, { navChangeLines = NAV_CHANGE_LINES } = {}) {
-  const A = cardLabel(a), B = cardLabel(b);
+export function findingLists(a, b, { navChangeLines = NAV_CHANGE_LINES, brief = false } = {}) {
+  let A = cardLabel(a), B = cardLabel(b), A2 = A, B2 = B;
+  // Brief, two weeks of one product: "the newer week" / "the older week" instead of their dates.
+  if (brief && a && b && a.slug && a.slug === b.slug && a.week && b.week && a.week !== b.week) {
+    [A, B] = a.week > b.week ? ["the newer week", "the older week"] : ["the older week", "the newer week"];
+    [A2, B2] = [A.replace(/ week$/, ""), B.replace(/ week$/, "")];
+  }
   const ma = (a && a.metrics) || {}, mb = (b && b.metrics) || {};
   const has = (m, k) => m[k] !== undefined && m[k] !== null;
-  const nav = navFindings(a || {}, b || {}, A, B, ma, mb, navChangeLines);
+  const nav = navFindings(a || {}, b || {}, A, B, ma, mb, navChangeLines, brief);
   const differences = [...nav.diff];
   const similarities = [...nav.same];
   for (const r of RULES) {
     if (!has(ma, r.key) || !has(mb, r.key)) continue;
     const x = ma[r.key], y = mb[r.key];
-    (r.differs(x, y) ? differences : similarities).push(r.text(A, B, x, y));
+    (r.differs(x, y) ? differences : similarities).push(brief ? briefText(r, A, B, x, y, A2, B2) : r.text(A, B, x, y));
+  }
+  if (brief) {
+    for (const list of [differences, similarities]) list.forEach((l, i) => { list[i] = capFirst(l); });
   }
   const missing = [[A, ma], [B, mb]]
     .map(([label, m]) => [label, [...(nav.missing.includes(label) ? [MENU] : []), ...RULES.filter((r) => !has(m, r.key)).map((r) => r.name)]])
@@ -213,12 +253,12 @@ const TABLE_DIFFERENCES = 6;
 const TABLE_SIMILARITIES = 5;
 
 /**
- * The Table's lists for two cards: every menu change, then the other differences, at most 6 lines (the
- * last says "and N more differences" when there are more); at most 5 similarities. Null when the two
- * cards have no field in common.
+ * The Table's lists for two cards, in the brief wording (each list sits under a "<A> vs <B>" heading): every menu
+ * change, then the other differences, at most 6 lines (the last says "and N more differences" when there are more);
+ * at most 5 similarities. Null when the two cards have no field in common.
  */
 export function tableFindings(a, b) {
-  const { differences, similarities } = findingLists(a, b, { navChangeLines: Infinity });
+  const { differences, similarities } = findingLists(a, b, { navChangeLines: Infinity, brief: true });
   if (!differences.length && !similarities.length) return null;
   const shown = TABLE_DIFFERENCES - 1;
   return {
@@ -248,8 +288,9 @@ export function findingsCellHTML(findings, kind, { heading = "", note = "" } = {
 const CARD_W = 280;
 const GAP = 260;
 export const ZOOM_MIN = 0.25, ZOOM_MAX = 2;
-/** Zoom a board opens at, centred on the cards, when nothing saved or linked sets one. Narrower boards fit instead. */
-const ZOOM_DEFAULT = 1.36, ZOOM_DEFAULT_MIN_WIDTH = 760;
+/** Zoom a board opens at when nothing saved or linked sets one: the cards centred across, their top TOP_PAD below the
+ * board's top edge. Narrower boards fit instead. */
+const ZOOM_DEFAULT = 1.36, ZOOM_DEFAULT_MIN_WIDTH = 760, TOP_PAD = 32;
 /** Pixels a press must travel before it drags; anything shorter is a click. */
 const DRAG_THRESHOLD = 3;
 
@@ -493,8 +534,9 @@ function mountBoard(root, cards, opts) {
     cam.k = nk;
     applyCam();
   }
-  /** Centre the cards and lines on the board, scaled to fit (at most 100%), or at zoom `k` when given. */
-  function fit(k) {
+  /** Centre the cards and lines on the board, scaled to fit (at most 100%), or at zoom `k` when given.
+   * `top`: put their top TOP_PAD below the board's top edge instead of centring them down the board. */
+  function fit(k, top = false) {
     const rects = [...cardEls.values(), ...[...edgeEls.values()].map((e) => e.box)].map((el) => {
       if (el.classList.contains("anc-box")) {
         const e = edgeEls.get(el.dataset.edge);
@@ -511,7 +553,7 @@ function mountBoard(root, cards, opts) {
     const pad = 40, bw = board.clientWidth, bh = board.clientHeight;
     if (k === undefined) k = Math.min(1, (bw - pad * 2) / (x1 - x0), (bh - pad * 2) / (y1 - y0));
     k = clampZoom(k);
-    cam = { k, x: (bw - (x1 - x0) * k) / 2 - x0 * k, y: (bh - (y1 - y0) * k) / 2 - y0 * k };
+    cam = { k, x: (bw - (x1 - x0) * k) / 2 - x0 * k, y: (top ? TOP_PAD : (bh - (y1 - y0) * k) / 2) - y0 * k };
     applyCam();
   }
   const boardPoint = (e) => {
@@ -688,7 +730,8 @@ function mountBoard(root, cards, opts) {
   buildEdges();
   if (cam) applyCam();
   else if (sharedZoom) fit(sharedZoom);
-  else fit(board.clientWidth >= ZOOM_DEFAULT_MIN_WIDTH ? ZOOM_DEFAULT : undefined);
+  else if (board.clientWidth >= ZOOM_DEFAULT_MIN_WIDTH) fit(ZOOM_DEFAULT, true);
+  else fit();
   // Card heights settle once thumbnails load; reroute lines then.
   const onImg = () => routeEdges();
   world.querySelectorAll("img").forEach((img) => img.addEventListener("load", onImg));

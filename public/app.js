@@ -1522,8 +1522,14 @@ async function renderAnTable() {
   if (empty) { wrap.innerHTML = anEmpty(empty); return; }
   const slugs = [...new Set(columns.filter((c) => c.cap).map((c) => c.cap.slug))];
   const latest = new Map(await Promise.all(slugs.map(async (slug) => [slug, await anLatestWeek(slug)])));
-  wrap.innerHTML = anTableHTML(columns, latest);
+  // Phones show one card per column instead of the table (anStackHTML).
+  wrap.innerHTML = AN_PHONE.matches ? anStackHTML(columns, latest) : anTableHTML(columns, latest);
 }
+/** Phone widths, where the Table view shows stacked cards; crossing the width redraws the Table. */
+const AN_PHONE = window.matchMedia("(max-width: 640px)");
+AN_PHONE.addEventListener("change", () => {
+  if (an.inited && an.view === "table" && !$("#analyticsView").hidden) renderAnTable();
+});
 
 /**
  * A portal's newest week with a successful capture, the week its page /portals/<slug> shows (src/db.ts,
@@ -1595,35 +1601,65 @@ function anTableHTML(cols, latest = new Map()) {
   ).join("")}</tr>`;
 
   const rows = [];
-  rows.push(anRow("Snapshot", cols.map((c) => {
-    const src = anShot(c.cap);
-    if (!src) return `<td><div class="an-noshot">${c.cap ? (an.device === "mobile" ? "No mobile shot" : "—") : "No capture"}</div></td>`;
-    return `<td><div class="an-shot an-shot--${an.device === "mobile" ? "mobile" : "desktop"}" data-full="${esc(src)}" data-title="${esc(c.label)}" data-file="${esc((c.cap.slug || "shot") + "-" + (c.cap.week || "") + (an.device === "mobile" ? "-mobile" : ""))}"><img loading="lazy" src="${esc(thumbUrl(src, 1280))}" alt="${esc(shotAlt(c.portalName, an.device === "mobile" ? "mobile" : "desktop", c.cap.week))}"${sizeAttrs(shotSize(c.cap, an.device === "mobile"))} /></div></td>`;
-  })));
+  const fields = anFields(cols, latest);
+  rows.push(anRow(fields[0][0], fields[0][1].map((html) => `<td>${html}</td>`)));
   rows.push(...anFindingRows(cols));
-  rows.push(anRow("Brand colour", cols.map((c) =>
-    c.cap && c.cap.brand ? `<td><span class="an-swatch" style="background:${esc(c.cap.brand)}"></span><code>${esc(String(c.cap.brand).toUpperCase())}</code></td>` : `<td>—</td>`
-  )));
-  rows.push(anRow("Palette", cols.map((c) => {
-    const pal = (c.cap && c.cap.palette) || [];
-    if (!pal.length) return `<td>—</td>`;
-    return `<td><span class="an-palette">${pal.slice(0, 6).map((h) => `<i style="background:${esc(h)}" title="${esc(h)}"></i>`).join("")}</span></td>`;
-  })));
-  rows.push(anRow("Tone", cols.map((c) => {
-    const t = c.cap ? anTone([c.cap.brand, ...((c.cap.palette) || [])]) : null;
-    return `<td>${t ? `<span class="an-tag">${t}</span>` : "—"}</td>`;
-  })));
-  rows.push(anRow("Colour temp.", cols.map((c) => {
-    const t = c.cap ? anTemp([c.cap.brand, ...((c.cap.palette) || [])]) : null;
-    return `<td>${t ? `<span class="an-tag">${t}</span>` : "—"}</td>`;
-  })));
-  rows.push(anRow("Captured", cols.map((c) => `<td>${c.cap ? esc(fmtDate(c.cap.capturedAt)) : "—"}</td>`)));
-  rows.push(anRow("Page", cols.map((c) => `<td>${anPageLink(c, latest)}</td>`)));
-  rows.push(anRow("Design notes", cols.map((c) => `<td class="an-notes">${c.cap ? esc(displayedAnalysis(c.cap)) : "—"}</td>`)));
+  for (const [label, cells, cls] of fields.slice(1)) rows.push(anRow(label, cells.map((html) => `<td${cls ? ` class="${cls}"` : ""}>${html}</td>`)));
 
   return `<table class="an-table"><thead>${head}</thead><tbody>${rows.join("")}</tbody></table>`;
 }
 function anRow(label, tds) { return `<tr><th class="an-rowhead">${esc(label)}</th>${tds.join("")}</tr>`; }
+
+/** Each column's fields, shared by the table and the phone cards: [label, cell HTML per column, cell class]. Snapshot first. */
+function anFields(cols, latest) {
+  const mobile = an.device === "mobile";
+  const tag = (t) => (t ? `<span class="an-tag">${t}</span>` : "—");
+  const colours = (c) => [c.cap.brand, ...((c.cap.palette) || [])];
+  return [
+    ["Snapshot", cols.map((c) => {
+      const src = anShot(c.cap);
+      if (!src) return `<div class="an-noshot">${c.cap ? (mobile ? "No mobile shot" : "—") : "No capture"}</div>`;
+      return `<div class="an-shot an-shot--${mobile ? "mobile" : "desktop"}" data-full="${esc(src)}" data-title="${esc(c.label)}" data-file="${esc((c.cap.slug || "shot") + "-" + (c.cap.week || "") + (mobile ? "-mobile" : ""))}"><img loading="lazy" src="${esc(thumbUrl(src, 1280))}" alt="${esc(shotAlt(c.portalName, mobile ? "mobile" : "desktop", c.cap.week))}"${sizeAttrs(shotSize(c.cap, mobile))} /></div>`;
+    })],
+    ["Brand colour", cols.map((c) => (c.cap && c.cap.brand ? `<span class="an-swatch" style="background:${esc(c.cap.brand)}"></span><code>${esc(String(c.cap.brand).toUpperCase())}</code>` : "—"))],
+    ["Palette", cols.map((c) => {
+      const pal = (c.cap && c.cap.palette) || [];
+      return pal.length ? `<span class="an-palette">${pal.slice(0, 6).map((h) => `<i style="background:${esc(h)}" title="${esc(h)}"></i>`).join("")}</span>` : "—";
+    })],
+    ["Tone", cols.map((c) => tag(c.cap ? anTone(colours(c)) : null))],
+    ["Colour temp.", cols.map((c) => tag(c.cap ? anTemp(colours(c)) : null))],
+    ["Captured", cols.map((c) => (c.cap ? esc(fmtDate(c.cap.capturedAt)) : "—"))],
+    ["Page", cols.map((c) => anPageLink(c, latest))],
+    ["Design notes", cols.map((c) => (c.cap ? esc(displayedAnalysis(c.cap)) : "—")), "an-notes"],
+  ];
+}
+
+/**
+ * Phones: one card per column, with the Differences and Similarities between neighbouring cards. The pairs are the
+ * table's (anFindingRows): two columns share one pair; with more, Week by week compares each week with the next older one,
+ * so its lists sit between those two cards, and Across products compares each product with the first, so its lists
+ * sit just before that product's card.
+ */
+function anStackHTML(cols, latest) {
+  const fields = anFields(cols, latest);
+  const note = an.device === "mobile" ? "From the desktop analysis" : "";
+  const findings = (a, b) => {
+    const f = tableFindings(anFindingCard(a), anFindingCard(b));
+    return `<section class="an-mcmp" aria-label="${esc(`${a.label} vs ${b.label}`)}"><div class="an-mcmp-head">${esc(`${a.label} vs ${b.label}`)}</div>`
+      + ["differences", "similarities"].map((kind) => `<div class="an-mcmp-kind">${kind === "differences" ? "Differences" : "Similarities"}</div>${findingsCellHTML(f, kind, { note })}`).join("")
+      + `</section>`;
+  };
+  const card = (c, i) => `<article class="an-mcard"><h3 class="an-mcard-head">${c.icon ? `<span class="an-logo"><img alt=""${sizeAttrs(iconSize(c.icon))} loading="lazy" src="${esc(iconUrl(c.icon))}" onerror="this.parentNode.remove()" /></span>` : ""}<span>${esc(c.label)}</span></h3>`
+    + `<div class="an-mcard-shot">${fields[0][1][i]}</div><dl class="an-mcard-fields">`
+    + fields.slice(1).map(([label, cells, cls]) => `<div class="an-mfield${cls ? ` ${cls}` : ""}"><dt>${esc(label)}</dt><dd>${cells[i]}</dd></div>`).join("")
+    + `</dl></article>`;
+  const parts = [];
+  cols.forEach((c, i) => {
+    if (i > 0) parts.push(cols.length === 2 || an.mode === "weeks" ? findings(cols[i - 1], c) : findings(c, cols[0]));
+    parts.push(card(c, i));
+  });
+  return `<div class="an-mstack">${parts.join("")}</div>`;
+}
 
 /** A Table column as a findings card (public/analytics-canvas.js): the same fields the Canvas cards use. */
 const anFindingCard = (c) => ({ label: c.label, slug: c.cap ? c.cap.slug : null, week: c.cap ? c.cap.week : null, metrics: c.cap && c.cap.metrics ? c.cap.metrics : null });

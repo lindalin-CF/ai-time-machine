@@ -250,7 +250,7 @@ describe('Copy link in Table and Canvas (browser)', () => {
     expect(await page.locator('#anShare').isVisible()).toBe(true);
     expect(await place()).toEqual({ right: 0, sameRow: true, inView: true });
     await page.locator('[data-anview="table"]').click();
-    await page.locator('#anTableWrap .an-table').waitFor();
+    await page.locator('#anTableWrap').locator('.an-table, .an-mstack').first().waitFor(); // stacked cards at 390px
     expect(await page.locator('#anShare').isVisible()).toBe(true);
     expect(await page.locator('#anCanvasTools').isVisible()).toBe(false);
     expect(await place()).toEqual({ right: 0, sameRow: true, inView: true });

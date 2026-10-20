@@ -399,7 +399,7 @@ describe('in the browser', () => {
     expect(fab.y + fab.height).toBeLessThanOrEqual(bar.y);
     await v.page.getByRole('button', { name: 'Accept' }).click();
     const fabAfter = (await v.page.locator('.voice-fab').boundingBox())!;
-    expect(fabAfter.y + fabAfter.height).toBeCloseTo(800 - 22, 0);
+    expect(fabAfter.y + fabAfter.height).toBeCloseTo(800 - 16, 0); // 16px from the edge on phones (public/voice.js)
     await v.context.close();
   });
 });

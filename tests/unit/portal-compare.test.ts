@@ -168,12 +168,14 @@ describe('portal page Compare button (browser)', () => {
     };
     expect(await look()).toEqual(base);
     await page.locator('.compare-cta').hover();
+    await page.locator('.compare-cta').evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished))); // 150ms fade
     expect(await look()).toEqual({ ...base, bg: 'rgb(222, 212, 198)' });
     await page.mouse.move(0, 0);
     await page.locator('.compare-cta').focus();
     await page.keyboard.press('Shift+Tab');
     await page.keyboard.press('Tab'); // keyboard focus, so :focus-visible applies
     expect(await page.evaluate(() => document.activeElement?.className)).toBe('compare-cta');
+    await page.locator('.compare-cta').evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished))); // hover fade-out
     expect(await look()).toEqual({ ...base, outline: '2px solid rgb(235, 98, 44) 2px' });
     await page.context().close();
   });

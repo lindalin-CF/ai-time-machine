@@ -72,7 +72,7 @@ describe('analytics canvas controls (browser)', () => {
       });
     });
 
-    it('in Canvas, Mobile is dimmed with an existing colour token and cannot be picked', async () => {
+    it('in Canvas, Mobile stays readable in an existing colour token, marked by a dotted underline, and cannot be picked', async () => {
       const page = await openAnalytics(browser);
       await showCanvas(page);
       // .vt-btn fades its colour over 150ms.
@@ -80,13 +80,16 @@ describe('analytics canvas controls (browser)', () => {
       const colors = await page.evaluate(() => {
         const m = document.querySelector('.an-device [data-andevice="mobile"]')!;
         const probe = document.createElement('span');
-        probe.style.color = 'var(--cf-border-strong)';
+        probe.style.color = 'var(--cf-text-soft)';
         document.body.appendChild(probe);
         const token = getComputedStyle(probe).color;
         probe.remove();
         const d = document.querySelector('.an-device [data-andevice="desktop"]')!;
-        return { mobile: getComputedStyle(m).color, token, desktop: getComputedStyle(d).color, cursor: getComputedStyle(m).cursor };
+        return { mobile: getComputedStyle(m).color, token, desktop: getComputedStyle(d).color, cursor: getComputedStyle(m).cursor,
+          underline: `${getComputedStyle(m).textDecorationLine} ${getComputedStyle(m).textDecorationStyle}`, opacity: getComputedStyle(m).opacity };
       });
+      expect(colors.underline).toBe('underline dotted');
+      expect(colors.opacity).toBe('1');
       expect(colors.mobile).toBe(colors.token);
       expect(colors.mobile).not.toBe(colors.desktop);
       expect(colors.cursor).toBe('not-allowed');

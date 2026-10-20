@@ -88,7 +88,7 @@ describe('Compare defaults (browser)', () => {
   beforeAll(async () => { browser = await chromium.launch(); });
   afterAll(async () => { await browser?.close(); });
 
-  it('opens in Canvas at 136%, centred on the cards (1280px)', async () => {
+  it('opens in Canvas at 136%, the cards centred across and 32px below the board\'s top (1280px)', async () => {
     const page = await openSite(browser, '#compare', { shotShaped: true });
     await page.locator('#anCanvasWrap .anc-card img').first().waitFor();
     expect(await pressed(page, 'canvas')).toBe('true');
@@ -99,10 +99,10 @@ describe('Compare defaults (browser)', () => {
       const rects = [...document.querySelectorAll('.anc-card, .anc-board .anc-box')].map((el) => el.getBoundingClientRect());
       const x0 = Math.min(...rects.map((r) => r.left)), x1 = Math.max(...rects.map((r) => r.right));
       const y0 = Math.min(...rects.map((r) => r.top)), y1 = Math.max(...rects.map((r) => r.bottom));
-      return { x: (x0 + x1) / 2 - (board.left + board.width / 2), y: (y0 + y1) / 2 - (board.top + board.height / 2) };
+      return { x: (x0 + x1) / 2 - (board.left + board.width / 2), top: y0 - board.top };
     });
     expect(Math.abs(off.x)).toBeLessThanOrEqual(2);
-    expect(Math.abs(off.y)).toBeLessThanOrEqual(2);
+    expect(Math.abs(off.top - 32)).toBeLessThanOrEqual(2);
     // Nothing changed yet, so nothing is written to the URL.
     await page.waitForTimeout(400);
     expect(page.url()).toBe('https://site.test/#compare');
