@@ -17,7 +17,7 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     slug: "canvas-movable-findings",
     date: "2026-10-19",
-    time: "21:35",
+    time: "21:36",
     title: "Movable Findings Boxes",
     subtitle: "On the Compare canvas, the findings box between two cards can now be dragged out of the way",
     bullets: [
