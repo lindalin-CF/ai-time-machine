@@ -15,6 +15,18 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "selected-looks-the-same",
+    date: "2026-10-19",
+    time: "20:30",
+    title: "One Look for Selected",
+    subtitle: "Every switch now marks its chosen option the way the product buttons do",
+    bullets: [
+      { lead: "Dark fill", text: "The chosen side of Across products | Week by week, Desktop | Mobile and Table | Canvas has the same dark fill and light text as a selected product, so it is clear which one is on." },
+      { lead: "Unchanged", text: "Options that are not chosen look as before, Mobile still looks unavailable in Canvas, and the top bar still marks the page you are on in orange." },
+    ],
+    closing: "Open Compare and switch between Table and Canvas.",
+  },
+  {
     slug: "changelog-in-footer",
     date: "2026-10-19",
     time: "20:18",

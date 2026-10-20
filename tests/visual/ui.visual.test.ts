@@ -28,7 +28,9 @@ test('Library and Collection device toggles stay visually consistent', async () 
 
   await expect(page.getByTestId('collection-toggle')).toMatchVisualDiff(
     page.getByTestId('library-toggle'),
-    { a11y: true, pixels: true },
+    // The test frame is scaled, so the two copies land on different sub-pixel offsets; with light text on the dark
+    // selected fill the text edges differ by a few anti-aliased pixels. Those are ignored; any other pixel still counts.
+    { a11y: true, pixels: true, pixelOpts: { includeAA: false } },
   );
 });
 

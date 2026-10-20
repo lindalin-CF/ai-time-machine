@@ -13,6 +13,10 @@
   --cf-border:#d9cebd;
   --cf-border-strong:#c8bba4;
   --accent-blue:#0055dc;
+  /* "Selected": the active product chip and the active option of every segmented toggle (.vt-btn.active).
+     #f5f1e9 on #423217 is about 11:1. The top nav's current page stays orange ("where you are", not a selection). */
+  --selected-bg:var(--cf-text);
+  --selected-fg:var(--cf-bg-100);
   --font-sans:'Space Grotesk','Inter',system-ui,-apple-system,sans-serif;
   --font-mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',monospace;
   --radius:14px;
@@ -241,7 +245,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 }
 @media(hover:hover){.chip:hover{border-color:var(--cf-border-strong);color:var(--cf-text)}}
 .chip[aria-selected="true"]{
-  background:var(--cf-text);color:var(--cf-bg-100);border-color:var(--cf-text);
+  background:var(--selected-bg);color:var(--selected-fg);border-color:var(--selected-bg);
 }
 .chip .swatch{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:middle}
 .weekpick{display:flex;align-items:center;gap:10px}
@@ -485,7 +489,8 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
   font-size:12.5px;padding:6px 11px;border-radius:7px;transition:background-color .15s ease-out,color .15s ease-out}
 .vt-btn svg{opacity:.85}
 .vt-btn:hover{color:var(--cf-text)}
-.vt-btn.active{background:var(--cf-bg-100);color:var(--cf-orange-ink);box-shadow:0 1px 3px rgba(66,50,23,.12)}
+.vt-btn.active{background:var(--selected-bg);color:var(--selected-fg);box-shadow:0 1px 3px rgba(66,50,23,.12)}
+.vt-btn.active svg{opacity:1}
 
 /* mobile screenshots render in a portrait (phone) frame */
 .shot.mobile{aspect-ratio:3/4}

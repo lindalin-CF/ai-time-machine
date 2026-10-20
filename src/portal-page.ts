@@ -285,7 +285,7 @@ export function compareWeeks(curWeek: string | null, prevWeek: string | null, ne
 
 /**
  * Portal pages with a Compare button: it sits at the right end of the week links' row (on its own line, left-aligned,
- * when the row wraps). Styled like the active Desktop/Mobile toggle on the homepage (.vt-btn.active in public/styles.css).
+ * when the row wraps). A cream button with orange text and a small shadow (a link, not a selection, so not the dark selected fill).
  */
 const COMPARE_HEAD = `  <style>
     .weeknav-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;margin:0 0 24px}
