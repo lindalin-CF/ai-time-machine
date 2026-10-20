@@ -15,6 +15,18 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "compare-mode-names",
+    date: "2026-10-19",
+    time: "20:47",
+    title: "Clearer Compare Mode Names",
+    subtitle: "The two Compare modes are now Across portals and Single portal",
+    bullets: [
+      { lead: "New names", text: "Across products is now Across portals, and Week by week is now Single portal, which says what each mode compares." },
+      { lead: "Same links", text: "Shared Compare links open exactly as before." },
+    ],
+    closing: "Open Compare and pick Single portal to follow one portal over the weeks.",
+  },
+  {
     slug: "selected-looks-the-same",
     date: "2026-10-19",
     time: "20:30",

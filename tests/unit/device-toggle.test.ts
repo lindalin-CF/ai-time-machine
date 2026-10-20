@@ -38,10 +38,10 @@ describe('gallery device toggle and other toggles (browser)', () => {
   // The Compare, Device and View toggles (not Clear selection or the canvas zoom buttons).
   const anToggles = '#analyticsView .viewtoggle:not(.anc-zoom) .vt-btn';
 
-  it('Compare loads with Across products, Desktop and Table highlighted, as the HTML marks them', async () => {
+  it('Compare loads with Across portals, Desktop and Table highlighted, as the HTML marks them', async () => {
     const page = await openAnalytics(browser);
     expect(await buttons(page, anToggles)).toEqual([
-      'Across products*:true', 'Week by week:false', 'Desktop*:true', 'Mobile:false', 'Table*:true', 'Canvas:false',
+      'Across portals*:true', 'Single portal:false', 'Desktop*:true', 'Mobile:false', 'Table*:true', 'Canvas:false',
     ]);
   });
 

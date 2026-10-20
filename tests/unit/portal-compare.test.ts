@@ -5,7 +5,7 @@ import { buildAnalyticsHash } from '../../public/analytics-share.js';
 import { makeEnv } from './fake-env';
 import { frames, openSite, probe } from './analytics-page';
 
-// The Compare button on portal pages (src/portal-page.ts): it opens Compare in Week by week, Canvas, desktop, for the
+// The Compare button on portal pages (src/portal-page.ts): it opens Compare in Single portal, Canvas, desktop, for the
 // portal and two weeks: the shown week and the next newer one, or the previous one on the hub and the latest week.
 
 const WEEKS = ['2026-10-12', '2026-10-05', '2026-09-28']; // newest first
@@ -108,12 +108,12 @@ describe('portal page Compare button (browser)', () => {
   it.each([
     ['/portals/chatgpt', [WEEKS[0], WEEKS[1]]],
     [`/portals/chatgpt/${WEEKS[1]}`, [WEEKS[0], WEEKS[1]]],
-  ])('clicking Compare on %s opens Compare in Canvas, Week by week, ChatGPT, with its two weeks, without the homepage', async (path, weeks) => {
+  ])('clicking Compare on %s opens Compare in Canvas, Single portal, ChatGPT, with its two weeks, without the homepage', async (path, weeks) => {
     const page = await open(path, { probe: true });
     await page.locator('.compare-cta').click();
     await page.locator('#anCanvasWrap .anc-card img').first().waitFor();
     expect(page.url()).toBe(`https://site.test/#compare?view=canvas&mode=time&portal=chatgpt&weeks=${weeks.join(',')}&device=desktop`);
-    expect(await compare(page)).toEqual({ mode: ['Week by week'], view: ['Canvas'], device: ['Desktop'], portals: ['ChatGPT'], cards: weeks });
+    expect(await compare(page)).toEqual({ mode: ['Single portal'], view: ['Canvas'], device: ['Desktop'], portals: ['ChatGPT'], cards: weeks });
     const log = await frames(page);
     expect(log.length).toBeGreaterThan(5);
     expect(log.filter((f) => f.gallery)).toEqual([]);

@@ -1445,7 +1445,7 @@ function anChip(v, label, on, brand) {
 function renderAnalytics() {
   const portalsMode = an.mode === "portals";
   const weekOptions = state.weeks.map((w) => ({ value: w.week, label: shortWeekLabel(w.week) }));
-  // Across products: one week, several portals. Week by week: one portal, several weeks.
+  // Across portals: one week, several portals. Single portal: one portal, several weeks.
   $("#anWeekLabel").textContent = portalsMode ? "Week" : "Weeks";
   weekPick($("#anWeek"), portalsMode
     ? {
@@ -1636,8 +1636,8 @@ function anFields(cols, latest) {
 
 /**
  * Phones: one card per column, with the Differences and Similarities between neighbouring cards. The pairs are the
- * table's (anFindingRows): two columns share one pair; with more, Week by week compares each week with the next older one,
- * so its lists sit between those two cards, and Across products compares each product with the first, so its lists
+ * table's (anFindingRows): two columns share one pair; with more, Single portal compares each week with the next older one,
+ * so its lists sit between those two cards, and Across portals compares each product with the first, so its lists
  * sit just before that product's card.
  */
 function anStackHTML(cols, latest) {
@@ -1666,8 +1666,8 @@ const anFindingCard = (c) => ({ label: c.label, slug: c.cap ? c.cap.slug : null,
 
 /**
  * Differences and Similarities rows, from the same findings as the Canvas box. Two columns: one cell spanning both.
- * More columns: Week by week compares each week with the next older one (the last column is the oldest shown);
- * Across products compares each product with the first column. Metrics come from the desktop analysis only, so
+ * More columns: Single portal compares each week with the next older one (the last column is the oldest shown);
+ * Across portals compares each product with the first column. Metrics come from the desktop analysis only, so
  * with Mobile selected each cell says so.
  */
 function anFindingRows(cols) {

@@ -1,6 +1,6 @@
 // Shareable Compare links: the whole Compare setup lives in the hash after #compare, e.g.
 //   #compare?view=canvas&mode=time&portal=chatgpt&weeks=2026-10-12,2026-10-05&device=desktop&zoom=1.28&pan=12,-40&layout=<base64url>
-// mode=time is Week by week (one portal, several weeks; "weeks" in app.js), mode=portals is Across products
+// mode=time is Single portal (one portal, several weeks; "weeks" in app.js), mode=portals is Across portals
 // (one week, several portals). Compare was called Analytics: #analytics links, already shared, still open it
 // (compareHash() rewrites them). Nothing is sent to the server. Everything read back is validated against
 // the portals and weeks the site actually has.

@@ -38,15 +38,15 @@ describe('Compare (browser)', () => {
     expect(await page.evaluate(() => document.documentElement.dataset.view)).toBe('compare');
     expect(await page.locator('#analyticsView h1').textContent()).toBe('Compare');
     expect(await page.locator('#analyticsView .analytics-sub').textContent())
-      .toBe('Compare AI product UIs side by side, or see how one product changes week by week.');
+      .toBe('Compare AI portal UIs side by side, or see how one portal changes week by week.');
     expect(await page.locator('header, #analyticsView').filter({ hasText: 'Analytics' }).count()).toBe(0);
   });
 
-  it('the mode toggle shows Across products and Week by week, with the same mode values', async () => {
+  it('the mode toggle shows Across portals and Single portal, with the same mode values', async () => {
     const page = await openSite(browser, '#compare');
     await cardsReady(page);
     expect(await page.locator('.an-mode .vt-btn').evaluateAll((els) => els.map((b) => `${b.getAttribute('data-mode')}=${b.textContent!.trim()}`)))
-      .toEqual(['portals=Across products', 'weeks=Week by week']);
+      .toEqual(['portals=Across portals', 'weeks=Single portal']);
     await page.locator('[data-mode="weeks"]').click();
     await page.waitForFunction(() => location.hash.includes('mode=time'));
     expect(new URL(page.url()).hash).toMatch(/^#compare\?view=canvas&mode=time&/);
@@ -62,7 +62,7 @@ describe('Compare (browser)', () => {
     expect(await old.evaluate(() => history.length)).toBe(await current.evaluate(() => history.length));
     const seen = await setup(old);
     expect(seen).toEqual(await setup(current));
-    expect(seen).toMatchObject({ mode: ['Week by week'], view: ['Canvas'], portals: ['Claude'], count: '2 of 4 selected', edges: 1, pct: '90%' });
+    expect(seen).toMatchObject({ mode: ['Single portal'], view: ['Canvas'], portals: ['Claude'], count: '2 of 4 selected', edges: 1, pct: '90%' });
     expect(await old.locator('.topnav-link.active').allTextContents()).toEqual(['Compare']);
   });
 
@@ -79,7 +79,7 @@ describe('Compare (browser)', () => {
     await page.evaluate((s) => { location.hash = `#analytics?${s}`; }, SETUP);
     await cardsReady(page);
     expect(page.url()).toBe(`https://site.test/#compare?${SETUP}`);
-    expect((await setup(page)).mode).toEqual(['Week by week']);
+    expect((await setup(page)).mode).toEqual(['Single portal']);
     // Copy link and URL sync write #compare.
     await page.locator('[data-anview="table"]').click();
     await page.waitForFunction(() => location.hash.includes('view=table'));

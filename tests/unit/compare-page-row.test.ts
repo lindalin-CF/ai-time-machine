@@ -35,7 +35,7 @@ describe('Compare Table: PAGE row (browser)', () => {
     return page;
   };
 
-  it('Week by week, Gemini Oct 12 vs Oct 5: the latest week links to the portal page, the older to its weekly page', async () => {
+  it('Single portal, Gemini Oct 12 vs Oct 5: the latest week links to the portal page, the older to its weekly page', async () => {
     const page = await open(`mode=time&portal=gemini&weeks=${WEEKS[0]},${WEEKS[1]}&device=desktop`);
     const { labels, cells } = await pageRow(page);
     expect(labels.slice(labels.indexOf('Captured'))).toEqual(['Captured', 'Page', 'Design notes']);
@@ -46,14 +46,14 @@ describe('Compare Table: PAGE row (browser)', () => {
     await page.context().close();
   });
 
-  it('Across products for an older week: every column links to its weekly page', async () => {
+  it('Across portals for an older week: every column links to its weekly page', async () => {
     const page = await open(`mode=portals&week=${WEEKS[1]}&portals=chatgpt,claude,gemini&device=desktop`);
     expect((await pageRow(page)).cells.map((c) => (typeof c === 'string' ? c : c.href)))
       .toEqual(['/portals/chatgpt/2026-10-05', '/portals/claude/2026-10-05', '/portals/gemini/2026-10-05']);
     await page.context().close();
   });
 
-  it('Across products for the latest week: every column links to its portal page', async () => {
+  it('Across portals for the latest week: every column links to its portal page', async () => {
     const page = await open(`mode=portals&week=${WEEKS[0]}&portals=chatgpt,claude,gemini&device=desktop`);
     expect((await pageRow(page)).cells.map((c) => (typeof c === 'string' ? c : c.href))).toEqual(['/portals/chatgpt', '/portals/claude', '/portals/gemini']);
     await page.context().close();

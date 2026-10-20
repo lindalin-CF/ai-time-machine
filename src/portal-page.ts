@@ -264,7 +264,7 @@ function notFound(request: Request): Response {
 }
 
 /**
- * The Compare page (public/index.html) in Week by week mode, Canvas, desktop, for one portal and two weeks (newer first),
+ * The Compare page (public/index.html) in Single portal mode, Canvas, desktop, for one portal and two weeks (newer first),
  * in the same format as its Copy link button (buildAnalyticsHash in public/analytics-share.js), so it opens as a shared link.
  */
 export function compareWeeksHash(slug: string, weeks: [string, string]): string {

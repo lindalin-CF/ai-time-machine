@@ -9,7 +9,7 @@ type Card = { label: string; slug: string; week: string; metrics: Record<string,
 const SNAP = JSON.parse(readFileSync(new URL('../fixtures/compare-findings-before.json', import.meta.url), 'utf8')) as {
   cards: Record<string, Card>; cases: { a: string; b: string; weekLabels?: boolean; out: string[] }[];
 };
-/** A real card; Week by week labels cards by their week, like Compare does. */
+/** A real card; Single portal labels cards by their week, like Compare does. */
 const card = (id: string, label?: string): Card => ({ ...SNAP.cards[id], ...(label ? { label } : {}) });
 const oct12 = card('chatgpt@2026-10-12', 'Oct 12'), oct5 = card('chatgpt@2026-10-05', 'Oct 5');
 
