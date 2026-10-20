@@ -86,7 +86,6 @@ test('Mobile top menu keeps Library and Collection on one row', async () => {
         <a href="#" class="topnav-link" data-nav="gallery">Library</a>
         <a href="#collection" class="topnav-link" data-nav="collection">Collection</a>
         <a href="#compare" class="topnav-link" data-nav="compare">Compare</a>
-        <a href="/changelog" class="topnav-link" data-nav="changelog">Changelog</a>
       </nav>
     </header>
   `);

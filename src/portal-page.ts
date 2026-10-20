@@ -132,14 +132,12 @@ export function jsonLdScript(data: unknown): string {
 export const MENU_BUTTON = `<button type="button" class="topnav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="site-nav"><svg class="topnav-toggle-open" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 5.5h14M3 10h14M3 14.5h14"/></svg><svg class="topnav-toggle-close" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg></button>`;
 
 /**
- * The site's top bar, the same as the homepage's (public/index.html): wordmark, then Library · Collection · Compare ·
- * Changelog. Only `current` is marked as the current page (orange, aria-current); the homepage views are hashes on /.
+ * The site's top bar, the same as the homepage's (public/index.html): wordmark, then Library · Collection · Compare.
+ * The homepage views are hashes on /, so no link is current on a server-rendered page (the Changelog is in the footer).
  */
-export function siteHeader(current?: "changelog"): string {
-  const links: [string, string, string][] = [["gallery", "/", "Library"], ["collection", "/#collection", "Collection"], ["compare", "/#compare", "Compare"], ["changelog", "/changelog", "Changelog"]];
-  const nav = links.map(([key, href, label]) => key === current
-    ? `<a href="${href}" class="topnav-link active" aria-current="page">${label}</a>`
-    : `<a href="${href}" class="topnav-link">${label}</a>`).join("\n        ");
+export function siteHeader(): string {
+  const links: [string, string][] = [["/", "Library"], ["/#collection", "Collection"], ["/#compare", "Compare"]];
+  const nav = links.map(([href, label]) => `<a href="${href}" class="topnav-link">${label}</a>`).join("\n        ");
   return `    <header class="topbar">
       <a class="wordmark" href="/"><span class="wordmark-dot" aria-hidden="true"></span><span class="wordmark-text">AI Interface Library</span></a>
       ${MENU_BUTTON}
@@ -149,7 +147,7 @@ export function siteHeader(current?: "changelog"): string {
     </header>`;
 }
 
-function page(opts: { title: string; description: string; canonical?: string; noindex?: boolean; image?: PreviewImage; jsonLd?: unknown; markdown?: string; head?: string; consent: ConsentMode; current?: "changelog"; body: string }): string {
+function page(opts: { title: string; description: string; canonical?: string; noindex?: boolean; image?: PreviewImage; jsonLd?: unknown; markdown?: string; head?: string; consent: ConsentMode; body: string }): string {
   return `<!doctype html>
 <html lang="en" data-consent="${opts.consent}">
 <head>
@@ -242,7 +240,7 @@ ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts
 ${opts.head ?? ""}</head>
 <body>
   <div class="wrap">
-${siteHeader(opts.current)}
+${siteHeader()}
 ${opts.body}
     <footer>Independent personal project. Not affiliated with any of the companies featured.
 ${FOOTER_LEGAL}
@@ -621,7 +619,6 @@ export function handleChangelog(request: Request): Response {
     description: "Decisions and releases for AI Interface Library, newest first.",
     canonical: CHANGELOG_URL,
     head: CHANGELOG_HEAD,
-    current: "changelog",
     body: `    <main class="changelog">
       <h1>Changelog</h1>
       <p class="meta">Decisions and releases for AI Interface Library.</p>

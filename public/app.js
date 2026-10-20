@@ -1711,7 +1711,7 @@ function route() {
     const el = $(sel);
     if (el) el.hidden = v !== view;
   }
-  // Exactly one link is current: the one for this view (Changelog is a separate page, never current here).
+  // Exactly one link is current: the one for this view.
   document.querySelectorAll(".topnav-link[data-nav]").forEach((a) => {
     const on = a.dataset.nav === view;
     a.classList.toggle("active", on);

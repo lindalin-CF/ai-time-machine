@@ -31,7 +31,7 @@ describe('Compare (browser)', () => {
   it('the nav shows Compare, active, and the page is titled Compare', async () => {
     const page = await openSite(browser, '#compare');
     await cardsReady(page);
-    expect(await page.locator('.topnav-link').allTextContents()).toEqual(['Library', 'Collection', 'Compare', 'Changelog']);
+    expect(await page.locator('.topnav-link').allTextContents()).toEqual(['Library', 'Collection', 'Compare']);
     const link = page.locator('.topnav-link[data-nav="compare"]');
     expect(await link.getAttribute('href')).toBe('#compare');
     expect(await page.locator('.topnav-link.active').allTextContents()).toEqual(['Compare']);

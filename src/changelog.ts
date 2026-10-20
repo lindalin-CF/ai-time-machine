@@ -15,6 +15,18 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "changelog-in-footer",
+    date: "2026-10-19",
+    time: "20:18",
+    title: "Changelog Moves to the Footer",
+    subtitle: "The top bar keeps the three places you browse: Library, Collection and Compare",
+    bullets: [
+      { lead: "Top bar", text: "Library, Collection and Compare, on every page and in the phone menu." },
+      { lead: "Footer", text: "The Changelog link stays after License, where it was. Old #notes links still open this page." },
+    ],
+    closing: "Scroll to the bottom of any page to find the Changelog.",
+  },
+  {
     slug: "compare-mode-row",
     date: "2026-10-19",
     time: "20:00",

@@ -3,7 +3,7 @@ import { chromium, type Browser, type Page } from 'playwright';
 import { handleChangelog } from '../../src/portal-page';
 import { openSite } from './analytics-page';
 
-// The top bar on phones (≤ 640px): the four links sit behind a menu button (public/site-menu.js) on the homepage and
+// The top bar on phones (≤ 640px): the three links sit behind a menu button (public/site-menu.js) on the homepage and
 // on the server-rendered pages. Above 640px, and without JS, the links show as before.
 
 const ORANGES = ['rgb(235, 98, 44)', 'rgb(204, 80, 30)'];
@@ -16,7 +16,7 @@ const visibleLinks = (page: Page) => links(page).evaluateAll((els) =>
 const orangeLinks = (page: Page) => links(page).evaluateAll((els, o) => els.filter((a) => o.includes(getComputedStyle(a).color)).map((a) => a.textContent!.trim()), ORANGES);
 const openMenu = async (page: Page) => {
   await toggle(page).click();
-  await expect.poll(() => visibleLinks(page)).toEqual(['Library', 'Collection', 'Compare', 'Changelog']);
+  await expect.poll(() => visibleLinks(page)).toEqual(['Library', 'Collection', 'Compare']);
 };
 const closed = async (page: Page) => {
   await expect.poll(() => visibleLinks(page)).toEqual([]);
@@ -39,7 +39,7 @@ describe('phone menu (browser)', () => {
   });
   afterAll(async () => { await browser?.close(); });
 
-  it.each(['', 'changelog'])('/%s at 390px: the links hide behind the button, which opens a panel of all four', async (path) => {
+  it.each(['', 'changelog'])('/%s at 390px: the links hide behind the button, which opens a panel of the three links', async (path) => {
     const page = await openSite(browser, path, { width: PHONE, pages });
     expect(await visibleLinks(page)).toEqual([]);
     expect(await toggle(page).isVisible()).toBe(true);
@@ -54,7 +54,7 @@ describe('phone menu (browser)', () => {
 
     await openMenu(page);
     expect(await toggle(page).getAttribute('aria-expanded')).toBe('true');
-    expect(await page.locator('#site-nav .topnav-link').count()).toBe(4);
+    expect(await page.locator('#site-nav .topnav-link').allTextContents()).toEqual(['Library', 'Collection', 'Compare']);
     await page.waitForTimeout(200); // the panel slides in over .15s
     const bar = (await page.locator('.topbar').boundingBox())!;
     const panel = (await page.locator('#site-nav').boundingBox())!;
@@ -80,7 +80,7 @@ describe('phone menu (browser)', () => {
     await page.waitForTimeout(300);
     const before = await rootStyles(page);
     if (how === 'swipe') await toggle(page).tap(); else await toggle(page).click();
-    await expect.poll(() => visibleLinks(page)).toHaveLength(4);
+    await expect.poll(() => visibleLinks(page)).toHaveLength(3);
     expect(await rootStyles(page)).toEqual(before); // no overflow, position or padding change on html or body
     if (how === 'wheel') {
       await page.mouse.move(200, 600);
@@ -92,7 +92,7 @@ describe('phone menu (browser)', () => {
     }
     await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThanOrEqual(590);
     expect(await toggle(page).getAttribute('aria-expanded')).toBe('true');
-    expect(await visibleLinks(page)).toHaveLength(4);
+    expect(await visibleLinks(page)).toHaveLength(3);
     expect(await rootStyles(page)).toEqual(before);
     // The panel is still attached under the sticky bar.
     const bar = (await page.locator('.topbar').boundingBox())!;
@@ -126,7 +126,7 @@ describe('phone menu (browser)', () => {
   it('tabbing out of the menu closes it', async () => {
     const page = await openSite(browser, '', { width: PHONE });
     await openMenu(page);
-    await page.locator('.topnav-link[data-nav="changelog"]').focus();
+    await page.locator('.topnav-link[data-nav="compare"]').focus();
     await page.keyboard.press('Tab');
     await closed(page);
     await page.context().close();
@@ -135,14 +135,14 @@ describe('phone menu (browser)', () => {
   it('a tap outside closes the menu without pressing what was under it', async () => {
     const page = await openSite(browser, '', { width: PHONE, hasTouch: true });
     await toggle(page).tap();
-    await expect.poll(() => visibleLinks(page)).toHaveLength(4);
+    await expect.poll(() => visibleLinks(page)).toHaveLength(3);
     const url = page.url();
     await page.touchscreen.tap(200, 700);
     await closed(page);
     expect(page.url()).toBe(url);
     // The button toggles it too.
     await toggle(page).tap();
-    await expect.poll(() => visibleLinks(page)).toHaveLength(4);
+    await expect.poll(() => visibleLinks(page)).toHaveLength(3);
     await toggle(page).tap();
     await closed(page);
     await page.context().close();
@@ -155,7 +155,7 @@ describe('phone menu (browser)', () => {
     await expect.poll(() => page.evaluate(() => document.documentElement.classList.contains('menu-open'))).toBe(false);
     expect(await toggle(page).getAttribute('aria-expanded')).toBe('false');
     expect(await toggle(page).isVisible()).toBe(false);
-    expect(await visibleLinks(page)).toEqual(['Library', 'Collection', 'Compare', 'Changelog']);
+    expect(await visibleLinks(page)).toEqual(['Library', 'Collection', 'Compare']);
     await page.context().close();
   });
 
@@ -163,14 +163,15 @@ describe('phone menu (browser)', () => {
     ['', 'Library', '.hero'],
     ['#collection', 'Collection', '.topnav-link.active'],
     ['#compare', 'Compare', '#anCanvasWrap .anc-card img'],
-    ['changelog', 'Changelog', 'main.changelog h1'],
-  ])('"%s": the menu marks exactly one item, %s', async (path, current, ready) => {
+    ['changelog', '', 'main.changelog h1'],
+  ])('"%s": the menu marks exactly one item (%s), or none on /changelog', async (path, current, ready) => {
     const page = await openSite(browser, path, { width: PHONE, pages });
     await page.locator(ready).first().waitFor({ state: 'attached' });
     await openMenu(page);
     await page.waitForTimeout(200); // link colours fade over .15s
-    expect(await orangeLinks(page)).toEqual([current]);
-    expect(await page.locator('.topnav-link[aria-current="page"]').allTextContents()).toEqual([current]);
+    const expected = current ? [current] : [];
+    expect(await orangeLinks(page)).toEqual(expected);
+    expect(await page.locator('.topnav-link[aria-current="page"]').allTextContents()).toEqual(expected);
     await page.context().close();
   });
 
@@ -178,14 +179,14 @@ describe('phone menu (browser)', () => {
     const page = await openSite(browser, '', { width: PHONE, reducedMotion: 'reduce' });
     expect(await page.locator('#site-nav').evaluate((el) => getComputedStyle(el).transitionDuration)).toBe('0s');
     await toggle(page).click();
-    expect(await visibleLinks(page)).toHaveLength(4);
+    expect(await visibleLinks(page)).toHaveLength(3);
     await page.context().close();
   });
 
   it.each(['', 'changelog'])('/%s at 1280px: no menu button, the links sit in the bar as before', async (path) => {
     const page = await openSite(browser, path, { pages });
     expect(await toggle(page).isVisible()).toBe(false);
-    expect(await visibleLinks(page)).toEqual(['Library', 'Collection', 'Compare', 'Changelog']);
+    expect(await visibleLinks(page)).toEqual(['Library', 'Collection', 'Compare']);
     const nav = await page.locator('#site-nav').evaluate((el) => {
       const s = getComputedStyle(el);
       return { position: s.position, direction: s.flexDirection, gap: s.columnGap, font: getComputedStyle(el.querySelector('a')!).fontSize };
@@ -198,9 +199,9 @@ describe('phone menu (browser)', () => {
     await page.context().close();
   });
 
-  it.each(['', 'changelog'])('/%s at 390px without JS: all four links are visible', async (path) => {
+  it.each(['', 'changelog'])('/%s at 390px without JS: all three links are visible', async (path) => {
     const page = await openSite(browser, path, { width: PHONE, pages, javaScriptEnabled: false });
-    expect(await visibleLinks(page)).toEqual(['Library', 'Collection', 'Compare', 'Changelog']);
+    expect(await visibleLinks(page)).toEqual(['Library', 'Collection', 'Compare']);
     expect(await toggle(page).isVisible()).toBe(false);
     expect(await noSideScroll(page)).toBe(true);
     await page.context().close();

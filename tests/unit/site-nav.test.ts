@@ -5,24 +5,25 @@ import { MENU_BUTTON, handleChangelog, handleHowWeAnalyze, handleLicense, handle
 import { makeEnv } from './fake-env';
 import { openSite } from './analytics-page';
 
-// The top bar: Library · Collection · Compare · Changelog on the homepage (public/index.html) and on every
-// server-rendered page (siteHeader in src/portal-page.ts). Exactly one item is current, and the retired Notes
-// links (#notes, #insights) go to /changelog.
+// The top bar: Library · Collection · Compare on the homepage (public/index.html) and on every server-rendered
+// page (siteHeader in src/portal-page.ts). Exactly one item is current on the homepage views and none elsewhere.
+// The Changelog is linked from both footers, and the retired Notes links (#notes, #insights) go to /changelog.
 
 const INDEX_HTML = readFileSync(new URL('../../public/index.html', import.meta.url), 'utf8');
 /** The accent orange and the darker orange-ink: both read as "orange" (the old hover colour was orange-ink). */
 const ORANGES = ['rgb(235, 98, 44)', 'rgb(204, 80, 30)'];
 
 describe('top bar markup', () => {
-  it('the homepage lists Library, Collection, Compare and Changelog, with no Notes', () => {
+  it('the homepage lists Library, Collection and Compare, with no Changelog or Notes', () => {
     const nav = INDEX_HTML.match(/<nav class="topnav" id="site-nav" aria-label="Site">([\s\S]*?)<\/nav>/)![1];
     expect([...nav.matchAll(/<a href="([^"]+)" class="topnav-link" data-nav="([^"]+)">([^<]+)<\/a>/g)].map((m) => [m[1], m[2], m[3]])).toEqual([
-      ['#', 'gallery', 'Library'], ['#collection', 'collection', 'Collection'], ['#compare', 'compare', 'Compare'], ['/changelog', 'changelog', 'Changelog'],
+      ['#', 'gallery', 'Library'], ['#collection', 'collection', 'Collection'], ['#compare', 'compare', 'Compare'],
     ]);
+    expect(nav).not.toContain('Changelog');
     expect(INDEX_HTML).not.toMatch(/>\s*Notes\s*</);
   });
 
-  it('server pages have the same four links; only /changelog marks one as current', async () => {
+  it('server pages have the same three links, none of them current', async () => {
     const t = makeEnv();
     const req = (p: string) => new Request(`https://x${p}`);
     const pages: [string, string][] = [
@@ -36,12 +37,18 @@ describe('top bar markup', () => {
     for (const [path, html] of pages) {
       const nav = html.match(/<nav class="topnav" id="site-nav" aria-label="Site">([\s\S]*?)<\/nav>/)?.[1] ?? '';
       expect([...nav.matchAll(/<a href="([^"]+)"[^>]*>([^<]+)<\/a>/g)].map((m) => `${m[2]} ${m[1]}`), path)
-        .toEqual(['Library /', 'Collection /#collection', 'Compare /#compare', 'Changelog /changelog']);
-      expect((nav.match(/aria-current="page"/g) ?? []).length, path).toBe(path === '/changelog' ? 1 : 0);
-      expect(html, path).toContain(siteHeader(path === '/changelog' ? 'changelog' : undefined));
+        .toEqual(['Library /', 'Collection /#collection', 'Compare /#compare']);
+      expect(nav, path).not.toMatch(/aria-current|active/);
+      expect(html, path).toContain(siteHeader());
       expect(html, path).not.toMatch(/>\s*Notes\s*</);
+      // The footer keeps Changelog right after License.
+      expect(html, path).toContain('<a href="/license">License</a> &middot; <a href="/changelog">Changelog</a> &middot;');
     }
-    expect(siteHeader('changelog')).toContain('<a href="/changelog" class="topnav-link active" aria-current="page">Changelog</a>');
+  });
+
+  it('the homepage footer keeps Changelog right after License', () => {
+    const foot = INDEX_HTML.match(/<footer class="sitefoot">([\s\S]*?)<\/footer>/)![1];
+    expect(foot).toContain('<a href="/license">License</a> &middot; <a href="/changelog">Changelog</a> &middot;');
   });
 
   it('the homepage and the server pages share the same menu button, right before the nav it controls', () => {
@@ -97,7 +104,7 @@ describe('top bar in the browser', () => {
     expect(log.filter((f) => f.gallery)).toEqual([]);
     expect(log.filter((f) => f.notes)).toEqual([]);
     expect(log.filter((f) => f.path !== '/changelog')).toEqual([]); // nothing was drawn before leaving
-    expect(log.at(-1)!.orange).toEqual(['Changelog']);
+    expect(log.at(-1)!.orange).toEqual([]);
     await page.context().close();
   });
 
@@ -124,12 +131,14 @@ describe('top bar in the browser', () => {
     await page.context().close();
   });
 
-  it('/changelog: exactly one orange item, Changelog', async () => {
+  it('/changelog: no orange item and no aria-current, on every frame', async () => {
     const page = await openSite(browser, 'changelog', { pages, initScript: PROBE });
     await page.waitForTimeout(300);
     const log = await frames(page);
     expect(log.length).toBeGreaterThan(5);
-    expect(log.filter((f) => f.orange.join() !== 'Changelog')).toEqual([]);
+    expect(log.filter((f) => f.orange.length)).toEqual([]);
+    expect(await page.locator('.topnav-link').allTextContents()).toEqual(['Library', 'Collection', 'Compare']);
+    expect(await page.locator('.topnav-link[aria-current]').count()).toBe(0);
     await page.context().close();
   });
 
