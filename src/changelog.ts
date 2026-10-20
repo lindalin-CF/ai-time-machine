@@ -15,6 +15,19 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "compare-mode-row",
+    date: "2026-10-19",
+    time: "20:00",
+    title: "Compare Mode on Its Own Row",
+    subtitle: "The switch between Across products and Week by week now sits first in the Compare controls",
+    bullets: [
+      { lead: "First row", text: "Across products | Week by week has a row to itself, as wide as the week menu and the Desktop/Mobile switch below it, so it is easier to spot." },
+      { lead: "Second row", text: "The week menu (or the weeks picker in Week by week), Desktop/Mobile, and the selected count with Clear on the right. The product buttons follow." },
+      { lead: "Phones", text: "The same rows at full width." },
+    ],
+    closing: "Open Compare and pick a mode in the first row.",
+  },
+  {
     slug: "design-polish",
     date: "2026-10-19",
     time: "19:43",

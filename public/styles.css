@@ -991,13 +991,16 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
 .anc-box--stack{margin:0 14px}
 
 /* ---------- analytics: control layout ----------
-   Row 1: Compare toggle, Week dropdown and Device toggle in equal columns as wide as the widest of
-   the three (1fr columns in a max-content grid), with the selected count and Clear on the right.
-   Row 2: portal chips across the full width.
+   Row 1: the Compare toggle alone. Row 2: Week dropdown and Device toggle in two equal columns (1fr columns
+   in a max-content grid) that the Compare toggle spans, so its edges line up with theirs at every width;
+   the selected count and Clear sit at the right end of row 2 (a subgrid shares the outer rows).
+   Then the portal chips across the full width.
    Above the results: View toggle left, canvas zoom and reset right (Canvas only), then the note. */
-#analyticsView .an-bar--top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px}
-#analyticsView .an-primary{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:12px;max-width:100%}
-#analyticsView .an-selection{display:flex;align-items:center;gap:4px;margin-left:auto}
+#analyticsView .an-bar--top{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:12px 16px}
+#analyticsView .an-primary{grid-column:1;grid-row:1 / span 2;align-self:stretch;display:grid;grid-template-rows:subgrid;
+  grid-template-columns:repeat(2,1fr);align-items:center;gap:12px;max-width:100%}
+#analyticsView .an-primary .an-mode{grid-column:1 / -1}
+#analyticsView .an-selection{grid-column:2;grid-row:2;justify-self:end;display:flex;align-items:center;gap:4px}
 #analyticsView .an-count{font-family:var(--font-mono);font-size:12px;color:var(--cf-text-soft);white-space:nowrap}
 /* Icon-only Clear: no background or border in any state; hover changes only the icon colour. */
 #analyticsView .an-clear{display:inline-grid;place-items:center;width:24px;height:24px;padding:0;margin:0;border:0;border-radius:6px;
@@ -1013,11 +1016,15 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
 @media(max-width:760px){
   #analyticsView .an-wp-btn{font-size:12px} /* the toggle buttons' size at this width */
 }
-@media(max-width:880px){
-  /* Below about 840px the three controls ("Across products | Week by week" is the widest) no longer fit
-     side by side at their natural width, so row 1
-     stacks into one full-width column (all three stay the same width); the count and Clear wrap below. */
-  #analyticsView .an-primary{grid-auto-flow:row;flex-basis:100%}
+@media(max-width:640px){
+  /* Phones: the same rows at full width (Compare; Week and Device in equal halves under it), the count and Clear below. */
+  #analyticsView .an-bar--top{grid-template-columns:1fr}
+  #analyticsView .an-primary{grid-row:auto;grid-template-rows:auto auto}
+  #analyticsView .an-selection{grid-column:1;grid-row:auto}
+}
+@media(max-width:359px){
+  /* Too narrow for Week and Device side by side ("Desktop | Mobile" needs about 135px): one full-width column. */
+  #analyticsView .an-primary{grid-template-columns:1fr;grid-template-rows:none}
 }
 
 /* ---------- analytics: week dropdown (public/analytics-weekpick.js) ----------
