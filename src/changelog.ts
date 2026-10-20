@@ -15,6 +15,18 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "compare-device-first",
+    date: "2026-10-19",
+    time: "21:19",
+    title: "Device First, One Even Row",
+    subtitle: "In Compare, Desktop | Mobile now comes before the week, and the controls share one size",
+    bullets: [
+      { lead: "New order", text: "The second row reads Desktop | Mobile, then the week (or weeks), with the selected count at the right end." },
+      { lead: "One size", text: "Desktop | Mobile and the week menu are the same height, text size and roundness as Across portals | Single portal above them, and both rows still start and end on the same edges." },
+    ],
+    closing: "Open Compare and switch between Desktop and Mobile.",
+  },
+  {
     slug: "compare-mode-names",
     date: "2026-10-19",
     time: "20:47",

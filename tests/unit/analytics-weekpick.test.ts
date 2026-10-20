@@ -103,8 +103,8 @@ describe('analytics week dropdown (browser)', () => {
       const page = await openAnalytics(browser);
       await page.locator('#analyticsView [data-mode="weeks"]').focus();
       await page.locator('#analyticsView [data-mode="weeks"]').evaluate((el) => (el as HTMLElement).blur());
-      await page.locator('#analyticsView [data-mode="portals"]').focus();
-      await page.keyboard.press('Tab');
+      // Row 2 reads Desktop, Mobile, then the dropdown: Tab from Mobile lands on it.
+      await page.locator('#analyticsView [data-andevice="mobile"]').focus();
       await page.keyboard.press('Tab');
       expect(await page.evaluate(() => document.activeElement?.classList.contains('an-wp-btn'))).toBe(true);
       expect(await btn(page).evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid');

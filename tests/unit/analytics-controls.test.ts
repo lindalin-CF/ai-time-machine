@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { chromium, type Browser, type Page } from 'playwright';
 import { openAnalytics, openSite, showCanvas } from './analytics-page';
 
-// Analytics controls layout: row 1 (Compare alone), row 2 (Week, Device; count and Clear selection on the right), then the portal chips,
+// Analytics controls layout: row 1 (Compare alone), row 2 (Device, Week; count and Clear selection on the right), then the portal chips,
 // and the results row (View toggle; canvas zoom and reset, Canvas only) with the canvas note under it.
 
 describe('analytics controls (browser)', () => {
@@ -25,12 +25,19 @@ describe('analytics controls (browser)', () => {
       const pr = panel.getBoundingClientRect();
       // Lines of text per button: a label that wraps has more than one client rect.
       const lines = (b: Element) => { const r = document.createRange(); r.selectNodeContents(b); return new Set([...r.getClientRects()].map((x) => Math.round(x.top))).size; };
+      // Font, padding and radius of a toggle's track and option (or the dropdown button), to show they share one set of values.
+      const look = (track: string, btn: string) => {
+        const t = getComputedStyle(document.querySelector(track)!), b = getComputedStyle(document.querySelector(btn)!);
+        return { font: b.fontSize, weight: b.fontWeight, trackPad: t.paddingTop, trackRadius: t.borderTopLeftRadius, pad: b.padding, radius: b.borderTopLeftRadius };
+      };
       const btns = (sel: string) => [...document.querySelectorAll<HTMLElement>(`${sel} .vt-btn`)].map((b) => ({ w: b.getBoundingClientRect().width, justify: getComputedStyle(b).justifyContent, lines: lines(b) }));
       return {
         mode: { left: c.left, right: c.right, top: c.top, bottom: c.bottom, h: c.height, font: getComputedStyle(document.querySelector('#analyticsView .an-mode .vt-btn')!).fontSize },
         week: { left: w.left, right: w.right, top: w.top, h: w.height }, device: { left: d.left, right: d.right, top: d.top, bottom: d.bottom, h: d.height },
         sel: { right: s.right, top: s.top, bottom: s.bottom, mid: s.top + s.height / 2 }, chipsTop: p.top,
         content: { left: pr.left + pad, right: pr.right - pad },
+        looks: { mode: look('#analyticsView .an-mode', '#analyticsView .an-mode .vt-btn'), device: look('#analyticsView .an-device', '#analyticsView .an-device .vt-btn') },
+        weekLook: (() => { const b = getComputedStyle(document.querySelector('#analyticsView .an-wp-btn')!); return { font: b.fontSize, weight: b.fontWeight, radius: b.borderTopLeftRadius }; })(),
         toggles: [btns('#analyticsView .an-mode'), btns('#analyticsView .an-device'), btns('#analyticsView .an-view')],
         overflow: document.documentElement.scrollWidth > window.innerWidth,
       };
@@ -42,13 +49,20 @@ describe('analytics controls (browser)', () => {
       }
       expect(r.overflow).toBe(false);
     };
-    // Compare alone on row 1, spanning Week + gap + Device on row 2 (edges within 1px).
+    // Compare alone on row 1, spanning Device + gap + Week on row 2 (edges within 1px); Device comes first.
     const expectSpan = (r: Awaited<ReturnType<typeof rows>>) => {
-      expect(r.week.top).toBeGreaterThanOrEqual(r.mode.bottom);
+      expect(r.device.top).toBeGreaterThanOrEqual(r.mode.bottom);
       expect(Math.abs(r.device.top - r.week.top)).toBeLessThan(1);
-      expect(Math.abs(r.mode.left - r.week.left)).toBeLessThanOrEqual(1);
-      expect(Math.abs(r.mode.right - r.device.right)).toBeLessThanOrEqual(1);
-      expect(r.device.left).toBeGreaterThan(r.week.right);
+      expect(Math.abs(r.mode.left - r.device.left)).toBeLessThanOrEqual(1);
+      expect(Math.abs(r.mode.right - r.week.right)).toBeLessThanOrEqual(1);
+      expect(r.week.left).toBeGreaterThan(r.device.right);
+    };
+    // Device matches the mode toggle (track and option), and the dropdown matches both in height, font and radius.
+    const expectSameLook = (r: Awaited<ReturnType<typeof rows>>) => {
+      expect(r.looks.device).toEqual(r.looks.mode);
+      expect(r.weekLook).toEqual({ font: r.looks.mode.font, weight: r.looks.mode.weight, radius: r.looks.mode.trackRadius });
+      expect(Math.abs(r.device.h - r.mode.h)).toBeLessThan(0.5);
+      expect(Math.abs(r.week.h - r.mode.h)).toBeLessThan(0.5);
     };
 
     it.each([[1280], [1100], [881], [641]])('at %ipx: Compare sits alone on row 1, edge to edge with Week and Device below it, in both modes', async (width) => {
@@ -58,6 +72,7 @@ describe('analytics controls (browser)', () => {
         const r = await rows(page);
         expectSpan(r);
         expectToggles(r);
+        expectSameLook(r);
         // Same height and font size as before the rearrangement (36px tall; 12.5px text above 760px, 12px below).
         expect(r.mode.h).toBeCloseTo(36, 1);
         expect(r.week.h).toBeCloseTo(36, 1);
@@ -70,13 +85,15 @@ describe('analytics controls (browser)', () => {
       }
     });
 
-    it('at 390px: Compare, then Week and Device, then the count, then the chips, each row full width', async () => {
+    it('at 390px: Compare, then Device and Week, then the count, then the chips, each row full width', async () => {
       const page = await openAnalytics(browser, { width: 390 });
       for (const mode of ['portals', 'weeks']) {
         await page.locator(`[data-mode="${mode}"]`).click();
         const r = await rows(page);
         expectSpan(r);
         expectToggles(r);
+        expectSameLook(r);
+        expect(r.mode.font).toBe('12px');
         expect(r.mode.left).toBeCloseTo(r.content.left, 0);
         expect(r.mode.right).toBeCloseTo(r.content.right, 0);
         expect(r.sel.top).toBeGreaterThanOrEqual(r.device.bottom);
@@ -87,7 +104,7 @@ describe('analytics controls (browser)', () => {
       expect((await rows(page)).overflow).toBe(false);
     });
 
-    it('at 320px: Week and Device stack under Compare at full width and nothing overflows', async () => {
+    it('at 320px: Device and Week stack under Compare at full width and nothing overflows', async () => {
       const page = await openAnalytics(browser, { width: 320 });
       const r = await rows(page);
       expectToggles(r);
@@ -95,11 +112,11 @@ describe('analytics controls (browser)', () => {
         expect(b.left).toBeCloseTo(r.content.left, 0);
         expect(b.right).toBeCloseTo(r.content.right, 0);
       }
-      expect(r.week.top).toBeGreaterThanOrEqual(r.mode.bottom);
-      expect(r.device.top).toBeGreaterThanOrEqual(r.week.top + r.week.h);
+      expect(r.device.top).toBeGreaterThanOrEqual(r.mode.bottom);
+      expect(r.week.top).toBeGreaterThanOrEqual(r.device.bottom);
     });
 
-    it('Compare follows the width of Week and Device (no fixed pixel width)', async () => {
+    it('Compare follows the width of Device and Week (no fixed pixel width)', async () => {
       const page = await openAnalytics(browser);
       const before = await rows(page);
       // Make Device wider; its column, the Week column and Compare all follow it.
@@ -219,8 +236,9 @@ describe('analytics controls (browser)', () => {
     });
 
     it('Clear is keyboard reachable with a visible focus ring', async () => {
+      // The week dropdown is the last control before Clear (row 2 reads Device, Week, then the count and Clear).
       const page = await openAnalytics(browser);
-      await page.locator('#analyticsView [data-andevice="mobile"]').focus();
+      await page.locator('#analyticsView .an-wp-btn').focus();
       await page.keyboard.press('Tab');
       expect(await page.evaluate(() => document.activeElement?.id)).toBe('anClear');
       expect(await page.locator('#anClear').evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid');
@@ -312,7 +330,7 @@ describe('analytics controls (browser)', () => {
       expect(hover.color).toBe(await token(page, '--cf-text'));
 
       await page.mouse.move(0, 0);
-      await page.locator('#analyticsView [data-andevice="mobile"]').focus();
+      await page.locator('#analyticsView .an-wp-btn').focus();
       await page.keyboard.press('Tab');
       expect(await look(page)).toMatchObject(plain);
       expect(await page.locator('#anClear').evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('solid');

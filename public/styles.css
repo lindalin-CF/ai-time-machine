@@ -17,6 +17,15 @@
      #f5f1e9 on #423217 is about 11:1. The top nav's current page stays orange ("where you are", not a selection). */
   --selected-bg:var(--cf-text);
   --selected-fg:var(--cf-bg-100);
+  /* Segmented toggles (.viewtoggle, .vt-btn) and the Compare week dropdown (.an-wp-btn) read these, so the Compare
+     mode toggle, the Desktop/Mobile toggle and the dropdown keep one height, padding, font and radius. */
+  --toggle-track-pad:3px;
+  --toggle-track-radius:10px;
+  --toggle-pad-y:6px;
+  --toggle-pad-x:11px;
+  --toggle-font-size:12.5px;
+  --toggle-font-weight:600;
+  --toggle-radius:7px;
   --font-sans:'Space Grotesk','Inter',system-ui,-apple-system,sans-serif;
   --font-mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',monospace;
   --radius:14px;
@@ -483,10 +492,12 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
 .controls-right{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .collection-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 
-.viewtoggle{display:inline-flex;background:var(--cf-bg-300);border:1px solid var(--cf-border);border-radius:10px;padding:3px;gap:2px}
+.viewtoggle{display:inline-flex;background:var(--cf-bg-300);border:1px solid var(--cf-border);border-radius:var(--toggle-track-radius);
+  padding:var(--toggle-track-pad);gap:2px}
 .vt-btn{display:inline-flex;align-items:center;gap:6px;border:none;cursor:pointer;
-  background:transparent;color:var(--cf-text-soft);font-family:var(--font-sans);font-weight:600;
-  font-size:12.5px;padding:6px 11px;border-radius:7px;transition:background-color .15s ease-out,color .15s ease-out}
+  background:transparent;color:var(--cf-text-soft);font-family:var(--font-sans);font-weight:var(--toggle-font-weight);
+  font-size:var(--toggle-font-size);padding:var(--toggle-pad-y) var(--toggle-pad-x);border-radius:var(--toggle-radius);
+  transition:background-color .15s ease-out,color .15s ease-out}
 .vt-btn svg{opacity:.85}
 .vt-btn:hover{color:var(--cf-text)}
 .vt-btn.active{background:var(--selected-bg);color:var(--selected-fg);box-shadow:0 1px 3px rgba(66,50,23,.12)}
@@ -591,7 +602,7 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
     gap:10px;
   }
   .viewtoggle{flex:0 0 auto}
-  .vt-btn{font-size:12px;padding:6px 9px}
+  :root{--toggle-font-size:12px;--toggle-pad-x:9px}
   .weekpick{flex:1 1 160px;justify-content:flex-end}
   #weekSelect,#collectionWeekSelect{max-width:100%;font-size:13px;padding:8px 32px 8px 12px}
 
@@ -996,7 +1007,7 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
 .anc-box--stack{margin:0 14px}
 
 /* ---------- analytics: control layout ----------
-   Row 1: the Compare toggle alone. Row 2: Week dropdown and Device toggle in two equal columns (1fr columns
+   Row 1: the Compare toggle alone. Row 2: Device toggle and Week dropdown in two equal columns (1fr columns
    in a max-content grid) that the Compare toggle spans, so its edges line up with theirs at every width;
    the selected count and Clear sit at the right end of row 2 (a subgrid shares the outer rows).
    Then the portal chips across the full width.
@@ -1018,27 +1029,25 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
 #analyticsView .an-resultsbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
 #analyticsView .anc-tools[hidden]{display:none}
 #analyticsView .an-canvas-note{margin:-2px 0 12px}
-@media(max-width:760px){
-  #analyticsView .an-wp-btn{font-size:12px} /* the toggle buttons' size at this width */
-}
 @media(max-width:640px){
-  /* Phones: the same rows at full width (Compare; Week and Device in equal halves under it), the count and Clear below. */
+  /* Phones: the same rows at full width (Compare; Device and Week in equal halves under it), the count and Clear below. */
   #analyticsView .an-bar--top{grid-template-columns:1fr}
   #analyticsView .an-primary{grid-row:auto;grid-template-rows:auto auto}
   #analyticsView .an-selection{grid-column:1;grid-row:auto}
 }
 @media(max-width:359px){
-  /* Too narrow for Week and Device side by side ("Desktop | Mobile" needs about 135px): one full-width column. */
+  /* Too narrow for Device and Week side by side ("Desktop | Mobile" needs about 135px): one full-width column. */
   #analyticsView .an-primary{grid-template-columns:1fr;grid-template-rows:none}
 }
 
 /* ---------- analytics: week dropdown (public/analytics-weekpick.js) ----------
-   Matches a toggle group: same background, border, radius and button font; 6px button padding inside
-   the group's 3px padding gives 9px, so it is as tall as a toggle group. */
+   Matches a toggle group: same background, border, radius and button font (the --toggle-* tokens); its vertical
+   padding is the group's track padding plus a button's, so it is exactly as tall as a toggle group. */
 #analyticsView .an-wp{position:relative;min-width:0}
 #analyticsView .an-wp-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin:0;
-  background:var(--cf-bg-300);border:1px solid var(--cf-border);border-radius:10px;padding:9px 10px 9px 14px;cursor:pointer;
-  font-family:var(--font-sans);font-weight:600;font-size:12.5px;color:var(--cf-text);text-align:left}
+  background:var(--cf-bg-300);border:1px solid var(--cf-border);border-radius:var(--toggle-track-radius);
+  padding:calc(var(--toggle-track-pad) + var(--toggle-pad-y)) 10px calc(var(--toggle-track-pad) + var(--toggle-pad-y)) 14px;cursor:pointer;
+  font-family:var(--font-sans);font-weight:var(--toggle-font-weight);font-size:var(--toggle-font-size);color:var(--cf-text);text-align:left}
 #analyticsView .an-wp-btn:hover{border-color:var(--cf-border-strong)}
 #analyticsView .an-wp-btn:focus-visible{outline:2px solid var(--cf-orange);outline-offset:2px}
 #analyticsView .an-wp-value{display:grid}
