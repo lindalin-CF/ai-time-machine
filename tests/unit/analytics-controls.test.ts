@@ -19,7 +19,7 @@ describe('analytics controls (browser)', () => {
   describe('layout', () => {
     const rows = (page: Page) => page.evaluate(() => {
       const box = (sel: string) => document.querySelector(sel)!.getBoundingClientRect();
-      const [c, w, d, s, p] = ['#analyticsView .an-mode', '#analyticsView .an-wp-btn', '#analyticsView .an-device', '#analyticsView .an-selection', '#anPortals'].map(box);
+      const [c, w, d, s, p] = ['#analyticsView .an-mode', '#analyticsView .an-wp-btn', '#analyticsView .an-device', '#analyticsView .an-selection', '#analyticsView .an-bar--portals'].map(box);
       const panel = document.querySelector<HTMLElement>('#analyticsView .analytics-controls')!;
       const pad = parseFloat(getComputedStyle(panel).paddingLeft) + 1;
       const pr = panel.getBoundingClientRect();
@@ -249,15 +249,15 @@ describe('analytics controls (browser)', () => {
     const place = (page: Page) => page.evaluate(() => {
       const r = (sel: string) => document.querySelector(sel)!.getBoundingClientRect();
       const panel = r('#analyticsView .analytics-controls'), device = r('#analyticsView .an-device'), mode = r('#analyticsView .an-mode');
-      const sel = r('#analyticsView .an-selection'), count = r('#anCount'), clear = r('#anClear'), chips = r('#anPortals');
+      const sel = r('#analyticsView .an-selection'), count = r('#anCount'), clear = r('#anClear'), chips = r('#analyticsView .an-bar--portals');
       const pad = parseFloat(getComputedStyle(document.querySelector('#analyticsView .analytics-controls')!).paddingRight) + 1;
       return {
         centred: Math.abs((sel.top + sel.height / 2) - (device.top + device.height / 2)),
         rightGap: panel.right - pad - sel.right,
         below: sel.top >= mode.bottom,
         clearAfterCount: clear.left >= count.right,
-        // Phones (≤ 640px): the chips scroll sideways in one row that runs to the panel's borders.
-        chipsFullWidth: Math.abs(chips.width - (innerWidth <= 640 ? panel.width - 2 : panel.width - 2 * pad)) < 1,
+        // The portal row (chips that scroll sideways, then "+N more") spans the panel's content width.
+        chipsFullWidth: Math.abs(chips.width - (panel.width - 2 * pad)) < 1,
         chipsBelow: chips.top >= Math.max(sel.bottom, device.bottom),
         overflow: document.documentElement.scrollWidth > window.innerWidth,
       };

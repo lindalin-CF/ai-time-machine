@@ -15,6 +15,19 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "compare-portal-row",
+    date: "2026-10-21",
+    time: "17:06",
+    title: "Compare's Portals on One Line",
+    subtitle: "Compare now lists portals the way the Library filter bar does",
+    bullets: [
+      { lead: "One row", text: "The first four portals sit in one row that scrolls sideways, so the comparison starts higher on the page." },
+      { lead: "+ more", text: "The rest are in a \"+ more\" menu. A portal you pick there joins the row, and picking it again takes it out." },
+      { lead: "Same limits", text: "Across portals still compares up to four portals, and Single portal still follows one." },
+    ],
+    closing: "Open Compare and pick a portal from + more.",
+  },
+  {
     slug: "browse-compare-filter-bar",
     date: "2026-10-21",
     time: "16:42",

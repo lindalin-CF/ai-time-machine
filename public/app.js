@@ -136,9 +136,9 @@ function renderFilters() {
   fadeFilterEdges();
 }
 
-/** Fade the end(s) of the chip row that hide more chips. */
-function fadeFilterEdges() {
-  const wrap = $("#filters");
+/** Fade the end(s) of a chip row (the Library's #filters, Compare's #anPortals) that hide more chips. */
+function fadeFilterEdges() { fadeChipEdges($("#filters")); }
+function fadeChipEdges(wrap) {
   if (!wrap) return;
   const max = wrap.scrollWidth - wrap.clientWidth;
   wrap.classList.toggle("fade-start", max > 1 && wrap.scrollLeft > 1);
@@ -156,11 +156,7 @@ function togglePortal(slug) {
   if (inMenu) {
     const hadFocus = document.activeElement?.closest?.("#filters, #moreMenu");
     renderFilters();
-    if (hadFocus) {
-      const chip = $(`#filters .chip[data-portal="${CSS.escape(slug)}"]`) || $("#moreMenu .chip-more");
-      chip?.focus();
-      chip?.scrollIntoView({ block: "nearest", inline: "nearest" });
-    }
+    if (hadFocus) focusPortalChip($("#filters"), $("#moreMenu"), slug);
   } else {
     syncFilterChips();
   }
@@ -183,23 +179,26 @@ function syncFilterChips() {
 
 // "+N more": built like the week dropdown (a button, then a listbox of option buttons). Arrow keys, Home and End
 // move between options, Enter or a click picks one, Esc closes and returns focus to the button, as does a click outside.
-function renderMoreMenu() {
-  const menu = $("#moreMenu");
+// Used by the Library filter bar (#moreMenu) and Compare's portal row (#anMoreMenu).
+// opts: { listId, items: portals[], multi, selected(slug), disabled(slug), onPick(slug) }.
+function mountMoreMenu(menu, opts) {
   if (!menu) return;
-  const rest = state.portals.slice(FILTER_CHIPS);
+  const rest = opts.items;
   menu.hidden = rest.length === 0;
   if (!rest.length) { menu.innerHTML = ""; return; }
+  const disabled = opts.disabled || (() => false);
   menu.innerHTML =
-    `<button class="chip chip-more" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="moreMenuList">+${rest.length} more</button>` +
-    `<div class="week-menu-list more-menu-list" id="moreMenuList" role="listbox" aria-multiselectable="true" aria-label="More portals">` +
-    rest.map((p) => `<button class="week-option more-option" type="button" role="option" data-portal="${esc(p.slug)}" aria-selected="false" tabindex="-1">` +
-      `<span class="swatch" style="background:${esc(p.brand)}"></span>${esc(p.name)}</button>`).join("") +
+    `<button class="chip chip-more" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="${opts.listId}">+${rest.length} more</button>` +
+    `<div class="week-menu-list more-menu-list" id="${opts.listId}" role="listbox"${opts.multi ? ' aria-multiselectable="true"' : ""} aria-label="More portals">` +
+    rest.map((p) => `<button class="week-option more-option" type="button" role="option" data-portal="${esc(p.slug)}" aria-selected="${opts.selected(p.slug)}"` +
+      `${disabled(p.slug) ? ' aria-disabled="true"' : ""} tabindex="-1"><span class="swatch" style="background:${esc(p.brand)}"></span>${esc(p.name)}</button>`).join("") +
     `</div>`;
   const btn = menu.querySelector(".chip-more");
   const options = () => [...menu.querySelectorAll(".more-option")];
   const focusOption = (i) => { const o = options(); o[(i + o.length) % o.length]?.focus(); };
   const openAt = (i) => {
     closeWeekMenus();
+    closeMoreMenu();
     menu.classList.add("open");
     btn.setAttribute("aria-expanded", "true");
     if (i !== null) focusOption(i);
@@ -226,18 +225,33 @@ function renderMoreMenu() {
   });
   options().forEach((o) => o.addEventListener("click", (e) => {
     e.stopPropagation();
+    if (o.getAttribute("aria-disabled") === "true") return; // e.g. Compare already has four portals
     closeMoreMenu();
-    togglePortal(o.dataset.portal);
+    opts.onPick(o.dataset.portal);
   }));
 }
 
+/** After a pick from a "+N more" menu re-renders the row: focus the portal's chip, or "+N more" when it left the row. */
+function focusPortalChip(row, menu, slug) {
+  const chip = row?.querySelector(`.chip[data-portal="${CSS.escape(slug)}"], .chip[data-v="${CSS.escape(slug)}"]`) || menu?.querySelector(".chip-more");
+  chip?.focus();
+  chip?.scrollIntoView({ block: "nearest", inline: "nearest" });
+}
+
+function renderMoreMenu() {
+  mountMoreMenu($("#moreMenu"), {
+    listId: "moreMenuList", items: state.portals.slice(FILTER_CHIPS), multi: true,
+    selected: (slug) => state.selected.has(slug), onPick: togglePortal,
+  });
+}
+
 function closeMoreMenu(refocus = false) {
-  const menu = $("#moreMenu.open");
-  if (!menu) return;
-  menu.classList.remove("open");
-  const btn = menu.querySelector(".chip-more");
-  btn.setAttribute("aria-expanded", "false");
-  if (refocus) btn.focus();
+  document.querySelectorAll(".more-menu.open").forEach((menu) => {
+    menu.classList.remove("open");
+    const btn = menu.querySelector(".chip-more");
+    btn.setAttribute("aria-expanded", "false");
+    if (refocus && menu.contains(document.activeElement)) btn.focus();
+  });
 }
 
 // ---- Browse | Compare: Compare opens the Compare view with this page's portal, week and device ----
@@ -256,10 +270,12 @@ function initTaskSwitch() {
 
 // The filter bar sticks right under the sticky top bar, whose height changes with the viewport (and its wrapping).
 function initFilterEdges() {
-  const wrap = $("#filters");
-  if (!wrap) return;
-  wrap.addEventListener("scroll", fadeFilterEdges, { passive: true });
-  if (typeof ResizeObserver === "function") new ResizeObserver(fadeFilterEdges).observe(wrap);
+  for (const wrap of [$("#filters"), $("#anPortals")]) {
+    if (!wrap) continue;
+    const fade = () => fadeChipEdges(wrap);
+    wrap.addEventListener("scroll", fade, { passive: true });
+    if (typeof ResizeObserver === "function") new ResizeObserver(fade).observe(wrap);
+  }
 }
 
 function trackTopbarHeight() {
@@ -1574,21 +1590,28 @@ function renderAnalytics() {
       labelledBy: "anWeekLabel",
       onChange: (weeks) => { an.weeks = new Set(weeks); anSyncSelection(); renderAnContent(); anChanged(); },
     });
+  // One row, like the Library filter bar: the first FILTER_CHIPS portals, then any picked portal from the
+  // "+N more" menu, which holds the rest.
   const chips = $("#anPortals");
+  const isOn = (slug) => (portalsMode ? an.portals.has(slug) : slug === an.portal);
+  const pick = (v) => {
+    if (!portalsMode) an.portal = v;
+    else if (an.portals.has(v)) an.portals.delete(v);
+    else if (an.portals.size < AN_MAX) an.portals.add(v);
+    renderAnalytics();
+    anChanged();
+  };
+  const shown = state.portals.slice(0, FILTER_CHIPS);
+  const extra = state.portals.filter((p) => isOn(p.slug) && !shown.includes(p));
   chips.setAttribute("aria-label", portalsMode ? "Portals" : "Portal");
-  chips.innerHTML = state.portals
-    .map((p) => anChip(p.slug, p.name, portalsMode ? an.portals.has(p.slug) : p.slug === an.portal, p.brand))
-    .join("");
-  chips.querySelectorAll(".chip").forEach((c) =>
-    c.addEventListener("click", () => {
-      const v = c.dataset.v;
-      if (!portalsMode) an.portal = v;
-      else if (an.portals.has(v)) an.portals.delete(v);
-      else if (an.portals.size < AN_MAX) an.portals.add(v);
-      renderAnalytics();
-      anChanged();
-    })
-  );
+  chips.innerHTML = [...shown, ...extra].map((p) => anChip(p.slug, p.name, isOn(p.slug), p.brand)).join("");
+  chips.querySelectorAll(".chip").forEach((c) => c.addEventListener("click", () => pick(c.dataset.v)));
+  mountMoreMenu($("#anMoreMenu"), {
+    listId: "anMoreMenuList", items: state.portals.slice(FILTER_CHIPS), multi: portalsMode,
+    selected: isOn, disabled: (slug) => portalsMode && !isOn(slug) && an.portals.size >= AN_MAX,
+    onPick: (v) => { pick(v); focusPortalChip(chips, $("#anMoreMenu"), v); },
+  });
+  fadeChipEdges(chips);
   anSyncSelection();
   renderAnContent();
 }
@@ -1843,7 +1866,7 @@ document.addEventListener("click", () => { closeWeekMenus(); closeMoreMenu(); })
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
   closeWeekMenus();
-  closeMoreMenu($("#moreMenu")?.contains(document.activeElement));
+  closeMoreMenu(true);
 });
 
 initLightbox();
