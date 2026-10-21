@@ -17,7 +17,7 @@ export const CHANGELOG: ChangelogEntry[] = [
   {
     slug: "library-week-dropdown",
     date: "2026-10-21",
-    time: "18:10",
+    time: "18:02",
     title: "One Week Dropdown",
     subtitle: "The week picker in the Library filter bar is now the same dropdown Compare uses",
     bullets: [
