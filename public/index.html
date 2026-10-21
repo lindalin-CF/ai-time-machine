@@ -111,16 +111,8 @@
         <div class="more-menu" id="moreMenu" hidden></div>
       </div>
       <div class="controls-right">
-        <div class="viewtoggle" role="group" aria-label="Screenshot device">
-          <button class="vt-btn active" type="button" data-device="desktop" aria-pressed="true">
-            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-4l1 2h2a1 1 0 1 1 0 2H7a1 1 0 1 1 0-2h2l1-2H6a2 2 0 0 1-2-2V5Zm2 0v9h12V5H6Z"/></svg>
-            Desktop
-          </button>
-          <button class="vt-btn" type="button" data-device="mobile" aria-pressed="false">
-            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M7 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H7Zm0 2h10v14H7V5Zm4 12h2a1 1 0 1 1 0 2h-2a1 1 0 1 1 0-2Z"/></svg>
-            Mobile
-          </button>
-        </div>
+        <!-- Desktop | Mobile: public/device-toggle.js renders it -->
+        <div class="viewtoggle device-toggle" id="deviceToggle" role="group" aria-label="Screenshot device"></div>
         <div class="weekpick">
           <label for="weekSelect" class="sr-only">Week</label>
           <select id="weekSelect" aria-label="Choose a week"></select>
@@ -171,16 +163,7 @@
           <label for="collectionWeekSelect">Week</label>
           <select id="collectionWeekSelect" aria-label="Choose a week"></select>
         </div>
-        <div class="viewtoggle" role="group" aria-label="Screenshot device">
-          <button class="vt-btn active" type="button" data-device="desktop" aria-pressed="true">
-            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-4l1 2h2a1 1 0 1 1 0 2H7a1 1 0 1 1 0-2h2l1-2H6a2 2 0 0 1-2-2V5Zm2 0v9h12V5H6Z"/></svg>
-            Desktop
-          </button>
-          <button class="vt-btn" type="button" data-device="mobile" aria-pressed="false">
-            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M7 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H7Zm0 2h10v14H7V5Zm4 12h2a1 1 0 1 1 0 2h-2a1 1 0 1 1 0-2Z"/></svg>
-            Mobile
-          </button>
-        </div>
+        <div class="viewtoggle device-toggle" id="collectionDeviceToggle" role="group" aria-label="Screenshot device"></div>
         <button class="dl-all" id="dlAll" type="button">
           <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1Z"/><path fill="currentColor" d="M5 19a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg>
           <span class="dl-all-label">Download all (.zip)</span>
@@ -203,10 +186,7 @@
               <button class="vt-btn active" type="button" data-mode="portals" aria-pressed="true">Across portals</button>
               <button class="vt-btn" type="button" data-mode="weeks" aria-pressed="false">Single portal</button>
             </div>
-            <div class="viewtoggle an-device" role="group" aria-label="Screenshot device">
-              <button class="vt-btn active" type="button" data-andevice="desktop" aria-pressed="true">Desktop</button>
-              <button class="vt-btn" type="button" data-andevice="mobile" aria-pressed="false">Mobile</button>
-            </div>
+            <div class="viewtoggle device-toggle an-device" id="anDevice" role="group" aria-label="Screenshot device"></div>
             <span id="anWeekLabel" hidden>Week</span>
             <div class="an-week" id="anWeek"></div>
           </div>

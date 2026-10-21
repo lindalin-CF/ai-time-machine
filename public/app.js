@@ -2,6 +2,7 @@
 import { anCanvasState, findingsCellHTML, mountAnCanvas, tableFindings, unmountAnCanvas } from "./analytics-canvas.js";
 import { buildAnalyticsHash, compareHash, hashRoute, libraryCompareHash, parseAnalyticsHash } from "./analytics-share.js";
 import { closeWeekPicks, weekPick } from "./analytics-weekpick.js";
+import { deviceToggle } from "./device-toggle.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 
@@ -781,11 +782,7 @@ function initDownloadAll() {
 
 // ---- device toggle: Desktop / Mobile (both Library + Collection) ----------
 function syncToggles() {
-  document.querySelectorAll(".vt-btn[data-device]").forEach((b) => {
-    const on = b.dataset.device === state.device;
-    b.classList.toggle("active", on);
-    b.setAttribute("aria-pressed", on ? "true" : "false");
-  });
+  for (const id of ["#deviceToggle", "#collectionDeviceToggle"]) deviceToggle($(id), { selected: state.device });
 }
 
 function initDeviceToggle() {
@@ -1617,14 +1614,7 @@ const AN_CANVAS_DEVICE_NOTE = "Canvas compares desktop screenshots only.";
 function anSyncDevice() {
   const canvas = an.view === "canvas";
   if (canvas && an.device === "mobile") an.device = "desktop";
-  $("#analyticsView").querySelectorAll(".an-device .vt-btn").forEach((x) => {
-    const on = x.dataset.andevice === an.device;
-    x.classList.toggle("active", on); x.setAttribute("aria-pressed", String(on));
-    if (x.dataset.andevice !== "mobile") return;
-    x.disabled = canvas;
-    if (canvas) { x.setAttribute("aria-disabled", "true"); x.title = AN_CANVAS_DEVICE_NOTE; }
-    else { x.removeAttribute("aria-disabled"); x.removeAttribute("title"); }
-  });
+  deviceToggle($("#anDevice"), { attr: "andevice", selected: an.device, disabled: canvas ? { mobile: AN_CANVAS_DEVICE_NOTE } : {} });
 }
 
 // Compare's portal row: the site's first four portals, then these (when the site has them), then the rest in site order.
@@ -1933,6 +1923,8 @@ document.addEventListener("keydown", (e) => {
   closeMoreMenu(true);
 });
 
+// Compare's Desktop | Mobile now, before the data: enterAnalytics() binds its listeners to these buttons.
+deviceToggle($("#anDevice"), { attr: "andevice", selected: an.device });
 initLightbox();
 initManualSnapshots();
 initDownloadAll();

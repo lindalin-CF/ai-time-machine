@@ -15,6 +15,18 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "compare-device-icons",
+    date: "2026-10-21",
+    time: "18:19",
+    title: "Desktop and Mobile Icons in Compare",
+    subtitle: "Compare's Desktop | Mobile switch now has the monitor and phone icons, like the Library",
+    bullets: [
+      { lead: "One switch", text: "The Library, the Collection and Compare now share the same Desktop | Mobile switch." },
+      { lead: "Same place", text: "In Compare it is still exactly as wide as Across portals | Single portal, and Mobile is still off in Canvas, which compares desktop screenshots only." },
+    ],
+    closing: "Open Compare and look at Desktop | Mobile.",
+  },
+  {
     slug: "library-week-dropdown",
     date: "2026-10-21",
     time: "18:02",

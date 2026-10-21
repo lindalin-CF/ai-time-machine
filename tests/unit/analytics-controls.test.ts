@@ -23,8 +23,13 @@ describe('analytics controls (browser)', () => {
       const panel = document.querySelector<HTMLElement>('#analyticsView .analytics-controls')!;
       const pad = parseFloat(getComputedStyle(panel).paddingLeft) + 1;
       const pr = panel.getBoundingClientRect();
-      // Lines of text per button: a label that wraps has more than one client rect.
-      const lines = (b: Element) => { const r = document.createRange(); r.selectNodeContents(b); return new Set([...r.getClientRects()].map((x) => Math.round(x.top))).size; };
+      // Lines of text per button: a label that wraps has more than one client rect (its text only, not an icon).
+      const lines = (b: Element) => {
+        const tops = [...b.childNodes].filter((n) => n.nodeType === Node.TEXT_NODE && n.textContent!.trim()).flatMap((n) => {
+          const r = document.createRange(); r.selectNodeContents(n); return [...r.getClientRects()].map((x) => Math.round(x.top));
+        });
+        return new Set(tops).size;
+      };
       // Font, padding and radius of a toggle's track and option (or the dropdown button), to show they share one set of values.
       const look = (track: string, btn: string) => {
         const t = getComputedStyle(document.querySelector(track)!), b = getComputedStyle(document.querySelector(btn)!);

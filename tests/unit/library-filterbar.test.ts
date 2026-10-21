@@ -88,7 +88,7 @@ describe('landing page controls (browser)', () => {
       expect(await btn.evaluate((b) => [b.tagName, b.getAttribute('type'), b.textContent!.trim(), b.getAttribute('aria-label')]))
         .toEqual(['BUTTON', 'button', 'Compare →', 'Compare the selected portals']);
       expect(await page.locator('.controls-right > *').evaluateAll((els) => els.map((e) => e.className || e.id)))
-        .toEqual(['viewtoggle', 'weekpick', 'searchbar', 'fb-compare']);
+        .toEqual(['viewtoggle device-toggle', 'weekpick', 'searchbar', 'fb-compare']);
       const r = await page.evaluate(() => {
         const box = (s: string) => document.querySelector(s)!.getBoundingClientRect();
         const bar = box('.controls'), b = box('#compareBtn'), cs = getComputedStyle(document.querySelector('#compareBtn')!);

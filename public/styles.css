@@ -538,6 +538,12 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
 .vt-btn:hover{color:var(--cf-text)}
 .vt-btn.active{background:var(--selected-bg);color:var(--selected-fg);box-shadow:0 1px 3px rgba(66,50,23,.12)}
 .vt-btn.active svg{opacity:1}
+/* Desktop | Mobile (public/device-toggle.js): the Library bar, the Collection and Compare. Its size and width come from
+   each place's layout rules. A disabled option (Mobile in Compare's Canvas) stays readable: the soft text colour, with a
+   dotted underline that points to its tooltip (the title says why). */
+.device-toggle .vt-btn:focus-visible{outline:2px solid var(--cf-orange);outline-offset:2px}
+.device-toggle .vt-btn:disabled,.device-toggle .vt-btn:disabled:hover{color:var(--cf-text-soft);background:transparent;box-shadow:none;cursor:not-allowed;
+  text-decoration:underline dotted;text-underline-offset:3px}
 
 /* mobile screenshots render in a portrait (phone) frame */
 .shot.mobile{aspect-ratio:3/4}
@@ -1034,10 +1040,6 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
 .anc-box-list{margin:0;padding:0 0 0 16px;font-size:12px;line-height:1.4;color:var(--cf-text)}
 .anc-box-list li+li{margin-top:4px}
 /* Narrow screens: stacked cards with the comparison between neighbours. */
-/* Canvas has no mobile analysis data, so Mobile is disabled there (public/app.js anSyncDevice). */
-/* Readable, not faded: the soft text colour, with a dotted underline that points to its tooltip (the title says why). */
-.an-device .vt-btn:disabled,.an-device .vt-btn:disabled:hover{color:var(--cf-text-soft);background:transparent;box-shadow:none;cursor:not-allowed;
-  text-decoration:underline dotted;text-underline-offset:3px}
 .an-canvas-wrap > .anc-note{padding:10px 12px;border-bottom:1px solid var(--cf-border);background:var(--cf-bg-200)}
 .anc-stack{display:flex;flex-direction:column;align-items:stretch;gap:10px;padding:12px}
 .anc-card--stack,.anc-box--stack{position:static;width:auto;cursor:default}
@@ -1062,7 +1064,7 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
   background:none;color:var(--cf-text-soft);cursor:pointer}
 #analyticsView .an-clear:hover{color:var(--cf-text)}
 #analyticsView .an-clear:disabled,#analyticsView .an-clear:disabled:hover{color:var(--cf-border-strong);cursor:not-allowed}
-#analyticsView .an-clear:focus-visible,#analyticsView .an-mode .vt-btn:focus-visible,#analyticsView .an-device .vt-btn:focus-visible{outline:2px solid var(--cf-orange);outline-offset:2px}
+#analyticsView .an-clear:focus-visible,#analyticsView .an-mode .vt-btn:focus-visible{outline:2px solid var(--cf-orange);outline-offset:2px}
 #analyticsView .an-mode,#analyticsView .an-device,#analyticsView .an-view{display:grid;grid-auto-flow:column;grid-auto-columns:1fr}
 #analyticsView .an-mode .vt-btn,#analyticsView .an-device .vt-btn,#analyticsView .an-view .vt-btn{justify-content:center}
 #analyticsView .an-resultsbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
