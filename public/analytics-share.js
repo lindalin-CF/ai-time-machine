@@ -178,3 +178,24 @@ export function parseAnalyticsHash(hash, known) {
   }
   return out;
 }
+
+/**
+ * The Compare link for the landing page's Browse | Compare switch, in the format Copy link writes.
+ * s: { portal (slug, or null for All portals), week (the week on screen), weeks[] (newest first), portals[] (site order), device }.
+ * All portals: one week, Compare's default portals. One portal: that portal over this week and the nearest older one,
+ * or, when there is no older week, that portal next to Compare's usual second default. Mobile opens the Table
+ * (the Canvas compares desktop screenshots only).
+ */
+export function libraryCompareHash(s) {
+  const view = s.device === "mobile" ? "table" : "canvas";
+  const device = s.device === "mobile" ? "mobile" : "desktop";
+  const week = s.week || null;
+  if (!s.portal) return `${ROUTE}?view=${view}&mode=portals${week ? `&week=${encodeURIComponent(week)}` : ""}&device=${device}`;
+  const weeks = s.weeks || [];
+  const older = week ? weeks[weeks.indexOf(week) + 1] : undefined;
+  if (week && weeks.includes(week) && older) {
+    return buildAnalyticsHash({ view, mode: "weeks", portal: s.portal, weeks: [week, older], device });
+  }
+  const second = (s.portals || []).slice(0, 2).find((p) => p !== s.portal) || (s.portals || []).find((p) => p !== s.portal);
+  return buildAnalyticsHash({ view, mode: "portals", week, portals: second ? [s.portal, second] : [s.portal], device });
+}

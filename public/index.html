@@ -104,9 +104,19 @@
       </div>
     </section>
 
-    <!-- controls -->
-    <section class="controls">
-      <div class="filters" id="filters" role="tablist" aria-label="Filter by portal"></div>
+    <!-- controls: Browse | Compare, then one sticky filter bar (portal chips, device, week, search) -->
+    <div class="task-switch-row">
+      <div class="viewtoggle task-switch" role="group" aria-label="Browse the library or compare portals">
+        <button class="vt-btn active" type="button" data-task="browse" aria-pressed="true">Browse</button>
+        <button class="vt-btn" type="button" data-task="compare" aria-pressed="false">Compare</button>
+      </div>
+    </div>
+    <section class="controls" aria-label="Filters">
+      <div class="fb-portals">
+        <span class="fb-label" id="filtersLabel">Filter by portal</span>
+        <div class="filters" id="filters" role="group" aria-labelledby="filtersLabel"></div>
+        <div class="more-menu" id="moreMenu" hidden></div>
+      </div>
       <div class="controls-right">
         <div class="viewtoggle" role="group" aria-label="Screenshot device">
           <button class="vt-btn active" type="button" data-device="desktop" aria-pressed="true">
@@ -119,17 +129,16 @@
           </button>
         </div>
         <div class="weekpick">
-          <label for="weekSelect">Week</label>
+          <label for="weekSelect" class="sr-only">Week</label>
           <select id="weekSelect" aria-label="Choose a week"></select>
+        </div>
+        <div class="searchbar">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M10 4a6 6 0 1 0 3.874 10.588l4.269 4.27a1 1 0 0 0 1.414-1.415l-4.27-4.269A6 6 0 0 0 10 4Zm-4 6a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z"/></svg>
+          <label for="searchInput" class="sr-only">Search captures</label>
+          <input id="searchInput" type="search" class="search-input" placeholder="Search…" aria-label="Search captures" autocomplete="off" />
         </div>
       </div>
     </section>
-
-    <!-- search -->
-    <div class="searchbar">
-      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M10 4a6 6 0 1 0 3.874 10.588l4.269 4.27a1 1 0 0 0 1.414-1.415l-4.27-4.269A6 6 0 0 0 10 4Zm-4 6a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z"/></svg>
-      <input id="searchInput" type="search" class="search-input" placeholder="Search portals, companies, or analysis…" aria-label="Search captures" autocomplete="off" />
-    </div>
 
     <!-- section heading -->
     <div class="section-head">

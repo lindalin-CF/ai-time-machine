@@ -15,6 +15,20 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "browse-compare-filter-bar",
+    date: "2026-10-21",
+    time: "16:42",
+    title: "Browse or Compare, and One Filter Bar",
+    subtitle: "On the Library page, browsing and comparing are now two separate choices, and the filters sit in one slim bar that stays in view",
+    bullets: [
+      { lead: "Browse | Compare", text: "A switch above the filters. Compare opens the Compare page with your week and device, and with the portal you picked, shown week by week." },
+      { lead: "One bar", text: "Portal chips, Desktop | Mobile, the week and search now share one row. It stays pinned under the top bar as you scroll." },
+      { lead: "+ more", text: "The first four portals show as chips. The rest are in a \"+ more\" menu, and the one you pick joins the row." },
+      { lead: "One portal at a time", text: "Picking a portal shows only that portal. All portals shows everything again." },
+    ],
+    closing: "Pick a portal on the Library page, then press Compare.",
+  },
+  {
     slug: "canvas-movable-findings",
     date: "2026-10-19",
     time: "21:36",

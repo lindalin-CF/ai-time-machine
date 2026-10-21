@@ -1,6 +1,6 @@
 // AI Surface Library — front-end controller
 import { anCanvasState, findingsCellHTML, mountAnCanvas, tableFindings, unmountAnCanvas } from "./analytics-canvas.js";
-import { buildAnalyticsHash, compareHash, hashRoute, parseAnalyticsHash } from "./analytics-share.js";
+import { buildAnalyticsHash, compareHash, hashRoute, libraryCompareHash, parseAnalyticsHash } from "./analytics-share.js";
 import { weekPick } from "./analytics-weekpick.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -116,33 +116,44 @@ function countUp(el, target) {
   requestAnimationFrame(step);
 }
 
+// Portal chips in the sticky filter bar: "All portals" and the first FILTER_CHIPS portals in one scrolling row, then a
+// "+N more" menu with the rest. Single-select: one chip is active at a time; a portal picked from the menu shows as
+// the active chip at the end of the row.
+const FILTER_CHIPS = 4;
+const filterChip = (slug, label, brand) =>
+  `<button class="chip" type="button" data-portal="${esc(slug)}" aria-pressed="false">` +
+  (brand ? `<span class="swatch" style="background:${esc(brand)}"></span>` : "") + `${esc(label)}</button>`;
+
 function renderFilters() {
   const wrap = $("#filters");
-  const chips = [
-    `<button class="chip" role="tab" data-portal="all" aria-selected="true">All portals</button>`,
-    ...state.portals.map(
-      (p) =>
-        `<button class="chip" role="tab" data-portal="${esc(p.slug)}" aria-selected="false">` +
-        `<span class="swatch" style="background:${esc(p.brand)}"></span>${esc(p.name)}</button>`
-    ),
-  ];
-  wrap.innerHTML = chips.join("");
-  wrap.querySelectorAll(".chip").forEach((btn) =>
-    btn.addEventListener("click", () => {
-      const slug = btn.dataset.portal;
-      if (slug === "all") {
-        state.selected.clear(); // "All portals" resets to showing everything
-      } else if (state.selected.has(slug)) {
-        state.selected.delete(slug); // toggle off
-      } else {
-        state.selected.add(slug); // toggle on (multi-select)
-      }
-      syncFilterChips();
-      renderGrid();
-      updateManualResults();
-    })
-  );
+  if (!wrap) return;
+  const shown = state.portals.slice(0, FILTER_CHIPS);
+  const picked = state.portals.find((p) => state.selected.has(p.slug) && !shown.includes(p));
+  wrap.innerHTML = [filterChip("all", "All portals"), ...shown.map((p) => filterChip(p.slug, p.name, p.brand)),
+    ...(picked ? [filterChip(picked.slug, picked.name, picked.brand)] : [])].join("");
+  wrap.querySelectorAll(".chip").forEach((btn) => btn.addEventListener("click", () => selectPortal(btn.dataset.portal)));
+  renderMoreMenu();
   syncFilterChips();
+  fadeFilterEdges();
+}
+
+/** Fade the end(s) of the chip row that hide more chips. */
+function fadeFilterEdges() {
+  const wrap = $("#filters");
+  if (!wrap) return;
+  const max = wrap.scrollWidth - wrap.clientWidth;
+  wrap.classList.toggle("fade-start", max > 1 && wrap.scrollLeft > 1);
+  wrap.classList.toggle("fade-end", max > 1 && wrap.scrollLeft < max - 1);
+}
+
+/** Show one portal ("all" for every portal), keeping the grid, the search results and the chips in step. */
+function selectPortal(slug) {
+  state.selected.clear();
+  if (slug !== "all") state.selected.add(slug);
+  const inRow = $(`#filters .chip[data-portal="${CSS.escape(slug)}"]`);
+  if (inRow) syncFilterChips(); else renderFilters(); // a portal from the menu joins the row
+  renderGrid();
+  updateManualResults();
 }
 
 // Reflect state.selected on the chips. Empty selection => "All portals" is active.
@@ -153,8 +164,101 @@ function syncFilterChips() {
   wrap.querySelectorAll(".chip").forEach((c) => {
     const slug = c.dataset.portal;
     const on = slug === "all" ? none : state.selected.has(slug);
-    c.setAttribute("aria-selected", String(on));
+    c.setAttribute("aria-pressed", String(on));
   });
+  document.querySelectorAll("#moreMenu .more-option").forEach((o) => o.setAttribute("aria-selected", String(state.selected.has(o.dataset.portal))));
+}
+
+// "+N more": built like the week dropdown (a button, then a listbox of option buttons). Arrow keys, Home and End
+// move between options, Enter or a click picks one, Esc closes and returns focus to the button, as does a click outside.
+function renderMoreMenu() {
+  const menu = $("#moreMenu");
+  if (!menu) return;
+  const rest = state.portals.slice(FILTER_CHIPS);
+  menu.hidden = rest.length === 0;
+  if (!rest.length) { menu.innerHTML = ""; return; }
+  menu.innerHTML =
+    `<button class="chip chip-more" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="moreMenuList">+${rest.length} more</button>` +
+    `<div class="week-menu-list more-menu-list" id="moreMenuList" role="listbox" aria-label="More portals">` +
+    rest.map((p) => `<button class="week-option more-option" type="button" role="option" data-portal="${esc(p.slug)}" aria-selected="false" tabindex="-1">` +
+      `<span class="swatch" style="background:${esc(p.brand)}"></span>${esc(p.name)}</button>`).join("") +
+    `</div>`;
+  const btn = menu.querySelector(".chip-more");
+  const options = () => [...menu.querySelectorAll(".more-option")];
+  const focusOption = (i) => { const o = options(); o[(i + o.length) % o.length]?.focus(); };
+  const openAt = (i) => {
+    closeWeekMenus();
+    menu.classList.add("open");
+    btn.setAttribute("aria-expanded", "true");
+    if (i !== null) focusOption(i);
+  };
+  const selectedIndex = () => Math.max(0, options().findIndex((o) => o.getAttribute("aria-selected") === "true"));
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (menu.classList.contains("open")) closeMoreMenu();
+    else openAt(e.detail === 0 ? selectedIndex() : null); // keyboard (Enter/Space) moves focus into the list
+  });
+  btn.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      openAt(e.key === "ArrowUp" ? options().length - 1 : selectedIndex());
+    }
+  });
+  menu.querySelector(".more-menu-list").addEventListener("keydown", (e) => {
+    const i = options().indexOf(document.activeElement);
+    if (e.key === "ArrowDown") { e.preventDefault(); focusOption(i + 1); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); focusOption(i - 1); }
+    else if (e.key === "Home") { e.preventDefault(); focusOption(0); }
+    else if (e.key === "End") { e.preventDefault(); focusOption(-1); }
+    else if (e.key === "Tab") closeMoreMenu();
+  });
+  options().forEach((o) => o.addEventListener("click", (e) => {
+    e.stopPropagation();
+    closeMoreMenu();
+    selectPortal(o.dataset.portal);
+    const chip = $(`#filters .chip[data-portal="${CSS.escape(o.dataset.portal)}"]`);
+    chip?.focus();
+    chip?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }));
+}
+
+function closeMoreMenu(refocus = false) {
+  const menu = $("#moreMenu.open");
+  if (!menu) return;
+  menu.classList.remove("open");
+  const btn = menu.querySelector(".chip-more");
+  btn.setAttribute("aria-expanded", "false");
+  if (refocus) btn.focus();
+}
+
+// ---- Browse | Compare: Compare opens the Compare view with this page's portal, week and device ----
+function initTaskSwitch() {
+  const btn = $('.task-switch [data-task="compare"]');
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    const portal = state.selected.size === 1 ? [...state.selected][0] : null;
+    location.hash = libraryCompareHash({
+      portal, week: state.week, device: state.device,
+      weeks: state.weeks.map((w) => w.week), portals: state.portals.map((p) => p.slug),
+    });
+  });
+}
+
+// The filter bar sticks right under the sticky top bar, whose height changes with the viewport (and its wrapping).
+function initFilterEdges() {
+  const wrap = $("#filters");
+  if (!wrap) return;
+  wrap.addEventListener("scroll", fadeFilterEdges, { passive: true });
+  if (typeof ResizeObserver === "function") new ResizeObserver(fadeFilterEdges).observe(wrap);
+}
+
+function trackTopbarHeight() {
+  const bar = $(".topbar");
+  const controls = $(".controls");
+  if (!bar || !controls) return;
+  const set = () => controls.style.setProperty("--topbar-h", `${bar.getBoundingClientRect().height}px`);
+  set();
+  if (typeof ResizeObserver === "function") new ResizeObserver(set).observe(bar);
 }
 
 function shortWeekLabel(week) {
@@ -203,6 +307,7 @@ function ensureWeekMenu(sel) {
       e.stopPropagation();
       const willOpen = !menu.classList.contains("open");
       closeWeekMenus(menu);
+      closeMoreMenu();
       menu.classList.toggle("open", willOpen);
       btn.setAttribute("aria-expanded", String(willOpen));
     });
@@ -1724,14 +1829,21 @@ function route() {
 }
 window.addEventListener("hashchange", route);
 
-document.addEventListener("click", () => closeWeekMenus());
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeWeekMenus(); });
+document.addEventListener("click", () => { closeWeekMenus(); closeMoreMenu(); });
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  closeWeekMenus();
+  closeMoreMenu($("#moreMenu")?.contains(document.activeElement));
+});
 
 initLightbox();
 initManualSnapshots();
 initDownloadAll();
 initDeviceToggle();
 initSearch();
+initTaskSwitch();
+initFilterEdges();
+trackTopbarHeight();
 initHeroOrbFollow();
 if (document.documentElement.dataset.view === "gallery") startHeroAnnotations();
 // The phone menu can open before route() runs: name the current item for screen readers now (CSS already colours it).

@@ -185,7 +185,7 @@ describe('analytics controls (browser)', () => {
 
     it('leaves the gallery Desktop/Mobile toggle as it was', async () => {
       const page = await openSite(browser, '');
-      const style = await page.locator('#galleryView .viewtoggle').evaluate((el) => ({
+      const style = await page.locator('#galleryView .controls .viewtoggle').evaluate((el) => ({
         display: getComputedStyle(el).display,
         justify: [...el.querySelectorAll('.vt-btn')].map((b) => getComputedStyle(b).justifyContent),
       }));

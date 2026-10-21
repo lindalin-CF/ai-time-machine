@@ -242,18 +242,41 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .stat dd{margin:2px 0 0;font-size:22px;font-weight:700;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:var(--cf-text)}
 
 /* ---------- controls ---------- */
+/* Browse | Compare: two tasks, above the filter bar. Same segmented toggle as Desktop | Mobile, 44px tall. */
+.task-switch-row{display:flex;justify-content:flex-start;margin:0 0 12px}
+.task-switch .vt-btn{min-height:36px;padding:0 18px;font-size:14px}
+/* One slim filter bar, pinned under the sticky top bar (--topbar-h is the top bar's measured height, set by app.js).
+   Above the cards (z-index 1 inside), below the top bar and its phone menu (z-index 70). */
 .controls{
-  display:flex;align-items:flex-start;justify-content:space-between;gap:18px;
-  flex-wrap:wrap;margin-bottom:26px;
+  position:sticky;top:var(--topbar-h,0px);z-index:60;
+  display:flex;align-items:center;gap:10px 12px;flex-wrap:nowrap;margin-bottom:26px;
+  background:var(--cf-bg-100);border:1px solid var(--cf-border);border-radius:14px;padding:12px 16px;
 }
-.filters{display:flex;flex-wrap:wrap;gap:8px;flex:1 1 auto}
+.fb-portals{display:flex;align-items:center;gap:6px;flex:1 1 auto;min-width:0}
+.fb-label{flex:none;font-size:12.5px;font-weight:500;color:var(--cf-text-soft);white-space:nowrap;margin-right:2px}
+.filters{display:flex;flex-wrap:nowrap;gap:6px;flex:0 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  /* room for the 2px focus ring, which overflow would clip */
+  padding:3px;margin:-3px}
+.filters::-webkit-scrollbar{display:none}
+.filters .chip,.chip-more{flex:none;padding:7px 11px}
+/* When chips are scrolled out of view, fade the edge they are hidden behind (app.js sets the classes). */
+.filters.fade-end{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+.filters.fade-start{-webkit-mask-image:linear-gradient(90deg,transparent,#000 28px);mask-image:linear-gradient(90deg,transparent,#000 28px)}
+.filters.fade-start.fade-end{-webkit-mask-image:linear-gradient(90deg,transparent,#000 28px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,transparent,#000 28px,#000 calc(100% - 28px),transparent)}
+.more-menu{position:relative;flex:none}
+.chip-more{border-style:dashed;border-color:var(--cf-border-strong);background:transparent}
+.more-menu.open .chip-more{border-color:var(--cf-orange);color:var(--cf-text)}
+/* Right-aligned to the chip, so it opens under the row and never past the page's right edge. */
+.more-menu .more-menu-list{left:auto;right:0;width:220px;max-width:calc(100vw - 32px)}
+.more-menu.open .more-menu-list{opacity:1;transform:none;pointer-events:auto}
+.more-option .swatch{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:middle}
 .chip{
   font-size:13px;font-weight:500;color:var(--cf-text-soft);cursor:pointer;
   background:var(--cf-bg-100);border:1px solid var(--cf-border);
   padding:7px 14px;border-radius:999px;transition:background-color .15s ease-out,color .15s ease-out,border-color .15s ease-out;white-space:nowrap;
 }
 @media(hover:hover){.chip:hover{border-color:var(--cf-border-strong);color:var(--cf-text)}}
-.chip[aria-selected="true"]{
+.chip[aria-selected="true"],.chip[aria-pressed="true"]{
   background:var(--selected-bg);color:var(--selected-fg);border-color:var(--selected-bg);
 }
 .chip .swatch{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:middle}
@@ -268,12 +291,15 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 }
 
 /* ---------- search ---------- */
+/* Compact search at the right end of the filter bar; widens while focused. */
 .searchbar{
-  display:flex;align-items:center;gap:9px;margin:0 0 22px;
+  display:flex;align-items:center;gap:8px;flex:none;width:140px;
   background:var(--cf-bg-100);border:1px solid var(--cf-border);
-  border-radius:999px;padding:8px 16px;transition:border-color .15s ease-out;
+  border-radius:999px;padding:7px 14px;transition:border-color .15s ease-out,width .2s ease-out;
 }
-.searchbar:focus-within{border-color:var(--cf-border-strong)}
+.searchbar:focus-within{width:240px;border-color:var(--cf-orange);outline:2px solid #eb622c;outline-offset:2px}
+.search-input:focus-visible{outline:none} /* the ring is drawn on .searchbar */
+@media (prefers-reduced-motion:reduce){.searchbar{transition:border-color .15s ease-out}}
 .searchbar svg{flex:none;color:var(--cf-text-soft)}
 .search-input{
   flex:1 1 auto;min-width:0;border:0;outline:0;background:transparent;
@@ -489,7 +515,7 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
 
 
 /* ---------- device toggle (Desktop / Mobile) + mobile screenshots ---------- */
-.controls-right{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.controls-right{display:flex;align-items:center;gap:8px;flex:none;flex-wrap:nowrap}
 .collection-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 
 .viewtoggle{display:inline-flex;background:var(--cf-bg-300);border:1px solid var(--cf-border);border-radius:var(--toggle-track-radius);
@@ -579,27 +605,10 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
     line-height:1.22;
   }
 
-  .controls{
-    gap:14px;
-    margin-bottom:20px;
-  }
-  .filters{
-    flex-wrap:nowrap;
-    overflow-x:auto;
-    -webkit-overflow-scrolling:touch;
-    padding-bottom:4px;
-    scrollbar-width:none;
-  }
-  .filters::-webkit-scrollbar{display:none}
   .chip{
     flex:0 0 auto;
     font-size:12px;
     padding:7px 12px;
-  }
-  .controls-right{
-    width:100%;
-    justify-content:space-between;
-    gap:10px;
   }
   .viewtoggle{flex:0 0 auto}
   :root{--toggle-font-size:12px;--toggle-pad-x:9px}
@@ -850,27 +859,40 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
   .wordmark-text{max-width:100%}
   .topnav{margin-left:auto;flex:0 0 auto;display:flex;gap:14px;flex-wrap:nowrap;justify-content:flex-end;white-space:nowrap}
   .topnav-link{font-size:12px;white-space:nowrap}
-
-  .controls-right{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:nowrap}
-  .controls-right .viewtoggle{flex:0 0 auto}
-  .controls-right .weekpick{flex:0 0 auto;margin-left:auto;justify-content:flex-end;gap:0}
-  .controls-right .weekpick label{display:none}
-  .controls-right .week-menu{min-width:132px}
-  .controls-right .week-menu-btn{font-size:12.5px;padding:7px 28px 7px 10px;border-radius:9px}
-  .controls-right .week-menu-btn::after{right:9px}
-  .controls-right .week-menu-list{right:0;min-width:145px}
 }
 @media(max-width:420px){
   .topbar{flex-direction:row;align-items:center;gap:8px;padding:12px 14px}
   .wordmark{font-size:12px;max-width:54vw;letter-spacing:0}
   .topnav{width:auto;margin-left:auto;justify-content:flex-end;gap:11px}
   .topnav-link{font-size:12px}
-  .controls-right{gap:8px}
-  .controls-right .vt-btn{font-size:11.5px;padding:6px 8px}
-  .controls-right .week-menu{min-width:122px}
-  .controls-right .week-menu-btn{font-size:12px;padding:7px 26px 7px 9px}
 }
 
+
+/* ---------- filter bar: compact week menu, then two rows below 900px, full width at 640px ---------- */
+.controls .weekpick{flex:none;gap:0}
+.controls .week-menu{min-width:0}
+.controls .week-menu-btn{font-size:13px;padding:7px 28px 7px 12px;border-radius:999px}
+.controls .week-menu-btn::after{right:10px}
+.controls .viewtoggle .vt-btn{padding-inline:9px}
+@media(max-width:900px){
+  .controls{flex-wrap:wrap}
+  .fb-portals{flex:1 1 100%}
+  .controls-right{flex:1 1 100%}
+  .controls .searchbar,.controls .searchbar:focus-within{flex:1 1 auto;width:auto;min-width:0}
+}
+@media(max-width:640px){
+  .controls{gap:10px;padding:10px 12px;margin-bottom:20px}
+  .fb-label{display:none} /* the chip row keeps its name for screen readers (aria-labelledby) */
+  .controls-right{flex-wrap:wrap;gap:8px}
+  .controls-right .viewtoggle{flex:1 1 auto}
+  .controls-right .viewtoggle .vt-btn{flex:1;justify-content:center}
+  .controls .weekpick{flex:1 1 auto}
+  .controls .week-menu{min-width:0;width:100%}
+  .controls .searchbar,.controls .searchbar:focus-within{flex:1 1 100%}
+  .task-switch-row{margin-bottom:10px}
+  .task-switch{width:100%}
+  .task-switch .vt-btn{flex:1;justify-content:center}
+}
 
 /* manual snapshot add slot */
 .manual-add{display:grid;place-items:center;gap:10px;min-height:210px;border:1px dashed var(--cf-border-strong);

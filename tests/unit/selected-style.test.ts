@@ -38,9 +38,9 @@ describe('selected style (browser)', () => {
 
   it('the active chip is the dark fill with cream text, readable at 4.5:1 or more', async () => {
     const page = await openSite(browser, '');
-    await page.locator('#filters .chip[aria-selected="true"]').first().waitFor();
+    await page.locator('#filters .chip[aria-pressed="true"]').first().waitFor();
     await settle(page);
-    const chip = await look(page, '#filters .chip[aria-selected="true"]');
+    const chip = await look(page, '#filters .chip[aria-pressed="true"]');
     expect([chip.bg, chip.color]).toEqual([DARK, CREAM]);
     expect(contrast(chip.bg, chip.color)).toBeGreaterThanOrEqual(4.5);
     await page.context().close();
@@ -48,9 +48,9 @@ describe('selected style (browser)', () => {
 
   it('homepage Desktop / Mobile toggles: active matches the chip, the icon too; inactive stays as it was', async () => {
     const page = await openSite(browser, '');
-    await page.locator('#filters .chip[aria-selected="true"]').first().waitFor();
+    await page.locator('#filters .chip[aria-pressed="true"]').first().waitFor();
     await settle(page);
-    const chip = await look(page, '#filters .chip[aria-selected="true"]');
+    const chip = await look(page, '#filters .chip[aria-pressed="true"]');
     const active = await look(page, '.controls [data-device].active');
     expect([active.bg, active.color]).toEqual([chip.bg, chip.color]);
     expect(active.shadow).toContain('0px 1px 3px');
