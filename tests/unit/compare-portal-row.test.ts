@@ -11,10 +11,13 @@ const PORTALS = [
   { slug: 'gemini', name: 'Gemini', brand: '#4285f4' }, { slug: 'perplexity', name: 'Perplexity', brand: '#20808d' },
   { slug: 'copilot', name: 'Microsoft Copilot', brand: '#0078d4' }, { slug: 'grok', name: 'Grok', brand: '#111111' },
   { slug: 'deepseek', name: 'DeepSeek', brand: '#4d6bfe' }, { slug: 'lechat', name: 'Le Chat', brand: '#fa520f' },
-  { slug: 'meta', name: 'Meta AI', brand: '#0866ff' }, { slug: 'manus', name: 'Manus', brand: '#5b4a3a' },
+  { slug: 'meta-ai', name: 'Meta AI', brand: '#0866ff' }, { slug: 'manus', name: 'Manus', brand: '#5b4a3a' },
   { slug: 'poe', name: 'Poe', brand: '#5d5cde' }, { slug: 'kimi', name: 'Kimi', brand: '#222222' },
+  { slug: 'muse', name: 'Muse', brand: '#333333' },
 ];
-const NAMES = PORTALS.map((p) => p.name);
+/** The row's order: the first four, then Grok, Meta AI, Muse and Manus, then the rest in site order. */
+const ROW = ['chatgpt', 'claude', 'gemini', 'perplexity', 'grok', 'meta-ai', 'muse', 'manus', 'copilot', 'deepseek', 'lechat', 'poe', 'kimi'];
+const NAMES = ROW.map((slug) => PORTALS.find((p) => p.slug === slug)!.name);
 
 describe('Compare portal row (browser)', () => {
   let browser: Browser;
@@ -43,7 +46,7 @@ describe('Compare portal row (browser)', () => {
     return c.left >= r.left + start && c.right <= r.right - end;
   }, slug);
 
-  it.each([1280, 390])('at %ipx: every portal in one row that scrolls sideways, without "+N more"', async (width) => {
+  it.each([1280, 390])('at %ipx: every portal in one row that scrolls sideways, without "+N more", Grok, Meta AI, Muse and Manus fifth to eighth', async (width) => {
     const page = await open(width);
     expect(await page.locator('#anPortals .chip').allTextContents()).toEqual(NAMES);
     expect(await page.locator('#analyticsView .chip-more, #anMoreMenu').count()).toBe(0);
@@ -113,13 +116,13 @@ describe('Compare portal row (browser)', () => {
     const page = await open(390);
     await page.locator('#anPortals .chip').first().focus();
     const seen: string[] = [];
-    for (let i = 0; i < PORTALS.length; i++) {
+    for (let i = 0; i < ROW.length; i++) {
       const slug = await page.evaluate(() => (document.activeElement as HTMLElement).dataset.v!);
       seen.push(slug);
       expect(await inView(page, slug)).toBe(true);
       await page.keyboard.press('Tab');
     }
-    expect(seen).toEqual(PORTALS.map((p) => p.slug));
+    expect(seen).toEqual(ROW);
     await page.context().close();
   });
 

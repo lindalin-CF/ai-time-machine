@@ -1608,6 +1608,14 @@ function anSyncDevice() {
   });
 }
 
+// Compare's portal row: the site's first four portals, then these (when the site has them), then the rest in site order.
+const AN_ROW_NEXT = ["grok", "meta-ai", "muse", "manus"];
+function anRowPortals() {
+  const first = state.portals.slice(0, 4);
+  const next = AN_ROW_NEXT.map((slug) => state.portals.find((p) => p.slug === slug)).filter((p) => p && !first.includes(p));
+  return [...first, ...next, ...state.portals.filter((p) => !first.includes(p) && !next.includes(p))];
+}
+
 function anChip(v, label, on, brand) {
   const sw = brand ? `<span class="swatch" style="background:${esc(brand)}"></span>` : "";
   return `<button class="chip" type="button" data-v="${esc(v)}" aria-selected="${on ? "true" : "false"}">${sw}${esc(label)}</button>`;
@@ -1635,7 +1643,7 @@ function renderAnalytics() {
   const isOn = (slug) => (portalsMode ? an.portals.has(slug) : slug === an.portal);
   const scrollLeft = chips.scrollLeft;
   chips.setAttribute("aria-label", portalsMode ? "Portals" : "Portal");
-  chips.innerHTML = state.portals.map((p) => anChip(p.slug, p.name, isOn(p.slug), p.brand)).join("");
+  chips.innerHTML = anRowPortals().map((p) => anChip(p.slug, p.name, isOn(p.slug), p.brand)).join("");
   chips.scrollLeft = scrollLeft;
   chips.querySelectorAll(".chip").forEach((c) =>
     c.addEventListener("click", () => {
