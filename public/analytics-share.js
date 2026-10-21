@@ -184,11 +184,10 @@ export function parseAnalyticsHash(hash, known) {
  * s: { selection[] (selected slugs in site order; empty for All portals), week (the week on screen), weeks[] (newest first),
  * portals[] (site order), device }. All portals: one week, Compare's default portals. One portal: that portal over this
  * week and the nearest older one, or, when there is no older week, that portal next to Compare's usual second default.
- * Several portals: those portals side by side for this week (at most 4, Compare's limit). Mobile opens the Table
- * (the Canvas compares desktop screenshots only).
+ * Several portals: those portals side by side for this week (at most 4, Compare's limit). It always opens the Table.
  */
 export function libraryCompareHash(s) {
-  const view = s.device === "mobile" ? "table" : "canvas";
+  const view = "table";
   const device = s.device === "mobile" ? "mobile" : "desktop";
   const week = s.week || null;
   const selection = s.selection || [];

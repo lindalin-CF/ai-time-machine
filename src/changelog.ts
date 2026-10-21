@@ -21,7 +21,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "Browse or Compare, and One Filter Bar",
     subtitle: "On the Library page, browsing and comparing are now two separate choices, and the filters sit in one slim bar that stays in view",
     bullets: [
-      { lead: "Browse | Compare", text: "A switch above the filters. Compare opens the Compare page with your week and device, and with the portal you picked, shown week by week." },
+      { lead: "Browse | Compare", text: "A switch above the filters. Compare opens the Compare page in Table view, with your week, device and the portals you picked." },
       { lead: "One bar", text: "Portal chips, Desktop | Mobile, the week and search now share one row. It stays pinned under the top bar as you scroll." },
       { lead: "+ more", text: "The first four portals show as chips. The rest are in a \"+ more\" menu, and the ones you pick join the row." },
       { lead: "Compare what you picked", text: "Pick several portals and Compare puts them side by side (up to four). All portals shows everything again." },
