@@ -19,38 +19,45 @@ describe('libraryCompareHash', () => {
   const base = { weeks: WEEKS, portals: SLUGS, week: WEEKS[0], device: 'desktop' };
 
   it('All portals: one week on the canvas, Compare picks its default portals', () => {
-    expect(libraryCompareHash({ ...base, portal: null })).toBe(`#compare?view=canvas&mode=portals&week=${WEEKS[0]}&device=desktop`);
-    expect(libraryCompareHash({ ...base, portal: null, week: WEEKS[2] })).toBe(`#compare?view=canvas&mode=portals&week=${WEEKS[2]}&device=desktop`);
+    expect(libraryCompareHash({ ...base, selection: [] })).toBe(`#compare?view=canvas&mode=portals&week=${WEEKS[0]}&device=desktop`);
+    expect(libraryCompareHash({ ...base, selection: [], week: WEEKS[2] })).toBe(`#compare?view=canvas&mode=portals&week=${WEEKS[2]}&device=desktop`);
   });
 
   it('one portal: that portal over this week and the nearest older one', () => {
-    expect(libraryCompareHash({ ...base, portal: 'claude' }))
+    expect(libraryCompareHash({ ...base, selection: ['claude'] }))
       .toBe(`#compare?view=canvas&mode=time&portal=claude&weeks=${WEEKS[0]},${WEEKS[1]}&device=desktop`);
-    expect(libraryCompareHash({ ...base, portal: 'grok', week: WEEKS[3] }))
+    expect(libraryCompareHash({ ...base, selection: ['grok'], week: WEEKS[3] }))
       .toBe(`#compare?view=canvas&mode=time&portal=grok&weeks=${WEEKS[3]},${WEEKS[4]}&device=desktop`);
   });
 
   it('one portal in the oldest week: Across portals with Compare\'s usual second default', () => {
     const oldest = WEEKS[WEEKS.length - 1];
-    expect(libraryCompareHash({ ...base, portal: 'grok', week: oldest }))
+    expect(libraryCompareHash({ ...base, selection: ['grok'], week: oldest }))
       .toBe(`#compare?view=canvas&mode=portals&week=${oldest}&portals=grok,chatgpt&device=desktop`);
-    expect(libraryCompareHash({ ...base, portal: 'chatgpt', week: oldest }))
+    expect(libraryCompareHash({ ...base, selection: ['chatgpt'], week: oldest }))
       .toBe(`#compare?view=canvas&mode=portals&week=${oldest}&portals=chatgpt,claude&device=desktop`);
-    expect(libraryCompareHash({ ...base, portal: 'claude', week: oldest }))
+    expect(libraryCompareHash({ ...base, selection: ['claude'], week: oldest }))
       .toBe(`#compare?view=canvas&mode=portals&week=${oldest}&portals=claude,chatgpt&device=desktop`);
   });
 
+  it('several portals: those portals side by side for this week, at most four', () => {
+    expect(libraryCompareHash({ ...base, selection: ['chatgpt', 'grok'] }))
+      .toBe(`#compare?view=canvas&mode=portals&week=${WEEKS[0]}&portals=chatgpt,grok&device=desktop`);
+    expect(libraryCompareHash({ ...base, selection: SLUGS, device: 'mobile' }))
+      .toBe(`#compare?view=table&mode=portals&week=${WEEKS[0]}&portals=chatgpt,claude,gemini,perplexity&device=mobile`);
+  });
+
   it('Mobile opens the Table (the canvas compares desktop screenshots only)', () => {
-    expect(libraryCompareHash({ ...base, portal: null, device: 'mobile' })).toBe(`#compare?view=table&mode=portals&week=${WEEKS[0]}&device=mobile`);
-    expect(libraryCompareHash({ ...base, portal: 'gemini', device: 'mobile' }))
+    expect(libraryCompareHash({ ...base, selection: [], device: 'mobile' })).toBe(`#compare?view=table&mode=portals&week=${WEEKS[0]}&device=mobile`);
+    expect(libraryCompareHash({ ...base, selection: ['gemini'], device: 'mobile' }))
       .toBe(`#compare?view=table&mode=time&portal=gemini&weeks=${WEEKS[0]},${WEEKS[1]}&device=mobile`);
   });
 
   it('writes only parameters Compare already reads back', () => {
     const known = { portals: SLUGS, weeks: WEEKS, max: 4 };
-    expect(parseAnalyticsHash(libraryCompareHash({ ...base, portal: 'claude' }), known))
+    expect(parseAnalyticsHash(libraryCompareHash({ ...base, selection: ['claude'] }), known))
       .toMatchObject({ view: 'canvas', mode: 'weeks', portal: 'claude', weeks: [WEEKS[0], WEEKS[1]], device: 'desktop' });
-    expect(parseAnalyticsHash(libraryCompareHash({ ...base, portal: null, device: 'mobile' }), known))
+    expect(parseAnalyticsHash(libraryCompareHash({ ...base, selection: [], device: 'mobile' }), known))
       .toEqual({ view: 'table', mode: 'portals', week: WEEKS[0], device: 'mobile' });
   });
 });
@@ -107,6 +114,16 @@ describe('landing page controls (browser)', () => {
       await page.context().close();
     });
 
+    it('Compare with several portals opens Across portals with those portals', async () => {
+      const page = await open();
+      await page.locator('#filters .chip[data-portal="claude"]').click();
+      await page.locator('.chip-more').click();
+      await page.locator('#moreMenuList [data-portal="grok"]').click();
+      expect(await compare(page)).toBe(`#compare?view=canvas&mode=portals&week=${WEEKS[0]}&portals=claude,grok&device=desktop`);
+      expect(await page.locator('#anPortals .chip[aria-selected="true"]').allTextContents()).toEqual(['Claude', 'Grok']);
+      await page.context().close();
+    });
+
     it('keeps the week picked on the page', async () => {
       const page = await open();
       await page.locator('.controls .week-menu-btn').click();
@@ -144,7 +161,7 @@ describe('landing page controls (browser)', () => {
   });
 
   describe('portal chips', () => {
-    it('shows All portals, the first four portals and "+3 more"; one chip is active at a time and the grid follows it', async () => {
+    it('shows All portals, the first four portals and "+3 more"; chips toggle, All portals clears, and the grid follows', async () => {
       const page = await open();
       expect(await page.locator('#filters .chip').allTextContents()).toEqual(['All portals', 'ChatGPT', 'Claude', 'Gemini', 'Perplexity']);
       expect((await page.locator('.chip-more').textContent())!.trim()).toBe('+3 more');
@@ -155,10 +172,14 @@ describe('landing page controls (browser)', () => {
       expect(await pressed(page)).toEqual(['ChatGPT']);
       expect(await cardNames(page)).toEqual(['ChatGPT']);
       await page.locator('#filters .chip[data-portal="claude"]').click();
+      expect(await pressed(page)).toEqual(['ChatGPT', 'Claude']);
+      expect(await cardNames(page)).toEqual(['ChatGPT', 'Claude']);
+      await page.locator('#filters .chip[data-portal="chatgpt"]').click(); // pressing it again unpicks it
       expect(await pressed(page)).toEqual(['Claude']);
       expect(await cardNames(page)).toEqual(['Claude']);
-      await page.locator('#filters .chip[data-portal="claude"]').click(); // pressing it again keeps it
-      expect(await pressed(page)).toEqual(['Claude']);
+      await page.locator('#filters .chip[data-portal="claude"]').click(); // nothing picked: All portals again
+      expect(await pressed(page)).toEqual(['All portals']);
+      await page.locator('#filters .chip[data-portal="gemini"]').click();
       await page.locator('#filters .chip[data-portal="all"]').click();
       expect(await pressed(page)).toEqual(['All portals']);
       expect(await cardNames(page)).toHaveLength(7);
@@ -194,10 +215,18 @@ describe('landing page controls (browser)', () => {
       expect(await pressed(page)).toEqual(['Grok']);
       expect(await cardNames(page)).toEqual(['Grok']);
       expect(await list(page).locator('[aria-selected="true"]').allTextContents()).toEqual(['Grok']);
-      // Another chip replaces it; the row goes back to the first four.
+      // Other chips add to it; unpicking it from the menu takes it out of the row again.
       await page.locator('#filters .chip[data-portal="claude"]').click();
-      expect(await pressed(page)).toEqual(['Claude']);
-      expect(await page.locator('#filters .chip').allTextContents()).toEqual(['All portals', 'ChatGPT', 'Claude', 'Gemini', 'Perplexity', 'Grok']);
+      expect(await pressed(page)).toEqual(['Claude', 'Grok']);
+      expect(await cardNames(page)).toEqual(['Claude', 'Grok']);
+      await page.locator('.chip-more').click();
+      await list(page).locator('[data-portal="copilot"]').click();
+      expect(await pressed(page)).toEqual(['Claude', 'Copilot', 'Grok']);
+      await page.locator('.chip-more').click();
+      expect(await list(page).locator('[aria-selected="true"]').allTextContents()).toEqual(['Copilot', 'Grok']);
+      await list(page).locator('[data-portal="grok"]').click();
+      expect(await page.locator('#filters .chip').allTextContents()).toEqual(['All portals', 'ChatGPT', 'Claude', 'Gemini', 'Perplexity', 'Copilot']);
+      expect(await pressed(page)).toEqual(['Claude', 'Copilot']);
       await page.context().close();
     });
 

@@ -117,8 +117,8 @@ function countUp(el, target) {
 }
 
 // Portal chips in the sticky filter bar: "All portals" and the first FILTER_CHIPS portals in one scrolling row, then a
-// "+N more" menu with the rest. Single-select: one chip is active at a time; a portal picked from the menu shows as
-// the active chip at the end of the row.
+// "+N more" menu with the rest. Multi-select: each portal chip toggles, "All portals" clears the selection; portals
+// picked from the menu show as active chips at the end of the row.
 const FILTER_CHIPS = 4;
 const filterChip = (slug, label, brand) =>
   `<button class="chip" type="button" data-portal="${esc(slug)}" aria-pressed="false">` +
@@ -128,10 +128,9 @@ function renderFilters() {
   const wrap = $("#filters");
   if (!wrap) return;
   const shown = state.portals.slice(0, FILTER_CHIPS);
-  const picked = state.portals.find((p) => state.selected.has(p.slug) && !shown.includes(p));
-  wrap.innerHTML = [filterChip("all", "All portals"), ...shown.map((p) => filterChip(p.slug, p.name, p.brand)),
-    ...(picked ? [filterChip(picked.slug, picked.name, picked.brand)] : [])].join("");
-  wrap.querySelectorAll(".chip").forEach((btn) => btn.addEventListener("click", () => selectPortal(btn.dataset.portal)));
+  const picked = state.portals.filter((p) => state.selected.has(p.slug) && !shown.includes(p));
+  wrap.innerHTML = [filterChip("all", "All portals"), ...[...shown, ...picked].map((p) => filterChip(p.slug, p.name, p.brand))].join("");
+  wrap.querySelectorAll(".chip").forEach((btn) => btn.addEventListener("click", () => togglePortal(btn.dataset.portal)));
   renderMoreMenu();
   syncFilterChips();
   fadeFilterEdges();
@@ -146,12 +145,25 @@ function fadeFilterEdges() {
   wrap.classList.toggle("fade-end", max > 1 && wrap.scrollLeft < max - 1);
 }
 
-/** Show one portal ("all" for every portal), keeping the grid, the search results and the chips in step. */
-function selectPortal(slug) {
-  state.selected.clear();
-  if (slug !== "all") state.selected.add(slug);
-  const inRow = $(`#filters .chip[data-portal="${CSS.escape(slug)}"]`);
-  if (inRow) syncFilterChips(); else renderFilters(); // a portal from the menu joins the row
+/** Toggle one portal ("all" clears the selection), keeping the grid, the search results and the chips in step.
+ * A portal from the menu joins the row when picked and leaves it when unpicked; focus goes to its chip, or to
+ * "+N more" when the chip is gone. */
+function togglePortal(slug) {
+  if (slug === "all") state.selected.clear();
+  else if (state.selected.has(slug)) state.selected.delete(slug);
+  else state.selected.add(slug);
+  const inMenu = state.portals.findIndex((p) => p.slug === slug) >= FILTER_CHIPS;
+  if (inMenu) {
+    const hadFocus = document.activeElement?.closest?.("#filters, #moreMenu");
+    renderFilters();
+    if (hadFocus) {
+      const chip = $(`#filters .chip[data-portal="${CSS.escape(slug)}"]`) || $("#moreMenu .chip-more");
+      chip?.focus();
+      chip?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    }
+  } else {
+    syncFilterChips();
+  }
   renderGrid();
   updateManualResults();
 }
@@ -179,7 +191,7 @@ function renderMoreMenu() {
   if (!rest.length) { menu.innerHTML = ""; return; }
   menu.innerHTML =
     `<button class="chip chip-more" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="moreMenuList">+${rest.length} more</button>` +
-    `<div class="week-menu-list more-menu-list" id="moreMenuList" role="listbox" aria-label="More portals">` +
+    `<div class="week-menu-list more-menu-list" id="moreMenuList" role="listbox" aria-multiselectable="true" aria-label="More portals">` +
     rest.map((p) => `<button class="week-option more-option" type="button" role="option" data-portal="${esc(p.slug)}" aria-selected="false" tabindex="-1">` +
       `<span class="swatch" style="background:${esc(p.brand)}"></span>${esc(p.name)}</button>`).join("") +
     `</div>`;
@@ -215,10 +227,7 @@ function renderMoreMenu() {
   options().forEach((o) => o.addEventListener("click", (e) => {
     e.stopPropagation();
     closeMoreMenu();
-    selectPortal(o.dataset.portal);
-    const chip = $(`#filters .chip[data-portal="${CSS.escape(o.dataset.portal)}"]`);
-    chip?.focus();
-    chip?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    togglePortal(o.dataset.portal);
   }));
 }
 
@@ -236,9 +245,10 @@ function initTaskSwitch() {
   const btn = $('.task-switch [data-task="compare"]');
   if (!btn) return;
   btn.addEventListener("click", () => {
-    const portal = state.selected.size === 1 ? [...state.selected][0] : null;
+    // Selected portals in site order: none = All portals, one = that portal week by week, more = side by side.
+    const selection = state.portals.map((p) => p.slug).filter((slug) => state.selected.has(slug));
     location.hash = libraryCompareHash({
-      portal, week: state.week, device: state.device,
+      selection, week: state.week, device: state.device,
       weeks: state.weeks.map((w) => w.week), portals: state.portals.map((p) => p.slug),
     });
   });

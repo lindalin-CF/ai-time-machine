@@ -23,8 +23,8 @@ export const CHANGELOG: ChangelogEntry[] = [
     bullets: [
       { lead: "Browse | Compare", text: "A switch above the filters. Compare opens the Compare page with your week and device, and with the portal you picked, shown week by week." },
       { lead: "One bar", text: "Portal chips, Desktop | Mobile, the week and search now share one row. It stays pinned under the top bar as you scroll." },
-      { lead: "+ more", text: "The first four portals show as chips. The rest are in a \"+ more\" menu, and the one you pick joins the row." },
-      { lead: "One portal at a time", text: "Picking a portal shows only that portal. All portals shows everything again." },
+      { lead: "+ more", text: "The first four portals show as chips. The rest are in a \"+ more\" menu, and the ones you pick join the row." },
+      { lead: "Compare what you picked", text: "Pick several portals and Compare puts them side by side (up to four). All portals shows everything again." },
     ],
     closing: "Pick a portal on the Library page, then press Compare.",
   },
