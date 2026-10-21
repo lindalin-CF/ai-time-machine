@@ -15,6 +15,17 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "compare-button-opens-table",
+    date: "2026-10-21",
+    time: "18:27",
+    title: "Compare → Opens the Table",
+    subtitle: "The Compare → button on the Library page now always opens Compare in Table view",
+    bullets: [
+      { lead: "Table first", text: "On Desktop and Mobile alike, with the portals, week and device you picked. Canvas is one click away." },
+    ],
+    closing: "Pick two portals on the Library page, then press Compare →.",
+  },
+  {
     slug: "compare-device-icons",
     date: "2026-10-21",
     time: "18:19",

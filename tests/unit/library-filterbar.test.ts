@@ -18,36 +18,36 @@ const SLUGS = PORTALS.map((p) => p.slug);
 describe('libraryCompareHash', () => {
   const base = { weeks: WEEKS, portals: SLUGS, week: WEEKS[0], device: 'desktop' };
 
-  it('All portals: one week in the Canvas, Compare picks its default portals', () => {
-    expect(libraryCompareHash({ ...base, selection: [] })).toBe(`#compare?view=canvas&mode=portals&week=${WEEKS[0]}&device=desktop`);
-    expect(libraryCompareHash({ ...base, selection: [], week: WEEKS[2] })).toBe(`#compare?view=canvas&mode=portals&week=${WEEKS[2]}&device=desktop`);
+  it('All portals: one week in the Table, Compare picks its default portals', () => {
+    expect(libraryCompareHash({ ...base, selection: [] })).toBe(`#compare?view=table&mode=portals&week=${WEEKS[0]}&device=desktop`);
+    expect(libraryCompareHash({ ...base, selection: [], week: WEEKS[2] })).toBe(`#compare?view=table&mode=portals&week=${WEEKS[2]}&device=desktop`);
   });
 
   it('one portal: that portal over this week and the nearest older one', () => {
     expect(libraryCompareHash({ ...base, selection: ['claude'] }))
-      .toBe(`#compare?view=canvas&mode=time&portal=claude&weeks=${WEEKS[0]},${WEEKS[1]}&device=desktop`);
+      .toBe(`#compare?view=table&mode=time&portal=claude&weeks=${WEEKS[0]},${WEEKS[1]}&device=desktop`);
     expect(libraryCompareHash({ ...base, selection: ['grok'], week: WEEKS[3] }))
-      .toBe(`#compare?view=canvas&mode=time&portal=grok&weeks=${WEEKS[3]},${WEEKS[4]}&device=desktop`);
+      .toBe(`#compare?view=table&mode=time&portal=grok&weeks=${WEEKS[3]},${WEEKS[4]}&device=desktop`);
   });
 
   it('one portal in the oldest week: Across portals with Compare\'s usual second default', () => {
     const oldest = WEEKS[WEEKS.length - 1];
     expect(libraryCompareHash({ ...base, selection: ['grok'], week: oldest }))
-      .toBe(`#compare?view=canvas&mode=portals&week=${oldest}&portals=grok,chatgpt&device=desktop`);
+      .toBe(`#compare?view=table&mode=portals&week=${oldest}&portals=grok,chatgpt&device=desktop`);
     expect(libraryCompareHash({ ...base, selection: ['chatgpt'], week: oldest }))
-      .toBe(`#compare?view=canvas&mode=portals&week=${oldest}&portals=chatgpt,claude&device=desktop`);
+      .toBe(`#compare?view=table&mode=portals&week=${oldest}&portals=chatgpt,claude&device=desktop`);
     expect(libraryCompareHash({ ...base, selection: ['claude'], week: oldest }))
-      .toBe(`#compare?view=canvas&mode=portals&week=${oldest}&portals=claude,chatgpt&device=desktop`);
+      .toBe(`#compare?view=table&mode=portals&week=${oldest}&portals=claude,chatgpt&device=desktop`);
   });
 
   it('several portals: those portals side by side for this week, at most four', () => {
     expect(libraryCompareHash({ ...base, selection: ['chatgpt', 'grok'] }))
-      .toBe(`#compare?view=canvas&mode=portals&week=${WEEKS[0]}&portals=chatgpt,grok&device=desktop`);
+      .toBe(`#compare?view=table&mode=portals&week=${WEEKS[0]}&portals=chatgpt,grok&device=desktop`);
     expect(libraryCompareHash({ ...base, selection: SLUGS, device: 'mobile' }))
       .toBe(`#compare?view=table&mode=portals&week=${WEEKS[0]}&portals=chatgpt,claude,gemini,perplexity&device=mobile`);
   });
 
-  it('Mobile opens the Table instead of the Canvas', () => {
+  it('always opens the Table, on Desktop and Mobile', () => {
     expect(libraryCompareHash({ ...base, selection: [], device: 'mobile' })).toBe(`#compare?view=table&mode=portals&week=${WEEKS[0]}&device=mobile`);
     expect(libraryCompareHash({ ...base, selection: ['gemini'], device: 'mobile' }))
       .toBe(`#compare?view=table&mode=time&portal=gemini&weeks=${WEEKS[0]},${WEEKS[1]}&device=mobile`);
@@ -56,7 +56,7 @@ describe('libraryCompareHash', () => {
   it('writes only parameters Compare already reads back', () => {
     const known = { portals: SLUGS, weeks: WEEKS, max: 4 };
     expect(parseAnalyticsHash(libraryCompareHash({ ...base, selection: ['claude'] }), known))
-      .toMatchObject({ view: 'canvas', mode: 'weeks', portal: 'claude', weeks: [WEEKS[0], WEEKS[1]], device: 'desktop' });
+      .toMatchObject({ view: 'table', mode: 'weeks', portal: 'claude', weeks: [WEEKS[0], WEEKS[1]], device: 'desktop' });
     expect(parseAnalyticsHash(libraryCompareHash({ ...base, selection: [], device: 'mobile' }), known))
       .toEqual({ view: 'table', mode: 'portals', week: WEEKS[0], device: 'mobile' });
   });
@@ -118,20 +118,20 @@ describe('landing page controls (browser)', () => {
       await page.context().close();
     });
 
-    it('All portals opens Across portals in the Canvas for this week and device', async () => {
+    it('All portals opens Across portals in the Table for this week and device', async () => {
       const page = await open();
-      expect(await compare(page)).toBe(`#compare?view=canvas&mode=portals&week=${WEEKS[0]}&device=desktop`);
+      expect(await compare(page)).toBe(`#compare?view=table&mode=portals&week=${WEEKS[0]}&device=desktop`);
       expect(await page.locator('#analyticsView').isVisible()).toBe(true);
       expect(await page.locator('#galleryView').isVisible()).toBe(false);
-      expect(await anPressed(page)).toEqual(['Across portals', 'Desktop', 'Canvas']);
+      expect(await anPressed(page)).toEqual(['Across portals', 'Desktop', 'Table']);
       await page.context().close();
     });
 
     it('one portal opens Single portal over this week and the one before', async () => {
       const page = await open();
       await page.locator('#filters .chip[data-portal="claude"]').click();
-      expect(await compare(page)).toBe(`#compare?view=canvas&mode=time&portal=claude&weeks=${WEEKS[0]},${WEEKS[1]}&device=desktop`);
-      expect(await anPressed(page)).toEqual(['Single portal', 'Desktop', 'Canvas']);
+      expect(await compare(page)).toBe(`#compare?view=table&mode=time&portal=claude&weeks=${WEEKS[0]},${WEEKS[1]}&device=desktop`);
+      expect(await anPressed(page)).toEqual(['Single portal', 'Desktop', 'Table']);
       await page.context().close();
     });
 
@@ -140,7 +140,7 @@ describe('landing page controls (browser)', () => {
       await page.locator('#filters .chip[data-portal="claude"]').click();
       await page.locator('.chip-more').click();
       await page.locator('#moreMenuList [data-portal="grok"]').click();
-      expect(await compare(page)).toBe(`#compare?view=canvas&mode=portals&week=${WEEKS[0]}&portals=claude,grok&device=desktop`);
+      expect(await compare(page)).toBe(`#compare?view=table&mode=portals&week=${WEEKS[0]}&portals=claude,grok&device=desktop`);
       expect(await page.locator('#anPortals .chip[aria-selected="true"]').allTextContents()).toEqual(['Claude', 'Grok']);
       await page.context().close();
     });
@@ -151,7 +151,7 @@ describe('landing page controls (browser)', () => {
       await page.locator('#moreMenuList [data-portal="deepseek"]').click();
       for (const slug of ['perplexity', 'gemini', 'chatgpt', 'claude']) await page.locator(`#filters .chip[data-portal="${slug}"]`).click();
       expect(await pressed(page)).toEqual(['ChatGPT', 'Claude', 'Gemini', 'Perplexity', 'DeepSeek']);
-      expect(await compare(page)).toBe(`#compare?view=canvas&mode=portals&week=${WEEKS[0]}&portals=chatgpt,claude,gemini,perplexity&device=desktop`);
+      expect(await compare(page)).toBe(`#compare?view=table&mode=portals&week=${WEEKS[0]}&portals=chatgpt,claude,gemini,perplexity&device=desktop`);
       await page.context().close();
     });
 
@@ -161,7 +161,7 @@ describe('landing page controls (browser)', () => {
       await page.locator(`.controls .an-wp-item[data-v="${WEEKS[2]}"]`).click();
       await expect.poll(() => page.locator('#weekSelect').inputValue()).toBe(WEEKS[2]);
       await page.locator('#filters .chip[data-portal="gemini"]').click();
-      expect(await compare(page)).toBe(`#compare?view=canvas&mode=time&portal=gemini&weeks=${WEEKS[2]},${WEEKS[3]}&device=desktop`);
+      expect(await compare(page)).toBe(`#compare?view=table&mode=time&portal=gemini&weeks=${WEEKS[2]},${WEEKS[3]}&device=desktop`);
       await page.context().close();
     });
 
@@ -177,7 +177,7 @@ describe('landing page controls (browser)', () => {
     it('one portal with no older week: Across portals with that portal and the usual second default', async () => {
       const page = await open({ weeks: [WEEKS[0]] });
       await page.locator('#filters .chip[data-portal="perplexity"]').click();
-      expect(await compare(page)).toBe(`#compare?view=canvas&mode=portals&week=${WEEKS[0]}&portals=perplexity,chatgpt&device=desktop`);
+      expect(await compare(page)).toBe(`#compare?view=table&mode=portals&week=${WEEKS[0]}&portals=perplexity,chatgpt&device=desktop`);
       expect(await page.locator('#anPortals .chip[aria-selected="true"]').allTextContents()).toEqual(['ChatGPT', 'Perplexity']);
       await page.context().close();
     });
@@ -193,7 +193,7 @@ describe('landing page controls (browser)', () => {
         w.__clickAt = w.__frames.length;
       }, { capture: true, once: true }));
       await page.locator('#compareBtn').click();
-      await page.locator('#anCanvasWrap .anc-card img').first().waitFor();
+      await page.locator('#anTableWrap').locator('.an-table, .an-mstack').first().waitFor();
       await page.waitForTimeout(200);
       const log = (await frames(page)).slice(await page.evaluate(() => (window as unknown as { __clickAt: number }).__clickAt));
       expect(log.length).toBeGreaterThan(3);
