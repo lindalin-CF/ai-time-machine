@@ -15,6 +15,18 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "compare-toggles-aligned",
+    date: "2026-10-21",
+    time: "17:26",
+    title: "Matching Compare Switches",
+    subtitle: "In Compare, Desktop | Mobile is now exactly as wide as Across portals | Single portal above it",
+    bullets: [
+      { lead: "Lined up", text: "The two switches share their left and right edges, each with two equal halves. The week sits to the right of Desktop | Mobile, and the selected count stays at the far right." },
+      { lead: "On phones", text: "Both switches are full width, with the week below them." },
+    ],
+    closing: "Open Compare and look at the two switches.",
+  },
+  {
     slug: "compare-all-portals-row",
     date: "2026-10-21",
     time: "17:18",
