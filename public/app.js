@@ -179,7 +179,7 @@ function syncFilterChips() {
 
 // "+N more": built like the week dropdown (a button, then a listbox of option buttons). Arrow keys, Home and End
 // move between options, Enter or a click picks one, Esc closes and returns focus to the button, as does a click outside.
-// Used by the Library filter bar (#moreMenu) and Compare's portal row (#anMoreMenu).
+// Used by the Library filter bar (#moreMenu).
 // opts: { listId, items: portals[], multi, selected(slug), disabled(slug), onPick(slug) }.
 function mountMoreMenu(menu, opts) {
   if (!menu) return;
@@ -233,7 +233,7 @@ function mountMoreMenu(menu, opts) {
 
 /** After a pick from a "+N more" menu re-renders the row: focus the portal's chip, or "+N more" when it left the row. */
 function focusPortalChip(row, menu, slug) {
-  const chip = row?.querySelector(`.chip[data-portal="${CSS.escape(slug)}"], .chip[data-v="${CSS.escape(slug)}"]`) || menu?.querySelector(".chip-more");
+  const chip = row?.querySelector(`.chip[data-portal="${CSS.escape(slug)}"]`) || menu?.querySelector(".chip-more");
   chip?.focus();
   chip?.scrollIntoView({ block: "nearest", inline: "nearest" });
 }
@@ -269,6 +269,43 @@ function initTaskSwitch() {
 }
 
 // The filter bar sticks right under the sticky top bar, whose height changes with the viewport (and its wrapping).
+/** Scroll a chip row sideways (never the page) so `chip` is in full view, clear of the 24px edge fades. The row snaps
+ * each chip's start to 24px in (scroll-padding), so it stops on such a snap point, or the end, instead of being pulled off. */
+function revealChip(row, chip, pad = 24) {
+  if (!row || !chip) return;
+  const r = row.getBoundingClientRect(), c = chip.getBoundingClientRect();
+  const max = row.scrollWidth - row.clientWidth;
+  const snapTo = (el) => Math.min(max, Math.max(0, row.scrollLeft + el.getBoundingClientRect().left - (r.left + pad)));
+  let left = row.scrollLeft;
+  if (c.left < r.left + pad) left = snapTo(chip);
+  else if (c.right > r.right - pad) {
+    // The first snap point that brings the chip's end in; past the last one, the end of the row.
+    const shift = (x) => x - row.scrollLeft;
+    left = max;
+    for (const el of row.querySelectorAll(".chip")) {
+      const x = snapTo(el);
+      if (x > row.scrollLeft && c.right - shift(x) <= r.right - pad) { left = x; break; }
+    }
+  }
+  if (left !== row.scrollLeft) row.scrollTo({ left, behavior: "instant" });
+  fadeChipEdges(row);
+}
+
+// Compare's portal row: a focused chip scrolls into view, and a vertical mouse wheel scrolls the row sideways
+// (until it reaches an end, then the page scrolls as usual).
+function initAnPortalRow() {
+  const row = $("#anPortals");
+  if (!row) return;
+  row.addEventListener("focusin", (e) => { if (e.target.matches(".chip")) revealChip(row, e.target); });
+  row.addEventListener("wheel", (e) => {
+    if (e.ctrlKey || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return; // pinch-zoom, or already sideways
+    const max = row.scrollWidth - row.clientWidth;
+    if (max <= 0 || (e.deltaY < 0 && row.scrollLeft <= 0) || (e.deltaY > 0 && row.scrollLeft >= max - 1)) return;
+    e.preventDefault();
+    row.scrollLeft += e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+  }, { passive: false });
+}
+
 function initFilterEdges() {
   for (const wrap of [$("#filters"), $("#anPortals")]) {
     if (!wrap) continue;
@@ -1475,6 +1512,8 @@ function enterAnalytics() {
   }
   anSyncToggles();
   renderAnalytics();
+  const row = $("#anPortals");
+  revealChip(row, row.querySelector('.chip[aria-selected="true"]'));
 }
 
 // ---- shareable links: the setup lives in the hash after #compare (public/analytics-share.js) ----
@@ -1590,27 +1629,25 @@ function renderAnalytics() {
       labelledBy: "anWeekLabel",
       onChange: (weeks) => { an.weeks = new Set(weeks); anSyncSelection(); renderAnContent(); anChanged(); },
     });
-  // One row, like the Library filter bar: the first FILTER_CHIPS portals, then any picked portal from the
-  // "+N more" menu, which holds the rest.
+  // Every portal in one row that scrolls sideways (snapping to chips, edges fading where there is more).
+  // Re-rendering keeps the row where the viewer scrolled it.
   const chips = $("#anPortals");
   const isOn = (slug) => (portalsMode ? an.portals.has(slug) : slug === an.portal);
-  const pick = (v) => {
-    if (!portalsMode) an.portal = v;
-    else if (an.portals.has(v)) an.portals.delete(v);
-    else if (an.portals.size < AN_MAX) an.portals.add(v);
-    renderAnalytics();
-    anChanged();
-  };
-  const shown = state.portals.slice(0, FILTER_CHIPS);
-  const extra = state.portals.filter((p) => isOn(p.slug) && !shown.includes(p));
+  const scrollLeft = chips.scrollLeft;
   chips.setAttribute("aria-label", portalsMode ? "Portals" : "Portal");
-  chips.innerHTML = [...shown, ...extra].map((p) => anChip(p.slug, p.name, isOn(p.slug), p.brand)).join("");
-  chips.querySelectorAll(".chip").forEach((c) => c.addEventListener("click", () => pick(c.dataset.v)));
-  mountMoreMenu($("#anMoreMenu"), {
-    listId: "anMoreMenuList", items: state.portals.slice(FILTER_CHIPS), multi: portalsMode,
-    selected: isOn, disabled: (slug) => portalsMode && !isOn(slug) && an.portals.size >= AN_MAX,
-    onPick: (v) => { pick(v); focusPortalChip(chips, $("#anMoreMenu"), v); },
-  });
+  chips.innerHTML = state.portals.map((p) => anChip(p.slug, p.name, isOn(p.slug), p.brand)).join("");
+  chips.scrollLeft = scrollLeft;
+  chips.querySelectorAll(".chip").forEach((c) =>
+    c.addEventListener("click", () => {
+      const v = c.dataset.v;
+      if (!portalsMode) an.portal = v;
+      else if (an.portals.has(v)) an.portals.delete(v);
+      else if (an.portals.size < AN_MAX) an.portals.add(v);
+      renderAnalytics();
+      anChanged();
+      $(`#anPortals .chip[data-v="${CSS.escape(v)}"]`)?.focus({ preventScroll: true }); // the re-render replaced the button
+    })
+  );
   fadeChipEdges(chips);
   anSyncSelection();
   renderAnContent();
@@ -1876,6 +1913,7 @@ initDeviceToggle();
 initSearch();
 initTaskSwitch();
 initFilterEdges();
+initAnPortalRow();
 trackTopbarHeight();
 initHeroOrbFollow();
 if (document.documentElement.dataset.view === "gallery") startHeroAnnotations();
