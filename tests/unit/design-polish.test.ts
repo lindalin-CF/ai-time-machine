@@ -90,14 +90,13 @@ describe('design rules (browser)', () => {
   it('shows the 2px orange ring on a focused week option', async () => {
     const page = await openSite(browser, '');
     await page.locator('#grid .card').first().waitFor();
-    await page.locator('.controls .week-menu-btn').focus();
-    await page.keyboard.press('Enter'); // opens the list
-    await page.keyboard.press('Tab'); // the newest week (selected)
-    await page.keyboard.press('Tab'); // the next week
+    await page.locator('.controls .an-wp-btn').focus();
+    await page.keyboard.press('Enter'); // opens the list on the newest week (selected)
+    await page.keyboard.press('ArrowDown'); // the next week
     const ring = await page.evaluate(() => {
       const el = document.activeElement as HTMLElement;
       const cs = getComputedStyle(el);
-      return { option: el.classList.contains('week-option'), outline: `${cs.outlineWidth} ${cs.outlineStyle} ${cs.outlineColor}` };
+      return { option: el.classList.contains('an-wp-item'), outline: `${cs.outlineWidth} ${cs.outlineStyle} ${cs.outlineColor}` };
     });
     expect(ring).toEqual({ option: true, outline: '2px solid rgb(235, 98, 44)' });
     await page.context().close();

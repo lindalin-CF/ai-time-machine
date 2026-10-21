@@ -15,6 +15,18 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "library-week-dropdown",
+    date: "2026-10-21",
+    time: "18:10",
+    title: "One Week Dropdown",
+    subtitle: "The week picker in the Library filter bar is now the same dropdown Compare uses",
+    bullets: [
+      { lead: "Same look", text: "Same button, chevron, menu and focus ring on both pages, as tall as Desktop | Mobile next to it." },
+      { lead: "Same keys", text: "Arrows move through the weeks, Enter picks one, Esc closes, and a click outside closes it too." },
+    ],
+    closing: "Open the week menu on the Library page.",
+  },
+  {
     slug: "filter-bar-compare-button",
     date: "2026-10-21",
     time: "17:50",

@@ -878,11 +878,8 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
 }
 
 
-/* ---------- filter bar: compact week menu, then two rows below 900px, full width at 640px ---------- */
+/* ---------- filter bar: two rows below 900px, full width at 640px ---------- */
 .controls .weekpick{flex:none;gap:0}
-.controls .week-menu{min-width:0}
-.controls .week-menu-btn{font-size:13px;padding:7px 28px 7px 12px;border-radius:999px}
-.controls .week-menu-btn::after{right:10px}
 .controls .viewtoggle .vt-btn{padding-inline:9px}
 @media(max-width:900px){
   .controls{flex-wrap:wrap}
@@ -896,7 +893,7 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
   .controls-right .viewtoggle{flex:1 1 auto}
   .controls-right .viewtoggle .vt-btn{flex:1;justify-content:center}
   .controls .weekpick{flex:1 1 auto}
-  .controls .week-menu{min-width:0;width:100%}
+  .controls .an-week,.controls .an-wp{width:100%}
   .controls .searchbar,.controls .searchbar:focus-within{flex:1 1 100%}
   .fb-compare{flex:1 1 100%;min-height:36px}
 }
@@ -1079,34 +1076,34 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
   #analyticsView .an-selection{grid-column:1;grid-row:auto}
 }
 
-/* ---------- analytics: week dropdown (public/analytics-weekpick.js) ----------
+/* ---------- week dropdown (public/analytics-weekpick.js): Compare's week and the Library filter bar's week ----------
    Matches a toggle group: same background, border, radius and button font (the --toggle-* tokens); its vertical
    padding is the group's track padding plus a button's, so it is exactly as tall as a toggle group. */
-#analyticsView .an-wp{position:relative;min-width:0}
-#analyticsView .an-wp-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin:0;
+.an-wp{position:relative;min-width:0}
+.an-wp-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin:0;
   background:var(--cf-bg-300);border:1px solid var(--cf-border);border-radius:var(--toggle-track-radius);
   padding:calc(var(--toggle-track-pad) + var(--toggle-pad-y)) 10px calc(var(--toggle-track-pad) + var(--toggle-pad-y)) 14px;cursor:pointer;
   font-family:var(--font-sans);font-weight:var(--toggle-font-weight);font-size:var(--toggle-font-size);color:var(--cf-text);text-align:left}
-#analyticsView .an-wp-btn:hover{border-color:var(--cf-border-strong)}
-#analyticsView .an-wp-btn:focus-visible{outline:2px solid var(--cf-orange);outline-offset:2px}
-#analyticsView .an-wp-value{display:grid}
-#analyticsView .an-wp-value > span{grid-area:1 / 1;white-space:nowrap}
-#analyticsView .an-wp-sizer{visibility:hidden}
-#analyticsView .an-wp-chevron{flex:0 0 auto;color:var(--cf-text-soft);transition:transform .15s ease-out}
-#analyticsView .an-wp.is-open .an-wp-chevron{transform:rotate(180deg)}
-#analyticsView .an-wp-list{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:30;margin:0;padding:4px;
+.an-wp-btn:hover{border-color:var(--cf-border-strong)}
+.an-wp-btn:focus-visible{outline:2px solid var(--cf-orange);outline-offset:2px}
+.an-wp-value{display:grid}
+.an-wp-value > span{grid-area:1 / 1;white-space:nowrap}
+.an-wp-sizer{visibility:hidden}
+.an-wp-chevron{flex:0 0 auto;color:var(--cf-text-soft);transition:transform .15s ease-out}
+.an-wp.is-open .an-wp-chevron{transform:rotate(180deg)}
+.an-wp-list{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:30;margin:0;padding:4px;
   max-height:min(320px,55vh);overflow-y:auto;overscroll-behavior:contain;
   background:var(--cf-bg-100);border:1px solid var(--cf-border);border-radius:10px;box-shadow:var(--shadow-sm)}
-#analyticsView .an-wp-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;cursor:pointer;
+.an-wp-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;cursor:pointer;
   font-family:var(--font-sans);font-size:12.5px;font-weight:600;color:var(--cf-text);white-space:nowrap}
-#analyticsView .an-wp-item:hover,#analyticsView .an-wp-item:focus{outline:none;background:rgba(235,98,44,.12);color:var(--cf-orange-ink)}
-#analyticsView .an-wp-item:focus-visible{outline:2px solid var(--cf-orange);outline-offset:-2px}
-#analyticsView .an-wp-item[aria-selected="true"]{color:var(--cf-orange-ink)}
-#analyticsView .an-wp-item[aria-disabled="true"]{color:var(--cf-border-strong);cursor:not-allowed;background:transparent}
-#analyticsView .an-wp-check{flex:0 0 auto;display:grid;place-items:center;width:14px;height:14px;border-radius:4px;
+.an-wp-item:hover,.an-wp-item:focus{outline:none;background:rgba(235,98,44,.12);color:var(--cf-orange-ink)}
+.an-wp-item:focus-visible{outline:2px solid var(--cf-orange);outline-offset:-2px}
+.an-wp-item[aria-selected="true"]{color:var(--cf-orange-ink)}
+.an-wp-item[aria-disabled="true"]{color:var(--cf-border-strong);cursor:not-allowed;background:transparent}
+.an-wp-check{flex:0 0 auto;display:grid;place-items:center;width:14px;height:14px;border-radius:4px;
   border:1.5px solid var(--cf-border-strong);background:var(--cf-bg-100)}
-#analyticsView .an-wp-item[aria-checked="true"] .an-wp-check{background:var(--cf-orange);border-color:var(--cf-orange)}
-#analyticsView .an-wp-item[aria-checked="true"] .an-wp-check::after{content:"";width:7px;height:4px;margin-top:-2px;
+.an-wp-item[aria-checked="true"] .an-wp-check{background:var(--cf-orange);border-color:var(--cf-orange)}
+.an-wp-item[aria-checked="true"] .an-wp-check::after{content:"";width:7px;height:4px;margin-top:-2px;
   border-left:2px solid var(--cf-bg-100);border-bottom:2px solid var(--cf-bg-100);transform:rotate(-45deg)}
 
 /* ---------- phone top-bar menu (public/site-menu.js; the server pages repeat this in src/portal-page.ts) ---------- */

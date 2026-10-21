@@ -157,8 +157,8 @@ describe('landing page controls (browser)', () => {
 
     it('keeps the week picked on the page', async () => {
       const page = await open();
-      await page.locator('.controls .week-menu-btn').click();
-      await page.locator(`.controls .week-option[data-week="${WEEKS[2]}"]`).click();
+      await page.locator('.controls .an-wp-btn').click();
+      await page.locator(`.controls .an-wp-item[data-v="${WEEKS[2]}"]`).click();
       await expect.poll(() => page.locator('#weekSelect').inputValue()).toBe(WEEKS[2]);
       await page.locator('#filters .chip[data-portal="gemini"]').click();
       expect(await compare(page)).toBe(`#compare?view=canvas&mode=time&portal=gemini&weeks=${WEEKS[2]},${WEEKS[3]}&device=desktop`);
@@ -382,7 +382,7 @@ describe('landing page controls (browser)', () => {
       const bar = r('.controls'), left = r('.fb-portals'), right = r('.controls-right'), btn = r('#compareBtn'), search = r('.searchbar');
       const inside = [...document.querySelectorAll('.controls *')].every((el) => {
         const b = el.getBoundingClientRect();
-        return (b.width === 0 && b.height === 0) || el.closest('.week-menu-list, .more-menu-list, #filters > *') /* chips scrolled out of the row are clipped by it */ || (b.left >= bar.left - 0.5 && b.right <= bar.right + 0.5);
+        return (b.width === 0 && b.height === 0) || el.closest('.an-wp-list, .more-menu-list, #filters > *') /* chips scrolled out of the row are clipped by it */ || (b.left >= bar.left - 0.5 && b.right <= bar.right + 0.5);
       });
       const mid = (b: DOMRect) => b.top + b.height / 2;
       const rightRow = [...document.querySelectorAll('.controls-right > *')].map((el) => Math.round(mid(el.getBoundingClientRect())));
@@ -458,6 +458,142 @@ describe('landing page controls (browser)', () => {
       expect(await page.locator('.controls .searchbar').evaluate((el) => getComputedStyle(el).transitionProperty)).not.toContain('width');
       await page.locator('#searchInput').focus();
       expect(await page.locator('.controls .searchbar').evaluate((el) => el.getBoundingClientRect().width)).toBe(240);
+      await page.context().close();
+    });
+  });
+
+  describe('week dropdown', () => {
+    const btn = (page: Page) => page.locator('.controls .an-wp-btn');
+    const isOpen = (page: Page) => page.locator('.controls .an-wp').evaluate((el) => el.classList.contains('is-open'));
+    const active = (page: Page) => page.evaluate(() => document.activeElement!.textContent!.trim());
+    const label = (w: string) => new Date(`${w}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+
+    /** Computed styles of the week button (closed, then keyboard-focused), the open list, a hovered option and the
+     * selected one, on the Library bar or on Compare (Across portals). Sizes that follow the labels (widths) are left out. */
+    const weekStyles = async (hash: string, scope: string) => {
+      const page = await openSite(browser, hash, { portals: PORTALS, width: 1440 });
+      await page.locator(`${scope} .an-wp-btn`).waitFor();
+      await page.waitForTimeout(300);
+      const PROPS = ['background-color', 'border-top-color', 'border-top-width', 'border-top-style', 'border-bottom-width', 'border-left-width',
+        'border-right-width', 'border-top-left-radius', 'border-bottom-right-radius', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+        'font-family', 'font-size', 'font-weight', 'line-height', 'letter-spacing', 'color', 'height', 'box-shadow', 'cursor', 'outline-width',
+        'outline-style', 'outline-color', 'outline-offset', 'transform', 'gap', 'max-height', 'top', 'opacity'];
+      const read = (sel: string) => page.evaluate(([sel, props]) => {
+        const cs = getComputedStyle(document.querySelector(sel as string)!);
+        return Object.fromEntries((props as string[]).map((p) => [p, cs.getPropertyValue(p)]));
+      }, [sel, PROPS]);
+      const out: Record<string, unknown> = {};
+      out.button = await read(`${scope} .an-wp-btn`);
+      out.chevron = await read(`${scope} .an-wp-chevron`);
+      await page.locator(`${scope} .an-wp-btn`).focus();
+      await page.keyboard.press('Shift+Tab'); // focus it from the keyboard, so :focus-visible applies
+      await page.keyboard.press('Tab');
+      out.focused = await read(`${scope} .an-wp-btn`);
+      await page.keyboard.press('Enter');
+      await page.waitForTimeout(250);
+      out.openChevron = await read(`${scope} .an-wp-chevron`);
+      out.list = await read(`${scope} .an-wp-list`);
+      out.selected = await read(`${scope} .an-wp-item[aria-selected="true"]`);
+      await page.keyboard.press('ArrowDown');
+      out.focusedOption = await read(`${scope} .an-wp-item:nth-child(2)`);
+      await page.locator(`${scope} .an-wp-item:nth-child(3)`).hover();
+      out.hovered = await read(`${scope} .an-wp-item:nth-child(3)`);
+      out.texts = await page.locator(`${scope} .an-wp-item`).allTextContents();
+      await page.context().close();
+      return out;
+    };
+
+    it('looks exactly like Compare\'s week dropdown, closed, focused and open', async () => {
+      const library = await weekStyles('', '.controls');
+      const compare = await weekStyles(`#compare?view=table&mode=portals&week=${WEEKS[0]}`, '#anWeek');
+      expect(library).toEqual(compare);
+      expect((library.focused as Record<string, string>)['outline-color']).toBe('rgb(235, 98, 44)');
+      expect(library.texts).toEqual(WEEKS.map(label));
+    });
+
+    it('is the same component: one dropdown in the bar, and no second copy of the old menu', async () => {
+      const page = await open();
+      expect(await page.locator('.controls .an-wp').count()).toBe(1);
+      expect(await page.locator('.controls .week-menu, .controls .week-menu-btn').count()).toBe(0);
+      expect(await btn(page).getAttribute('aria-haspopup')).toBe('listbox');
+      await page.context().close();
+    });
+
+    it('is named "Choose a week" (with the week it shows), and #weekSelect keeps its name and value', async () => {
+      const page = await open();
+      expect(await page.locator('.controls').getByRole('button', { name: `Choose a week ${label(WEEKS[0])}`, exact: true }).count()).toBe(1);
+      expect(await page.locator('#weekSelect').getAttribute('aria-label')).toBe('Choose a week');
+      expect(await page.locator('#weekSelect').inputValue()).toBe(WEEKS[0]);
+      await page.context().close();
+    });
+
+    it('choosing a week updates the cards, the week heading and #weekSelect', async () => {
+      const page = await open();
+      const heading = await page.locator('#weekHeading').textContent();
+      await btn(page).click();
+      await page.locator(`.controls .an-wp-item[data-v="${WEEKS[3]}"]`).click();
+      await expect.poll(() => page.locator('#weekSelect').inputValue()).toBe(WEEKS[3]);
+      await expect.poll(() => page.locator('#weekHeading').textContent()).not.toBe(heading);
+      await expect.poll(() => page.locator('#grid .card img').first().getAttribute('src')).toContain(`/${WEEKS[3]}/`);
+      expect((await btn(page).locator('.an-wp-current').textContent())!.trim()).toBe(label(WEEKS[3]));
+      expect(await isOpen(page)).toBe(false);
+      await page.context().close();
+    });
+
+    it('works from the keyboard: Enter opens on the selected week, arrows move, Enter picks, Esc closes', async () => {
+      const page = await open();
+      await btn(page).focus();
+      await page.keyboard.press('Enter');
+      expect(await isOpen(page)).toBe(true);
+      expect(await active(page)).toBe(label(WEEKS[0]));
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('ArrowDown');
+      expect(await active(page)).toBe(label(WEEKS[2]));
+      await page.keyboard.press('ArrowUp');
+      expect(await active(page)).toBe(label(WEEKS[1]));
+      await page.keyboard.press('Escape');
+      expect(await isOpen(page)).toBe(false);
+      expect(await page.evaluate(() => document.activeElement!.classList.contains('an-wp-btn'))).toBe(true);
+      await page.keyboard.press('ArrowUp'); // opens on the oldest week
+      expect(await active(page)).toBe(label(WEEKS[WEEKS.length - 1]));
+      await page.keyboard.press('Home');
+      await page.keyboard.press('ArrowDown');
+      await page.keyboard.press('Enter');
+      expect(await isOpen(page)).toBe(false);
+      await expect.poll(() => page.locator('#weekSelect').inputValue()).toBe(WEEKS[1]);
+      expect(await page.evaluate(() => document.activeElement!.classList.contains('an-wp-btn'))).toBe(true);
+      await page.context().close();
+    });
+
+    it('closes on a click outside, and when "+N more" opens', async () => {
+      const page = await open();
+      await btn(page).click();
+      expect(await isOpen(page)).toBe(true);
+      await page.locator('#weekHeading').click();
+      expect(await isOpen(page)).toBe(false);
+      await btn(page).click();
+      await page.locator('.chip-more').click();
+      expect(await isOpen(page)).toBe(false);
+      expect(await page.locator('#moreMenu').evaluate((m) => m.classList.contains('open'))).toBe(true);
+      await btn(page).click(); // and the other way round
+      expect(await isOpen(page)).toBe(true);
+      expect(await page.locator('#moreMenu').evaluate((m) => m.classList.contains('open'))).toBe(false);
+      expect(await page.locator('#weekSelect').inputValue()).toBe(WEEKS[0]);
+      await page.context().close();
+    });
+
+    it.each([[1440, 62], [390, 185]])('at %ipx it is as tall as Desktop | Mobile, centred with the search, and the bar stays %ipx tall', async (width, barHeight) => {
+      const page = await open({ width });
+      const r = await page.evaluate(() => {
+        const b = (s: string) => document.querySelector(s)!.getBoundingClientRect();
+        const mid = (x: DOMRect) => x.top + x.height / 2;
+        const week = b('.controls .an-wp-btn'), toggle = b('.controls .viewtoggle'), search = b('.searchbar');
+        return { bar: b('.controls').height, week: week.height, toggle: toggle.height, search: search.height, weekToggleMid: Math.abs(mid(week) - mid(toggle)) };
+      });
+      expect(r.bar).toBe(barHeight);
+      expect(r.week).toBe(r.toggle);
+      expect(Math.abs(r.week - r.search)).toBeLessThanOrEqual(1); // the search pill is 35px, as before
+      expect(r.weekToggleMid).toBeLessThan(1);
       await page.context().close();
     });
   });

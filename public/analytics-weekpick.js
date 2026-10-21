@@ -1,4 +1,4 @@
-// Week dropdown for the Analytics controls. Single select (button + listbox: closes on pick) or
+// Week dropdown for the Compare controls and the Library filter bar. Single select (button + listbox: closes on pick) or
 // multi select (button + menu of checkboxes: stays open, at most `max` checked). Keyboard: Enter, Space
 // or the arrow keys open it; arrows, Home and End move; Enter or Space picks; Esc closes and returns
 // focus to the button; Tab or a click outside closes it. Calling weekPick() again on the same
@@ -136,6 +136,11 @@ function create(container) {
   container.replaceChildren(wp);
   bindDocument();
   return wp;
+}
+
+/** Close every open week dropdown (for another menu opening whose click does not reach the document). */
+export function closeWeekPicks() {
+  document.querySelectorAll(".an-wp.is-open").forEach((wp) => close(wp, false));
 }
 
 /**

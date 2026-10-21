@@ -1,7 +1,7 @@
 // AI Surface Library — front-end controller
 import { anCanvasState, findingsCellHTML, mountAnCanvas, tableFindings, unmountAnCanvas } from "./analytics-canvas.js";
 import { buildAnalyticsHash, compareHash, hashRoute, libraryCompareHash, parseAnalyticsHash } from "./analytics-share.js";
-import { weekPick } from "./analytics-weekpick.js";
+import { closeWeekPicks, weekPick } from "./analytics-weekpick.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 
@@ -198,6 +198,7 @@ function mountMoreMenu(menu, opts) {
   const focusOption = (i) => { const o = options(); o[(i + o.length) % o.length]?.focus(); };
   const openAt = (i) => {
     closeWeekMenus();
+    closeWeekPicks();
     closeMoreMenu();
     menu.classList.add("open");
     btn.setAttribute("aria-expanded", "true");
@@ -347,7 +348,20 @@ function closeWeekMenus(except = null) {
   });
 }
 
+// The Library filter bar's week: Compare's week dropdown, showing the same week as #weekSelect.
+function renderLibraryWeekPick() {
+  const box = $("#weekPick");
+  if (!box) return;
+  const current = state.week || state.weeks[0]?.week;
+  weekPick(box, {
+    options: state.weeks.map((w) => ({ value: w.week, label: shortWeekLabel(w.week) })),
+    selected: current ? [current] : [], multi: false, labelledBy: "weekPickLabel",
+    onChange: (week) => { closeWeekMenus(); closeMoreMenu(); loadWeek(week); },
+  });
+}
+
 function syncWeekMenus() {
+  renderLibraryWeekPick();
   document.querySelectorAll(".week-menu").forEach((menu) => {
     const btn = menu.querySelector(".week-menu-btn");
     const list = menu.querySelector(".week-menu-list");
@@ -398,13 +412,15 @@ function renderWeekSelect() {
         .map((w) => `<option value="${esc(w.week)}">${esc(shortWeekLabel(w.week))}</option>`)
         .join("")
     : `<option>No weeks yet</option>`;
-  // Library and Collection each have their own week dropdown; keep both in sync.
+  // Library and Collection each have their own week dropdown; keep both in sync. The Library's visible control is
+  // the week dropdown in #weekPick; the Collection's is the .week-menu built over its select.
   for (const id of ["#weekSelect", "#collectionWeekSelect"]) {
     const sel = $(id);
     if (!sel) continue;
     sel.innerHTML = opts;
     if (state.weeks.length) sel.addEventListener("change", () => loadWeek(sel.value));
-    ensureWeekMenu(sel);
+    if (id === "#weekSelect") { sel.classList.add("week-native"); renderLibraryWeekPick(); }
+    else ensureWeekMenu(sel);
   }
 }
 
