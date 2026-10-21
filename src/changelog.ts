@@ -15,6 +15,19 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "filter-bar-compare-button",
+    date: "2026-10-21",
+    time: "17:50",
+    title: "Compare From the Filter Bar",
+    subtitle: "On the Library page, Compare → now sits at the end of the filter bar, replacing the Browse | Compare switch",
+    bullets: [
+      { lead: "Compare →", text: "Opens Compare with the bar's week and device. Two to four portals go side by side (the first four if you picked more), one portal is shown this week against the week before, and All portals uses Compare's defaults." },
+      { lead: "Canvas or Table", text: "Desktop opens the Canvas. Mobile opens the Table." },
+      { lead: "Slimmer bar", text: "The \"Filter by portal\" label is gone. Search starts a little wider and grows when you click into it, and on phones Compare → spans the bar at the bottom." },
+    ],
+    closing: "Pick two portals on the Library page, then press Compare →.",
+  },
+  {
     slug: "compare-toggles-aligned",
     date: "2026-10-21",
     time: "17:26",

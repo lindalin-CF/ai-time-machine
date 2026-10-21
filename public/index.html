@@ -104,17 +104,10 @@
       </div>
     </section>
 
-    <!-- controls: Browse | Compare, then one sticky filter bar (portal chips, device, week, search) -->
-    <div class="task-switch-row">
-      <div class="viewtoggle task-switch" role="group" aria-label="Browse the library or compare portals">
-        <button class="vt-btn active" type="button" data-task="browse" aria-pressed="true">Browse</button>
-        <button class="vt-btn" type="button" data-task="compare" aria-pressed="false">Compare</button>
-      </div>
-    </div>
+    <!-- controls: one sticky filter bar (portal chips, device, week, search, Compare →) -->
     <section class="controls" aria-label="Filters">
       <div class="fb-portals">
-        <span class="fb-label" id="filtersLabel">Filter by portal</span>
-        <div class="filters" id="filters" role="group" aria-labelledby="filtersLabel"></div>
+        <div class="filters" id="filters" role="group" aria-label="Filter by portal"></div>
         <div class="more-menu" id="moreMenu" hidden></div>
       </div>
       <div class="controls-right">
@@ -137,6 +130,7 @@
           <label for="searchInput" class="sr-only">Search captures</label>
           <input id="searchInput" type="search" class="search-input" placeholder="Search…" aria-label="Search captures" autocomplete="off" />
         </div>
+        <button class="fb-compare" id="compareBtn" type="button" aria-label="Compare the selected portals">Compare <span aria-hidden="true">→</span></button>
       </div>
     </section>
 

@@ -2,10 +2,10 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { chromium, type Browser, type Page } from 'playwright';
 // @ts-expect-error -- plain browser module without type declarations
 import { libraryCompareHash, parseAnalyticsHash } from '../../public/analytics-share.js';
-import { openSite, WEEKS } from './analytics-page';
+import { frames, openSite, probe, WEEKS } from './analytics-page';
 
-// The landing page's controls: a Browse | Compare switch, then one slim sticky filter bar (portal chips with a
-// "+N more" menu, Desktop | Mobile, week, search). Compare opens #compare with this page's portal, week and device.
+// The landing page's controls: one slim sticky filter bar (portal chips with a "+N more" menu, Desktop | Mobile, week,
+// search, Compare →). Compare → opens #compare with the bar's portals, week and device.
 
 const PORTALS = [
   { slug: 'chatgpt', name: 'ChatGPT', brand: '#10a37f' }, { slug: 'claude', name: 'Claude', brand: '#d97757' },
@@ -18,36 +18,36 @@ const SLUGS = PORTALS.map((p) => p.slug);
 describe('libraryCompareHash', () => {
   const base = { weeks: WEEKS, portals: SLUGS, week: WEEKS[0], device: 'desktop' };
 
-  it('All portals: one week in the Table, Compare picks its default portals', () => {
-    expect(libraryCompareHash({ ...base, selection: [] })).toBe(`#compare?view=table&mode=portals&week=${WEEKS[0]}&device=desktop`);
-    expect(libraryCompareHash({ ...base, selection: [], week: WEEKS[2] })).toBe(`#compare?view=table&mode=portals&week=${WEEKS[2]}&device=desktop`);
+  it('All portals: one week in the Canvas, Compare picks its default portals', () => {
+    expect(libraryCompareHash({ ...base, selection: [] })).toBe(`#compare?view=canvas&mode=portals&week=${WEEKS[0]}&device=desktop`);
+    expect(libraryCompareHash({ ...base, selection: [], week: WEEKS[2] })).toBe(`#compare?view=canvas&mode=portals&week=${WEEKS[2]}&device=desktop`);
   });
 
   it('one portal: that portal over this week and the nearest older one', () => {
     expect(libraryCompareHash({ ...base, selection: ['claude'] }))
-      .toBe(`#compare?view=table&mode=time&portal=claude&weeks=${WEEKS[0]},${WEEKS[1]}&device=desktop`);
+      .toBe(`#compare?view=canvas&mode=time&portal=claude&weeks=${WEEKS[0]},${WEEKS[1]}&device=desktop`);
     expect(libraryCompareHash({ ...base, selection: ['grok'], week: WEEKS[3] }))
-      .toBe(`#compare?view=table&mode=time&portal=grok&weeks=${WEEKS[3]},${WEEKS[4]}&device=desktop`);
+      .toBe(`#compare?view=canvas&mode=time&portal=grok&weeks=${WEEKS[3]},${WEEKS[4]}&device=desktop`);
   });
 
   it('one portal in the oldest week: Across portals with Compare\'s usual second default', () => {
     const oldest = WEEKS[WEEKS.length - 1];
     expect(libraryCompareHash({ ...base, selection: ['grok'], week: oldest }))
-      .toBe(`#compare?view=table&mode=portals&week=${oldest}&portals=grok,chatgpt&device=desktop`);
+      .toBe(`#compare?view=canvas&mode=portals&week=${oldest}&portals=grok,chatgpt&device=desktop`);
     expect(libraryCompareHash({ ...base, selection: ['chatgpt'], week: oldest }))
-      .toBe(`#compare?view=table&mode=portals&week=${oldest}&portals=chatgpt,claude&device=desktop`);
+      .toBe(`#compare?view=canvas&mode=portals&week=${oldest}&portals=chatgpt,claude&device=desktop`);
     expect(libraryCompareHash({ ...base, selection: ['claude'], week: oldest }))
-      .toBe(`#compare?view=table&mode=portals&week=${oldest}&portals=claude,chatgpt&device=desktop`);
+      .toBe(`#compare?view=canvas&mode=portals&week=${oldest}&portals=claude,chatgpt&device=desktop`);
   });
 
   it('several portals: those portals side by side for this week, at most four', () => {
     expect(libraryCompareHash({ ...base, selection: ['chatgpt', 'grok'] }))
-      .toBe(`#compare?view=table&mode=portals&week=${WEEKS[0]}&portals=chatgpt,grok&device=desktop`);
+      .toBe(`#compare?view=canvas&mode=portals&week=${WEEKS[0]}&portals=chatgpt,grok&device=desktop`);
     expect(libraryCompareHash({ ...base, selection: SLUGS, device: 'mobile' }))
       .toBe(`#compare?view=table&mode=portals&week=${WEEKS[0]}&portals=chatgpt,claude,gemini,perplexity&device=mobile`);
   });
 
-  it('always opens the Table, on Desktop and Mobile', () => {
+  it('Mobile opens the Table instead of the Canvas', () => {
     expect(libraryCompareHash({ ...base, selection: [], device: 'mobile' })).toBe(`#compare?view=table&mode=portals&week=${WEEKS[0]}&device=mobile`);
     expect(libraryCompareHash({ ...base, selection: ['gemini'], device: 'mobile' }))
       .toBe(`#compare?view=table&mode=time&portal=gemini&weeks=${WEEKS[0]},${WEEKS[1]}&device=mobile`);
@@ -56,7 +56,7 @@ describe('libraryCompareHash', () => {
   it('writes only parameters Compare already reads back', () => {
     const known = { portals: SLUGS, weeks: WEEKS, max: 4 };
     expect(parseAnalyticsHash(libraryCompareHash({ ...base, selection: ['claude'] }), known))
-      .toMatchObject({ view: 'table', mode: 'weeks', portal: 'claude', weeks: [WEEKS[0], WEEKS[1]], device: 'desktop' });
+      .toMatchObject({ view: 'canvas', mode: 'weeks', portal: 'claude', weeks: [WEEKS[0], WEEKS[1]], device: 'desktop' });
     expect(parseAnalyticsHash(libraryCompareHash({ ...base, selection: [], device: 'mobile' }), known))
       .toEqual({ view: 'table', mode: 'portals', week: WEEKS[0], device: 'mobile' });
   });
@@ -75,52 +75,83 @@ describe('landing page controls (browser)', () => {
   const pressed = (page: Page) => page.locator('#filters .chip[aria-pressed="true"]').allTextContents();
   const cardNames = (page: Page) => page.locator('#grid .card .portal-name').allTextContents();
   const compare = async (page: Page) => {
-    await page.locator('.task-switch [data-task="compare"]').click();
+    await page.locator('#compareBtn').click();
     await page.waitForFunction(() => document.documentElement.dataset.view === 'compare');
     return decodeURIComponent(new URL(page.url()).hash);
   };
   const anPressed = (page: Page) => page.locator('#analyticsView .viewtoggle:not(.anc-zoom) .vt-btn[aria-pressed="true"]').allTextContents();
 
-  describe('Browse | Compare switch', () => {
-    it('sits above the filter bar as a labelled group of two pressed-state buttons, Browse on, at least 44px tall', async () => {
-      const page = await open();
-      const sw = page.locator('.task-switch');
-      expect(await sw.getAttribute('role')).toBe('group');
-      expect(await sw.getAttribute('aria-label')).toBeTruthy();
-      const btns = await sw.locator('button').evaluateAll((els) => els.map((b) => `${b.textContent!.trim()}:${b.getAttribute('aria-pressed')}:${b.getAttribute('type')}`));
-      expect(btns).toEqual(['Browse:true:button', 'Compare:false:button']);
-      const s = (await sw.boundingBox())!;
-      const bar = (await page.locator('.controls').boundingBox())!;
-      expect(s.height).toBeGreaterThanOrEqual(44);
-      expect(s.y + s.height).toBeLessThanOrEqual(bar.y);
-      expect(Math.abs(s.x - bar.x)).toBeLessThan(1); // left-aligned with the bar
+  describe('Compare → button', () => {
+    it('is the last control in the bar: a primary button with its own name, as tall as the bar\'s other controls', async () => {
+      const page = await open({ width: 1440 });
+      const btn = page.locator('#compareBtn');
+      expect(await btn.evaluate((b) => [b.tagName, b.getAttribute('type'), b.textContent!.trim(), b.getAttribute('aria-label')]))
+        .toEqual(['BUTTON', 'button', 'Compare →', 'Compare the selected portals']);
+      expect(await page.locator('.controls-right > *').evaluateAll((els) => els.map((e) => e.className || e.id)))
+        .toEqual(['viewtoggle', 'weekpick', 'searchbar', 'fb-compare']);
+      const r = await page.evaluate(() => {
+        const box = (s: string) => document.querySelector(s)!.getBoundingClientRect();
+        const bar = box('.controls'), b = box('#compareBtn'), cs = getComputedStyle(document.querySelector('#compareBtn')!);
+        return { right: bar.right - b.right, height: b.height, toggle: box('.controls .viewtoggle').height, bg: cs.backgroundColor, fg: cs.color };
+      });
+      expect(r.right).toBeLessThan(20); // at the right end, inside the bar's padding
+      expect(r.height).toBe(r.toggle);
+      expect(r).toMatchObject({ bg: 'rgb(196, 76, 28)', fg: 'rgb(255, 255, 255)' });
+      // White on the fill (and on the hover fill) is at least 4.5:1.
+      const lum = (rgb: number[]) => { const c = rgb.map((v) => v / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+      expect(1.05 / (lum([196, 76, 28]) + 0.05)).toBeGreaterThanOrEqual(4.5);
+      expect(1.05 / (lum([168, 63, 21]) + 0.05)).toBeGreaterThanOrEqual(4.5);
       await page.context().close();
     });
 
-    it('Compare with All portals opens Across portals in the Table for this week and device', async () => {
+    it('shows a 2px orange ring on keyboard focus and presses to 97%', async () => {
       const page = await open();
-      expect(await compare(page)).toBe(`#compare?view=table&mode=portals&week=${WEEKS[0]}&device=desktop`);
+      await page.locator('#searchInput').focus();
+      await page.keyboard.press('Tab');
+      const ring = await page.evaluate(() => { const el = document.activeElement!; const cs = getComputedStyle(el); return `${el.id} ${cs.outlineWidth} ${cs.outlineStyle} ${cs.outlineColor}`; });
+      expect(ring).toBe('compareBtn 2px solid rgb(235, 98, 44)');
+      const b = (await page.locator('#compareBtn').boundingBox())!;
+      await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+      await page.mouse.down();
+      await page.waitForTimeout(200);
+      expect(await page.locator('#compareBtn').evaluate((el) => getComputedStyle(el).transform)).toBe('matrix(0.97, 0, 0, 0.97, 0, 0)');
+      await page.context().close();
+    });
+
+    it('All portals opens Across portals in the Canvas for this week and device', async () => {
+      const page = await open();
+      expect(await compare(page)).toBe(`#compare?view=canvas&mode=portals&week=${WEEKS[0]}&device=desktop`);
       expect(await page.locator('#analyticsView').isVisible()).toBe(true);
       expect(await page.locator('#galleryView').isVisible()).toBe(false);
-      expect(await anPressed(page)).toEqual(['Across portals', 'Desktop', 'Table']);
+      expect(await anPressed(page)).toEqual(['Across portals', 'Desktop', 'Canvas']);
       await page.context().close();
     });
 
-    it('Compare with one portal opens Single portal over this week and the one before', async () => {
+    it('one portal opens Single portal over this week and the one before', async () => {
       const page = await open();
       await page.locator('#filters .chip[data-portal="claude"]').click();
-      expect(await compare(page)).toBe(`#compare?view=table&mode=time&portal=claude&weeks=${WEEKS[0]},${WEEKS[1]}&device=desktop`);
-      expect(await anPressed(page)).toEqual(['Single portal', 'Desktop', 'Table']);
+      expect(await compare(page)).toBe(`#compare?view=canvas&mode=time&portal=claude&weeks=${WEEKS[0]},${WEEKS[1]}&device=desktop`);
+      expect(await anPressed(page)).toEqual(['Single portal', 'Desktop', 'Canvas']);
       await page.context().close();
     });
 
-    it('Compare with several portals opens Across portals with those portals', async () => {
+    it('two portals open Across portals with those portals', async () => {
       const page = await open();
       await page.locator('#filters .chip[data-portal="claude"]').click();
       await page.locator('.chip-more').click();
       await page.locator('#moreMenuList [data-portal="grok"]').click();
-      expect(await compare(page)).toBe(`#compare?view=table&mode=portals&week=${WEEKS[0]}&portals=claude,grok&device=desktop`);
+      expect(await compare(page)).toBe(`#compare?view=canvas&mode=portals&week=${WEEKS[0]}&portals=claude,grok&device=desktop`);
       expect(await page.locator('#anPortals .chip[aria-selected="true"]').allTextContents()).toEqual(['Claude', 'Grok']);
+      await page.context().close();
+    });
+
+    it('more than four portals: the first four in chip order', async () => {
+      const page = await open();
+      await page.locator('.chip-more').click();
+      await page.locator('#moreMenuList [data-portal="deepseek"]').click();
+      for (const slug of ['perplexity', 'gemini', 'chatgpt', 'claude']) await page.locator(`#filters .chip[data-portal="${slug}"]`).click();
+      expect(await pressed(page)).toEqual(['ChatGPT', 'Claude', 'Gemini', 'Perplexity', 'DeepSeek']);
+      expect(await compare(page)).toBe(`#compare?view=canvas&mode=portals&week=${WEEKS[0]}&portals=chatgpt,claude,gemini,perplexity&device=desktop`);
       await page.context().close();
     });
 
@@ -130,7 +161,7 @@ describe('landing page controls (browser)', () => {
       await page.locator(`.controls .week-option[data-week="${WEEKS[2]}"]`).click();
       await expect.poll(() => page.locator('#weekSelect').inputValue()).toBe(WEEKS[2]);
       await page.locator('#filters .chip[data-portal="gemini"]').click();
-      expect(await compare(page)).toBe(`#compare?view=table&mode=time&portal=gemini&weeks=${WEEKS[2]},${WEEKS[3]}&device=desktop`);
+      expect(await compare(page)).toBe(`#compare?view=canvas&mode=time&portal=gemini&weeks=${WEEKS[2]},${WEEKS[3]}&device=desktop`);
       await page.context().close();
     });
 
@@ -146,16 +177,39 @@ describe('landing page controls (browser)', () => {
     it('one portal with no older week: Across portals with that portal and the usual second default', async () => {
       const page = await open({ weeks: [WEEKS[0]] });
       await page.locator('#filters .chip[data-portal="perplexity"]').click();
-      expect(await compare(page)).toBe(`#compare?view=table&mode=portals&week=${WEEKS[0]}&portals=perplexity,chatgpt&device=desktop`);
+      expect(await compare(page)).toBe(`#compare?view=canvas&mode=portals&week=${WEEKS[0]}&portals=perplexity,chatgpt&device=desktop`);
       expect(await page.locator('#anPortals .chip[aria-selected="true"]').allTextContents()).toEqual(['ChatGPT', 'Perplexity']);
       await page.context().close();
     });
 
-    it('is the only Compare button on the landing page', async () => {
+    it('opens Compare without a frame of the homepage in between, and Back returns to the homepage', async () => {
+      const page = await openSite(browser, '', { portals: PORTALS, initScript: probe('#analyticsView', 'compare') });
+      await page.locator('#grid .card:not(.skeleton)').first().waitFor();
+      await page.locator('#filters .chip[data-portal="claude"]').click();
+      await page.locator('#filters .chip[data-portal="gemini"]').click();
+      // Frames from the moment the click reaches the page (a capturing listener runs before the button's own).
+      await page.evaluate(() => document.addEventListener('click', () => {
+        const w = window as unknown as { __frames: unknown[]; __clickAt: number };
+        w.__clickAt = w.__frames.length;
+      }, { capture: true, once: true }));
+      await page.locator('#compareBtn').click();
+      await page.locator('#anCanvasWrap .anc-card img').first().waitFor();
+      await page.waitForTimeout(200);
+      const log = (await frames(page)).slice(await page.evaluate(() => (window as unknown as { __clickAt: number }).__clickAt));
+      expect(log.length).toBeGreaterThan(3);
+      expect(log.filter((f) => f.gallery || !f.target)).toEqual([]);
+      await page.goBack();
+      await page.waitForFunction(() => document.documentElement.dataset.view === 'gallery');
+      expect(await page.locator('#galleryView').isVisible()).toBe(true);
+      await page.context().close();
+    });
+
+    it('is the only Compare button on the landing page, and the Browse | Compare switch is gone', async () => {
       const page = await open();
       const compares = await page.locator('#galleryView button, #galleryView a').evaluateAll((els) =>
-        els.filter((e) => /^compare$/i.test(e.textContent!.trim())).length);
+        els.filter((e) => /^compare\b/i.test(e.textContent!.trim())).length);
       expect(compares).toBe(1);
+      expect(await page.locator('.task-switch, .task-switch-row, [data-task]').count()).toBe(0);
       await page.context().close();
     });
   });
@@ -325,71 +379,112 @@ describe('landing page controls (browser)', () => {
   describe('widths', () => {
     const layout = (page: Page) => page.evaluate(() => {
       const r = (s: string) => document.querySelector(s)!.getBoundingClientRect();
-      const bar = r('.controls'), left = r('.fb-portals'), right = r('.controls-right');
+      const bar = r('.controls'), left = r('.fb-portals'), right = r('.controls-right'), btn = r('#compareBtn'), search = r('.searchbar');
       const inside = [...document.querySelectorAll('.controls *')].every((el) => {
         const b = el.getBoundingClientRect();
         return (b.width === 0 && b.height === 0) || el.closest('.week-menu-list, .more-menu-list, #filters > *') /* chips scrolled out of the row are clipped by it */ || (b.left >= bar.left - 0.5 && b.right <= bar.right + 0.5);
       });
+      const mid = (b: DOMRect) => b.top + b.height / 2;
+      const rightRow = [...document.querySelectorAll('.controls-right > *')].map((el) => Math.round(mid(el.getBoundingClientRect())));
       return {
         noSideScroll: document.documentElement.scrollWidth <= document.documentElement.clientWidth,
-        oneRow: Math.abs((left.top + left.height / 2) - (right.top + right.height / 2)) < 2,
+        oneRow: Math.abs(mid(left) - mid(right)) < 2 && new Set(rightRow).size === 1,
         chipsOnTop: right.top >= left.bottom,
+        compareAtRightEnd: Math.abs(btn.right - right.right) < 1 && Math.abs(mid(btn) - mid(search)) < 2,
+        compareFullWidthAtBottom: Math.abs(btn.width - right.width) < 1 && btn.top >= search.bottom && Math.abs(btn.bottom - right.bottom) < 1,
+        searchFullWidth: Math.abs(search.width - right.width) < 1,
+        moreVisible: r('.chip-more').right <= left.right + 0.5,
         inside,
         heights: { topbar: r('.topbar').height, bar: bar.height },
       };
     });
+    const focusSearch = async (page: Page) => { await page.locator('#searchInput').focus(); await page.waitForTimeout(300); };
 
-    it('1440px and 1024px: one row', async () => {
-      for (const width of [1440, 1024]) {
-        const page = await open({ width });
-        expect(await layout(page)).toMatchObject({ noSideScroll: true, oneRow: true, inside: true });
-        await page.context().close();
-      }
-    });
-
-    it('800px: two rows, chips on top', async () => {
-      const page = await open({ width: 800 });
-      expect(await layout(page)).toMatchObject({ noSideScroll: true, oneRow: false, chipsOnTop: true, inside: true });
+    it.each([1440, 1024])('%ipx: one row with Compare → at the right end, also while the search is focused', async (width) => {
+      const page = await open({ width });
+      const one = { noSideScroll: true, oneRow: true, compareAtRightEnd: true, moreVisible: true, inside: true };
+      expect(await layout(page)).toMatchObject(one);
+      await focusSearch(page);
+      expect(await layout(page)).toMatchObject(one);
       await page.context().close();
     });
 
-    it('390px: chips on top, everything full width, nothing overflows; the search widens on focus without overflowing', async () => {
-      const page = await open({ width: 390 });
+    it('800px: two rows, chips on top, Compare → at the right end of the second row', async () => {
+      const page = await open({ width: 800 });
+      expect(await layout(page)).toMatchObject({ noSideScroll: true, oneRow: false, chipsOnTop: true, compareAtRightEnd: true, inside: true });
+      await page.context().close();
+    });
+
+    it.each([390, 360])('%ipx: chips on top, the search full width, then Compare → full width at the bottom; nothing overflows', async (width) => {
+      const page = await open({ width });
       const l = await layout(page);
-      expect(l).toMatchObject({ noSideScroll: true, chipsOnTop: true, inside: true });
+      expect(l).toMatchObject({ noSideScroll: true, chipsOnTop: true, searchFullWidth: true, compareFullWidthAtBottom: true, inside: true });
       const full = await page.evaluate(() => {
         const bar = document.querySelector('.controls')!.getBoundingClientRect();
-        return ['.fb-portals', '.controls-right', '.searchbar', '.task-switch'].map((s) => {
+        return ['.fb-portals', '.controls-right', '.searchbar', '#compareBtn'].map((s) => {
           const b = document.querySelector(s)!.getBoundingClientRect();
-          return s === '.task-switch' ? Math.round(b.width) === Math.round(bar.width) : b.right > bar.right - 20 && b.left < bar.left + 20;
+          return b.right > bar.right - 20 && b.left < bar.left + 20;
         });
       });
       expect(full).toEqual([true, true, true, true]);
-      await page.locator('#searchInput').focus();
-      await page.waitForTimeout(250);
-      expect((await layout(page)).noSideScroll).toBe(true);
+      await focusSearch(page);
+      expect(await layout(page)).toMatchObject({ noSideScroll: true, inside: true, compareFullWidthAtBottom: true });
       await page.locator('.chip-more').click(); // the open "+N more" list stays on the page too
       await page.waitForTimeout(200);
-      expect(await page.evaluate(() => document.querySelector('#moreMenuList')!.getBoundingClientRect().right)).toBeLessThanOrEqual(390);
+      expect(await page.evaluate(() => document.querySelector('#moreMenuList')!.getBoundingClientRect().right)).toBeLessThanOrEqual(width);
       expect((await layout(page)).noSideScroll).toBe(true);
       // Reported in the change summary: the top bar and the filter bar together.
-      console.log(`390px: top bar ${l.heights.topbar}px + filter bar ${l.heights.bar}px = ${l.heights.topbar + l.heights.bar}px`);
+      console.log(`${width}px: top bar ${l.heights.topbar}px + filter bar ${l.heights.bar}px = ${l.heights.topbar + l.heights.bar}px`);
       await page.context().close();
     });
 
-    it('1440px: the search starts compact and widens on focus', async () => {
+    it('1440px: the search is 170px, widens to 240px on focus over 200ms, and goes back on blur', async () => {
       const page = await open({ width: 1440 });
       const w = () => page.locator('.controls .searchbar').evaluate((el) => el.getBoundingClientRect().width);
-      expect(await w()).toBeLessThanOrEqual(170);
-      await page.locator('#searchInput').focus();
-      await page.waitForTimeout(300);
+      expect(await w()).toBe(170);
+      const t = await page.locator('.controls .searchbar').evaluate((el) => { const cs = getComputedStyle(el); return cs.transitionProperty.split(', ').map((p, i) => `${p} ${cs.transitionDuration.split(', ')[i]} ${cs.transitionTimingFunction.split(', ')[i]}`); });
+      expect(t).toContain('width 0.2s ease-out');
+      await focusSearch(page);
       expect(await w()).toBe(240);
-      expect((await layout(page)).noSideScroll).toBe(true);
+      await page.locator('#searchInput').blur();
+      await page.waitForTimeout(300);
+      expect(await w()).toBe(170);
+      await page.context().close();
+    });
+
+    it('with reduced motion the search width does not animate', async () => {
+      const page = await openSite(browser, '', { portals: PORTALS, width: 1440, reducedMotion: 'reduce' });
+      await page.locator('#grid .card:not(.skeleton)').first().waitFor();
+      expect(await page.locator('.controls .searchbar').evaluate((el) => getComputedStyle(el).transitionProperty)).not.toContain('width');
+      await page.locator('#searchInput').focus();
+      expect(await page.locator('.controls .searchbar').evaluate((el) => el.getBoundingClientRect().width)).toBe(240);
+      await page.context().close();
+    });
+  });
+
+  describe('search', () => {
+    it('filters the cards as before, keeping its orange focus ring', async () => {
+      const page = await open();
+      await page.locator('#searchInput').fill('grok');
+      await expect.poll(() => cardNames(page)).toEqual(['Grok']);
+      const ring = () => page.locator('.controls .searchbar').evaluate((el) => { const cs = getComputedStyle(el); return `${cs.outlineWidth} ${cs.outlineStyle} ${cs.outlineColor} ${cs.borderColor}`; });
+      await expect.poll(ring).toBe('2px solid rgb(235, 98, 44) rgb(235, 98, 44)');
+      await page.locator('#searchInput').fill('');
+      await expect.poll(() => cardNames(page)).toHaveLength(7);
       await page.context().close();
     });
   });
 
   describe('accessible names', () => {
+    it('no visible "Filter by portal" label; the chip group keeps the name', async () => {
+      const page = await open();
+      expect(await page.locator('.controls').innerText()).not.toContain('Filter by portal');
+      expect(await page.locator('.fb-label, #filtersLabel').count()).toBe(0);
+      expect(await page.locator('#filters').evaluate((el) => [el.getAttribute('role'), el.getAttribute('aria-label'), el.getAttribute('aria-labelledby')]))
+        .toEqual(['group', 'Filter by portal', null]);
+      await page.context().close();
+    });
+
     it('the week select and the search input keep their names and have visually hidden labels', async () => {
       const page = await open();
       const r = await page.evaluate(() => ['weekSelect', 'searchInput'].map((id) => {
@@ -397,7 +492,18 @@ describe('landing page controls (browser)', () => {
         return { aria: document.getElementById(id)!.getAttribute('aria-label'), hidden: label.classList.contains('sr-only') };
       }));
       expect(r).toEqual([{ aria: 'Choose a week', hidden: true }, { aria: 'Search captures', hidden: true }]);
-      expect(await page.locator('#filters').getAttribute('aria-labelledby')).toBe('filtersLabel');
+      await page.context().close();
+    });
+  });
+
+  describe('the rest of the landing page', () => {
+    it('keeps its sections in order, with only the filter bar between the hero and the section heading', async () => {
+      const page = await open();
+      expect(await page.locator('#galleryView > *').evaluateAll((els) => els.map((e) => e.id || e.className)))
+        .toEqual(['hero', 'controls', 'section-head', 'grid', 'empty', 'portalIndex', 'manualResults']);
+      expect(await page.locator('.topbar').isVisible()).toBe(true);
+      expect(await page.locator('footer.sitefoot').isVisible()).toBe(true);
+      expect(await page.locator('#grid .card').count()).toBe(7);
       await page.context().close();
     });
   });

@@ -242,9 +242,6 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .stat dd{margin:2px 0 0;font-size:22px;font-weight:700;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:var(--cf-text)}
 
 /* ---------- controls ---------- */
-/* Browse | Compare: two tasks, above the filter bar. Same segmented toggle as Desktop | Mobile, 44px tall. */
-.task-switch-row{display:flex;justify-content:flex-start;margin:0 0 12px}
-.task-switch .vt-btn{min-height:36px;padding:0 18px;font-size:14px}
 /* One slim filter bar, pinned under the sticky top bar (--topbar-h is the top bar's measured height, set by app.js).
    Above the cards (z-index 1 inside), below the top bar and its phone menu (z-index 70). */
 .controls{
@@ -253,7 +250,6 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   background:var(--cf-bg-100);border:1px solid var(--cf-border);border-radius:14px;padding:12px 16px;
 }
 .fb-portals{display:flex;align-items:center;gap:6px;flex:1 1 auto;min-width:0}
-.fb-label{flex:none;font-size:12.5px;font-weight:500;color:var(--cf-text-soft);white-space:nowrap;margin-right:2px}
 .filters{display:flex;flex-wrap:nowrap;gap:6px;flex:0 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;
   /* room for the 2px focus ring, which overflow would clip */
   padding:3px;margin:-3px}
@@ -291,9 +287,9 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 }
 
 /* ---------- search ---------- */
-/* Compact search at the right end of the filter bar; widens while focused. */
+/* Compact search near the right end of the filter bar; widens while focused. */
 .searchbar{
-  display:flex;align-items:center;gap:8px;flex:none;width:140px;
+  display:flex;align-items:center;gap:8px;flex:none;width:170px;
   background:var(--cf-bg-100);border:1px solid var(--cf-border);
   border-radius:999px;padding:7px 14px;transition:border-color .15s ease-out,width .2s ease-out;
 }
@@ -307,6 +303,20 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 }
 .search-input::placeholder{color:var(--cf-text-soft)}
 .search-input::-webkit-search-cancel-button{cursor:pointer}
+
+/* ---------- Compare → (primary button at the right end of the filter bar) ---------- */
+/* The site orange (#eb622c) under white text is 3.3:1, so the fill is a deeper orange: #fff on #c44c1c is 4.8:1,
+   on the #a83f15 hover 6.2:1. As tall as the search pill next to it. */
+.fb-compare{
+  flex:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;align-self:stretch;
+  border:1px solid #c44c1c;border-radius:999px;background:#c44c1c;color:#fff;cursor:pointer;
+  font:700 13px/1 var(--font-sans);padding:0 16px;white-space:nowrap;
+  transition:background-color .15s ease-out,border-color .15s ease-out,transform .1s ease-out;
+}
+@media(hover:hover){.fb-compare:hover{background:#a83f15;border-color:#a83f15}}
+.fb-compare:active{transform:scale(.97)}
+.fb-compare:focus-visible{outline:2px solid #eb622c;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.fb-compare{transition:background-color .15s ease-out,border-color .15s ease-out}}
 
 /* ---------- manual-observation search results ---------- */
 .manual-results{margin-top:42px}
@@ -882,16 +892,13 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
 }
 @media(max-width:640px){
   .controls{gap:10px;padding:10px 12px;margin-bottom:20px}
-  .fb-label{display:none} /* the chip row keeps its name for screen readers (aria-labelledby) */
   .controls-right{flex-wrap:wrap;gap:8px}
   .controls-right .viewtoggle{flex:1 1 auto}
   .controls-right .viewtoggle .vt-btn{flex:1;justify-content:center}
   .controls .weekpick{flex:1 1 auto}
   .controls .week-menu{min-width:0;width:100%}
   .controls .searchbar,.controls .searchbar:focus-within{flex:1 1 100%}
-  .task-switch-row{margin-bottom:10px}
-  .task-switch{width:100%}
-  .task-switch .vt-btn{flex:1;justify-content:center}
+  .fb-compare{flex:1 1 100%;min-height:36px}
 }
 
 /* manual snapshot add slot */

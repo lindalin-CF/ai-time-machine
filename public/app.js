@@ -254,17 +254,20 @@ function closeMoreMenu(refocus = false) {
   });
 }
 
-// ---- Browse | Compare: Compare opens the Compare view with this page's portal, week and device ----
-function initTaskSwitch() {
-  const btn = $('.task-switch [data-task="compare"]');
+// ---- Compare →: opens the Compare view with the filter bar's portals, week and device ----
+function initCompareButton() {
+  const btn = $("#compareBtn");
   if (!btn) return;
   btn.addEventListener("click", () => {
-    // Selected portals in site order: none = All portals, one = that portal week by week, more = side by side.
+    // Selected portals in chip (site) order: none = All portals, one = that portal week by week, more = side by side.
     const selection = state.portals.map((p) => p.slug).filter((slug) => state.selected.has(slug));
-    location.hash = libraryCompareHash({
+    const hash = libraryCompareHash({
       selection, week: state.week, device: state.device,
       weeks: state.weeks.map((w) => w.week), portals: state.portals.map((p) => p.slug),
     });
+    // Push and route in this same task, so the next frame is already Compare (no hashchange round trip).
+    history.pushState(history.state, "", hash);
+    route();
   });
 }
 
@@ -1919,7 +1922,7 @@ initManualSnapshots();
 initDownloadAll();
 initDeviceToggle();
 initSearch();
-initTaskSwitch();
+initCompareButton();
 initFilterEdges();
 initAnPortalRow();
 trackTopbarHeight();
