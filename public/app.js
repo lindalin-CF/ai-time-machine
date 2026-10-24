@@ -3,6 +3,7 @@ import { anCanvasState, findingsCellHTML, mountAnCanvas, tableFindings, unmountA
 import { buildAnalyticsHash, compareHash, hashRoute, libraryCompareHash, parseAnalyticsHash } from "./analytics-share.js";
 import { closeWeekPicks, weekPick } from "./analytics-weekpick.js";
 import { deviceToggle } from "./device-toggle.js";
+import { setNavCompareParams, track, trackCompare } from "./track.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
 
@@ -270,6 +271,7 @@ function initCompareButton() {
     // Push and route in this same task, so the next frame is already Compare (no hashchange round trip).
     history.pushState(history.state, "", hash);
     route();
+    trackCompare("landing_filter_bar", anClickParams());
   });
 }
 
@@ -654,7 +656,9 @@ function initLightbox() {
     img.removeAttribute("src");
     document.body.style.overflow = "";
   };
-  const open = (full, t, file, thumb) => {
+  let meta = {}; // the shot on screen, for the file_download event
+  const open = (full, t, file, thumb, data = {}) => {
+    meta = { image_id: data.gaImage, image_source: data.gaSource, portal: data.gaPortal, week: data.gaWeek, device: data.gaDevice };
     // The enlarged image is the same file as the thumbnail, so it takes the thumbnail's size and alt.
     for (const a of ["width", "height"]) {
       if (thumb?.getAttribute(a)) img.setAttribute(a, thumb.getAttribute(a)); else img.removeAttribute(a);
@@ -681,6 +685,7 @@ function initLightbox() {
       a.href = url; a.download = name;
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 4000);
+      track("file_download", { download_type: "screenshot_png", file_name: name, file_extension: "png", ...meta });
     } catch {
       window.open(dl.href, "_blank", "noopener");
     }
@@ -690,7 +695,7 @@ function initLightbox() {
   document.body.addEventListener("click", (e) => {
     const shot = e.target.closest("[data-full]");
     if (!shot) return;
-    open(shot.dataset.full, shot.dataset.title || "Screenshot", shot.dataset.file, shot.querySelector("img"));
+    open(shot.dataset.full, shot.dataset.title || "Screenshot", shot.dataset.file, shot.querySelector("img"), shot.dataset);
   });
 }
 
@@ -759,20 +764,25 @@ function initDownloadAll() {
     const orig = label ? label.textContent : "";
     if (label) label.textContent = "Preparing ZIP…";
     btn.disabled = true;
-    const href = `/api/collection.zip?week=${encodeURIComponent(week)}${state.device === "mobile" ? "&device=mobile" : ""}`;
+    const device = state.device;
+    const href = `/api/collection.zip?week=${encodeURIComponent(week)}${device === "mobile" ? "&device=mobile" : ""}`;
+    const name = `ai-portals-${week}${device === "mobile" ? "-mobile" : ""}.zip`;
+    const sent = () => track("file_download", { download_type: "week_zip", file_name: name, file_extension: "zip", image_id: `week-${week}-${device}`, week, device });
     try {
       const res = await fetch(href);
       if (!res.ok) throw new Error("zip " + res.status);
       const url = URL.createObjectURL(await res.blob());
       const a = document.createElement("a");
       a.href = url;
-      a.download = `ai-portals-${week}${state.device === "mobile" ? "-mobile" : ""}.zip`;
+      a.download = name;
       document.body.appendChild(a);
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 6000);
+      sent();
     } catch {
       window.location.href = href; // fallback: let the browser fetch + download it
+      sent();
     } finally {
       if (label) label.textContent = orig;
       btn.disabled = false;
@@ -829,7 +839,7 @@ function manualAlt(s, portal = s.portal) {
 function manualResultCard(s) {
   const src = s.image || (s.images && s.images[0]) || "";
   const zoom = src
-    ? ` data-full="${esc(src)}" data-title="${esc(s.portal)} manual snapshot" data-file="${esc(s.slug)}-manual-${esc(s.device)}"`
+    ? ` data-full="${esc(src)}" data-title="${esc(s.portal)} manual snapshot" data-file="${esc(s.slug)}-manual-${esc(s.device)}" data-ga-image="manual-${esc(s.id)}" data-ga-source="manual_snapshot" data-ga-portal="${esc(s.slug)}" data-ga-device="${esc(s.device)}"`
     : "";
   const inner = src
     ? `<img src="${esc(thumbUrl(src))}" alt="${esc(manualAlt(s))}"${sizeAttrs((s.sizes || [])[0])} loading="lazy" />`
@@ -1182,7 +1192,7 @@ function initManualSnapshots() {
     }
     const imgs = (s.images && s.images.length ? s.images : [s.image]).filter(Boolean);
     const slides = imgs.map((src, i) => `
-          <div class="manual-img" data-full="${esc(src)}" data-title="${esc(current.portal)} manual snapshot" data-file="${esc(current.slug)}-manual-${esc(s.device)}">
+          <div class="manual-img" data-full="${esc(src)}" data-title="${esc(current.portal)} manual snapshot" data-file="${esc(current.slug)}-manual-${esc(s.device)}" data-ga-image="manual-${esc(s.id)}" data-ga-source="manual_snapshot" data-ga-portal="${esc(current.slug)}" data-ga-device="${esc(s.device)}">
             <img src="${esc(thumbUrl(src))}" alt="${esc(manualAlt(s, current.portal))}"${sizeAttrs((s.sizes || [])[i])} loading="lazy" />
           </div>`).join("");
     const multi = imgs.length > 1;
@@ -1532,6 +1542,21 @@ function enterAnalytics() {
   revealChip(row, row.querySelector('.chip[aria-selected="true"]'));
 }
 
+/** compare_click's common params: what Compare shows, or, before its first visit, what it opens with
+ * (enterAnalytics's defaults). Single portal reports its portal and the newest of its weeks. */
+function anClickParams() {
+  const slugs = state.portals.map((p) => p.slug);
+  if (!an.inited) return { compare_mode: "portals", portals: slugs.slice(0, 2).join(","), week: state.weeks[0]?.week, device: an.device };
+  const time = an.mode === "weeks";
+  return {
+    compare_mode: time ? "time" : "portals",
+    portals: (time ? [an.portal] : slugs.filter((s) => an.portals.has(s))).filter(Boolean).slice(0, AN_MAX).join(","),
+    week: time ? state.weeks.map((w) => w.week).find((w) => an.weeks.has(w)) : an.week,
+    device: an.device,
+  };
+}
+setNavCompareParams(anClickParams);
+
 // ---- shareable links: the setup lives in the hash after #compare (public/analytics-share.js) ----
 function anApplyShared(s) {
   for (const k of ["view", "mode", "portal", "week", "device"]) if (s[k]) an[k] = s[k];
@@ -1812,7 +1837,7 @@ function anFields(cols, latest) {
     ["Snapshot", cols.map((c) => {
       const src = anShot(c.cap);
       if (!src) return `<div class="an-noshot">${c.cap ? (mobile ? "No mobile shot" : "—") : "No capture"}</div>`;
-      return `<div class="an-shot an-shot--${mobile ? "mobile" : "desktop"}" data-full="${esc(src)}" data-title="${esc(c.label)}" data-file="${esc((c.cap.slug || "shot") + "-" + (c.cap.week || "") + (mobile ? "-mobile" : ""))}"><img loading="lazy" src="${esc(thumbUrl(src, 1280))}" alt="${esc(shotAlt(c.portalName, mobile ? "mobile" : "desktop", c.cap.week))}"${sizeAttrs(shotSize(c.cap, mobile))} /></div>`;
+      return `<div class="an-shot an-shot--${mobile ? "mobile" : "desktop"}" data-full="${esc(src)}" data-title="${esc(c.label)}" data-file="${esc((c.cap.slug || "shot") + "-" + (c.cap.week || "") + (mobile ? "-mobile" : ""))}" data-ga-image="${esc(`${c.cap.slug}-${c.cap.week}-${mobile ? "mobile" : "desktop"}`)}" data-ga-source="weekly_capture" data-ga-portal="${esc(c.cap.slug || "")}" data-ga-week="${esc(c.cap.week || "")}" data-ga-device="${mobile ? "mobile" : "desktop"}"><img loading="lazy" src="${esc(thumbUrl(src, 1280))}" alt="${esc(shotAlt(c.portalName, mobile ? "mobile" : "desktop", c.cap.week))}"${sizeAttrs(shotSize(c.cap, mobile))} /></div>`;
     })],
     ["Brand colour", cols.map((c) => (c.cap && c.cap.brand ? `<span class="an-swatch" style="background:${esc(c.cap.brand)}"></span><code>${esc(String(c.cap.brand).toUpperCase())}</code>` : "—"))],
     ["Palette", cols.map((c) => {

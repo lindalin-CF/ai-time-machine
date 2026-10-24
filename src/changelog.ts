@@ -15,6 +15,19 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "download-and-compare-analytics",
+    date: "2026-10-24",
+    time: "11:20",
+    title: "Counting Downloads and Compare Clicks",
+    subtitle: "With analytics accepted, Google Analytics now counts screenshot downloads and Compare clicks",
+    bullets: [
+      { lead: "Downloads", text: "Download PNG in the enlarged view and Download all (.zip) in the Collection each count once, when the download starts." },
+      { lead: "Compare clicks", text: "Compare → in the Library filter bar, Compare on portal pages and Compare in the top bar each count once, with the portals, week and device it opens. The link opens as fast as before." },
+      { lead: "Consent first", text: "Nothing is sent unless analytics are on. Declined, Global Privacy Control or not answered yet: nothing changes." },
+    ],
+    closing: "Accept analytics, then download a screenshot.",
+  },
+  {
     slug: "model-picker-not-a-menu-change",
     date: "2026-10-23",
     time: "21:00",

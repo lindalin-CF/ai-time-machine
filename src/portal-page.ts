@@ -248,6 +248,8 @@ ${FOOTER_LEGAL}
   </div>
   <script src="/footer-dialogs.js" defer></script>
   <script src="/site-menu.js" defer></script>
+  <!-- GA4 events for the Compare links (sent only when consent.js has loaded gtag). -->
+  <script src="/track.js" type="module"></script>
 </body>
 </html>`;
 }
