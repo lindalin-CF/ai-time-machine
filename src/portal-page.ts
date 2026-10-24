@@ -8,7 +8,7 @@ import { MOBILE_CAPTURE_SIZE } from "./image-size";
 import { shotAlt, weekInWords } from "./format";
 import { captureMetrics } from "./capture-metrics";
 import { changeEntries, navChangeSentence, navItemName, type ChangeEntry } from "./nav-changes";
-import { POPULAR_PAIRINGS, comparePath, indexablePairs } from "./compare";
+import { COMPARE_WITH_LINKS, POPULAR_PAIRINGS, comparePath, indexablePairs } from "./compare";
 import { CHANGELOG, CHANGELOG_UPDATED, changelogDate, changelogDatetime, utcOffsetLabel, type ChangelogEntry } from "./changelog";
 
 export const ORIGIN = "https://ai-portal-library.dev";
@@ -397,7 +397,8 @@ ${timeline.length
 
   // "Compare with …": this portal's pair pages with the most compared products (src/compare.ts), skipping itself.
   const partners = (await Promise.all(POPULAR_PAIRINGS.filter((s) => s !== slug).map((s) => getPortal(env, s))))
-    .filter((x): x is NonNullable<typeof x> => !!x && !!x.active);
+    .filter((x): x is NonNullable<typeof x> => !!x && !!x.active)
+    .slice(0, COMPARE_WITH_LINKS);
   const compareWith = partners.length
     ? `\n      <nav class="compare-with" aria-label="Compare ${esc(name)} with other products"><h2>Compare with other products</h2>
         <ul>

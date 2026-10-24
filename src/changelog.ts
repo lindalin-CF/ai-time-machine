@@ -23,7 +23,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     bullets: [
       { lead: "Side by side", text: "Each page shows both desktop screenshots from the latest week both products were captured, with Compare's Differences and Similarities and each product's latest menu changes." },
       { lead: "One address per pair", text: "The two names are always in alphabetical order, so /compare/claude-vs-chatgpt opens /compare/chatgpt-vs-claude. Open in Compare takes you to the interactive view with the same pair and week." },
-      { lead: "Linked and listed", text: "Portal pages link to their comparisons with ChatGPT, Claude, Gemini and Perplexity. Pairs with at least 3 findings are in the sitemap and llms.txt, and every comparison has a Markdown version with .md added." },
+      { lead: "Linked and listed", text: "Each portal page links to 4 comparisons, picked from ChatGPT, Claude, Gemini, Perplexity and Microsoft Copilot. Pairs with at least 3 findings are in the sitemap and llms.txt, and every comparison has a Markdown version with .md added." },
     ],
     closing: "Open /compare/chatgpt-vs-claude.",
   },

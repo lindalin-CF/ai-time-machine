@@ -48,6 +48,7 @@ beforeEach(() => {
     ('chatgpt', 'ChatGPT', 'OpenAI', 'https://chatgpt.com/', '#10a37f', 0),
     ('gemini', 'Gemini', 'Google', 'https://gemini.google.com/', '#4285f4', 2),
     ('perplexity', 'Perplexity', 'Perplexity AI', 'https://perplexity.ai/', '#20808d', 3),
+    ('copilot', 'Microsoft Copilot', 'Microsoft', 'https://copilot.microsoft.com/', '#0078d4', 4),
     ('poe', 'Poe', 'Quora', 'https://poe.com/', '#5d5cde', 10)`);
   t.db.exec(`INSERT INTO portals (slug, name, company, url, brand, active) VALUES ('retired', 'Retired', 'Gone Inc', 'https://x/', '#000000', 0)`);
   t.db.exec(`UPDATE portals SET sort_order = 1 WHERE slug = 'claude'`);
@@ -251,29 +252,44 @@ describe('portal pages link to their most common pairs', () => {
   const links = (s: string) => [...(s.match(/<nav class="compare-with"[\s\S]*?<\/nav>/)?.[0] ?? '').matchAll(/<a href="([^"]+)">([^<]+)<\/a>/g)].map((m) => [m[1], m[2]]);
   const portal = async (path: string) => (await handlePortalPage(new Request(`https://x${path}`), t.env)).text();
 
-  it('skips the portal itself, on the hub and weekly pages', async () => {
+  it('gives each popular portal 4 links, skipping itself, on the hub and weekly pages', async () => {
     for (const path of ['/portals/chatgpt', `/portals/chatgpt/${NEW}`]) {
       expect(links(await portal(path)), path).toEqual([
         ['/compare/chatgpt-vs-claude', 'Compare with Claude'],
         ['/compare/chatgpt-vs-gemini', 'Compare with Gemini'],
         ['/compare/chatgpt-vs-perplexity', 'Compare with Perplexity'],
+        ['/compare/chatgpt-vs-copilot', 'Compare with Microsoft Copilot'],
       ]);
     }
     expect(links(await portal('/portals/perplexity'))).toEqual([ // no captures yet
       ['/compare/chatgpt-vs-perplexity', 'Compare with ChatGPT'],
       ['/compare/claude-vs-perplexity', 'Compare with Claude'],
       ['/compare/gemini-vs-perplexity', 'Compare with Gemini'],
+      ['/compare/copilot-vs-perplexity', 'Compare with Microsoft Copilot'],
+    ]);
+    expect(links(await portal('/portals/copilot')).map(([href]) => href)).toEqual([
+      '/compare/chatgpt-vs-copilot', '/compare/claude-vs-copilot', '/compare/copilot-vs-gemini', '/compare/copilot-vs-perplexity',
     ]);
   });
 
-  it('gives other portals all four, in alphabetical-slug URLs', async () => {
+  it('gives other portals the 4 most compared, in alphabetical-slug URLs', async () => {
     expect(links(await portal('/portals/poe')).map(([href]) => href)).toEqual([
       '/compare/chatgpt-vs-poe', '/compare/claude-vs-poe', '/compare/gemini-vs-poe', '/compare/perplexity-vs-poe',
     ]);
   });
 
+  it('skips an inactive partner, so the next one fills its place', async () => {
+    t.db.exec(`UPDATE portals SET active = 0 WHERE slug = 'gemini'`);
+    expect(links(await portal('/portals/poe')).map(([href]) => href)).toEqual([
+      '/compare/chatgpt-vs-poe', '/compare/claude-vs-poe', '/compare/perplexity-vs-poe', '/compare/copilot-vs-poe',
+    ]);
+    expect(links(await portal('/portals/chatgpt')).map(([href]) => href)).toEqual([
+      '/compare/chatgpt-vs-claude', '/compare/chatgpt-vs-perplexity', '/compare/chatgpt-vs-copilot',
+    ]);
+  });
+
   it('lists them in the Markdown version too', async () => {
     const md = await portal('/portals/claude.md');
-    expect(md).toContain(`## Compare with other products\n\n- [Compare with ChatGPT](${ORIGIN}/compare/chatgpt-vs-claude)\n- [Compare with Gemini](${ORIGIN}/compare/claude-vs-gemini)\n- [Compare with Perplexity](${ORIGIN}/compare/claude-vs-perplexity)`);
+    expect(md).toContain(`## Compare with other products\n\n- [Compare with ChatGPT](${ORIGIN}/compare/chatgpt-vs-claude)\n- [Compare with Gemini](${ORIGIN}/compare/claude-vs-gemini)\n- [Compare with Perplexity](${ORIGIN}/compare/claude-vs-perplexity)\n- [Compare with Microsoft Copilot](${ORIGIN}/compare/claude-vs-copilot)\n`);
   });
 });

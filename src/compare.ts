@@ -9,8 +9,12 @@ import { SYSTEM_TEST_WEEKS } from "./analysis";
 import { captureMetrics } from "./capture-metrics";
 import { findingLists } from "../public/analytics-canvas.js";
 
-/** The products people compare most; each portal page links to its pairs with these (src/portal-page.ts). */
-export const POPULAR_PAIRINGS = ["chatgpt", "claude", "gemini", "perplexity"];
+/**
+ * The products people compare most, most compared first. Each portal page links to its pairs with the first
+ * COMPARE_WITH_LINKS of these, skipping itself (src/portal-page.ts), so every portal gets the same number of links.
+ */
+export const POPULAR_PAIRINGS = ["chatgpt", "claude", "gemini", "perplexity", "copilot"];
+export const COMPARE_WITH_LINKS = 4;
 
 /** A pair with fewer findings than this is shown with noindex and left out of the sitemap and llms.txt. */
 export const MIN_INDEXABLE_FINDINGS = 3;
