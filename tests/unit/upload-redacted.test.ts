@@ -145,7 +145,7 @@ describe('upload-redacted.mjs', () => {
 
 describe('readProjectConfig', () => {
   it('reads the cache keys invalidate() in src/capture.ts deletes', () => {
-    expect(readProjectConfig().cacheKeys).toEqual(['captures:{week}', 'weeks', 'stats', 'sitemap', 'feed', 'changes', 'llms', 'llms-full', 'voice-context:typed', 'voice-context:spoken']);
+    expect(readProjectConfig().cacheKeys).toEqual(['captures:{week}', 'weeks', 'stats', 'sitemap', 'feed', 'changes', 'compare-pairs', 'llms', 'llms-full', 'voice-context:typed', 'voice-context:spoken']);
   });
 });
 

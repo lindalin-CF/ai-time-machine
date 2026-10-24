@@ -157,6 +157,17 @@ export async function captureWeeksForPortal(env: Env, slug: string): Promise<str
   return (results ?? []).map((r) => r.week);
 }
 
+/** Successful desktop captures (with a screenshot) on active portals, portal order, newest week first; all portals, or only `slugs` (/compare pages; read-only). */
+export async function compareCaptures(env: Env, slugs?: string[]): Promise<CaptureRow[]> {
+  const only = slugs ? ` AND c.slug IN (${slugs.map(() => "?").join(", ")})` : "";
+  const { results } = await env.DB.prepare(
+    `SELECT c.* FROM captures c JOIN portals p ON p.slug = c.slug
+     WHERE c.status = 'ok' AND p.active = 1 AND c.r2_key IS NOT NULL${only}
+     ORDER BY p.sort_order ASC, p.name ASC, c.week DESC`
+  ).bind(...(slugs ?? [])).all<CaptureRow>();
+  return results ?? [];
+}
+
 export type FeedCapture = { slug: string; week: string; name: string; analysis: string; analysis_by: string; analysis_json: string | null; captured_at: string; analysis_published_at: string | null };
 
 /** Published guideline analyses on active portals, newest first (RSS feed; read-only). */

@@ -9,6 +9,7 @@ import { captureMetrics } from "./capture-metrics";
 import { navChangeSentence, navItemName } from "./nav-changes";
 import { weekInWords } from "./format";
 import { ORIGIN, FEED_URL } from "./portal-page";
+import { comparePath, indexablePairs } from "./compare";
 
 const TEXT_HEADERS = { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600" };
 
@@ -21,18 +22,24 @@ function about(portalCount: number): string {
 export async function handleLlmsTxt(request: Request, env: Env): Promise<Response> {
   if (request.method !== "GET" && request.method !== "HEAD") return new Response("method not allowed", { status: 405 });
   const text = await cached(env, "cache:llms", 300, async () => {
-    const portals = await listPortals(env);
+    const [portals, pairs] = await Promise.all([listPortals(env), indexablePairs(env)]);
     return [
       "# AI Interface Library",
       "",
       about(portals.length),
       "",
-      "Every portal page and weekly page also has a Markdown version at the same address with .md added. The full text of each product's latest published analysis is in /llms-full.txt.",
+      "Every portal page, weekly page and comparison page also has a Markdown version at the same address with .md added. The full text of each product's latest published analysis is in /llms-full.txt.",
       "",
       "## Portals",
       "",
       ...portals.map((p) => `- [${p.name}](${ORIGIN}/portals/${p.slug}): ${p.company}. Weekly desktop and mobile screenshots with a design analysis ([Markdown](${ORIGIN}/portals/${p.slug}.md))`),
       "",
+      ...(pairs.length ? [
+        "## Comparisons",
+        "",
+        ...pairs.map((p) => `- [${p.aName} vs ${p.bName}](${ORIGIN}${comparePath(p.a, p.b)}): UI comparison for the week of ${weekInWords(p.week)}, with differences and similarities ([Markdown](${ORIGIN}${comparePath(p.a, p.b)}.md))`),
+        "",
+      ] : []),
       "## Changes",
       "",
       `- [Menu changes](${ORIGIN}/changes): every change to the products' built-in menu items between weekly captures, newest first`,

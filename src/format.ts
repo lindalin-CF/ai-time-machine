@@ -15,3 +15,9 @@ export function weekInWords(week: string): string {
 export function shotAlt(portal: string, device: "desktop" | "mobile", week: string): string {
   return `${portal} UI screenshot, ${device}, week of ${weekInWords(week)}`;
 }
+
+/** "2026-09-21" -> "Sep 21, 2026". Anything that isn't a YYYY-MM-DD date is returned unchanged. */
+export function weekShort(week: string): string {
+  const long = weekInWords(week);
+  return long === week ? week : long.replace(/^(\w{3})\w*/, "$1");
+}

@@ -8,11 +8,12 @@ import { MOBILE_CAPTURE_SIZE } from "./image-size";
 import { shotAlt, weekInWords } from "./format";
 import { captureMetrics } from "./capture-metrics";
 import { changeEntries, navChangeSentence, navItemName, type ChangeEntry } from "./nav-changes";
+import { POPULAR_PAIRINGS, comparePath, indexablePairs } from "./compare";
 import { CHANGELOG, CHANGELOG_UPDATED, changelogDate, changelogDatetime, utcOffsetLabel, type ChangelogEntry } from "./changelog";
 
 export const ORIGIN = "https://ai-portal-library.dev";
-const HTML_HEADERS = { "content-type": "text/html; charset=utf-8" };
-const MARKDOWN_HEADERS = { "content-type": "text/markdown; charset=utf-8" };
+export const HTML_HEADERS = { "content-type": "text/html; charset=utf-8" };
+export const MARKDOWN_HEADERS = { "content-type": "text/markdown; charset=utf-8" };
 
 /** The person who runs the site, as named in structured data. */
 export const SITE_PERSON = { "@type": "Person", name: "Linda" } as const;
@@ -21,7 +22,7 @@ export function esc(s: unknown): string {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 }
 
-function shotUrl(key: string | null, slug: string, capturedAt: string): string {
+export function shotUrl(key: string | null, slug: string, capturedAt: string): string {
   if (!key) return `/samples/${slug}.svg`;
   return `/img/${key}?v=${Date.parse(capturedAt) || 0}`;
 }
@@ -63,7 +64,7 @@ export const PORTAL_ALIASES: Record<string, string[]> = {
   copilot: ["Copilot"],
 };
 
-const BRAND = " | AI Interface Library";
+export const BRAND = " | AI Interface Library";
 /** Search results show about this many characters of a description. */
 const DESCRIPTION_SHOWN = 155;
 
@@ -147,7 +148,7 @@ export function siteHeader(): string {
     </header>`;
 }
 
-function page(opts: { title: string; description: string; canonical?: string; noindex?: boolean; image?: PreviewImage; jsonLd?: unknown; markdown?: string; head?: string; consent: ConsentMode; body: string }): string {
+export function page(opts: { title: string; description: string; canonical?: string; noindex?: boolean; image?: PreviewImage; jsonLd?: unknown; markdown?: string; head?: string; consent: ConsentMode; body: string }): string {
   return `<!doctype html>
 <html lang="en" data-consent="${opts.consent}">
 <head>
@@ -213,6 +214,9 @@ ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts
     .timeline ul{padding-left:1.25em;margin:0}
     .timeline li{margin:0 0 6px}
     .method{font-size:.85rem;color:#6b6257}
+    .compare-with{margin:32px 0}
+    .compare-with ul{padding-left:1.25em;margin:0}
+    .compare-with li{margin:0 0 6px}
     .howto h2{font-size:1.25rem;margin:32px 0 8px}
     .howto ul{padding-left:1.25em}
     .howto li{margin:0 0 6px}
@@ -391,18 +395,30 @@ ${timeline.length
     : `        <p>No menu changes have been recorded for ${esc(name)} yet.</p>`}
       </section>\n`;
 
+  // "Compare with …": this portal's pair pages with the most compared products (src/compare.ts), skipping itself.
+  const partners = (await Promise.all(POPULAR_PAIRINGS.filter((s) => s !== slug).map((s) => getPortal(env, s))))
+    .filter((x): x is NonNullable<typeof x> => !!x && !!x.active);
+  const compareWith = partners.length
+    ? `\n      <nav class="compare-with" aria-label="Compare ${esc(name)} with other products"><h2>Compare with other products</h2>
+        <ul>
+${partners.map((x) => `          <li><a href="${esc(comparePath(slug, x.slug))}">Compare with ${esc(x.name)}</a></li>`).join("\n")}
+        </ul>
+      </nav>`
+    : "";
+
   // "Le Chat by Mistral AI · also called LeChat" for portals with an alias, otherwise just the company.
   const byline = aliases[0] ? `${name} by ${portal.company} \u00b7 also called ${aliases[0]}` : portal.company;
   const body = `    <main>
       <h1>${esc(name)}</h1>
       <p class="meta">${esc(byline)}${cap ? ` &middot; captured week of ${esc(weekInWords(cap.week))}` : ""}</p>
 ${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screenshots">\n${shots}      </section>
-${timelineHtml}      <section class="analysis"><h2>Design analysis</h2><p>${esc(displayedAnalysis(cap))}</p><p class="method"><a href="/how-we-analyze">How this analysis is made</a></p></section>` : `      <p>No captures yet for ${esc(name)}.</p>\n${timelineHtml.replace(/\n$/, "")}`}
+${timelineHtml}      <section class="analysis"><h2>Design analysis</h2><p>${esc(displayedAnalysis(cap))}</p><p class="method"><a href="/how-we-analyze">How this analysis is made</a></p></section>` : `      <p>No captures yet for ${esc(name)}.</p>\n${timelineHtml.replace(/\n$/, "")}`}${compareWith}
     </main>`;
 
   if (markdown) {
     const md = portalMarkdown({
       name, company: portal.company, canonical, cap, timeline: weekParam === null ? timeline : null, slug,
+      compareWith: partners.map((x) => ({ name: x.name, url: `${ORIGIN}${comparePath(slug, x.slug)}` })),
       compare: compareHash ? `${ORIGIN}/${compareHash}` : null,
       shots: shotImages.map((img) => ({ device: img.device, url: img.url.startsWith("/") ? `${ORIGIN}${img.url}` : img.url })),
     });
@@ -708,7 +724,7 @@ export function handlePrivacy(request: Request): Response {
   });
 }
 
-/** Sitemap: home, then every active portal's page and its weekly pages, leaving out the system-test weeks. */
+/** Sitemap: home, then every active portal's page and its weekly pages, leaving out the system-test weeks, then the indexable comparison pages. */
 export async function handleSitemap(env: Env): Promise<Response> {
   const xml = await cached(env, "cache:sitemap", 300, async () => {
     const rows = (await sitemapCaptures(env)).filter((r) => !SYSTEM_TEST_WEEKS.includes(r.week)); // portal order, newest week first
@@ -735,6 +751,10 @@ export async function handleSitemap(env: Env): Promise<Response> {
       // The portal page shows its newest week, which is the first row for each portal.
       if (!seen.has(r.slug)) { seen.add(r.slug); entries.push({ loc: `${ORIGIN}/portals/${r.slug}`, lastmod: lastmod(bySlug.get(r.slug)!), images: images(r) }); }
       entries.push({ loc: `${ORIGIN}/portals/${r.slug}/${r.week}`, lastmod: lastmod(changed(r)), images: images(r) });
+    }
+    // Comparison pages with enough findings (src/compare.ts), with both desktop screenshots.
+    for (const p of await indexablePairs(env)) {
+      entries.push({ loc: `${ORIGIN}${comparePath(p.a, p.b)}`, lastmod: p.lastmod, images: p.images.map((i) => `${ORIGIN}${shotUrl(i.key, i.slug, i.capturedAt)}`) });
     }
     const entry = (e: { loc: string; lastmod?: string; images: string[] }) =>
       `  <url>\n    <loc>${esc(e.loc)}</loc>\n${e.lastmod ? `    <lastmod>${esc(e.lastmod)}</lastmod>\n` : ""}${e.images.map((i) => `    <image:image>\n      <image:loc>${esc(i)}</image:loc>\n    </image:image>\n`).join("")}  </url>`;
@@ -780,7 +800,7 @@ ${built ? `    <lastBuildDate>${built}</lastBuildDate>\n` : ""}${items.join("\n"
 }
 
 /** Every recorded menu change, newest week first (cached like the sitemap and feed). */
-async function changes(env: Env): Promise<ChangeEntry[]> {
+export async function changes(env: Env): Promise<ChangeEntry[]> {
   return await cached(env, "cache:changes", 300, async () => changeEntries(await publishedCaptures(env)));
 }
 
@@ -831,13 +851,14 @@ ${list}
 }
 
 /** Markdown version of a portal page: the same facts as the HTML page, plus its menu items and menu changes. */
-function portalMarkdown(o: { name: string; slug: string; company: string; canonical: string; cap: CaptureRow | null; timeline: TimelineWeek[] | null; shots: { device: string; url: string }[]; compare: string | null }): string {
+function portalMarkdown(o: { name: string; slug: string; company: string; canonical: string; cap: CaptureRow | null; timeline: TimelineWeek[] | null; shots: { device: string; url: string }[]; compare: string | null; compareWith: { name: string; url: string }[] }): string {
   const lines = [`# ${o.name}`, "", `- Company: ${o.company}`];
   // Hub only: the same "How the <Name> UI changed" list as the HTML page.
   const timeline = o.timeline === null ? [] : [`## How the ${o.name} UI changed`, "", ...(o.timeline.length
     ? o.timeline.map((w) => `- [${weekInWords(w.week)}](${ORIGIN}/portals/${o.slug}/${w.week}) \u2014 ${w.phrases.join("; ")}`)
     : [`No menu changes have been recorded for ${o.name} yet.`]), ""];
-  if (!o.cap) return [...lines, `- Page: ${o.canonical}`, "", `No captures yet for ${o.name}.`, "", ...timeline].join("\n");
+  const compareWith = o.compareWith.length ? ["## Compare with other products", "", ...o.compareWith.map((c) => `- [Compare with ${c.name}](${c.url})`), ""] : [];
+  if (!o.cap) return [...lines, `- Page: ${o.canonical}`, "", `No captures yet for ${o.name}.`, "", ...timeline, ...compareWith].join("\n");
   const cap = o.cap;
   lines.push(`- Week: week of ${weekInWords(cap.week)} (${cap.week})`, `- Page: ${o.canonical}`, ...(o.compare ? [`- Compare week by week: ${o.compare}`] : []), "", "## Design analysis", "", displayedAnalysis(cap), "");
 
@@ -861,6 +882,6 @@ function portalMarkdown(o: { name: string; slug: string; company: string; canoni
   } else {
     lines.push("No menu comparison for this week.");
   }
-  lines.push("", ...timeline, "## Screenshots", "", ...(o.shots.length ? o.shots.map((s) => `- ${s.device}: ${s.url}`) : ["No screenshots."]), "");
+  lines.push("", ...timeline, "## Screenshots", "", ...(o.shots.length ? o.shots.map((s) => `- ${s.device}: ${s.url}`) : ["No screenshots."]), "", ...compareWith);
   return lines.join("\n");
 }

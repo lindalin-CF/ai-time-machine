@@ -192,6 +192,8 @@ describe('Markdown portal pages', () => {
       '## Screenshots', '',
       `- Desktop: ${ORIGIN}/img/shots/2026-10-05/chatgpt.local.png?v=${Date.parse('2026-10-05T09:00:00Z')}`,
       `- Mobile: ${ORIGIN}/img/shots/2026-10-05/chatgpt.mobile.local.png?v=${Date.parse('2026-10-05T09:00:00Z')}`, '',
+      '## Compare with other products', '',
+      `- [Compare with Claude](${ORIGIN}/compare/chatgpt-vs-claude)`, '',
     ].join('\n'));
     for (const leak of LEAKS) expect(text).not.toContain(leak);
   });

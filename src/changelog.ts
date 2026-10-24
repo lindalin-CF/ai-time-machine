@@ -15,6 +15,19 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "comparison-pages",
+    date: "2026-10-24",
+    time: "17:34",
+    title: "Comparison Pages for Every Pair",
+    subtitle: "Pages like /compare/chatgpt-vs-claude put two products side by side, readable by search engines and AI assistants",
+    bullets: [
+      { lead: "Side by side", text: "Each page shows both desktop screenshots from the latest week both products were captured, with Compare's Differences and Similarities and each product's latest menu changes." },
+      { lead: "One address per pair", text: "The two names are always in alphabetical order, so /compare/claude-vs-chatgpt opens /compare/chatgpt-vs-claude. Open in Compare takes you to the interactive view with the same pair and week." },
+      { lead: "Linked and listed", text: "Portal pages link to their comparisons with ChatGPT, Claude, Gemini and Perplexity. Pairs with at least 3 findings are in the sitemap and llms.txt, and every comparison has a Markdown version with .md added." },
+    ],
+    closing: "Open /compare/chatgpt-vs-claude.",
+  },
+  {
     slug: "hero-fits-short-screens",
     date: "2026-10-24",
     time: "12:07",

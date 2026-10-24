@@ -16,6 +16,7 @@
       "/api/*",
       "/img/*",
       "/portals/*",
+      "/compare/*",
       "/sitemap.xml",
       "/feed.xml",
       "/how-we-analyze",
