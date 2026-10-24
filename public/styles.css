@@ -241,6 +241,20 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .stat-short{display:none}
 .stat dd{margin:2px 0 0;font-size:22px;font-weight:700;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:var(--cf-text)}
 
+/* Short desktop screens (e.g. Windows laptops at 125–150% scaling, ~600–730px tall): the hero follows the viewport
+   height too, so the filter bar starts in the first screen. At 900px tall and up every value below resolves to the
+   one above. The vh line is the fallback for browsers without svh. 761px+ only: narrower widths use the phone layout. */
+@media(min-width:761px){
+  .hero-panel{min-height:clamp(320px,calc(200px + 33.333vh),500px);min-height:clamp(320px,calc(200px + 33.333svh),500px)}
+  .hero-title{font-size:clamp(48px,min(8vw,11vh),92px);font-size:clamp(48px,min(8vw,11svh),92px)}
+  .hero-sub{font-size:clamp(18px,min(2.2vw,4.4vh),28px);font-size:clamp(18px,min(2.2vw,4.4svh),28px)}
+}
+@media(min-width:761px) and (max-height:820px){
+  .hero{margin-bottom:20px;padding:18px 0 22px}
+  .hero-frame{padding:12px;border-radius:28px}
+  .stats{top:14px}
+}
+
 /* ---------- controls ---------- */
 /* One slim filter bar, pinned under the sticky top bar (--topbar-h is the top bar's measured height, set by app.js).
    Above the cards (z-index 1 inside), below the top bar and its phone menu (z-index 70). */

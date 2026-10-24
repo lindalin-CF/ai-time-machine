@@ -15,6 +15,19 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "hero-fits-short-screens",
+    date: "2026-10-24",
+    time: "12:07",
+    title: "A Hero That Fits Short Screens",
+    subtitle: "On laptops with display scaling, the Library's filter bar now starts in the first screen",
+    bullets: [
+      { lead: "Follows the height", text: "On desktop the hero panel, title and sub copy scale with the window's height, not just its width. On a 1280 × 600 window the hero is 464px tall instead of 622px, and the filter bar starts at 550px instead of 716px." },
+      { lead: "Tighter spacing", text: "Below 820px tall the space around the hero and the dark frame are slimmer too." },
+      { lead: "Tall screens unchanged", text: "At 900px tall and up the hero looks exactly as before. Phones are unchanged too. The orb, stats and keyword annotations work at every size." },
+    ],
+    closing: "Open the Library on a Windows laptop at 125% or 150% scaling.",
+  },
+  {
     slug: "download-and-compare-analytics",
     date: "2026-10-24",
     time: "11:20",

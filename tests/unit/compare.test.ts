@@ -130,6 +130,27 @@ describe('homepage hero (browser)', () => {
     }
   });
 
+  it('follows the viewport height on desktop: short screens show the filter bar, 900px+ keeps the 500px panel', async () => {
+    for (const [width, height, panel] of [[1280, 600, 400], [1536, 730, 443], [1440, 900, 500], [1920, 1080, 500]]) {
+      const page = await openSite(browser, '', { width, height });
+      const m = await page.evaluate(() => {
+        const hero = document.querySelector('.hero')!;
+        const rect = (s: string) => document.querySelector(s)!.getBoundingClientRect();
+        const panel = rect('.hero-panel'), title = rect('.hero-title'), sub = rect('.hero-sub'), stats = rect('.stats');
+        return {
+          panel: Math.round(panel.height),
+          heroEnd: hero.getBoundingClientRect().bottom + parseFloat(getComputedStyle(hero).marginBottom),
+          inside: [title, sub].every((r) => r.top >= panel.top && r.bottom <= panel.bottom),
+          clearOfStats: sub.top > stats.bottom && title.top > stats.bottom,
+        };
+      });
+      expect(m.panel, `${width}×${height}`).toBe(panel);
+      expect(m.inside && m.clearOfStats, `${width}×${height}`).toBe(true);
+      if (height === 600) expect(m.heroEnd).toBeLessThanOrEqual(560);
+      await page.context().close();
+    }
+  });
+
   it('with reduced motion shows every word at once and no annotations', async () => {
     const page = await openSite(browser, '');
     await page.emulateMedia({ reducedMotion: 'reduce' });
