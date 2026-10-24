@@ -30,6 +30,23 @@ async function drag(page: Page, from: { x: number; y: number }, to: { x: number;
   await page.mouse.move(to.x, to.y, { steps: 8 });
   await page.mouse.up();
 }
+/**
+ * Wait until the URL holds the board as it is now. Compare writes zoom, pan and layout to the URL ~300ms after the
+ * last change, and a layout in the URL wins over the saved setup, so a reload or a copied link before then would open
+ * the previous board (on a busy machine an earlier write is often already in the URL). Compares against what the
+ * app's own buildAnalyticsHash makes of the live board, loaded from the same module URLs the app imports.
+ */
+async function urlCaughtUp(page: Page) {
+  await page.addScriptTag({ type: 'module', content: `
+    import { buildAnalyticsHash } from '/analytics-share.js';
+    import { anCanvasState } from '/analytics-canvas.js';
+    window.__boardInUrl = () => {
+      const want = new URLSearchParams(buildAnalyticsHash({ view: 'canvas', canvas: anCanvasState() }).split('?')[1]);
+      const have = new URLSearchParams(location.hash.split('?')[1] || '');
+      return ['zoom', 'pan', 'layout'].every((k) => have.get(k) === want.get(k));
+    };` });
+  await page.waitForFunction(() => (window as unknown as { __boardInUrl?: () => boolean }).__boardInUrl?.());
+}
 /** A point on the box's findings, away from its × button. */
 const boxBody = (page: Page) => center(page, `${BOX} .anc-box-list`);
 
@@ -116,6 +133,9 @@ describe('analytics canvas findings box drag (browser)', () => {
     const saved = JSON.parse((await page.evaluate((k) => localStorage.getItem(k), KEY))!);
     near(saved.offsets[LINE], want);
     expect(Number.isInteger(saved.offsets[LINE].dx) && Number.isInteger(saved.offsets[LINE].dy)).toBe(true);
+    // Reload a plain #compare, so the board comes from the saved setup, once no URL write is pending to replace it.
+    await urlCaughtUp(page);
+    await page.evaluate(() => history.replaceState(history.state, '', '#compare'));
     await page.reload();
     await page.locator('#anCanvasWrap .anc-board .anc-card img').first().waitFor();
     near(await boxOffset(page), want);
@@ -124,7 +144,7 @@ describe('analytics canvas findings box drag (browser)', () => {
   it('a shared link opens with the box where it was moved, and saves nothing until a change', async () => {
     const page = await openCanvas();
     const want = await dragBox(page, 80, 150);
-    await page.waitForTimeout(400); // the URL follows ~300ms after the last change
+    await urlCaughtUp(page);
     const hash = new URL(page.url()).hash;
     expect(hash).toContain('&layout=');
 
@@ -156,6 +176,7 @@ describe('analytics canvas findings box drag (browser)', () => {
     await page.locator('[data-reset]').click();
     near(await boxOffset(page), { dx: 0, dy: 0 }, 0.01);
     expect(await page.evaluate((k) => localStorage.getItem(k), KEY)).toBeNull();
+    await urlCaughtUp(page); // else the reload can open the moved box from a URL written before the reset
     await page.reload();
     await page.locator('#anCanvasWrap .anc-board .anc-card img').first().waitFor();
     near(await boxOffset(page), { dx: 0, dy: 0 }, 0.01);
