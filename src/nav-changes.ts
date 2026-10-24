@@ -9,6 +9,7 @@ const article = (region: string) => (/^[aeiou]/.test(region) ? "an" : "a");
 
 /** One change as a sentence that continues after "<Portal>: ", e.g. "the sidebar item Scheduled is now labeled Tasks." */
 export function navChangeSentence(c: NavChange): string {
+  if (c.picker) return c.change === "added" ? "a model picker now appears in the input area." : "the model picker no longer appears in the input area.";
   if (c.change === "icon_changed") return `the icon of ${article(c.region)} ${c.region} button changed (${c.previous} → ${c.current}).`;
   if (c.icon) {
     return c.change === "added"
@@ -23,6 +24,7 @@ export function navChangeSentence(c: NavChange): string {
 /** One change as a short phrase for a timeline line, e.g. "Scheduled renamed to Tasks" or "Upgrade removed from the top bar". */
 export function navChangePhrase(c: NavChange): string {
   const p = (() => {
+    if (c.picker) return c.change === "added" ? "model picker added to the input area" : "model picker removed from the input area";
     if (c.change === "icon_changed") return `${c.region} button icon changed (${c.previous} → ${c.current})`;
     if (c.icon) {
       return c.change === "added"
@@ -36,8 +38,9 @@ export function navChangePhrase(c: NavChange): string {
   return p[0].toUpperCase() + p.slice(1);
 }
 
-/** A menu item as shown in text: its name, or "an icon button (clock icon)" for an item without text. */
+/** A menu item as shown in text: its name, "a model picker", or "an icon button (clock icon)" for an item without text. */
 export function navItemName(it: NavItem): string {
+  if (it.picker) return `a ${it.label}`;
   return it.icon ? `an icon button (${it.label})` : it.label;
 }
 

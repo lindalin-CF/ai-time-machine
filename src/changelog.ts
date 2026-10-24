@@ -15,6 +15,19 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "model-picker-not-a-menu-change",
+    date: "2026-10-23",
+    time: "21:00",
+    title: "The Model Picker Is One Menu Item",
+    subtitle: "The model name in a portal's message box no longer counts as a menu change",
+    bullets: [
+      { lead: "Session, not design", text: "Names like Opus 5.5 High, Gemini Auto or Fast only show the model picked in that visit, so every page now lists them as one item: a model picker." },
+      { lead: "Fewer false changes", text: "Compare, the How the UI changed timeline and /changes no longer report a new model name as a renamed menu item. A picker that appears or disappears still counts." },
+      { lead: "Past weeks too", text: "Applied when pages are shown, so earlier weeks are corrected without editing any published analysis." },
+    ],
+    closing: "Compare Claude's weeks of Oct 19 and Oct 12 in Table view.",
+  },
+  {
     slug: "compare-button-opens-table",
     date: "2026-10-21",
     time: "18:27",

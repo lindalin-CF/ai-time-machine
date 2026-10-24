@@ -26,6 +26,7 @@ const NAV_NAMES = 3;
 
 /** One line per recorded change, e.g. "The sidebar item Scheduled is now labeled Tasks." */
 function navChangeText(c) {
+  if (c.picker) return c.change === "added" ? "A model picker now appears in the input area." : "The model picker no longer appears in the input area.";
   if (c.change === "icon_changed") {
     return `The icon of ${/^[aeiou]/.test(c.region) ? "an" : "a"} ${c.region} button changed (${c.previous} \u2192 ${c.current}).`;
   }
@@ -39,8 +40,8 @@ function navChangeText(c) {
   return `The ${c.previous} item no longer appears in the ${c.region}.`;
 }
 
-/** An item without text is shown by its icon label: "an icon button (clock icon)". */
-const navName = (it) => (it.icon ? `an icon button (${it.label})` : it.label);
+/** An item without text is shown by its icon label: "an icon button (clock icon)"; the model picker as "a model picker". */
+const navName = (it) => (it.picker ? `a ${it.label}` : it.icon ? `an icon button (${it.label})` : it.label);
 const navKey = (it) => `${it.region}\u0000${it.icon ? "icon" : "text"}\u0000${it.label}`;
 const navList = (items) => {
   const names = items.slice(0, NAV_NAMES).map((it) => `${navName(it)} (${it.region})`).join(", ");
@@ -79,7 +80,9 @@ function navFindings(a, b, A, B, ma, mb, changeLines, brief = false) {
   const where = noSidebar ? " outside the sidebar" : "";
   const kb = new Set(ib.map(navKey)), ka = new Set(ia.map(navKey));
   const onlyA = ia.filter((it) => !kb.has(navKey(it))), onlyB = ib.filter((it) => !ka.has(navKey(it)));
-  if (!onlyA.length && !onlyB.length) return { diff: [], same: [`Both show the same ${MENU}${where}.`], missing: [] };
+  // The model picker is one item whatever model it shows (src/model-picker.ts), so it never differs by name.
+  const picker = ia.some((it) => it.picker) && ib.some((it) => it.picker) ? ["Both show a model picker in the input area."] : [];
+  if (!onlyA.length && !onlyB.length) return { diff: [], same: [`Both show the same ${MENU}${where}.`, ...picker], missing: [] };
   if (!samePortal) {
     if (ia.length === ib.length) {
       return { diff: [], same: [brief ? `Both show ${word(ia.length, "menu item", MENU)}${where}.` : `${A} and ${B} each show ${word(ia.length, "menu item", MENU)}${where}.`], missing: [] };
@@ -89,7 +92,7 @@ function navFindings(a, b, A, B, ma, mb, changeLines, brief = false) {
   const diff = [];
   if (onlyB.length) diff.push(`${B} shows ${MENU} that ${A} does not: ${navList(onlyB)}.`);
   if (onlyA.length) diff.push(`${A} shows ${MENU} that ${B} does not: ${navList(onlyA)}.`);
-  return { diff, same: [], missing: [] };
+  return { diff, same: picker, missing: [] };
 }
 
 const RULES = [

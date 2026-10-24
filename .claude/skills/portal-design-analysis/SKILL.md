@@ -1,7 +1,7 @@
 ---
 name: portal-design-analysis
 description: 依 AI Surface Library 規範分析 AI portal 的桌面截圖，產出可追溯到指標、證據等級與位置的 Design analysis。使用者提供 portal 桌面截圖並要求 design analysis、跑規範、或比較不同週次截圖時使用。
-version: 1.5.3
+version: 1.6.0
 ---
 
 # AI Portal 桌面截圖 Design Analysis 規範
@@ -164,6 +164,7 @@ version: 1.5.3
   - 輸入框下方的建議 prompt（記在 D5，它們會輪換，不是導覽項目）。
   - **基本輸入控制**：只有送出（箭頭形）、麥克風／語音、附件／新增（加號形）這三類按鈕，不論有沒有文字標籤，都記在 D4，不列入 N1。
   - 輸入區裡的**功能按鈕要列入 N1**（`region` 寫 `input area`）：工具、模式切換、模型選擇、設定，以及 Think、Deep research 這類按鈕，有沒有文字都算；沒有文字的照常 `label: null` 加 `icon_label`（例如輸入框裡的滑桿形圖示）。
+- **模型選擇器**（輸入區裡顯示目前模型或模式名稱的選擇器，例如 "Opus 5.5 High"、"Gemini Auto"、"Fast"）只記**一項**，固定寫成 `{ "label": "model picker", "role": "model_picker", "current": "<畫面上顯示的名稱>", "region": "input area", "order": …, "icon": …, "badge": … }`。畫面上顯示的模型名稱是該次工作階段選的模型，屬於工作階段狀態，**不是導覽項目**：只寫在 `current`，不要另列成一項，也不要寫進 `label`。
   - **不能點擊的區段標題**（例如只是分組文字的 Recents、History）；看不出能不能點擊時一律不列入。
 - **側欄狀態**：N1 另有 `sidebar` 欄位，值為 `"visible"` / `"not_visible"`（側欄收合）/ `"none"`（沒有側欄）。側欄收合時只有 sidebar 區的項目看不到：`sidebar` 寫 `"not_visible"`，`value` 不列 sidebar 區的項目，`note` 寫 `"The sidebar is collapsed; sidebar items are not visible."`；頂列和輸入區的項目照常記錄。
 - 輸入區旁的項目也可能記在 D5，兩個指標各自照規則記錄。
@@ -316,6 +317,7 @@ version: 1.5.3
 2. **改名**：前一週的某項目在本週不見了，但同一 `region`、同一 `order` 位置（或同樣 `icon`）出現了不同名字的項目，記為 `renamed`，**不要拆成一個 `removed` 加一個 `added`**。例：前一週側欄某位置是 "Scheduled"（clock icon），本週同位置、同圖示變成 "Tasks" → `renamed`。
 3. **圖示改變**：兩週在同一 `region`、同一 `order` 位置都是沒有文字的項目（`label` 都是 `null`），但圖示形狀不同（`icon_label` 不同），記為 `icon_changed`，**不要拆成一個 `removed` 加一個 `added`**。只有圖示的細部角度或描述用字不同、形狀其實相同時不算。例：前一週頂列某位置是 bubble-clock icon，本週同位置變成 dashed bubble icon → `icon_changed`。
 4. 前一週剩下沒配對的記 `removed`，本週剩下沒配對的記 `added`。
+5. **模型選擇器**：兩週都有 `role: "model_picker"` 的項目時視為同一項；`current` 顯示的模型名稱不同**一律不是變動**，不寫入 `changes_vs_previous`（不記 `renamed`，也不拆成 `removed` 加 `added`）。只有選擇器本身出現或消失才記 `added`／`removed`，`previous`／`current` 寫 `"model picker"`。前一週 JSON 是 1.6 版以前、選擇器記成模型名稱的項目時，照同樣規則把它當成模型選擇器比較。
 
 **前一週 JSON 沒有 N1**（用 1.5 版以前的規範分析）：有前一週 PNG 時，依第 7.2 節規則從前一週截圖列出它的 N1 再比較，`note` 寫 `"Previous items read from the previous screenshot; the previous analysis predates N1."`；沒有前一週 PNG 時不比較 N1。
 
@@ -339,7 +341,7 @@ N1 每筆變動一筆紀錄：
 
 ```json
 {
-  "guideline_version": "1.5.3",
+  "guideline_version": "1.6.0",
   "portal": "example",
   "week": "2026-09-21",
   "previous_week": "2026-09-14",
@@ -465,7 +467,11 @@ N1 每筆變動一筆紀錄：
 6. 摘要與 note 中沒有第 8 節的禁止類型；無標籤圖示與按鈕（包括送出、麥克風）只描述形狀；每句只講一件事。
 7. 有前一週資料時，每筆變動都達第 9.3 節門檻，干擾判定與問候語輪換規則已套用。
 8. 第 1.1 節表列的 portal 已套用對應的收錄方式。
-9. N1 只列產品內建、可以點擊的項目，沒有帳號專屬清單、無法確定的項目、基本輸入控制（送出、麥克風／語音、附件／加號）或不能點擊的區段標題；輸入區的工具、模式、模型、設定等功能按鈕有列入；沒有文字的項目有 `icon_label`；翻譯過的 `label` 沒有 "(translated from …)"，語言記在 `translated_from`；側欄收合時 `sidebar` 為 `not_visible`，頂列和輸入區的項目照常記錄；跨週比較中同位置或同圖示的名稱改變記為 `renamed`、沒有文字的項目同位置圖示形狀改變記為 `icon_changed`，都沒有拆成移除加新增；有選單變化時比較句先寫選單。
+9. N1 只列產品內建、可以點擊的項目，沒有帳號專屬清單、無法確定的項目、基本輸入控制（送出、麥克風／語音、附件／加號）或不能點擊的區段標題；輸入區的工具、模式、模型、設定等功能按鈕有列入；模型選擇器只有一項 `label: "model picker"`、`role: "model_picker"`，顯示的模型名稱只在 `current`，模型名稱不同沒有記成 N1 變動；沒有文字的項目有 `icon_label`；翻譯過的 `label` 沒有 "(translated from …)"，語言記在 `translated_from`；側欄收合時 `sidebar` 為 `not_visible`，頂列和輸入區的項目照常記錄；跨週比較中同位置或同圖示的名稱改變記為 `renamed`、沒有文字的項目同位置圖示形狀改變記為 `icon_changed`，都沒有拆成移除加新增；有選單變化時比較句先寫選單。
+
+## 版本紀錄
+
+- **1.6.0**：輸入區的模型選擇器在 N1 只記一項 `{ label: "model picker", role: "model_picker", current }`；畫面顯示的模型名稱是工作階段狀態，不是導覽項目，名稱改變不記為 N1 變動（第 7.2、9.3 節）。網站在顯示時也用同樣規則整理較舊的分析（`src/model-picker.ts`），不修改已發布的資料。
 
 ## Repo integration
 

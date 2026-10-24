@@ -9,7 +9,10 @@
 // The whole object is null unless the analysis is a published, ok, matching desktop analysis outside
 // the system-test weeks. Inside one, each field is parsed on its own: a field whose stored shape is not
 // one of the known shapes is null ("No data") and the others are still returned.
+// The input area's model/mode selector is collapsed to one "model picker" item, and changes that only
+// rename it are dropped (src/model-picker.ts): the model it shows is session state, not a menu change.
 import { SYSTEM_TEST_WEEKS } from "./analysis";
+import { isModelPickerItem, looksLikeModelName, MODEL_PICKER_LABEL } from "./model-picker";
 
 /** Every field is null when its stored value could not be parsed with confidence. */
 export interface CaptureMetrics {
@@ -38,7 +41,13 @@ export interface CaptureMetrics {
 
 export type NavRegion = "sidebar" | "top bar" | "input area";
 /** `label` is the item's text, or its icon_label when `icon` is true. */
-export interface NavItem { label: string; region: NavRegion; icon?: true }
+export interface NavItem {
+  label: string;
+  region: NavRegion;
+  icon?: true;
+  /** The input area's model picker: `label` is always "model picker", never the model it shows. */
+  picker?: true;
+}
 export interface NavChange {
   change: "added" | "removed" | "renamed" | "icon_changed";
   previous: string | null;
@@ -46,6 +55,8 @@ export interface NavChange {
   region: NavRegion;
   /** previous/current are icon_labels of an item without text. */
   icon?: true;
+  /** The model picker appeared ("added") or disappeared ("removed"); previous/current is "model picker". */
+  picker?: true;
 }
 
 type Row = { week?: string | null; slug?: string | null; analysis_by?: string | null; analysis_json?: string | null };
@@ -141,18 +152,59 @@ function navName(v: unknown, max = LABEL_MAX): string | null {
   return t && t.length <= max && /^[\x20-\x7E]+$/.test(t) ? t : null;
 }
 
-/** N1 value: an array of { label, region, ... }. Malformed items are dropped; a non-array or more than 30 kept items is null. */
+const PICKER_ITEM: NavItem = { label: MODEL_PICKER_LABEL, region: "input area", picker: true };
+
+/**
+ * N1 value: an array of { label, region, ... }. Malformed items are dropped; a non-array or more than 30
+ * kept items is null. The input area's model picker (role "model_picker", or a label that reads as a
+ * model name) becomes one "model picker" item at the position of the first one.
+ */
 function navItems(v: unknown): NavItem[] | null {
   if (!Array.isArray(v)) return null;
   const items: NavItem[] = [];
+  let picker = false;
   for (const it of v) {
     if (!isObject(it) || !isRegion(it.region)) continue;
     const label = navName(it.label);
+    if (it.region === "input area" && (it.role === "model_picker" || (label && isModelPickerItem({ ...it, label })))) {
+      if (!picker) items.push(PICKER_ITEM);
+      picker = true;
+      continue;
+    }
     const iconLabel = it.label === null ? navName(it.icon_label, ICON_LABEL_MAX) : null;
     if (label) items.push({ label, region: it.region });
     else if (iconLabel) items.push({ label: iconLabel, region: it.region, icon: true });
   }
   return items.length <= NAV_MAX ? items : null;
+}
+
+/**
+ * Model-picker changes for display. A rename between two model names, or a removed + added pair of model
+ * names, is only a different model picked in the session, so it is dropped. A model name that only appears
+ * (or only disappears) means the picker itself appeared (or disappeared): it becomes one "model picker"
+ * change. A rename between a model name and a normal item is a picker change plus a normal item change.
+ */
+function normalizePickerChanges(items: NavChange[]): NavChange[] {
+  const model = (s: string | null) => s !== null && looksLikeModelName(s);
+  const inInput = (c: NavChange) => c.region === "input area" && !c.icon;
+  const out: NavChange[] = [];
+  let added = 0, removed = 0;
+  for (const c of items) {
+    if (!inInput(c)) { out.push(c); continue; }
+    if (c.change === "renamed") {
+      const p = model(c.previous), n = model(c.current);
+      if (p && n) continue;
+      if (p) { removed++; out.push({ change: "added", previous: null, current: c.current, region: c.region }); continue; }
+      if (n) { added++; out.push({ change: "removed", previous: c.previous, current: null, region: c.region }); continue; }
+      out.push(c);
+    } else if (c.change === "added" && model(c.current)) added++;
+    else if (c.change === "removed" && model(c.previous)) removed++;
+    else out.push(c);
+  }
+  // Paired removed + added model names cancel out; what is left is the picker appearing or disappearing.
+  if (added > removed) out.push({ change: "added", previous: null, current: MODEL_PICKER_LABEL, region: "input area", picker: true });
+  if (removed > added) out.push({ change: "removed", previous: MODEL_PICKER_LABEL, current: null, region: "input area", picker: true });
+  return out;
 }
 
 /** N1 metric's sidebar field: "visible" / "not_visible". */
@@ -178,7 +230,8 @@ function navChanges(changes: unknown, previousWeek: unknown, week: string): Capt
       (c.change === "icon_changed" && icon && previous && current && previous !== current);
     if (ok) items.push({ change: c.change as NavChange["change"], previous, current, region: c.region, ...(icon ? { icon: true as const } : {}) });
   }
-  return items.length <= NAV_MAX ? { previousWeek, items } : null;
+  const normalized = normalizePickerChanges(items);
+  return normalized.length <= NAV_MAX ? { previousWeek, items: normalized } : null;
 }
 
 /** Whitelisted metrics for a published, ok, non-system-test desktop analysis (fields null when unparseable); otherwise null. */
