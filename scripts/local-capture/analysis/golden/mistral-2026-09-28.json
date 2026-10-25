@@ -1,0 +1,142 @@
+{
+  "id": "mistral-2026-09-28",
+  "slug": "mistral",
+  "portal": "Le Chat",
+  "week": "2026-09-28",
+  "previous_week": "2026-09-21",
+  "guideline_version": "1.4",
+  "why_selected": "confounded week: onboarding pop-up (5 possibly_confounded)",
+  "analysis_file": "scripts/local-capture/analysis/work/mistral/2026-09-28/analysis.json",
+  "published_check": "summary equals the live site's published text (GET /api/captures, 2026-10-25)",
+  "screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-09-28/mistral/redacted-desktop.png",
+    "sha1": "a84a20084621aae6d590787103184605909ee7a4"
+  },
+  "previous_screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-09-21/mistral/redacted-desktop.png",
+    "sha1": "31f914a627565751072c082926640fa395e6c27c"
+  },
+  "changes_vs_previous": [
+    {
+      "id": "L1",
+      "change": null,
+      "status": "possibly_confounded"
+    },
+    {
+      "id": "L4",
+      "change": null,
+      "status": "possibly_confounded"
+    },
+    {
+      "id": "H1",
+      "change": null,
+      "status": "possibly_confounded"
+    },
+    {
+      "id": "C2",
+      "change": null,
+      "status": "changed"
+    },
+    {
+      "id": "D3",
+      "change": null,
+      "status": "possibly_confounded"
+    },
+    {
+      "id": "D5",
+      "change": null,
+      "status": "changed"
+    },
+    {
+      "id": "D7",
+      "change": null,
+      "status": "possibly_confounded"
+    }
+  ],
+  "sentences": [
+    {
+      "index": 1,
+      "text": "This shows the desktop version of Le Chat for the week of 2026-09-28, before scrolling.",
+      "sources": [
+        "context"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 2,
+      "text": "A sidebar on the left takes up about a fifth of the screen width.",
+      "sources": [
+        "L1",
+        "L2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 3,
+      "text": "The message box sits in the middle of the screen.",
+      "sources": [
+        "L3"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 4,
+      "text": "The message box is the largest item on the screen.",
+      "sources": [
+        "H1",
+        "H2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 5,
+      "text": "The text is light enough against the dark background to meet a common accessibility guideline.",
+      "sources": [
+        "C2",
+        "C3"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 6,
+      "text": "The outline of the message box is faint, but the hint text inside it is easy to read.",
+      "sources": [
+        "C4"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 7,
+      "text": "Four suggested prompts below the message box show what it can do.",
+      "sources": [
+        "D5"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 8,
+      "text": "There is no note that it can make mistakes.",
+      "sources": [
+        "D6"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 9,
+      "text": "Unlike the week of 2026-09-21, there are now suggested prompts below the message box.",
+      "sources": [
+        "D5"
+      ],
+      "label": "",
+      "note": ""
+    }
+  ]
+}

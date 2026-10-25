@@ -90,16 +90,23 @@ LOW_CONFIDENCE: <every metric with confidence "low": id, value, and why>
 JUDGEMENT_CALLS: <every judgement call you made, as a bullet list. For example: which areas you treated as excluded and why, when you couldn't tell whether something was product UI or account-specific, whether suggestions were personalized, element classification, the rank order in H1, the choice of text for C2/C3, possible hover states, section 1.1 handling, and anything in the guideline that was ambiguous for this screenshot>
 ````
 
-## 4. Review file, then stop
+## 4. Lint, review file, then stop
 
-Once every portal is done, write `analysis/work/review-$ARGUMENTS.md` (this directory is gitignored):
+Once every portal is done, and before you write the review file, run the deterministic lint from `scripts/local-capture/`:
+
+`node analysis/lint.mjs $ARGUMENTS --markdown`
+
+It checks every `analysis/work/<slug>/$ARGUMENTS/analysis.json` for guideline wording, metric ranges, text that contradicts the metrics, menu items missing from N1, cross-week rules, and privacy. It only reports: it never edits an analysis, it always exits 0, and its warnings never block publishing or change a portal's status. Privacy findings name the field only, so its output is safe to copy. Keep its stdout for the review file.
+
+Then write `analysis/work/review-$ARGUMENTS.md` (this directory is gitignored):
 
 1. A header with the week, the time it was generated, and a line saying nothing has been published.
 2. One table at the top, with one row per portal from `/api/portals` in order:
    `| Portal | Slug | Status | privacy_flag | Notes |`
    Status is one of `ready`, `stopped`, `failed validation` or `no capture`. privacy_flag is `true`, `false` or `—`. Put the stop or failure reason in Notes, in a few words.
 3. Counts by status under the table.
-4. For every portal that had a subagent, a `## <Portal> (<slug>)` section containing:
+4. The lint output, copied verbatim. It starts with its own `## Lint` heading and has a pass/warning table plus each warning with the exact sentence. Re-running `node analysis/lint.mjs $ARGUMENTS --write-review` later replaces this section in place.
+5. For every portal that had a subagent, a `## <Portal> (<slug>)` section containing:
    - Status (with the stop reason, if any) and the previous week used
    - **Public summary** (as a quote block)
    - **Validation** and **Privacy check** results, including any fixes the subagent made
@@ -112,7 +119,7 @@ Once every portal is done, write `analysis/work/review-$ARGUMENTS.md` (this dire
 
 If any row has privacy_flag `true`, add a line above the table reminding the user that the published screenshot may show account details (guideline 2.3).
 
-Then **stop**. Tell the user the full path of the review file, give a one-line tally, and remind them to reply "publish all" or "publish all except <slugs>". Do not publish anything.
+Then **stop**. Tell the user the full path of the review file, give a one-line tally (including the lint pass/warning count), and remind them to reply "publish all" or "publish all except <slugs>". Do not publish anything.
 
 ## 5. Publishing (only after the user replies)
 

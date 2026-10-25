@@ -1,0 +1,126 @@
+{
+  "id": "chatgpt-2026-10-19",
+  "slug": "chatgpt",
+  "portal": "ChatGPT",
+  "week": "2026-10-19",
+  "previous_week": "2026-10-12",
+  "guideline_version": "1.5.3",
+  "why_selected": "menu items removed (N1); promotional card ranks first",
+  "analysis_file": "scripts/local-capture/analysis/work/chatgpt/2026-10-19/analysis.json",
+  "published_check": "summary equals the live site's published text (GET /api/captures, 2026-10-25)",
+  "screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-10-19/chatgpt/redacted-desktop.png",
+    "sha1": "303ec3961e371d0bf7ebac869ece96d705648ba0"
+  },
+  "previous_screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-10-12/chatgpt/redacted-desktop.png",
+    "sha1": "c5bfd076182fa538f80b874892bd090a2e2da311"
+  },
+  "changes_vs_previous": [
+    {
+      "id": "N1",
+      "change": "removed",
+      "status": "changed"
+    },
+    {
+      "id": "N1",
+      "change": "removed",
+      "status": "changed"
+    },
+    {
+      "id": "C3",
+      "change": null,
+      "status": "changed"
+    },
+    {
+      "id": "D5",
+      "change": null,
+      "status": "changed"
+    }
+  ],
+  "sentences": [
+    {
+      "index": 1,
+      "text": "This shows the desktop version of ChatGPT for the week of 2026-10-19, before scrolling.",
+      "sources": [],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 2,
+      "text": "A sidebar takes up about a quarter of the screen width.",
+      "sources": [
+        "L1",
+        "L2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 3,
+      "text": "A large blue picture below the message box stands out most on the screen.",
+      "sources": [
+        "H1",
+        "D2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 4,
+      "text": "The main text is light enough against the dark background to meet a common accessibility guideline.",
+      "sources": [
+        "C1",
+        "C2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 5,
+      "text": "Even the lightest text on the screen meets that guideline.",
+      "sources": [
+        "C3"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 6,
+      "text": "The outline of the message box is faint, but the hint text inside it is easy to read.",
+      "sources": [
+        "C4"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 7,
+      "text": "The message box sits in the middle, under the question \"What's on the agenda today?\"",
+      "sources": [
+        "L3",
+        "D7"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 8,
+      "text": "No note that it can make mistakes is visible on this screen.",
+      "sources": [
+        "D6"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 9,
+      "text": "The Chat and Work items no longer appear in the top bar.",
+      "sources": [
+        "N1"
+      ],
+      "label": "",
+      "note": ""
+    }
+  ]
+}

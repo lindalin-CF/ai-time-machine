@@ -1,0 +1,97 @@
+{
+  "id": "qwen-2026-08-24",
+  "slug": "qwen",
+  "portal": "Qwen Chat",
+  "week": "2026-08-24",
+  "previous_week": "2026-08-17",
+  "guideline_version": "1.4",
+  "why_selected": "Chinese interface, translated text",
+  "analysis_file": "scripts/local-capture/analysis/work/qwen/2026-08-24/analysis.json",
+  "published_check": "summary equals the live site's published text (GET /api/captures, 2026-10-25)",
+  "screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-08-24/qwen/redacted-desktop.png",
+    "sha1": "efde332569681ce977627a40788f943d6d0b160e"
+  },
+  "previous_screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-08-17/qwen/redacted-desktop.png",
+    "sha1": "0ed9758cce4d08ed38cd8c054c76af8770d9c5db"
+  },
+  "changes_vs_previous": [],
+  "sentences": [
+    {
+      "index": 1,
+      "text": "This shows the desktop version of Qwen Chat for the week of 2026-08-24, before scrolling.",
+      "sources": [
+        "L1"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 2,
+      "text": "A pale gray sidebar takes up about a fifth of the screen width.",
+      "sources": [
+        "L1",
+        "L2",
+        "C1"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 3,
+      "text": "The message box is the largest item on the screen.",
+      "sources": [
+        "H1",
+        "H2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 4,
+      "text": "The heading text is dark enough against the white background to meet a common accessibility guideline.",
+      "sources": [
+        "C2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 5,
+      "text": "The hint text inside the message box is lighter than that guideline recommends.",
+      "sources": [
+        "C3"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 6,
+      "text": "The outline of the message box is hard to see against the white background.",
+      "sources": [
+        "C4"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 7,
+      "text": "A heading above the message box asks how it can help.",
+      "sources": [
+        "D7"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 8,
+      "text": "No note that it can make mistakes is visible.",
+      "sources": [
+        "D6"
+      ],
+      "label": "",
+      "note": ""
+    }
+  ]
+}

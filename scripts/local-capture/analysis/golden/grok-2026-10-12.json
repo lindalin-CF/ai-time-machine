@@ -1,0 +1,125 @@
+{
+  "id": "grok-2026-10-12",
+  "slug": "grok",
+  "portal": "Grok",
+  "week": "2026-10-12",
+  "previous_week": "2026-10-05",
+  "guideline_version": "1.5.3",
+  "why_selected": "confounded week: promo card and cookie banner (3 possibly_confounded)",
+  "analysis_file": "scripts/local-capture/analysis/work/grok/2026-10-12/analysis.json",
+  "published_check": "summary equals the live site's published text (GET /api/captures, 2026-10-25)",
+  "screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-10-12/grok/redacted-desktop.png",
+    "sha1": "4685a863fb5e69e0d2ce4c7be5ee6a41d0fcfa0c"
+  },
+  "previous_screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-10-05/grok/redacted-desktop.png",
+    "sha1": "1e87f2ec7029475f7574d268cc8c7b484e44e28b"
+  },
+  "changes_vs_previous": [
+    {
+      "id": "L1",
+      "change": null,
+      "status": "possibly_confounded"
+    },
+    {
+      "id": "D3",
+      "change": null,
+      "status": "possibly_confounded"
+    },
+    {
+      "id": "D5",
+      "change": null,
+      "status": "possibly_confounded"
+    }
+  ],
+  "sentences": [
+    {
+      "index": 1,
+      "text": "This shows the desktop version of Grok for the week of 2026-10-12, before scrolling.",
+      "sources": [
+        "L1"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 2,
+      "text": "A menu on the left takes up about a fifth of the screen width.",
+      "sources": [
+        "L1",
+        "L2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 3,
+      "text": "A large question at the top asks what to explore.",
+      "sources": [
+        "D7",
+        "L1"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 4,
+      "text": "The message box in the middle is the largest item on the screen.",
+      "sources": [
+        "L3",
+        "H1",
+        "H2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 5,
+      "text": "Most text is light enough against the dark background to meet a common accessibility guideline.",
+      "sources": [
+        "C2",
+        "C3",
+        "C1"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 6,
+      "text": "The hint text in the message box says to type @ to search your apps.",
+      "sources": [
+        "D5"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 7,
+      "text": "There are no suggested prompts.",
+      "sources": [
+        "D5"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 8,
+      "text": "There is no note that it can make mistakes.",
+      "sources": [
+        "D6"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 9,
+      "text": "The hint text in the message box differs from the week of 2026-10-05.",
+      "sources": [
+        "D5"
+      ],
+      "label": "",
+      "note": ""
+    }
+  ]
+}

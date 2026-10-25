@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Local only: no network requests are allowed (connect-src 'none'), images load from disk. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src file: 'self' blob: data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'none'; form-action 'none'">
+<title>Golden Set Review</title>
+<style>
+  :root {
+    --bg: #faf9f7; --panel: #ffffff; --text: #1f1d1a; --muted: #6b665f; --line: #e3dfd8;
+    --correct: #1f7a3d; --wrong: #b3261e; --unsure: #8a6100; --accent: #9f3e17;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #161513; --panel: #201e1b; --text: #ece8e1; --muted: #a39d93; --line: #38342e;
+      --correct: #5cc47f; --wrong: #f08a80; --unsure: #e0b84f; --accent: #e8875c; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 system-ui, -apple-system, sans-serif; }
+  header { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 16px; margin: 0 12px 0 0; }
+  button, select, label.btn { font: inherit; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--line);
+    background: var(--panel); color: var(--text); cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button:disabled { opacity: .5; cursor: default; }
+  #status { color: var(--muted); font-size: 13px; margin-left: auto; }
+  main { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; padding: 16px; }
+  .shot { position: sticky; top: 64px; align-self: start; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } .shot { position: static; } header { position: static; } }
+  .shot img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; display: block; background: #888; }
+  .shot .tabs { display: flex; gap: 6px; margin-bottom: 8px; }
+  .shot .tabs button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .meta { color: var(--muted); font-size: 13px; margin: 8px 0 0; word-break: break-all; }
+  .missing { padding: 24px; border: 1px dashed var(--line); border-radius: 6px; color: var(--muted); }
+  ol.sentences { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .s { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 6px; padding: 10px 12px; }
+  .s[data-label="correct"] { border-left-color: var(--correct); }
+  .s[data-label="wrong"] { border-left-color: var(--wrong); }
+  .s[data-label="unsure"] { border-left-color: var(--unsure); }
+  .s p { margin: 0 0 6px; }
+  .s .src { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+  .s .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .s .row button[aria-pressed="true"][data-v="correct"] { background: var(--correct); border-color: var(--correct); color: #fff; }
+  .s .row button[aria-pressed="true"][data-v="wrong"] { background: var(--wrong); border-color: var(--wrong); color: #fff; }
+  .s .row button[aria-pressed="true"][data-v="unsure"] { background: var(--unsure); border-color: var(--unsure); color: #fff; }
+  .s textarea { width: 100%; margin-top: 8px; min-height: 2.4em; font: inherit; font-size: 14px; padding: 6px 8px;
+    border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--text); resize: vertical; }
+  .intro { max-width: 720px; margin: 40px auto; padding: 0 16px; }
+  .intro code { background: var(--panel); padding: 1px 5px; border-radius: 4px; border: 1px solid var(--line); }
+  .why { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Golden set review</h1>
+  <button id="openDir" class="primary">Open golden folder</button>
+  <label class="btn" for="openFiles">Open JSON files…</label>
+  <input id="openFiles" type="file" accept=".json,application/json" multiple class="hidden">
+  <select id="pick" disabled aria-label="Analysis"></select>
+  <button id="prev" disabled>← Prev</button>
+  <button id="next" disabled>Next →</button>
+  <button id="save" disabled>Save</button>
+  <span id="status">Nothing loaded</span>
+</header>
+
+<div id="intro" class="intro">
+  <p>Open this page straight from disk (<code>scripts/local-capture/analysis/golden/review.html</code>). Nothing is uploaded: the page blocks all network requests.</p>
+  <p><strong>Open golden folder</strong> (Chrome or Edge) reads the <code>*.json</code> files in <code>analysis/golden/</code>, and <strong>Save</strong> writes your labels back into them.
+  Elsewhere, use <strong>Open JSON files…</strong>. Save then downloads each changed file under the same name, and you replace the copy in <code>analysis/golden/</code> with it.</p>
+  <p>Label each sentence <em>correct</em>, <em>wrong</em> or <em>unsure</em> against the redacted screenshot. Add a note when it's wrong or unsure. Keys: <code>1</code>/<code>2</code>/<code>3</code> label the focused sentence, <code>j</code>/<code>k</code> move between sentences.</p>
+</div>
+
+<main id="app" class="hidden">
+  <section class="shot">
+    <div class="tabs">
+      <button id="tabCur" aria-pressed="true">This week</button>
+      <button id="tabPrev" aria-pressed="false">Previous week</button>
+    </div>
+    <div id="imgWrap"></div>
+    <p class="meta" id="imgMeta"></p>
+  </section>
+  <section>
+    <h2 id="title" style="margin:0 0 4px;font-size:18px"></h2>
+    <p class="why" id="why"></p>
+    <ol class="sentences" id="sentences"></ol>
+  </section>
+</main>
+
+<script>
+// Repo root relative to this page (scripts/local-capture/analysis/golden/review.html).
+const ROOT = "../../../../";
+const LABELS = ["correct", "wrong", "unsure"];
+const state = { items: [], index: 0, dirty: new Set(), dirHandle: null, handles: new Map(), showPrev: false };
+const $ = (id) => document.getElementById(id);
+
+function setStatus() {
+  const all = state.items.flatMap((it) => it.data.sentences);
+  const done = all.filter((s) => s.label).length;
+  $("status").textContent = state.items.length
+    ? `${done}/${all.length} sentences labeled · ${state.dirty.size ? state.dirty.size + " unsaved file(s)" : "all saved"}`
+    : "Nothing loaded";
+  $("save").disabled = !state.dirty.size;
+}
+
+function load(items) {
+  state.items = items.filter((it) => Array.isArray(it.data?.sentences)).sort((a, b) => a.name.localeCompare(b.name));
+  state.index = 0;
+  state.dirty.clear();
+  const pick = $("pick");
+  pick.innerHTML = "";
+  state.items.forEach((it, i) => pick.add(new Option(`${it.data.portal ?? it.data.slug} · ${it.data.week}`, i)));
+  for (const id of ["pick", "prev", "next"]) $(id).disabled = !state.items.length;
+  $("intro").classList.toggle("hidden", !!state.items.length);
+  $("app").classList.toggle("hidden", !state.items.length);
+  render();
+}
+
+function render() {
+  const it = state.items[state.index];
+  if (!it) return;
+  const d = it.data;
+  $("pick").value = state.index;
+  $("title").textContent = `${d.portal ?? d.slug} — week of ${d.week}`;
+  $("why").textContent = [d.why_selected, d.guideline_version && `guideline ${d.guideline_version}`, d.previous_week && `compared with ${d.previous_week}`].filter(Boolean).join(" · ");
+  const shot = state.showPrev ? d.previous_screenshot : d.screenshot;
+  $("tabCur").setAttribute("aria-pressed", String(!state.showPrev));
+  $("tabPrev").setAttribute("aria-pressed", String(state.showPrev));
+  $("tabPrev").disabled = !d.previous_screenshot?.redacted;
+  const wrap = $("imgWrap");
+  wrap.innerHTML = "";
+  if (shot?.redacted) {
+    const img = new Image();
+    img.alt = `Redacted desktop screenshot, ${d.slug} ${state.showPrev ? d.previous_week : d.week}`;
+    img.src = ROOT + shot.redacted;
+    img.onerror = () => { wrap.innerHTML = `<div class="missing">Can't load the redacted screenshot. It lives in the gitignored <code>analysis/work/redact/</code> folder, so it only exists on the machine that made it.</div>`; };
+    wrap.append(img);
+    $("imgMeta").textContent = shot.redacted;
+  } else {
+    wrap.innerHTML = `<div class="missing">No redacted screenshot for this week${shot?.reason ? ` (${shot.reason})` : ""}.</div>`;
+    $("imgMeta").textContent = "";
+  }
+
+  const list = $("sentences");
+  list.innerHTML = "";
+  d.sentences.forEach((s, i) => {
+    const li = document.createElement("li");
+    li.className = "s";
+    li.tabIndex = 0;
+    li.dataset.label = s.label || "";
+    const p = document.createElement("p");
+    p.textContent = `${s.index ?? i + 1}. ${s.text}`;
+    const src = document.createElement("div");
+    src.className = "src";
+    src.textContent = `sources: ${(s.sources ?? []).join(", ") || "—"}`;
+    const row = document.createElement("div");
+    row.className = "row";
+    for (const v of LABELS) {
+      const b = document.createElement("button");
+      b.textContent = v;
+      b.dataset.v = v;
+      b.setAttribute("aria-pressed", String(s.label === v));
+      b.onclick = () => setLabel(i, s.label === v ? "" : v);
+      row.append(b);
+    }
+    const note = document.createElement("textarea");
+    note.placeholder = "note (why it's wrong or unsure)";
+    note.value = s.note ?? "";
+    note.oninput = () => { s.note = note.value; markDirty(); };
+    li.append(p, src, row, note);
+    list.append(li);
+  });
+  setStatus();
+}
+
+function markDirty() { state.dirty.add(state.index); setStatus(); }
+
+function setLabel(i, v) {
+  state.items[state.index].data.sentences[i].label = v;
+  markDirty();
+  const focused = i;
+  render();
+  $("sentences").children[focused]?.focus();
+}
+
+async function openDir() {
+  if (!window.showDirectoryPicker) { $("openFiles").click(); return; }
+  try {
+    const dir = await window.showDirectoryPicker({ mode: "readwrite" });
+    const items = [];
+    state.handles.clear();
+    for await (const [name, h] of dir.entries()) {
+      if (h.kind !== "file" || !name.endsWith(".json")) continue;
+      try { items.push({ name, data: JSON.parse(await (await h.getFile()).text()) }); state.handles.set(name, h); } catch { /* not a golden file */ }
+    }
+    state.dirHandle = dir;
+    load(items);
+  } catch (e) { if (e.name !== "AbortError") alertBox(`Couldn't open the folder: ${e.message}`); }
+}
+
+async function openFiles(files) {
+  state.dirHandle = null;
+  state.handles.clear();
+  const items = [];
+  for (const f of files) { try { items.push({ name: f.name, data: JSON.parse(await f.text()) }); } catch { /* skip */ } }
+  load(items);
+}
+
+async function save() {
+  for (const i of [...state.dirty]) {
+    const it = state.items[i];
+    const text = JSON.stringify(it.data, null, 2) + "\n";
+    const h = state.handles.get(it.name);
+    if (h) {
+      const w = await h.createWritable();
+      await w.write(text);
+      await w.close();
+    } else {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+      a.download = it.name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    }
+    state.dirty.delete(i);
+  }
+  setStatus();
+}
+
+// Shown inline instead of alert(): browser dialogs block the page.
+function alertBox(msg) { $("status").textContent = msg; }
+
+function go(delta) {
+  if (!state.items.length) return;
+  state.index = (state.index + delta + state.items.length) % state.items.length;
+  state.showPrev = false;
+  render();
+  window.scrollTo(0, 0);
+}
+
+$("openDir").onclick = openDir;
+$("openFiles").onchange = (e) => openFiles(e.target.files);
+$("pick").onchange = (e) => { state.index = Number(e.target.value); state.showPrev = false; render(); };
+$("prev").onclick = () => go(-1);
+$("next").onclick = () => go(1);
+$("save").onclick = save;
+$("tabCur").onclick = () => { state.showPrev = false; render(); };
+$("tabPrev").onclick = () => { state.showPrev = true; render(); };
+document.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") return;
+  const items = [...$("sentences").children];
+  const at = items.indexOf(document.activeElement);
+  if (e.key === "j" || e.key === "k") { (items[Math.max(0, Math.min(items.length - 1, at + (e.key === "j" ? 1 : -1)))] ?? items[0])?.focus(); e.preventDefault(); }
+  if (at >= 0 && ["1", "2", "3"].includes(e.key)) setLabel(at, LABELS[Number(e.key) - 1]);
+});
+window.addEventListener("beforeunload", (e) => { if (state.dirty.size) { e.preventDefault(); e.returnValue = ""; } });
+</script>
+</body>
+</html>

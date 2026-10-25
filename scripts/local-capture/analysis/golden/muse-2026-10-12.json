@@ -1,0 +1,117 @@
+{
+  "id": "muse-2026-10-12",
+  "slug": "muse",
+  "portal": "Muse",
+  "week": "2026-10-12",
+  "previous_week": "2026-10-05",
+  "guideline_version": "1.5.3",
+  "why_selected": "open conversation portal (section 1.1); 2 possibly_confounded",
+  "analysis_file": "scripts/local-capture/analysis/work/muse/2026-10-12/analysis.json",
+  "published_check": "summary equals the live site's published text (GET /api/captures, 2026-10-25)",
+  "screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-10-12/muse/redacted-desktop.png",
+    "sha1": "9b603db719ba17c1a8539f3262a1b24057e89b6e"
+  },
+  "previous_screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-10-05/muse/redacted-desktop.png",
+    "sha1": "ebf4b70b701415cb008ce9dfe479dbe18728b886"
+  },
+  "changes_vs_previous": [
+    {
+      "id": "L1",
+      "change": null,
+      "status": "possibly_confounded"
+    },
+    {
+      "id": "H2",
+      "change": null,
+      "status": "possibly_confounded"
+    }
+  ],
+  "sentences": [
+    {
+      "index": 1,
+      "text": "This shows the desktop version of Muse for the week of 2026-10-12, before scrolling.",
+      "sources": [
+        "context"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 2,
+      "text": "A thin column of icons runs down the far left side.",
+      "sources": [
+        "L1",
+        "L2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 3,
+      "text": "The message box sits near the bottom of the screen.",
+      "sources": [
+        "L3"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 4,
+      "text": "It is the largest control on the screen.",
+      "sources": [
+        "H1",
+        "H2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 5,
+      "text": "The outline of the message box is hard to see against the background.",
+      "sources": [
+        "C4"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 6,
+      "text": "The hint text inside it is lighter than a common accessibility guideline recommends.",
+      "sources": [
+        "C3"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 7,
+      "text": "No suggested prompts appear on the screen.",
+      "sources": [
+        "D5"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 8,
+      "text": "There is no note that it can make mistakes.",
+      "sources": [
+        "D6"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 9,
+      "text": "The message box differs from the week of 2026-10-05.",
+      "sources": [
+        "changes_vs_previous",
+        "H2"
+      ],
+      "label": "",
+      "note": ""
+    }
+  ]
+}

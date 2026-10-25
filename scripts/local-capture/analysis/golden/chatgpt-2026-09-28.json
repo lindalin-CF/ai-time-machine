@@ -1,0 +1,127 @@
+{
+  "id": "chatgpt-2026-09-28",
+  "slug": "chatgpt",
+  "portal": "ChatGPT",
+  "week": "2026-09-28",
+  "previous_week": "2026-09-21",
+  "guideline_version": "1.4",
+  "why_selected": "confounded week: promotional card disappeared (4 possibly_confounded changes)",
+  "analysis_file": "scripts/local-capture/analysis/work/chatgpt/2026-09-28/analysis-v1.4.json",
+  "published_check": "summary equals the live site's published text (GET /api/captures, 2026-10-25)",
+  "screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-09-28/chatgpt/redacted-desktop.png",
+    "sha1": "632ce8eccf0325f12ebde301c23daf6f29c4fc98"
+  },
+  "previous_screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-09-21/chatgpt/redacted-desktop.png",
+    "sha1": "2bb708a2e0ac52ec41710d6578fc1f78fc3e0936"
+  },
+  "changes_vs_previous": [
+    {
+      "id": "L1",
+      "change": null,
+      "status": "possibly_confounded"
+    },
+    {
+      "id": "H1",
+      "change": null,
+      "status": "possibly_confounded"
+    },
+    {
+      "id": "D3",
+      "change": null,
+      "status": "possibly_confounded"
+    },
+    {
+      "id": "D7",
+      "change": null,
+      "status": "possibly_confounded"
+    }
+  ],
+  "sentences": [
+    {
+      "index": 1,
+      "text": "This shows the desktop version of ChatGPT for the week of 2026-09-28, before scrolling.",
+      "sources": [],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 2,
+      "text": "A sidebar takes up about a fifth of the screen width.",
+      "sources": [
+        "L1",
+        "L2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 3,
+      "text": "The message box stands out most on the screen.",
+      "sources": [
+        "H1",
+        "D2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 4,
+      "text": "It sits in the middle, under the question \"What's on the agenda today?\"",
+      "sources": [
+        "L3",
+        "D7"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 5,
+      "text": "The main text is light enough against the dark background to meet a common accessibility guideline.",
+      "sources": [
+        "C1",
+        "C2",
+        "C3"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 6,
+      "text": "The outline of the message box is faint, but the hint text inside it is easy to read.",
+      "sources": [
+        "C4"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 7,
+      "text": "Three suggested prompts below the box include creating an image, writing, and searching the web.",
+      "sources": [
+        "D5"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 8,
+      "text": "No note that it can make mistakes is visible on this screen.",
+      "sources": [
+        "D6"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 9,
+      "text": "The question above the message box differs from the week of 2026-09-21.",
+      "sources": [
+        "D7"
+      ],
+      "label": "",
+      "note": ""
+    }
+  ]
+}

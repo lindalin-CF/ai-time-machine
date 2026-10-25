@@ -1,0 +1,129 @@
+{
+  "id": "gemini-2026-10-19",
+  "slug": "gemini",
+  "portal": "Gemini",
+  "week": "2026-10-19",
+  "previous_week": "2026-10-12",
+  "guideline_version": "1.5.3",
+  "why_selected": "confounded week: rotating heading and button (4 possibly_confounded)",
+  "analysis_file": "scripts/local-capture/analysis/work/gemini/2026-10-19/analysis.json",
+  "published_check": "summary equals the live site's published text (GET /api/captures, 2026-10-25)",
+  "screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-10-19/gemini/redacted-desktop.png",
+    "sha1": "3abe4c2a2ae7865d03fc6db519875638355c801a"
+  },
+  "previous_screenshot": {
+    "redacted": null,
+    "reason": "ledger result \"no change\" (no redacted file)"
+  },
+  "changes_vs_previous": [
+    {
+      "id": "L1",
+      "change": null,
+      "status": "possibly_confounded"
+    },
+    {
+      "id": "L1",
+      "change": null,
+      "status": "possibly_confounded"
+    },
+    {
+      "id": "D5",
+      "change": null,
+      "status": "possibly_confounded"
+    },
+    {
+      "id": "D7",
+      "change": null,
+      "status": "possibly_confounded"
+    }
+  ],
+  "sentences": [
+    {
+      "index": 1,
+      "text": "This shows the desktop version of Gemini for the week of 2026-10-19, before scrolling.",
+      "sources": [
+        "L1"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 2,
+      "text": "A narrow column of icons without text labels runs down the left edge of the screen.",
+      "sources": [
+        "L1",
+        "L2",
+        "N1"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 3,
+      "text": "The large heading in the middle stands out most on the screen.",
+      "sources": [
+        "H1",
+        "D2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 4,
+      "text": "Even the dimmest text is light enough against the dark background to meet a common accessibility guideline.",
+      "sources": [
+        "C2",
+        "C3"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 5,
+      "text": "The message box has no visible outline, but the hint text inside it is easy to read.",
+      "sources": [
+        "C4"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 6,
+      "text": "You start in the message box in the middle of the screen.",
+      "sources": [
+        "D1",
+        "L3"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 7,
+      "text": "The heading asks, \"Where should we start?\"",
+      "sources": [
+        "D7"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 8,
+      "text": "No note that it can make mistakes is visible.",
+      "sources": [
+        "D6"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 9,
+      "text": "The heading text differs from the week of 2026-10-12.",
+      "sources": [
+        "D7"
+      ],
+      "label": "",
+      "note": ""
+    }
+  ]
+}

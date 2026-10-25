@@ -1,0 +1,141 @@
+{
+  "id": "perplexity-2026-10-12",
+  "slug": "perplexity",
+  "portal": "Perplexity",
+  "week": "2026-10-12",
+  "previous_week": "2026-10-05",
+  "guideline_version": "1.5.3",
+  "why_selected": "confounded week: onboarding card (4 possibly_confounded); section renamed",
+  "analysis_file": "scripts/local-capture/analysis/work/perplexity/2026-10-12/analysis.json",
+  "published_check": "summary equals the live site's published text (GET /api/captures, 2026-10-25)",
+  "screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-10-12/perplexity/redacted-desktop.png",
+    "sha1": "6f318320e40eb5715eefaf24b9b613a8bfd72d06"
+  },
+  "previous_screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-10-05/perplexity/redacted-desktop.png",
+    "sha1": "682119610df54be151339b73e6e50446c394efae"
+  },
+  "changes_vs_previous": [
+    {
+      "id": "N1",
+      "change": "renamed",
+      "status": "changed"
+    },
+    {
+      "id": "L1",
+      "change": null,
+      "status": "possibly_confounded"
+    },
+    {
+      "id": "H1",
+      "change": null,
+      "status": "possibly_confounded"
+    },
+    {
+      "id": "C2",
+      "change": null,
+      "status": "possibly_confounded"
+    },
+    {
+      "id": "D3",
+      "change": null,
+      "status": "possibly_confounded"
+    }
+  ],
+  "sentences": [
+    {
+      "index": 1,
+      "text": "This shows the desktop version of Perplexity for the week of 2026-10-12, before scrolling.",
+      "sources": [
+        "context"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 2,
+      "text": "A sidebar on the left takes up about a fifth of the screen width.",
+      "sources": [
+        "L1",
+        "L2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 3,
+      "text": "The message box stands out most on the screen.",
+      "sources": [
+        "H1",
+        "H2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 4,
+      "text": "The outline of the message box is hard to see against the dark background.",
+      "sources": [
+        "C4"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 5,
+      "text": "The heading above it asks, \"What do you want to know?\"",
+      "sources": [
+        "D7"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 6,
+      "text": "Below the message box, a card titled Set up Computer appears.",
+      "sources": [
+        "L1",
+        "context"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 7,
+      "text": "The hint text inside the message box is lighter than a common accessibility guideline recommends.",
+      "sources": [
+        "C3"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 8,
+      "text": "There is no note saying it can make mistakes.",
+      "sources": [
+        "D6"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 9,
+      "text": "The sidebar section Sessions is now labeled Recents.",
+      "sources": [
+        "N1"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 10,
+      "text": "The card below the message box differs from the week of 2026-10-05.",
+      "sources": [
+        "L1"
+      ],
+      "label": "",
+      "note": ""
+    }
+  ]
+}

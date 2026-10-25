@@ -1,0 +1,97 @@
+{
+  "id": "grok-2026-08-17",
+  "slug": "grok",
+  "portal": "Grok",
+  "week": "2026-08-17",
+  "previous_week": "2026-08-10",
+  "guideline_version": "1.4",
+  "why_selected": "first guideline week",
+  "analysis_file": "scripts/local-capture/analysis/work/grok/2026-08-17/analysis.json",
+  "published_check": "summary equals the live site's published text (GET /api/captures, 2026-10-25)",
+  "screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-08-17/grok/redacted-desktop.png",
+    "sha1": "00dfce7a2e7f3bcd23aecfee907c16334d964f88"
+  },
+  "previous_screenshot": {
+    "redacted": null,
+    "reason": "not in the redaction ledger"
+  },
+  "changes_vs_previous": [],
+  "sentences": [
+    {
+      "index": 1,
+      "text": "This shows the desktop version of Grok for the week of 2026-08-17, before scrolling.",
+      "sources": [
+        "context"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 2,
+      "text": "A sidebar on the left takes up about a fifth of the screen width.",
+      "sources": [
+        "L1",
+        "L2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 3,
+      "text": "A dark upgrade card in the bottom right corner stands out most on the screen.",
+      "sources": [
+        "H1"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 4,
+      "text": "The message box sits just below the large Grok logo, in the middle of the screen.",
+      "sources": [
+        "L3",
+        "D1"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 5,
+      "text": "The text is dark enough against the light background to meet a common accessibility guideline.",
+      "sources": [
+        "C2",
+        "C3"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 6,
+      "text": "The outline of the message box is faint, but the hint text inside it is easy to read.",
+      "sources": [
+        "C4"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 7,
+      "text": "No suggested prompts are shown.",
+      "sources": [
+        "D5"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 8,
+      "text": "There is no note that it can make mistakes.",
+      "sources": [
+        "D6"
+      ],
+      "label": "",
+      "note": ""
+    }
+  ]
+}

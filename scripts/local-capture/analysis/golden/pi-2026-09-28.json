@@ -1,0 +1,135 @@
+{
+  "id": "pi-2026-09-28",
+  "slug": "pi",
+  "portal": "Pi",
+  "week": "2026-09-28",
+  "previous_week": "2026-09-21",
+  "guideline_version": "1.4",
+  "why_selected": "confounded week: activity card (4 possibly_confounded)",
+  "analysis_file": "scripts/local-capture/analysis/work/pi/2026-09-28/analysis.json",
+  "published_check": "summary equals the live site's published text (GET /api/captures, 2026-10-25)",
+  "screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-09-28/pi/redacted-desktop.png",
+    "sha1": "73f4f1f99fd4a2da338f803eff673e505a3101fc"
+  },
+  "previous_screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-09-21/pi/redacted-desktop.png",
+    "sha1": "b107c68f8cb9d72fc7ea474191adcc02c0f208f1"
+  },
+  "changes_vs_previous": [
+    {
+      "id": "L1",
+      "change": null,
+      "status": "possibly_confounded"
+    },
+    {
+      "id": "H1",
+      "change": null,
+      "status": "possibly_confounded"
+    },
+    {
+      "id": "D3",
+      "change": null,
+      "status": "possibly_confounded"
+    },
+    {
+      "id": "D5",
+      "change": null,
+      "status": "changed"
+    },
+    {
+      "id": "D7",
+      "change": null,
+      "status": "possibly_confounded"
+    }
+  ],
+  "sentences": [
+    {
+      "index": 1,
+      "text": "This shows the desktop version of Pi for the week of 2026-09-28, before scrolling.",
+      "sources": [
+        "L1"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 2,
+      "text": "A dark sidebar on the left takes up about a fifth of the screen width.",
+      "sources": [
+        "L1",
+        "L2",
+        "C1"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 3,
+      "text": "A card with a pink picture stands out most on the screen.",
+      "sources": [
+        "H1",
+        "D2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 4,
+      "text": "The text is light enough against the dark background to meet a common accessibility guideline.",
+      "sources": [
+        "C2",
+        "C3"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 5,
+      "text": "The outline of the message box is faint, but the hint text inside it is easy to read.",
+      "sources": [
+        "C4"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 6,
+      "text": "The green arrow-shaped button is hard to see against the message box.",
+      "sources": [
+        "C4"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 7,
+      "text": "You start in the message box, which asks what is on your mind.",
+      "sources": [
+        "D1",
+        "D5"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 8,
+      "text": "A note below the message box says Pi may make mistakes.",
+      "sources": [
+        "D6"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 9,
+      "text": "Unlike the week of 2026-09-21, the screen now shows a card about a group activity.",
+      "sources": [
+        "D5",
+        "L1"
+      ],
+      "label": "",
+      "note": ""
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "id": "meta-ai-2026-09-21",
+  "slug": "meta-ai",
+  "portal": "Meta AI",
+  "week": "2026-09-21",
+  "previous_week": "2026-09-07",
+  "guideline_version": "1.3",
+  "why_selected": "guideline 1.3 analysis with suggested prompts",
+  "analysis_file": "scripts/local-capture/analysis/work/meta-ai/2026-09-21/analysis.json",
+  "published_check": "summary equals the live site's published text (GET /api/captures, 2026-10-25)",
+  "screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-09-21/meta-ai/redacted-desktop.png",
+    "sha1": "d899e16c3c1283261cb2168e001ef878b00507d0"
+  },
+  "previous_screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-09-07/meta-ai/redacted-desktop.png",
+    "sha1": "5d4446cd6b0d66c48e25eb4c5c606e52f0e9180c"
+  },
+  "changes_vs_previous": [],
+  "sentences": [
+    {
+      "index": 1,
+      "text": "This shows the desktop version of Meta AI for the week of 2026-09-21, before scrolling.",
+      "sources": [
+        "L1"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 2,
+      "text": "The screen is dark, with a menu on the left that takes up about a fifth of the width.",
+      "sources": [
+        "L1",
+        "L2",
+        "C1"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 3,
+      "text": "The message box sits in the middle and is the largest item on the screen.",
+      "sources": [
+        "L3",
+        "H1",
+        "H2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 4,
+      "text": "Above it, a large heading asks, \"Where should we start?\"",
+      "sources": [
+        "D7",
+        "H1"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 5,
+      "text": "Below the box are four topic buttons and six suggested prompts, such as building a summer bucket list.",
+      "sources": [
+        "D5"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 6,
+      "text": "Most text is white and easy to read, but some small gray text is lighter than a common guideline recommends.",
+      "sources": [
+        "C2",
+        "C3"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 7,
+      "text": "The message box is only slightly lighter than the background, so its outline is hard to see.",
+      "sources": [
+        "C4"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 8,
+      "text": "There is no note on the screen saying it can make mistakes.",
+      "sources": [
+        "D6"
+      ],
+      "label": "",
+      "note": ""
+    }
+  ]
+}

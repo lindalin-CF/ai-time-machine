@@ -1,0 +1,97 @@
+{
+  "id": "gemini-2026-09-07",
+  "slug": "gemini",
+  "portal": "Gemini",
+  "week": "2026-09-07",
+  "previous_week": "2026-08-24",
+  "guideline_version": "1.4",
+  "why_selected": "icon-only sidebar rail",
+  "analysis_file": "scripts/local-capture/analysis/work/gemini/2026-09-07/analysis.json",
+  "published_check": "summary equals the live site's published text (GET /api/captures, 2026-10-25)",
+  "screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-09-07/gemini/redacted-desktop.png",
+    "sha1": "660a2a48f085e157f7197cae0c0d53ec1e9ee35a"
+  },
+  "previous_screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-08-24/gemini/redacted-desktop.png",
+    "sha1": "a775d9ffa97ed850e2825f44c6c194ad37aa55e6"
+  },
+  "changes_vs_previous": [],
+  "sentences": [
+    {
+      "index": 1,
+      "text": "This shows the desktop version of Gemini for the week of 2026-09-07, before scrolling.",
+      "sources": [
+        "context"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 2,
+      "text": "A dark sidebar on the left takes up just under a quarter of the screen width.",
+      "sources": [
+        "L1",
+        "L2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 3,
+      "text": "The message box sits in the middle of the screen.",
+      "sources": [
+        "L3"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 4,
+      "text": "The large greeting above the message box stands out most.",
+      "sources": [
+        "H1",
+        "D2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 5,
+      "text": "The text is light enough against the dark background to meet a common accessibility guideline.",
+      "sources": [
+        "C2",
+        "C3"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 6,
+      "text": "The outline of the message box is faint, but the hint text inside it is easy to read.",
+      "sources": [
+        "C4"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 7,
+      "text": "There are no suggested prompts on the screen.",
+      "sources": [
+        "D5"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 8,
+      "text": "No note that it can make mistakes is visible.",
+      "sources": [
+        "D6"
+      ],
+      "label": "",
+      "note": ""
+    }
+  ]
+}

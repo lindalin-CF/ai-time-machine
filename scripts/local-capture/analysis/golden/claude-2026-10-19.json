@@ -1,0 +1,136 @@
+{
+  "id": "claude-2026-10-19",
+  "slug": "claude",
+  "portal": "Claude",
+  "week": "2026-10-19",
+  "previous_week": "2026-10-12",
+  "guideline_version": "1.6.0",
+  "why_selected": "guideline 1.6.0 model picker; placeholder contrast change",
+  "analysis_file": "scripts/local-capture/analysis/work/claude/2026-10-19/analysis.json",
+  "published_check": "summary equals the live site's published text (GET /api/captures, 2026-10-25)",
+  "screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-10-19/claude/redacted-desktop.png",
+    "sha1": "b9798583fcb9c12e329de6b560bd9056c3d874de"
+  },
+  "previous_screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-10-12/claude/redacted-desktop.png",
+    "sha1": "69f39e24138055ad35cb925d3bf85f3af8d6248d"
+  },
+  "changes_vs_previous": [
+    {
+      "id": "D7",
+      "change": null,
+      "status": "possibly_confounded"
+    },
+    {
+      "id": "L1",
+      "change": null,
+      "status": "possibly_confounded"
+    },
+    {
+      "id": "C3",
+      "change": null,
+      "status": "changed"
+    },
+    {
+      "id": "C4",
+      "change": null,
+      "status": "changed"
+    },
+    {
+      "id": "C1",
+      "change": null,
+      "status": "changed"
+    }
+  ],
+  "sentences": [
+    {
+      "index": 1,
+      "text": "This shows the desktop version of Claude for the week of 2026-10-19, before scrolling.",
+      "sources": [
+        "L1"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 2,
+      "text": "A dark sidebar on the left takes up just under a quarter of the screen width.",
+      "sources": [
+        "L1",
+        "L2",
+        "C1"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 3,
+      "text": "The large heading in the middle stands out most.",
+      "sources": [
+        "H1",
+        "D2",
+        "D7"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 4,
+      "text": "The hint text inside the message box is much fainter than a common accessibility guideline recommends.",
+      "sources": [
+        "C3"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 5,
+      "text": "The outline of the message box is hard to see against the background.",
+      "sources": [
+        "C4"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 6,
+      "text": "You start in the message box just below the heading.",
+      "sources": [
+        "D1",
+        "L3"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 7,
+      "text": "There are no suggested prompts.",
+      "sources": [
+        "D5"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 8,
+      "text": "There is no visible note that it can make mistakes.",
+      "sources": [
+        "D6"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 9,
+      "text": "The hint text inside the message box is much fainter than in the week of 2026-10-12.",
+      "sources": [
+        "C3",
+        "C1",
+        "C4"
+      ],
+      "label": "",
+      "note": ""
+    }
+  ]
+}

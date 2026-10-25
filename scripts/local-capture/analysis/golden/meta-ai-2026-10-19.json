@@ -1,0 +1,117 @@
+{
+  "id": "meta-ai-2026-10-19",
+  "slug": "meta-ai",
+  "portal": "Meta AI",
+  "week": "2026-10-19",
+  "previous_week": "2026-10-12",
+  "guideline_version": "1.5.3",
+  "why_selected": "topic chip text change",
+  "analysis_file": "scripts/local-capture/analysis/work/meta-ai/2026-10-19/analysis.json",
+  "published_check": "summary equals the live site's published text (GET /api/captures, 2026-10-25)",
+  "screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-10-19/meta-ai/redacted-desktop.png",
+    "sha1": "4a915fec3b4fe3fb59296c49f0f08b38d7fa1c29"
+  },
+  "previous_screenshot": {
+    "redacted": "scripts/local-capture/analysis/work/redact/2026-10-12/meta-ai/redacted-desktop-v2.png",
+    "sha1": "754d5bb263183929cb36afbc75b7b26f972467c3"
+  },
+  "changes_vs_previous": [
+    {
+      "id": "L1",
+      "change": null,
+      "status": "changed"
+    },
+    {
+      "id": "D5",
+      "change": null,
+      "status": "changed"
+    }
+  ],
+  "sentences": [
+    {
+      "index": 1,
+      "text": "This shows the desktop version of Meta AI for the week of 2026-10-19, before scrolling.",
+      "sources": [
+        "L1"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 2,
+      "text": "A menu on the left takes up about a fifth of the screen width.",
+      "sources": [
+        "L1",
+        "L2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 3,
+      "text": "The message box is the largest item on the screen.",
+      "sources": [
+        "H1",
+        "H2"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 4,
+      "text": "Above it, a large heading in Chinese asks, \"Where should we start?\"",
+      "sources": [
+        "D7",
+        "H1"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 5,
+      "text": "Below the box are four topic buttons.",
+      "sources": [
+        "D5"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 6,
+      "text": "Some small gray text is lighter than a common accessibility guideline recommends.",
+      "sources": [
+        "C3"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 7,
+      "text": "The message box is only slightly lighter than the background, so its outline is hard to see.",
+      "sources": [
+        "C4"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 8,
+      "text": "There is no note on the screen saying it can make mistakes.",
+      "sources": [
+        "D6"
+      ],
+      "label": "",
+      "note": ""
+    },
+    {
+      "index": 9,
+      "text": "The first topic button now reads \"Explore\" instead of \"Try Meta AI.\"",
+      "sources": [
+        "changes_vs_previous"
+      ],
+      "label": "",
+      "note": ""
+    }
+  ]
+}
