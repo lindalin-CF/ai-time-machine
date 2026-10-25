@@ -17,6 +17,8 @@
       "/img/*",
       "/portals/*",
       "/compare/*",
+      "/weeks",
+      "/weeks/*",
       "/sitemap.xml",
       "/feed.xml",
       "/how-we-analyze",

@@ -243,7 +243,7 @@ describe('sitemap and llms.txt', () => {
 
   it('lists the indexable pair under Comparisons in llms.txt', async () => {
     const text = await (await handleLlmsTxt(new Request(`${ORIGIN}/llms.txt`), t.env)).text();
-    expect([...text.matchAll(/^## (.+)$/gm)].map((m) => m[1])).toEqual(['Portals', 'Comparisons', 'Changes', 'Method', 'Feeds']);
+    expect([...text.matchAll(/^## (.+)$/gm)].map((m) => m[1])).toEqual(['Portals', 'Comparisons', 'Weekly digests', 'Changes', 'Method', 'Feeds']);
     expect(text).toContain(`- [ChatGPT vs Claude](${ORIGIN}/compare/chatgpt-vs-claude): UI comparison for the week of October 12, 2026, with differences and similarities ([Markdown](${ORIGIN}/compare/chatgpt-vs-claude.md))`);
   });
 });

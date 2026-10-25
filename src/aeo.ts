@@ -10,6 +10,7 @@ import { navChangeSentence, navItemName } from "./nav-changes";
 import { weekInWords } from "./format";
 import { ORIGIN, FEED_URL } from "./portal-page";
 import { comparePath, indexablePairs } from "./compare";
+import { weekDigests, weekLine } from "./weeks";
 
 const TEXT_HEADERS = { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600" };
 
@@ -22,13 +23,14 @@ function about(portalCount: number): string {
 export async function handleLlmsTxt(request: Request, env: Env): Promise<Response> {
   if (request.method !== "GET" && request.method !== "HEAD") return new Response("method not allowed", { status: 405 });
   const text = await cached(env, "cache:llms", 300, async () => {
-    const [portals, pairs] = await Promise.all([listPortals(env), indexablePairs(env)]);
+    const [portals, pairs, digests] = await Promise.all([listPortals(env), indexablePairs(env), weekDigests(env)]);
+    const weeks = digests.filter((d) => d.indexable);
     return [
       "# AI Interface Library",
       "",
       about(portals.length),
       "",
-      "Every portal page, weekly page and comparison page also has a Markdown version at the same address with .md added. The full text of each product's latest published analysis is in /llms-full.txt.",
+      "Every portal page, weekly page, weekly digest and comparison page also has a Markdown version at the same address with .md added. The full text of each product's latest published analysis is in /llms-full.txt.",
       "",
       "## Portals",
       "",
@@ -38,6 +40,13 @@ export async function handleLlmsTxt(request: Request, env: Env): Promise<Respons
         "## Comparisons",
         "",
         ...pairs.map((p) => `- [${p.aName} vs ${p.bName}](${ORIGIN}${comparePath(p.a, p.b)}): UI comparison for the week of ${weekInWords(p.week)}, with differences and similarities ([Markdown](${ORIGIN}${comparePath(p.a, p.b)}.md))`),
+        "",
+      ] : []),
+      ...(weeks.length ? [
+        "## Weekly digests",
+        "",
+        `- [All weeks](${ORIGIN}/weeks): one digest per weekly capture, newest first`,
+        ...weeks.map((d) => `- [AI interface changes, week of ${weekInWords(d.week)}](${ORIGIN}/weeks/${d.week}): ${weekLine(d)} ([Markdown](${ORIGIN}/weeks/${d.week}.md))`),
         "",
       ] : []),
       "## Changes",

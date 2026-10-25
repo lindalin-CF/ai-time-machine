@@ -38,13 +38,20 @@ export function navChangePhrase(c: NavChange): string {
   return p[0].toUpperCase() + p.slice(1);
 }
 
+/** How notable a change is, for a weekly digest's summary: a rename, then an added or removed item, then the model picker, then an icon button. */
+export function navChangeWeight(c: NavChange): number {
+  if (c.picker) return 1;
+  if (c.icon) return 0;
+  return c.change === "renamed" ? 3 : 2;
+}
+
 /** A menu item as shown in text: its name, "a model picker", or "an icon button (clock icon)" for an item without text. */
 export function navItemName(it: NavItem): string {
   if (it.picker) return `a ${it.label}`;
   return it.icon ? `an icon button (${it.label})` : it.label;
 }
 
-export type ChangeEntry = { slug: string; name: string; week: string; previousWeek: string; sentence: string; phrase: string; publishedAt: string | null };
+export type ChangeEntry = { slug: string; name: string; week: string; previousWeek: string; sentence: string; phrase: string; weight: number; publishedAt: string | null };
 
 /**
  * Every recorded menu change in published analyses, newest week first (portal order within a week).
@@ -57,7 +64,7 @@ export function changeEntries(rows: PublishedCapture[]): ChangeEntry[] {
     const nc = captureMetrics(r)?.navChanges;
     if (!nc) continue;
     for (const c of nc.items) {
-      out.push({ slug: r.slug, name: r.name, week: r.week, previousWeek: nc.previousWeek, sentence: navChangeSentence(c), phrase: navChangePhrase(c), publishedAt: r.analysis_published_at });
+      out.push({ slug: r.slug, name: r.name, week: r.week, previousWeek: nc.previousWeek, sentence: navChangeSentence(c), phrase: navChangePhrase(c), weight: navChangeWeight(c), publishedAt: r.analysis_published_at });
     }
   }
   // Stable sort keeps portal order (and each analysis's own order) within a week.

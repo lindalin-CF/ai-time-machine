@@ -10,8 +10,8 @@
     "directory": "./public",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    // API, image streaming and the server-rendered pages (homepage, portals, comparisons, sitemap, feed, how-we-analyze, privacy, license, changelog, changes) run the Worker first; everything else is a static file.
-    "run_worker_first": ["/", "/agents/*", "/api/*", "/img/*", "/portals/*", "/compare/*", "/sitemap.xml", "/feed.xml", "/how-we-analyze", "/how-we-analyze/", "/privacy", "/privacy/", "/license", "/license/", "/changelog", "/changelog/", "/changes", "/changes/", "/llms.txt", "/llms-full.txt"]
+    // API, image streaming and the server-rendered pages (homepage, portals, comparisons, weekly digests, sitemap, feed, how-we-analyze, privacy, license, changelog, changes) run the Worker first; everything else is a static file.
+    "run_worker_first": ["/", "/agents/*", "/api/*", "/img/*", "/portals/*", "/compare/*", "/weeks", "/weeks/*", "/sitemap.xml", "/feed.xml", "/how-we-analyze", "/how-we-analyze/", "/privacy", "/privacy/", "/license", "/license/", "/changelog", "/changelog/", "/changes", "/changes/", "/llms.txt", "/llms-full.txt"]
   },
 
   "observability": { "enabled": true },

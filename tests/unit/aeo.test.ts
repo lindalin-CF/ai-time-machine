@@ -139,7 +139,7 @@ describe('/llms.txt', () => {
     expect(lines[0]).toBe('# AI Interface Library');
     expect(lines[2]).toMatch(/^> Each week, AI Interface Library captures the first screen of 3 AI products/);
     expect(lines[2]).toContain('a person reviews every analysis before it is published');
-    expect([...text.matchAll(/^## (.+)$/gm)].map((m) => m[1])).toEqual(['Portals', 'Changes', 'Method', 'Feeds']);
+    expect([...text.matchAll(/^## (.+)$/gm)].map((m) => m[1])).toEqual(['Portals', 'Weekly digests', 'Changes', 'Method', 'Feeds']);
     expect(text).toContain(`- [ChatGPT](${ORIGIN}/portals/chatgpt): OpenAI.`);
     expect(text).toContain(`([Markdown](${ORIGIN}/portals/chatgpt.md))`);
     expect(text).toContain(`- [Menu changes](${ORIGIN}/changes)`);
@@ -181,6 +181,8 @@ describe('Markdown portal pages', () => {
       '- Week: week of October 5, 2026 (2026-10-05)',
       `- Page: ${ORIGIN}/portals/chatgpt/2026-10-05`,
       `- Compare week by week: ${ORIGIN}/#compare?view=canvas&mode=time&portal=chatgpt&weeks=2026-10-05,2026-09-28&device=desktop`, '',
+      '## Key facts', '',
+      'As of Oct 5, 2026, ChatGPT shows a sidebar with 3 menu items. It uses a dark color scheme. Most recent menu change (week of Oct 5, 2026): the sidebar item Scheduled is now labeled Tasks.', '',
       '## Design analysis', '',
       'This shows the desktop version of chatgpt for the week of 2026-10-05, before scrolling. The message box stands out most.', '',
       '## Menu items', '',

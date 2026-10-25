@@ -7,6 +7,7 @@ import { makeEnv } from './fake-env';
 import { invalidate } from '../../src/capture';
 import { FIXED_SUMMARY_OPENING } from '../../src/analysis';
 import { CACHE_VERSION } from '../../src/db';
+import { weekInWords } from '../../src/format';
 
 // SEO metadata: sitemap <lastmod>, robots, link previews, descriptions, JSON-LD and the RSS feed.
 
@@ -266,7 +267,8 @@ describe('JSON-LD', () => {
       [2, 'ChatGPT', `${ORIGIN}/portals/chatgpt`],
       [3, 'Week of September 7, 2026', `${ORIGIN}/portals/chatgpt/2026-09-07`],
     ]);
-    expect(block['@graph'].slice(1)).toHaveLength(1); // desktop only that week
+    expect(block['@graph'].filter((n: any) => n['@type'] === 'ImageObject')).toHaveLength(1); // desktop only that week
+    expect(block['@graph'].find((n: any) => n['@type'] === 'WebPage').dateModified).toBe('2026-09-07');
   });
 
   it.each([['/portals/chatgpt'], ['/portals/chatgpt/2026-09-21'], ['/portals/chatgpt/2026-09-07'], ['/portals/claude']])(
@@ -294,7 +296,13 @@ describe('JSON-LD', () => {
 
       // Article: only for a published analysis; the publisher named is the product's own company.
       const articles = graph.filter((n: any) => n['@type'] === 'Article');
-      expect(graph).toHaveLength(1 + screenshots.length + articles.length);
+      const webPages = graph.filter((n: any) => n['@type'] === 'WebPage');
+      expect(graph).toHaveLength(1 + screenshots.length + articles.length + webPages.length);
+      // WebPage: the page itself, dated by the week it shows (every page here has a capture).
+      expect(webPages).toHaveLength(1);
+      const shownWeek = html.match(/captured week of ([^<]+)<\/p>/)![1];
+      expect(webPages[0]['@id']).toBe(crumbs.at(-1).item);
+      expect(weekInWords(webPages[0].dateModified)).toBe(shownWeek);
       for (const a of articles) {
         expect(Object.keys(a).sort()).toEqual(['@type', 'about', 'dateModified', 'datePublished', 'headline', 'image']);
         expect(a.about).toEqual({ '@type': 'SoftwareApplication', name: crumbs[1].name, publisher: { '@type': 'Organization', name: expect.any(String) } });
@@ -322,13 +330,15 @@ describe('/feed.xml', () => {
   });
 
   it('has one item per portal per week with a published analysis, newest first, without system-test weeks', () => {
-    expect(items(xml).map((i) => i.link)).toEqual([`${ORIGIN}/portals/chatgpt/2026-09-21`, `${ORIGIN}/portals/claude/2026-09-21`]);
+    // Each item links to its week's digest; the guid stays the portal's weekly page, one per item.
+    expect(items(xml).map((i) => i.link)).toEqual([`${ORIGIN}/weeks/2026-09-21`, `${ORIGIN}/weeks/2026-09-21`]);
+    expect(items(xml).map((i) => i.guid)).toEqual([`${ORIGIN}/portals/chatgpt/2026-09-21`, `${ORIGIN}/portals/claude/2026-09-21`]);
   });
 
   it('titles, links and describes each item from its weekly page and summary', () => {
     expect(items(xml)[0]).toEqual({
       title: 'ChatGPT interface — week of September 21, 2026',
-      link: `${ORIGIN}/portals/chatgpt/2026-09-21`,
+      link: `${ORIGIN}/weeks/2026-09-21`,
       guid: `${ORIGIN}/portals/chatgpt/2026-09-21`,
       pubDate: 'Sat, 26 Sep 2026 08:00:00 GMT', // the analysis was published after the capture
       description: SUMMARY_SENTENCES.slice(1).join(' '), // the full summary without the fixed opening
@@ -354,7 +364,7 @@ describe('/feed.xml', () => {
     t.db.exec(`UPDATE captures SET analysis = 'Tabs <b> & "quotes"', analysis_json = NULL WHERE id = 'chatgpt-2026-09-21'`);
     t.kv.clear();
     const x = await (await handleFeed(t.env)).text();
-    expect(items(x).map((i) => i.link)).toEqual([`${ORIGIN}/portals/chatgpt/2026-09-21`]);
+    expect(items(x).map((i) => i.link)).toEqual([`${ORIGIN}/weeks/2026-09-21`]);
     expect(items(x)[0].description).toBe('Tabs &lt;b&gt; &amp; &quot;quotes&quot;');
   });
 

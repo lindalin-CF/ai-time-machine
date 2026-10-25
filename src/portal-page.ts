@@ -5,10 +5,11 @@ import { cached } from "./api";
 import { consentMode, PRIVATE_HTML_CACHE, type ConsentMode } from "./consent";
 import { desktopSize, mobileSize } from "./api";
 import { MOBILE_CAPTURE_SIZE } from "./image-size";
-import { shotAlt, weekInWords } from "./format";
-import { captureMetrics } from "./capture-metrics";
+import { shotAlt, weekInWords, weekShort } from "./format";
+import { captureMetrics, type CaptureMetrics } from "./capture-metrics";
 import { changeEntries, navChangeSentence, navItemName, type ChangeEntry } from "./nav-changes";
 import { COMPARE_WITH_LINKS, POPULAR_PAIRINGS, comparePath, indexablePairs } from "./compare";
+import { weekDigests, latestIndexableWeek } from "./weeks";
 import { CHANGELOG, CHANGELOG_UPDATED, changelogDate, changelogDatetime, utcOffsetLabel, type ChangelogEntry } from "./changelog";
 
 export const ORIGIN = "https://ai-portal-library.dev";
@@ -91,6 +92,50 @@ function timelineWeeks(entries: ChangeEntry[]): TimelineWeek[] {
     const last = out.at(-1);
     if (last && last.week === e.week) last.phrases.push(e.phrase);
     else out.push({ week: e.week, phrases: [e.phrase] });
+  }
+  return out;
+}
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+/** Where the message box sits, by the vertical third its centre falls in. */
+const INPUT_POSITION: Record<NonNullable<CaptureMetrics["inputPosition"]>, string> = {
+  top: "a message box near the top",
+  middle: "a centered message box",
+  bottom: "a message box at the bottom",
+};
+
+/** "a, b and c". */
+const andList = (parts: string[]) => (parts.length < 2 ? parts.join("") : `${parts.slice(0, -1).join(", ")} and ${parts.at(-1)}`);
+
+/**
+ * The Key facts under a portal page's h1: up to 3 sentences from the shown week's captureMetrics() and the recorded
+ * menu changes up to that week (`entries`: this portal's, newest week first). A sentence whose values are all missing
+ * is left out; an empty list means no Key facts at all.
+ */
+export function keyFacts(name: string, week: string | null, m: CaptureMetrics | null, entries: ChangeEntry[]): string[] {
+  const out: string[] = [];
+  if (week && m) {
+    const parts: string[] = [];
+    const sidebarItems = m.navItems ? m.navItems.filter((it) => it.region === "sidebar").length : null;
+    if (m.navSidebarVisible === false) parts.push("a collapsed sidebar");
+    else if (m.sidebarPct === 0) parts.push("no sidebar");
+    else if (m.sidebarPct !== null || m.navSidebarVisible === true) parts.push(sidebarItems ? `a sidebar with ${plural(sidebarItems, "menu item", "menu items")}` : "a sidebar");
+    if (m.inputPosition) parts.push(INPUT_POSITION[m.inputPosition]);
+    if (m.suggestedPrompts !== null) parts.push(m.suggestedPrompts === 0 ? "no suggested prompts" : plural(m.suggestedPrompts, "suggested prompt", "suggested prompts"));
+    if (parts.length) out.push(`As of ${weekShort(week)}, ${name} shows ${andList(parts)}.`);
+    const scheme = m.colorScheme ? `uses a ${m.colorScheme} color scheme` : null;
+    const note = m.aiNote === null ? null : m.aiNote ? "a note about the AI's limits" : "no note about the AI's limits";
+    if (scheme && note) out.push(`It ${scheme} and shows ${note}.`);
+    else if (scheme) out.push(`It ${scheme}.`);
+    else if (note) out.push(`It shows ${note}.`);
+  }
+  const upTo = week ? entries.filter((e) => e.week <= week) : entries;
+  if (upTo.length) {
+    const latest = upTo.filter((e) => e.week === upTo[0].week);
+    const shown = latest.slice(0, 2).map((e) => e.sentence.replace(/\.$/, ""));
+    const more = latest.length > shown.length ? `, and ${plural(latest.length - shown.length, "more change", "more changes")}` : "";
+    out.push(`${latest.length === 1 ? "Most recent menu change" : "Most recent menu changes"} (week of ${weekShort(upTo[0].week)}): ${shown.join("; ")}${more}.`);
   }
   return out;
 }
@@ -203,6 +248,9 @@ ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts
     @media (max-width:640px) and (prefers-reduced-motion:no-preference){html.js .topnav-toggle:active{transform:scale(.97)}}
     h1{font-size:2rem;margin:24px 0 4px}
     .meta{color:#6b6257;margin:0 0 24px}
+    .key-facts{max-width:720px;margin:-8px 0 24px;padding:12px 16px;border:1px solid #d8cfc2;border-radius:8px;background:#fffdf9}
+    .key-facts h2{font-size:.8rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#6b6257;margin:0 0 4px}
+    .key-facts p{margin:0}
     .shots{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
     .shots figure{margin:0}
     .shots img{max-width:100%;height:auto;border:1px solid #d8cfc2;border-radius:8px;background:#fff}
@@ -351,8 +399,10 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
   // Weekly pages with a published analysis describe it in its own words (meta, og and twitter).
   const summary = weekParam !== null && cap ? summaryDescription(cap) : null;
   const aliases = PORTAL_ALIASES[slug] ?? [];
-  // The hub's "How the <Name> UI changed" timeline: recorded menu changes of this portal only.
-  const timeline = weekParam === null ? timelineWeeks((await changes(env)).filter((e) => e.slug === slug)) : [];
+  // Recorded menu changes of this portal only, newest week first: the hub's "How the <Name> UI changed" timeline, and Key facts.
+  const mine = (await changes(env)).filter((e) => e.slug === slug);
+  const timeline = weekParam === null ? timelineWeeks(mine) : [];
+  const facts = keyFacts(name, cap?.week ?? null, cap ? captureMetrics(cap) : null, mine);
   const description = weekParam === null
     ? hubDescription(name, aliases, timeline.length > 0, cap?.week ?? null)
     : summary ?? shortText(`${name} UI screenshots by ${portal.company} from the week of ${weekInWords(weekParam)}, on desktop and mobile, with a short design analysis of the interface. ${analysis}`, 300);
@@ -412,13 +462,13 @@ ${partners.map((x) => `          <li><a href="${esc(comparePath(slug, x.slug))}"
   const body = `    <main>
       <h1>${esc(name)}</h1>
       <p class="meta">${esc(byline)}${cap ? ` &middot; captured week of ${esc(weekInWords(cap.week))}` : ""}</p>
-${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screenshots">\n${shots}      </section>
+${facts.length ? `      <section class="key-facts" aria-labelledby="key-facts"><h2 id="key-facts">Key facts</h2><p>${esc(facts.join(" "))}</p></section>\n` : ""}${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screenshots">\n${shots}      </section>
 ${timelineHtml}      <section class="analysis"><h2>Design analysis</h2><p>${esc(displayedAnalysis(cap))}</p><p class="method"><a href="/how-we-analyze">How this analysis is made</a></p></section>` : `      <p>No captures yet for ${esc(name)}.</p>\n${timelineHtml.replace(/\n$/, "")}`}${compareWith}
     </main>`;
 
   if (markdown) {
     const md = portalMarkdown({
-      name, company: portal.company, canonical, cap, timeline: weekParam === null ? timeline : null, slug,
+      name, company: portal.company, canonical, cap, facts, timeline: weekParam === null ? timeline : null, slug,
       compareWith: partners.map((x) => ({ name: x.name, url: `${ORIGIN}${comparePath(slug, x.slug)}` })),
       compare: compareHash ? `${ORIGIN}/${compareHash}` : null,
       shots: shotImages.map((img) => ({ device: img.device, url: img.url.startsWith("/") ? `${ORIGIN}${img.url}` : img.url })),
@@ -462,6 +512,15 @@ ${timelineHtml}      <section class="analysis"><h2>Design analysis</h2><p>${esc(
         dateModified: cap.analysis_published_at,
         ...(image ? { image: image.url } : {}),
         about: { "@type": "SoftwareApplication", name, ...(aliases.length ? { alternateName: aliases } : {}), publisher: { "@type": "Organization", name: portal.company } },
+      }] : []),
+      // The page itself, dated by the week it shows.
+      ...(cap ? [{
+        "@type": "WebPage",
+        "@id": canonical,
+        url: canonical,
+        name: weekParam !== null ? `${name} UI \u2014 week of ${weekInWords(weekParam)}` : hubTitle(name),
+        ...(facts.length ? { description: facts.join(" ") } : {}),
+        dateModified: cap.week,
       }] : []),
     ],
   };
@@ -747,6 +806,10 @@ export async function handleSitemap(env: Env): Promise<Response> {
     const changesMod = changesLastmod(await changes(env));
     if (changesMod) entries.push({ loc: `${ORIGIN}/changes`, lastmod: changesMod, images: [] });
     entries.push({ loc: CHANGELOG_URL, lastmod: CHANGELOG_UPDATED, images: [] });
+    // Weekly digests (src/weeks.ts): the indexable weeks, and /weeks once it lists one.
+    const digests = (await weekDigests(env)).filter((d) => d.indexable);
+    if (digests.length) entries.push({ loc: `${ORIGIN}/weeks`, lastmod: digests.map((d) => d.lastmod).filter((t): t is string => !!t).sort().at(-1), images: [] });
+    for (const d of digests) entries.push({ loc: `${ORIGIN}/weeks/${d.week}`, lastmod: d.lastmod, images: d.images.map((i) => `${ORIGIN}${shotUrl(i.key, i.slug, i.capturedAt)}`) });
     const seen = new Set<string>();
     for (const r of rows) {
       // The portal page shows its newest week, which is the first row for each portal.
@@ -768,18 +831,19 @@ ${entries.map(entry).join("\n")}
   return new Response(xml, { headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" } });
 }
 
-/** /feed.xml: one item per portal per week with a published analysis, newest first. */
+/** /feed.xml: one item per portal per week with a published analysis, newest first, each linked to its week's digest (/weeks/<week>). */
 export async function handleFeed(env: Env): Promise<Response> {
   const xml = await cached(env, "cache:feed", 300, async () => {
     const rows = (await feedCaptures(env)).filter((r) => !SYSTEM_TEST_WEEKS.includes(r.week) && isPublishedAnalysis(r));
     const when = (r: { captured_at: string; analysis_published_at: string | null }) =>
       Math.max(...[r.captured_at, r.analysis_published_at].map((t) => Date.parse(t ?? "")).filter((n) => !Number.isNaN(n)));
     const items = rows.map((r) => {
-      const link = `${ORIGIN}/portals/${r.slug}/${r.week}`;
+      // The guid stays the portal's weekly page, so items already in readers keep their identity.
+      const guid = `${ORIGIN}/portals/${r.slug}/${r.week}`;
       return `    <item>
       <title>${esc(`${r.name} interface — week of ${weekInWords(r.week)}`)}</title>
-      <link>${esc(link)}</link>
-      <guid isPermaLink="true">${esc(link)}</guid>
+      <link>${esc(`${ORIGIN}/weeks/${r.week}`)}</link>
+      <guid isPermaLink="true">${esc(guid)}</guid>
       <pubDate>${new Date(when(r)).toUTCString()}</pubDate>
       <description>${esc(feedSummary(r))}</description>
     </item>`;
@@ -819,7 +883,8 @@ export function changeLine(e: ChangeEntry): string {
 /** /changes: every menu change recorded in a published analysis, newest week first, each linked to its weekly page. */
 export async function handleChanges(request: Request, env: Env): Promise<Response> {
   if (request.method !== "GET" && request.method !== "HEAD") return new Response("method not allowed", { status: 405 });
-  const entries = await changes(env);
+  const [entries, digests] = await Promise.all([changes(env), weekDigests(env)]);
+  const latestDigest = latestIndexableWeek(digests);
   const url = (e: ChangeEntry) => `/portals/${e.slug}/${e.week}`;
   const list = entries.length
     ? `      <ul>\n${entries.map((e) => `        <li><a href="${esc(url(e))}">${esc(changeLine(e))}</a></li>`).join("\n")}\n      </ul>`
@@ -828,7 +893,7 @@ export async function handleChanges(request: Request, env: Env): Promise<Respons
       <h1>Menu changes</h1>
       <p class="meta">Changes to the built-in menu items of AI products, from one weekly capture to the next.</p>
       <p>Each line comes from a published design analysis that compares a product&#39;s desktop screen with the week before. Only menu items that can be seen and clicked are compared, and changes that could come from the account, the plan or the interface language are left out. <a href="/how-we-analyze">How we analyze</a></p>
-${list}
+${latestDigest ? `      <p>Latest week: <a href="/weeks/${esc(latestDigest)}">AI interface changes, week of ${esc(weekShort(latestDigest))}</a> &middot; <a href="/weeks">All weeks</a></p>\n` : ""}${list}
     </main>`;
   const jsonLd = {
     "@context": "https://schema.org",
@@ -852,16 +917,17 @@ ${list}
 }
 
 /** Markdown version of a portal page: the same facts as the HTML page, plus its menu items and menu changes. */
-function portalMarkdown(o: { name: string; slug: string; company: string; canonical: string; cap: CaptureRow | null; timeline: TimelineWeek[] | null; shots: { device: string; url: string }[]; compare: string | null; compareWith: { name: string; url: string }[] }): string {
+function portalMarkdown(o: { name: string; slug: string; company: string; canonical: string; cap: CaptureRow | null; facts: string[]; timeline: TimelineWeek[] | null; shots: { device: string; url: string }[]; compare: string | null; compareWith: { name: string; url: string }[] }): string {
   const lines = [`# ${o.name}`, "", `- Company: ${o.company}`];
   // Hub only: the same "How the <Name> UI changed" list as the HTML page.
   const timeline = o.timeline === null ? [] : [`## How the ${o.name} UI changed`, "", ...(o.timeline.length
     ? o.timeline.map((w) => `- [${weekInWords(w.week)}](${ORIGIN}/portals/${o.slug}/${w.week}) \u2014 ${w.phrases.join("; ")}`)
     : [`No menu changes have been recorded for ${o.name} yet.`]), ""];
   const compareWith = o.compareWith.length ? ["## Compare with other products", "", ...o.compareWith.map((c) => `- [Compare with ${c.name}](${c.url})`), ""] : [];
-  if (!o.cap) return [...lines, `- Page: ${o.canonical}`, "", `No captures yet for ${o.name}.`, "", ...timeline, ...compareWith].join("\n");
+  const facts = o.facts.length ? ["## Key facts", "", o.facts.join(" "), ""] : [];
+  if (!o.cap) return [...lines, `- Page: ${o.canonical}`, "", ...facts, `No captures yet for ${o.name}.`, "", ...timeline, ...compareWith].join("\n");
   const cap = o.cap;
-  lines.push(`- Week: week of ${weekInWords(cap.week)} (${cap.week})`, `- Page: ${o.canonical}`, ...(o.compare ? [`- Compare week by week: ${o.compare}`] : []), "", "## Design analysis", "", displayedAnalysis(cap), "");
+  lines.push(`- Week: week of ${weekInWords(cap.week)} (${cap.week})`, `- Page: ${o.canonical}`, ...(o.compare ? [`- Compare week by week: ${o.compare}`] : []), "", ...facts, "## Design analysis", "", displayedAnalysis(cap), "");
 
   const m = captureMetrics(cap);
   lines.push("## Menu items", "");

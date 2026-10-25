@@ -342,9 +342,13 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .manual-results .manual-cell figcaption{flex:0 0 auto}
 
 /* ---------- section head ---------- */
-.section-head{display:flex;align-items:center;gap:18px;margin-bottom:22px}
+.section-head{display:flex;flex-wrap:wrap;align-items:center;gap:4px 18px;margin-bottom:22px}
 .section-head h2{font-size:16px;font-weight:600;letter-spacing:-.01em;margin:0;white-space:nowrap}
 .section-rule{flex:1;height:1px;background:linear-gradient(90deg,var(--cf-border-strong),transparent)}
+/* The week's digest (/weeks/<week>), at the right end of the week heading's row. */
+.section-link{display:inline-flex;align-items:center;gap:6px;min-height:32px;font-size:13px;font-weight:600;color:var(--cf-orange-ink);text-decoration:none;white-space:nowrap}
+.section-link[hidden]{display:none}
+@media (hover:hover){.section-link:hover{text-decoration:underline}}
 
 /* ---------- gallery ---------- */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:22px}
@@ -645,7 +649,7 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--cf-orange
   .weekpick{flex:1 1 160px;justify-content:flex-end}
   #weekSelect,#collectionWeekSelect{max-width:100%;font-size:13px;padding:8px 32px 8px 12px}
 
-  .section-head{gap:12px;margin-bottom:14px}
+  .section-head{gap:4px 12px;margin-bottom:14px}
   .week-title{font-size:22px}
   .grid{grid-template-columns:1fr;gap:18px}
   .card{border-radius:14px}

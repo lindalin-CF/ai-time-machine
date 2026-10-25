@@ -1,7 +1,7 @@
 import type { Env, PortalRow, CaptureRow } from "./types";
 
 /** Prefix for every KV-cached API payload (bump to orphan all cached responses). */
-export const CACHE_VERSION = "v4-change-phrase";
+export const CACHE_VERSION = "v5-week-digests";
 
 /** All active portals, capture order. */
 export async function listPortals(env: Env): Promise<PortalRow[]> {

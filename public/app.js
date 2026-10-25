@@ -473,6 +473,12 @@ function matchesSearch(c, q) {
 function updateWeekHeading(list) {
   const heading = $("#weekHeading");
   if (!heading) return;
+  // "This week's changes": the shown week's digest page (/weeks/<week>).
+  const digest = $("#weekDigest");
+  if (digest) {
+    digest.hidden = !state.week;
+    if (state.week) digest.href = `/weeks/${encodeURIComponent(state.week)}`;
+  }
   if (!state.label) {
     heading.textContent = "No captures yet";
     return;

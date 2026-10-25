@@ -5,6 +5,7 @@ import { capturePortal } from "./capture";
 import { handlePortalPage, handleSitemap, handleFeed, handleHowWeAnalyze, handlePrivacy, handleChanges, handleLicense, handleChangelog } from "./portal-page";
 import { handleLlmsTxt, handleLlmsFullTxt } from "./aeo";
 import { handleComparePage } from "./compare-page";
+import { handleWeeks } from "./week-page";
 import { handleHomepage } from "./homepage";
 import { isVoiceRoomPath } from "./voice-room";
 import { expireLegacyRoom } from "./voice";
@@ -32,6 +33,7 @@ async function route(request: Request, url: URL, env: Env, ctx: ExecutionContext
     if (url.pathname.startsWith("/img/")) return await handleImage(request, env);
     if (url.pathname.startsWith("/portals/")) return await handlePortalPage(request, env);
     if (url.pathname.startsWith("/compare/")) return await handleComparePage(request, env);
+    if (url.pathname === "/weeks" || url.pathname.startsWith("/weeks/")) return await handleWeeks(request, env);
     if (url.pathname === "/sitemap.xml") return await handleSitemap(env);
     if (url.pathname === "/feed.xml") return await handleFeed(env);
     if (url.pathname === "/how-we-analyze" || url.pathname === "/how-we-analyze/") return handleHowWeAnalyze(request);

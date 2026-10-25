@@ -15,6 +15,19 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "weekly-digests",
+    date: "2026-10-24",
+    time: "19:50",
+    title: "A Digest for Every Week",
+    subtitle: "Pages like /weeks/2026-10-19 sum up each weekly capture, and portal pages open with Key facts",
+    bullets: [
+      { lead: "One page per week", text: "Each digest says how many products were captured and which changed their menu items, with the changes in the same words as the portal timeline, a small screenshot, and links to the product's weekly page and a comparison. Products without changes are listed on one line." },
+      { lead: "Easy to find", text: "/weeks lists every week, newest first. The homepage's week heading links to that week's digest, /changes links to the latest one, and RSS items now open their week's digest. Weeks with published analyses are in the sitemap and llms.txt, and every digest has a Markdown version with .md added." },
+      { lead: "Key facts", text: "Portal pages start with 2 or 3 sentences from the week's measurements: the sidebar and its menu items, where the message box sits, suggested prompts, the color scheme, and the most recent menu change. A fact without data is left out." },
+    ],
+    closing: "Open /weeks.",
+  },
+  {
     slug: "comparison-pages",
     date: "2026-10-24",
     time: "17:34",
