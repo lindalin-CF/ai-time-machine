@@ -466,24 +466,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .card-link:focus-visible::after{outline:2px solid var(--brand);outline-offset:-2px;border-radius:inherit}
 .card .visit,.card .analysis-toggle,.card .analysis-method,.card .manual-open,.card .details-link{position:relative;z-index:1}
 
-.lb{position:fixed;inset:0;z-index:120;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px}
-.lb[hidden]{display:none}
-.lb-backdrop{position:absolute;inset:0;background:rgba(30,12,0,.68);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
-/* control cluster sits ABOVE the image, outside the figure, aligned to its right edge */
-.lb-controls{position:relative;z-index:130;width:min(1100px,94vw);display:flex;justify-content:flex-end;gap:8px}
-.lb-figure{
-  position:relative;z-index:125;margin:0;max-width:min(1100px,94vw);max-height:calc(92vh - 52px);
-  display:flex;background:var(--cf-bg-100,#f5f1e9);
-  border:1px solid var(--cf-border-strong,#c8bba4);border-radius:var(--radius,14px);
-  overflow:hidden;box-shadow:0 30px 80px -30px rgba(66,50,23,.6);
-}
-.lb-img{width:auto;height:auto;max-width:100%;max-height:calc(92vh - 52px);object-fit:contain;background:var(--cf-bg-300,#ded4c6);display:block}
-.lb-icon{width:38px;height:38px;display:grid;place-items:center;border:none;cursor:pointer;text-decoration:none;
-  border-radius:50%;background:rgba(20,10,0,.6);color:#fff;
-  -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);transition:background-color .15s ease-out,transform .15s ease-out}
-@media(hover:hover) and (pointer:fine){.lb-icon:hover{transform:translateY(-1px)}}
-.lb-download:hover{background:var(--brand)}
-.lb-close:hover{background:rgba(20,10,0,.82)}
+/* The lightbox itself: public/lightbox.css. */
 
 
 
@@ -672,12 +655,6 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
   .col-item .shot.mobile{aspect-ratio:9/16}
   .col-cap{font-size:12px}
   .col-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-  .lb{padding:14px;gap:8px}
-  .lb-controls{width:100%;max-width:94vw}
-  .lb-figure{max-width:94vw;max-height:calc(90vh - 58px)}
-  .lb-img{max-height:calc(90vh - 58px)}
-  .lb-icon{width:36px;height:36px}
 
   .voice-panel{width:calc(100vw - 32px)} /* position and size on phones: public/voice.js */
 }

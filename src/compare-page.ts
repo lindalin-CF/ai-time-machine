@@ -7,7 +7,7 @@ import { desktopSize } from "./api";
 import { consentMode, PRIVATE_HTML_CACHE } from "./consent";
 import { shotAlt, weekInWords, weekShort } from "./format";
 import { comparePair, comparePath, compareTableHash, parseComparePath, type ComparePair } from "./compare";
-import { BRAND, HTML_HEADERS, MARKDOWN_HEADERS, ORIGIN, changes, esc, hubTitle, page, shotUrl, type PreviewImage } from "./portal-page";
+import { BRAND, HTML_HEADERS, MARKDOWN_HEADERS, ORIGIN, changes, esc, hubTitle, page, shotLink, shotUrl, type PreviewImage } from "./portal-page";
 import type { ChangeEntry } from "./nav-changes";
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
@@ -103,7 +103,7 @@ export async function handleComparePage(request: Request, env: Env): Promise<Res
     ? `<ul>\n${items.map((l) => `          <li>${esc(l)}</li>`).join("\n")}\n        </ul>`
     : `<p class="cmp-empty">${esc(empty)}</p>`;
   const noData = pair.week ? "Not enough data to compare." : "No week with screenshots of both yet.";
-  const figures = shots.map((s) => `        <figure><img src="${esc(s.url)}" alt="${esc(s.alt)}" width="${s.width}" height="${s.height}" loading="eager" /><figcaption><a href="/portals/${esc(s.portal.slug)}/${esc(s.week)}">${esc(s.portal.name)}</a> &middot; desktop &middot; week of ${esc(weekInWords(s.week))}</figcaption></figure>`).join("\n");
+  const figures = shots.map((s) => `        <figure>${shotLink({ slug: s.portal.slug, name: s.portal.name, week: s.week, device: "desktop", url: s.url, group: "shots" }, `<img src="${esc(s.url)}" alt="${esc(s.alt)}" width="${s.width}" height="${s.height}" loading="eager" />`)}<figcaption><a href="/portals/${esc(s.portal.slug)}/${esc(s.week)}">${esc(s.portal.name)}</a> &middot; desktop &middot; week of ${esc(weekInWords(s.week))}</figcaption></figure>`).join("\n");
   const menuHtml = menu.map(({ portal, latest }) => latest
     ? `        <h3>${esc(portal.name)}</h3>\n        <p>Week of <a href="/portals/${esc(portal.slug)}/${esc(latest.week)}">${esc(weekInWords(latest.week))}</a>, compared with the week of ${esc(weekInWords(latest.previousWeek))}:</p>\n        ${list(latest.sentences, "")}`
     : `        <h3>${esc(portal.name)}</h3>\n        <p class="cmp-empty">No menu changes have been recorded for ${esc(portal.name)} yet.</p>`).join("\n");
@@ -171,6 +171,7 @@ ${menuHtml}
     jsonLd,
     markdown: `${canonical}.md`,
     head: COMPARE_PAGE_HEAD,
+    lightbox: shots.length > 0,
     body,
   });
   return new Response(request.method === "HEAD" ? null : html, { headers: { ...HTML_HEADERS, "cache-control": PRIVATE_HTML_CACHE } });

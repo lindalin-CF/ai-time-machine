@@ -149,7 +149,25 @@ export function siteHeader(): string {
     </header>`;
 }
 
-export function page(opts: { title: string; description: string; canonical?: string; noindex?: boolean; image?: PreviewImage; jsonLd?: unknown; markdown?: string; head?: string; consent: ConsentMode; body: string }): string {
+/**
+ * A screenshot <img> wrapped in a link to its original full-size file, which public/lightbox.js opens in the lightbox
+ * (a set of `group`, walked with the arrows; download name and GA4 params as on the homepage). Without JS it opens the image.
+ */
+export function shotLink(o: { slug: string; name: string; week: string; device: "desktop" | "mobile"; url: string; group: string }, img: string): string {
+  const device = o.device === "mobile" ? "Mobile" : "Desktop";
+  const file = `${o.slug}-${o.week}${o.device === "mobile" ? "-mobile" : ""}`;
+  const label = `Open the ${o.name} ${o.device} screenshot, week of ${weekInWords(o.week)}, full size`;
+  return `<a class="shot-link" href="${esc(o.url)}" aria-label="${esc(label)}" data-full="${esc(o.url)}" data-lb-group="${esc(o.group)}" data-title="${esc(o.name)}" data-caption="${esc(`${o.name} · ${device} · week of ${weekInWords(o.week)}`)}" data-file="${esc(file)}" data-ga-image="${esc(`${o.slug}-${o.week}-${o.device}`)}" data-ga-source="weekly_capture" data-ga-portal="${esc(o.slug)}" data-ga-week="${esc(o.week)}" data-ga-device="${o.device}">${img}</a>`;
+}
+
+/** The lightbox's stylesheet and script, for page({ lightbox: true }). */
+const LIGHTBOX_HEAD = `  <link rel="stylesheet" href="/lightbox.css" />
+`;
+const LIGHTBOX_SCRIPT = `  <!-- Screenshots open large in the lightbox, as on the homepage. -->
+  <script type="module">import { initLightbox } from "/lightbox.js"; initLightbox();</script>
+`;
+
+export function page(opts: { title: string; description: string; canonical?: string; noindex?: boolean; image?: PreviewImage; jsonLd?: unknown; markdown?: string; head?: string; lightbox?: boolean; consent: ConsentMode; body: string }): string {
   return `<!doctype html>
 <html lang="en" data-consent="${opts.consent}">
 <head>
@@ -243,8 +261,10 @@ ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts
     .contact-copy:hover{border-color:#6b6257}
     .contact-mail{display:inline-flex;align-items:center;padding:8px 16px;border-radius:8px;background:#231f1a;color:#fffdf9;text-decoration:none}
     .contact-mail:hover{background:#3a332b}
+    .shot-link{display:block;border-radius:8px;cursor:zoom-in}
+    .shot-link img{display:block}
   </style>
-${opts.head ?? ""}</head>
+${opts.lightbox ? LIGHTBOX_HEAD : ""}${opts.head ?? ""}</head>
 <body>
   <div class="wrap">
 ${siteHeader()}
@@ -257,7 +277,7 @@ ${FOOTER_LEGAL}
   <script src="/site-menu.js" defer></script>
   <!-- GA4 events for the Compare links (sent only when consent.js has loaded gtag). -->
   <script src="/track.js" type="module"></script>
-</body>
+${opts.lightbox ? LIGHTBOX_SCRIPT : ""}</body>
 </html>`;
 }
 
@@ -361,13 +381,13 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
     const d = desktopSize(cap);
     const dAlt = shotAlt(name, "desktop", cap.week);
     shotImages.push({ device: "Desktop", url: desktop, alt: dAlt, ...d });
-    shots += `      <figure class="desktop"><img src="${esc(desktop)}" alt="${esc(dAlt)}" width="${d.width}" height="${d.height}" loading="eager" /><figcaption>Desktop &middot; week of ${esc(weekInWords(cap.week))}</figcaption></figure>\n`;
+    shots += `      <figure class="desktop">${shotLink({ slug, name, week: cap.week, device: "desktop", url: desktop, group: "shots" }, `<img src="${esc(desktop)}" alt="${esc(dAlt)}" width="${d.width}" height="${d.height}" loading="eager" />`)}<figcaption>Desktop &middot; week of ${esc(weekInWords(cap.week))}</figcaption></figure>\n`;
     if (cap.r2_key_mobile) {
       const mobile = shotUrl(cap.r2_key_mobile, slug, cap.captured_at);
       const m = (await mobileSize(env, cap)) ?? MOBILE_CAPTURE_SIZE;
       const mAlt = shotAlt(name, "mobile", cap.week);
       shotImages.push({ device: "Mobile", url: mobile, alt: mAlt, ...m });
-      shots += `      <figure class="mobile"><img src="${esc(mobile)}" alt="${esc(mAlt)}" width="${m.width}" height="${m.height}" loading="lazy" /><figcaption>Mobile &middot; week of ${esc(weekInWords(cap.week))}</figcaption></figure>\n`;
+      shots += `      <figure class="mobile">${shotLink({ slug, name, week: cap.week, device: "mobile", url: mobile, group: "shots" }, `<img src="${esc(mobile)}" alt="${esc(mAlt)}" width="${m.width}" height="${m.height}" loading="lazy" />`)}<figcaption>Mobile &middot; week of ${esc(weekInWords(cap.week))}</figcaption></figure>\n`;
     }
   }
 
@@ -481,6 +501,7 @@ ${timelineHtml}      <section class="analysis"><h2>Design analysis</h2><p>${esc(
     markdown: `${canonical}.md`,
     noindex: !!cap && SYSTEM_TEST_WEEKS.includes(cap.week),
     head: compareHash ? COMPARE_HEAD : undefined,
+    lightbox: shotImages.length > 0,
     body,
   });
   return new Response(request.method === "HEAD" ? null : html, {

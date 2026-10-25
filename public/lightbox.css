@@ -1,0 +1,67 @@
+/* Screenshot lightbox (public/lightbox.js): the homepage and the server-rendered portal and /compare pages.
+   Colours fall back to the homepage's values, since the server pages don't load styles.css. */
+.lb{position:fixed;inset:0;z-index:120;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;
+  opacity:0;transition:opacity .2s ease-out}
+.lb[hidden]{display:none}
+.lb--open{opacity:1}
+.lb-backdrop{position:absolute;inset:0;background:rgba(30,12,0,.68);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+/* control cluster sits ABOVE the image, outside the figure, aligned to its right edge; the caption takes the left */
+.lb-controls{position:relative;z-index:130;width:min(1100px,94vw);display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.lb-caption{margin:0 auto 0 0;min-width:0;display:flex;align-items:baseline;gap:10px;color:#fff;
+  font-family:var(--font-sans,'Space Grotesk',system-ui,sans-serif);font-size:14px;font-weight:500;line-height:1.3;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.lb-caption[hidden]{display:none}
+.lb-count{flex:none;font-family:var(--font-mono,'JetBrains Mono',ui-monospace,monospace);font-size:12px;letter-spacing:.04em;
+  padding:3px 8px;border-radius:999px;background:rgba(20,10,0,.6)}
+.lb-count:empty{display:none}
+.lb-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-figure{
+  position:relative;z-index:125;margin:0;max-width:min(1100px,94vw);max-height:calc(92vh - 52px);
+  display:flex;background:var(--cf-bg-100,#f5f1e9);
+  border:1px solid var(--cf-border-strong,#c8bba4);border-radius:var(--radius,14px);
+  overflow:hidden;box-shadow:0 30px 80px -30px rgba(66,50,23,.6);
+  transform:scale(.96);transition:transform .2s ease-out;
+}
+.lb--open .lb-figure{transform:none}
+.lb-figure:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.lb-img{width:auto;height:auto;max-width:100%;max-height:calc(92vh - 52px);object-fit:contain;background:var(--cf-bg-300,#ded4c6);display:block;cursor:zoom-in}
+/* Actual size: the image at 1:1 in a frame of the fitted size's largest box, scrolled or dragged. */
+.lb--actual .lb-figure{width:min(1100px,94vw);height:calc(92vh - 52px);display:block;overflow:auto;overscroll-behavior:contain;cursor:zoom-out}
+.lb--actual .lb-img{max-width:none;max-height:none;cursor:inherit}
+.lb--actual .lb-figure.lb-dragging{cursor:grabbing}
+.lb-icon{width:38px;height:38px;flex:none;display:grid;place-items:center;border:none;cursor:pointer;text-decoration:none;
+  border-radius:50%;background:rgba(20,10,0,.6);color:#fff;
+  -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);transition:background-color .15s ease-out,transform .15s ease-out}
+.lb-icon:focus-visible{outline:2px solid #fff;outline-offset:2px}
+@media(hover:hover) and (pointer:fine){.lb-icon:hover{transform:translateY(-1px)}}
+.lb-download:hover{background:var(--brand)}
+.lb-close:hover,.lb-actual:hover,.lb-nav:hover{background:rgba(20,10,0,.82)}
+.lb-actual[aria-pressed="true"]{background:var(--brand)}
+.lb-i-shrink,.lb-actual[aria-pressed="true"] .lb-i-expand{display:none}
+.lb-actual[aria-pressed="true"] .lb-i-shrink{display:block}
+/* prev / next: at the screen's sides, level with the image's middle */
+.lb-nav{position:absolute;z-index:130;top:50%;width:44px;height:44px;margin-top:-22px}
+.lb-nav[hidden]{display:none}
+.lb-prev{left:16px}
+.lb-next{right:16px}
+@media(hover:hover) and (pointer:fine){.lb-nav:hover{transform:translateY(-1px)}}
+
+/* Phones: full-screen. The controls lie over the top of the image, prev / next over its bottom corners. Fit mode keeps
+   pinch gestures off the page; Actual size allows pinch-zoom and scrolling. */
+@media(max-width:640px){
+  .lb{padding:0;gap:0}
+  .lb-backdrop{background:rgba(20,8,0,.92)}
+  .lb-controls{position:absolute;top:0;left:0;right:0;width:auto;padding:10px 12px;
+    background:linear-gradient(rgba(20,8,0,.55),rgba(20,8,0,0))}
+  .lb-caption{font-size:13px}
+  .lb-figure,.lb--actual .lb-figure{width:100vw;max-width:100vw;height:100vh;height:100dvh;max-height:none;border:0;border-radius:0;
+    background:transparent;box-shadow:none;align-items:center;justify-content:center;touch-action:none}
+  .lb-img{max-height:100vh;max-height:100dvh;background:transparent}
+  .lb--actual .lb-figure{touch-action:pan-x pan-y pinch-zoom}
+  .lb-icon{width:36px;height:36px}
+  .lb-nav{top:auto;bottom:16px;margin-top:0;width:44px;height:44px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .lb,.lb-figure{transition:none}
+  .lb-figure{transform:none}
+}

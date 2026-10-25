@@ -3,6 +3,7 @@ import { anCanvasState, findingsCellHTML, mountAnCanvas, tableFindings, unmountA
 import { buildAnalyticsHash, compareHash, hashRoute, libraryCompareHash, parseAnalyticsHash } from "./analytics-share.js";
 import { closeWeekPicks, weekPick } from "./analytics-weekpick.js";
 import { deviceToggle } from "./device-toggle.js";
+import { initLightbox } from "./lightbox.js";
 import { setNavCompareParams, track, trackCompare } from "./track.js";
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -633,76 +634,6 @@ function fmtDate(iso) {
   } catch {
     return "Captured";
   }
-}
-
-// ---- lightbox: click a screenshot to enlarge + download --------------------
-function initLightbox() {
-  const el = document.createElement("div");
-  el.className = "lb";
-  el.hidden = true;
-  el.innerHTML = `
-    <div class="lb-backdrop" data-close></div>
-    <div class="lb-controls">
-      <a class="lb-icon lb-download" href="#" download aria-label="Download PNG" title="Download PNG">
-        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 3a1 1 0 0 1 1 1v9.59l3.3-3.3a1 1 0 1 1 1.4 1.42l-5 5a1 1 0 0 1-1.4 0l-5-5a1 1 0 1 1 1.4-1.42l3.3 3.3V4a1 1 0 0 1 1-1Z"/><path fill="currentColor" d="M5 19a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z"/></svg>
-      </a>
-      <button class="lb-icon lb-close" type="button" aria-label="Close" title="Close" data-close>
-        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M6.4 5A1 1 0 0 0 5 6.4L10.6 12 5 17.6A1 1 0 1 0 6.4 19L12 13.4 17.6 19a1 1 0 0 0 1.4-1.4L13.4 12 19 6.4A1 1 0 1 0 17.6 5L12 10.6Z"/></svg>
-      </button>
-    </div>
-    <figure class="lb-figure">
-      <img class="lb-img" alt="" />
-    </figure>`;
-  document.body.appendChild(el);
-  const img = el.querySelector(".lb-img");
-  const dl = el.querySelector(".lb-download");
-
-  const close = () => {
-    el.hidden = true;
-    img.removeAttribute("src");
-    document.body.style.overflow = "";
-  };
-  let meta = {}; // the shot on screen, for the file_download event
-  const open = (full, t, file, thumb, data = {}) => {
-    meta = { image_id: data.gaImage, image_source: data.gaSource, portal: data.gaPortal, week: data.gaWeek, device: data.gaDevice };
-    // The enlarged image is the same file as the thumbnail, so it takes the thumbnail's size and alt.
-    for (const a of ["width", "height"]) {
-      if (thumb?.getAttribute(a)) img.setAttribute(a, thumb.getAttribute(a)); else img.removeAttribute(a);
-    }
-    img.src = full;
-    img.alt = thumb?.alt || t + " screenshot";
-    dl.href = full;
-    dl.setAttribute("download", (file || "screenshot") + ".png");
-    el.hidden = false;
-    document.body.style.overflow = "hidden";
-  };
-
-  el.addEventListener("click", (e) => { if (e.target.closest("[data-close]")) close(); });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !el.hidden) close(); });
-
-  // Force a real download (same-origin) instead of navigating to the image.
-  dl.addEventListener("click", async (e) => {
-    e.preventDefault();
-    const name = dl.getAttribute("download") || "screenshot.png";
-    try {
-      const res = await fetch(dl.href);
-      const url = URL.createObjectURL(await res.blob());
-      const a = document.createElement("a");
-      a.href = url; a.download = name;
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 4000);
-      track("file_download", { download_type: "screenshot_png", file_name: name, file_extension: "png", ...meta });
-    } catch {
-      window.open(dl.href, "_blank", "noopener");
-    }
-  });
-
-  // Delegate clicks from any thumbnail carrying data-full (gallery + collection).
-  document.body.addEventListener("click", (e) => {
-    const shot = e.target.closest("[data-full]");
-    if (!shot) return;
-    open(shot.dataset.full, shot.dataset.title || "Screenshot", shot.dataset.file, shot.querySelector("img"), shot.dataset);
-  });
 }
 
 // ---- collection: one-pager of the whole week + download-all ----------------

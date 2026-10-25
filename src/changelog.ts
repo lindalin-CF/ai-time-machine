@@ -15,6 +15,20 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "screenshot-lightbox",
+    date: "2026-10-24",
+    time: "21:19",
+    title: "Screenshots Open Full Size",
+    subtitle: "On portal pages and comparison pages, click a screenshot to see it large",
+    bullets: [
+      { lead: "Same viewer as the homepage", text: "A click on a screenshot on a portal page or a comparison page opens it in the homepage's viewer, with the same Download PNG button. Without JavaScript the screenshot links to the image file." },
+      { lead: "The original file", text: "The viewer shows the full-resolution capture, fitted to the screen. Actual size, or a click on the image, shows it pixel for pixel so small text is readable; scroll or drag to move around, and click again to fit it back." },
+      { lead: "Step through", text: "When a page has more than one screenshot, such as desktop and mobile or the two sides of a comparison, the arrow keys and the previous and next buttons move between them, with a counter and a caption naming the portal, device and week." },
+      { lead: "Keyboard and phones", text: "Focus moves into the viewer and back to the screenshot when it closes. Esc or a click outside the image closes it. On phones it fills the screen, and Actual size can be pinch-zoomed." },
+    ],
+    closing: "Open a portal page.",
+  },
+  {
     slug: "one-brand-orange",
     date: "2026-10-24",
     time: "21:03",
