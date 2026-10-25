@@ -131,7 +131,7 @@ describe('/weeks/<week>', () => {
     expect(page).toContain(`<link rel="alternate" type="text/markdown" href="${ORIGIN}/weeks/${NEW}.md" />`);
   });
 
-  it('has a section per changed portal: its changes in timeline wording, a thumbnail, its weekly page and a comparison', async () => {
+  it('has a section per changed portal: its changes in timeline wording, a thumbnail, its weekly page and this week vs last week in Compare', async () => {
     const page = await html(`/weeks/${NEW}`);
     const sections = [...page.matchAll(/<section class="wk-portal" id="([^"]+)">([\s\S]*?)<\/section>/g)];
     expect(sections.map((m) => m[1])).toEqual(['chatgpt', 'gemini']); // portal order, Claude and Poe have none
@@ -141,10 +141,11 @@ describe('/weeks/<week>', () => {
     expect(chatgpt).toContain('<li>More renamed to Explore</li>');
     expect(chatgpt).toMatch(new RegExp(`<img src="/img/shots/${NEW}/chatgpt.local.png\\?v=\\d+" alt="ChatGPT UI screenshot, desktop, week of October 12, 2026" width="\\d+" height="\\d+" loading="lazy" />`));
     expect(chatgpt).toContain(`<a href="/portals/chatgpt/${NEW}">ChatGPT, week of Oct 12, 2026</a>`);
-    expect(chatgpt).toContain('<a href="/compare/chatgpt-vs-claude">ChatGPT vs Claude</a>');
+    expect(chatgpt).toContain(`<a href="/#compare?view=canvas&amp;mode=time&amp;portal=chatgpt&amp;weeks=${NEW},${OLD}&amp;device=desktop" aria-label="See ChatGPT this week vs last week">See this week vs last week</a>`);
+    expect(page).not.toContain('href="/compare/');
     expect(gemini).toContain('<li>Top bar button icon changed (star icon → spark icon)</li>');
     expect(gemini).toContain('<li>Gems added to the sidebar</li>');
-    expect(gemini).toContain('<a href="/compare/chatgpt-vs-gemini">Gemini vs ChatGPT</a>');
+    expect(gemini).toContain(`<a href="/#compare?view=canvas&amp;mode=time&amp;portal=gemini&amp;weeks=${NEW},${OLD}&amp;device=desktop" aria-label="See Gemini this week vs last week">See this week vs last week</a>`);
   });
 
   it('lists the portals without recorded changes on one line', async () => {
@@ -201,7 +202,7 @@ describe('/weeks/<week>', () => {
       'Compared with the week of October 5, 2026:', '',
       '- More renamed to Explore', '',
       `- Weekly page: ${ORIGIN}/portals/chatgpt/${NEW}`,
-      `- ChatGPT vs Claude: ${ORIGIN}/compare/chatgpt-vs-claude`,
+      `- See this week vs last week: ${ORIGIN}/#compare?view=canvas&mode=time&portal=chatgpt&weeks=${NEW},${OLD}&device=desktop`,
     ].join('\n'))).toBe(true);
     expect(text).toContain('## Gemini');
     expect(text.trimEnd().endsWith('No recorded menu changes: Claude, Poe.')).toBe(true);

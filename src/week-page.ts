@@ -1,14 +1,14 @@
 // /weeks/<week>: a crawlable digest of one week's captures (src/weeks.ts): how many portals were captured, each
-// changed portal's recorded menu changes with a small desktop screenshot, and the portals without changes.
+// changed portal's recorded menu changes with a small desktop screenshot and a link to Compare (this week vs the
+// week its analysis compared with), and the portals without changes.
 // /weeks lists every week, newest first. Both are built from existing data only.
-import type { Env, PortalRow } from "./types";
-import { capturesForWeek, listPortals } from "./db";
+import type { Env } from "./types";
+import { capturesForWeek } from "./db";
 import { desktopSize } from "./api";
 import { consentMode, PRIVATE_HTML_CACHE } from "./consent";
 import { shotAlt, weekInWords, weekShort } from "./format";
-import { POPULAR_PAIRINGS, comparePath } from "./compare";
 import { SYSTEM_TEST_WEEKS } from "./analysis";
-import { BRAND, HTML_HEADERS, MARKDOWN_HEADERS, ORIGIN, SITE_PERSON, esc, page, shotUrl, type PreviewImage } from "./portal-page";
+import { BRAND, HTML_HEADERS, MARKDOWN_HEADERS, ORIGIN, SITE_PERSON, compareWeeksHash, esc, page, shotUrl, type PreviewImage } from "./portal-page";
 import { weekDigests, weekLine, weekSummary, type WeekDigest } from "./weeks";
 
 export const WEEKS_URL = `${ORIGIN}/weeks`;
@@ -30,16 +30,6 @@ export function weekDescription(summary: string): string {
     out = next;
   }
   return out;
-}
-
-/** The comparison page linked from a changed portal: its pair with the most compared product other than itself. */
-function comparePartner(slug: string, portals: PortalRow[]): PortalRow | null {
-  for (const s of POPULAR_PAIRINGS) {
-    if (s === slug) continue;
-    const p = portals.find((x) => x.slug === s);
-    if (p) return p;
-  }
-  return null;
 }
 
 function notFound(request: Request): Response {
@@ -92,18 +82,18 @@ export async function handleWeeks(request: Request, env: Env): Promise<Response>
   const d = digests[i];
   const newer = digests[i - 1]?.week ?? null;
   const older = digests[i + 1]?.week ?? null;
-  const [portals, caps] = await Promise.all([listPortals(env), capturesForWeek(env, week)]);
+  const caps = await capturesForWeek(env, week);
   const canonical = `${ORIGIN}/weeks/${week}`;
   const summary = weekSummary(d);
   const changedSlugs = new Set(d.changed.map((p) => p.slug));
   const unchanged = d.captured.filter((p) => !changedSlugs.has(p.slug));
   const sections = d.changed.map((p) => {
     const cap = caps.find((c) => c.slug === p.slug && c.status === "ok");
-    const partner = comparePartner(p.slug, portals);
     return {
       portal: p,
       weekly: `/portals/${p.slug}/${week}`,
-      compare: partner ? { name: partner.name, path: comparePath(p.slug, partner.slug) } : null,
+      // Compare's Single portal canvas: this week vs the week the changes are measured against.
+      compare: `/${compareWeeksHash(p.slug, [week, p.previousWeek])}`,
       shot: cap?.r2_key ? { url: shotUrl(cap.r2_key, p.slug, cap.captured_at), alt: shotAlt(p.name, "desktop", week), ...desktopSize(cap) } : null,
     };
   });
@@ -126,7 +116,7 @@ ${s.shot ? `        <figure><a href="${esc(s.weekly)}"><img src="${esc(s.shot.ur
           <ul>
 ${s.portal.changes.map((c) => `            <li>${esc(c.phrase)}</li>`).join("\n")}
           </ul>
-          <p class="wk-links"><a href="${esc(s.weekly)}">${esc(s.portal.name)}, week of ${esc(weekShort(week))}</a>${s.compare ? `<a href="${esc(s.compare.path)}">${esc(s.portal.name)} vs ${esc(s.compare.name)}</a>` : ""}</p>
+          <p class="wk-links"><a href="${esc(s.weekly)}">${esc(s.portal.name)}, week of ${esc(weekShort(week))}</a><a href="${esc(s.compare)}" aria-label="See ${esc(s.portal.name)} this week vs last week">See this week vs last week</a></p>
         </div>
       </section>`).join("\n");
   const unchangedHtml = unchanged.length
@@ -236,7 +226,7 @@ ${list}
 function weekMarkdown(o: {
   d: WeekDigest; canonical: string; summary: string; older: string | null; newer: string | null;
   unchanged: { slug: string; name: string }[];
-  sections: { portal: WeekDigest["changed"][number]; weekly: string; compare: { name: string; path: string } | null; shot: { url: string } | null }[];
+  sections: { portal: WeekDigest["changed"][number]; weekly: string; compare: string; shot: { url: string } | null }[];
 }): string {
   const { d } = o;
   return [
@@ -257,7 +247,7 @@ function weekMarkdown(o: {
       ...s.portal.changes.map((c) => `- ${c.phrase}`),
       "",
       `- Weekly page: ${ORIGIN}${s.weekly}`,
-      ...(s.compare ? [`- ${s.portal.name} vs ${s.compare.name}: ${ORIGIN}${s.compare.path}`] : []),
+      `- See this week vs last week: ${ORIGIN}${s.compare}`,
       ...(s.shot ? [`- Desktop screenshot: ${ORIGIN}${s.shot.url}`] : []),
       "",
     ]),
