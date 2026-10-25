@@ -120,7 +120,7 @@ describe('gallery device toggle and other toggles (browser)', () => {
       await page.locator('#deviceToggle [data-device="desktop"]').focus();
       await page.keyboard.press('Tab');
       const ring = await page.evaluate(() => { const el = document.activeElement!; const cs = getComputedStyle(el); return `${el.getAttribute('data-device')} ${cs.outlineWidth} ${cs.outlineStyle} ${cs.outlineColor}`; });
-      expect(ring).toBe('mobile 2px solid rgb(235, 98, 44)');
+      expect(ring).toBe('mobile 2px solid rgb(196, 76, 28)');
       await page.keyboard.press('Space');
       expect(await gallery(page)).toEqual(['Desktop:false', 'Mobile*:true', 'Desktop:false', 'Mobile*:true']);
       expect((await shotSrcs(page)).every((s) => s!.includes('.mobile.'))).toBe(true);
@@ -134,7 +134,7 @@ describe('gallery device toggle and other toggles (browser)', () => {
       await page.locator('#anDevice [data-andevice="desktop"]').focus();
       await page.keyboard.press('Tab');
       const ring = await page.evaluate(() => { const el = document.activeElement!; const cs = getComputedStyle(el); return `${el.getAttribute('data-andevice')} ${cs.outlineWidth} ${cs.outlineStyle} ${cs.outlineColor}`; });
-      expect(ring).toBe('mobile 2px solid rgb(235, 98, 44)');
+      expect(ring).toBe('mobile 2px solid rgb(196, 76, 28)');
       await page.keyboard.press('Enter');
       expect(await buttons(page, '#anDevice .vt-btn')).toEqual(['Desktop:false', 'Mobile*:true']);
       await expect.poll(() => page.url()).toContain('device=mobile');

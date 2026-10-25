@@ -112,13 +112,13 @@
 .consent-bar a{color:inherit;text-decoration:underline}
 .consent-status{display:block;margin-top:2px;font-size:13px;opacity:.8}
 .consent-actions{display:flex;gap:10px;flex:0 1 auto}
-/* #c84e1d: the site orange just deep enough for white 15px text (4.6:1); the brighter #eb622c is only 3.3:1. */
-.consent-btn{flex:1 1 0;min-width:112px;min-height:44px;padding:10px 18px;border:1px solid #c84e1d;border-radius:8px;
-  background:#c84e1d;color:#fff;font:inherit;font-weight:600;cursor:pointer;
+/* --brand and --brand-hover (public/buttons.css): white 15px text on --brand is 4.8:1. */
+.consent-btn{flex:1 1 0;min-width:112px;min-height:44px;padding:10px 18px;border:1px solid var(--brand);border-radius:8px;
+  background:var(--brand);color:#fff;font:inherit;font-weight:600;cursor:pointer;
   transition:background-color .15s ease-out,border-color .15s ease-out,transform 160ms ease-out}
-.consent-btn:hover{background:#b8461a;border-color:#b8461a}
+.consent-btn:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
 @media (prefers-reduced-motion:no-preference){.consent-btn:active{transform:scale(.97)}}
-.consent-btn:focus-visible,.consent-bar a:focus-visible{outline:2px solid var(--cf-orange,#eb622c);outline-offset:2px}
+.consent-btn:focus-visible,.consent-bar a:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 @media (max-width:480px){.consent-actions{flex:1 1 100%}}
 html.consent-bar-open body{padding-bottom:var(--consent-bar-h,0px)}
 html.consent-bar-open .voice-fab{bottom:calc(var(--consent-bar-h,0px) + 12px)}

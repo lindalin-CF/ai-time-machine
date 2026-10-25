@@ -11,7 +11,7 @@ import { openSite } from './analytics-page';
 
 const INDEX_HTML = readFileSync(new URL('../../public/index.html', import.meta.url), 'utf8');
 /** The accent orange and the darker orange-ink: both read as "orange" (the old hover colour was orange-ink). */
-const ORANGES = ['rgb(235, 98, 44)', 'rgb(204, 80, 30)'];
+const ORANGES = ['rgb(196, 76, 28)', 'rgb(159, 62, 23)']; // --brand, --brand-text
 
 describe('top bar markup', () => {
   it('the homepage lists Library, Collection and Compare, with no Changelog or Notes', () => {

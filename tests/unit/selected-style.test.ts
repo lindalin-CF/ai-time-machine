@@ -9,7 +9,8 @@ import { openAnalytics, openSite, showCanvas } from './analytics-page';
 const DARK = 'rgb(66, 50, 23)'; // --cf-text
 const CREAM = 'rgb(245, 241, 233)'; // --cf-bg-100
 const SOFT = 'rgb(111, 94, 71)'; // --cf-text-soft
-const ORANGE = 'rgb(235, 98, 44)';
+const ORANGE = 'rgb(196, 76, 28)'; // --brand (focus rings)
+const ORANGE_TEXT = 'rgb(159, 62, 23)'; // --brand-text (the current nav item)
 const NONE = 'rgba(0, 0, 0, 0)';
 
 type Look = { bg: string; color: string; shadow: string; radius: string; decoration: string; svg: string[] };
@@ -132,7 +133,7 @@ describe('selected style (browser)', () => {
     const page = await openAnalytics(browser);
     await settle(page);
     const nav = await look(page, '.topnav-link.active');
-    expect([nav.bg, nav.color]).toEqual([NONE, ORANGE]);
+    expect([nav.bg, nav.color]).toEqual([NONE, ORANGE_TEXT]);
     await page.context().close();
   });
 });

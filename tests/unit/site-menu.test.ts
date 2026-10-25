@@ -6,7 +6,7 @@ import { openSite } from './analytics-page';
 // The top bar on phones (≤ 640px): the three links sit behind a menu button (public/site-menu.js) on the homepage and
 // on the server-rendered pages. Above 640px, and without JS, the links show as before.
 
-const ORANGES = ['rgb(235, 98, 44)', 'rgb(204, 80, 30)'];
+const ORANGES = ['rgb(196, 76, 28)', 'rgb(159, 62, 23)']; // --brand, --brand-text
 const PHONE = 390;
 
 const toggle = (page: Page) => page.locator('.topnav-toggle');

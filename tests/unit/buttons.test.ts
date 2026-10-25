@@ -58,8 +58,8 @@ async function look(page: Page, link: Locator, focusFrom?: Locator) {
 const classes = (l: Locator) => l.evaluate((a) => [...a.classList]);
 
 const SECONDARY = { display: 'inline-flex', align: 'center', gap: '6px', border: '1px solid rgb(217, 206, 189)', radius: '8px',
-  bg: 'rgb(245, 241, 233)', color: 'rgb(204, 80, 30)', underline: 'none', whiteSpace: 'nowrap', hoverBg: 'rgb(222, 212, 198)',
-  ring: 'solid 2px rgb(235, 98, 44) 2px', pressed: 'matrix(0.97, 0, 0, 0.97, 0, 0)' };
+  bg: 'rgb(245, 241, 233)', color: 'rgb(159, 62, 23)', underline: 'none', whiteSpace: 'nowrap', hoverBg: 'rgb(222, 212, 198)',
+  ring: 'solid 2px rgb(196, 76, 28) 2px', pressed: 'matrix(0.97, 0, 0, 0.97, 0, 0)' };
 const SHADOW = 'rgba(66, 50, 23, 0.12) 0px 1px 3px 0px';
 
 describe('shared button classes', () => {
@@ -132,7 +132,7 @@ describe('shared button classes (browser)', () => {
     expect(await look(page, btn, page.locator('.search-input'))).toEqual({ w: 107.8, h: 36, display: 'flex', align: 'center', gap: '6px',
       pad: '0px 16px 0px 16px', border: '1px solid rgb(196, 76, 28)', radius: '999px', bg: 'rgb(196, 76, 28)', color: 'rgb(255, 255, 255)',
       font: '"Space Grotesk" 700 13px 13px', underline: 'none', shadow: 'none', whiteSpace: 'nowrap', cursor: 'pointer',
-      hoverBg: 'rgb(168, 63, 21)', ring: 'solid 2px rgb(235, 98, 44) 2px', pressed: 'matrix(0.97, 0, 0, 0.97, 0, 0)' });
+      hoverBg: 'color(srgb 0.66102 0.256314 0.0944314)' /* --brand-hover, mixed from --brand */, ring: 'solid 2px rgb(196, 76, 28) 2px', pressed: 'matrix(0.97, 0, 0, 0.97, 0, 0)' });
   });
 
   it('"This week\'s changes" is a secondary button with the same label and link, centred on the week heading, at the right', async () => {

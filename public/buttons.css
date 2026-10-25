@@ -9,11 +9,22 @@
 
    Size, shape and colour come from the --btn-* tokens below. An instance that needs another size sets the tokens on
    itself (for example .details-link: 32px tall), so the class rules stay the same everywhere.
-   Colours are the --cf-* palette in public/styles.css, written out because server-rendered pages don't load it. */
+   Colours are the --cf-* palette in public/styles.css, written out because server-rendered pages don't load it.
+
+   Brand orange: this is the one stylesheet every page loads, so the site's two orange tokens live here too.
+   --brand       The primary button's orange. Fills, borders, focus rings, the hero motion and the voice button, and
+                 orange text only when large (18.66px bold or 24px and up). #fff on it is 4.78:1.
+   --brand-text  The same hue, darkened to reach 4.5:1 on every background it sits on: 5.87:1 on --cf-bg-100,
+                 5.43:1 on --cf-bg-200, 4.52:1 on --cf-bg-300, 5.01:1 on the page (#e7dfd4), 5.78:1 on server pages
+                 (#f4efe8). For all smaller orange text: the current nav item, links, accents.
+   --brand-hover Hover and pressed fills, mixed from --brand. Tints, glows and shadows are color-mix() of --brand too. */
 :root{
+  --brand:#c44c1c;
+  --brand-text:#9f3e17;
+  --brand-hover:color-mix(in srgb,var(--brand) 86%,#000);
   --btn-font:'Space Grotesk','Inter',system-ui,-apple-system,sans-serif;
   --btn-gap:6px;
-  --btn-focus-ring:#eb622c;
+  --btn-focus-ring:var(--brand);
   /* secondary */
   --btn-secondary-height:auto;
   --btn-secondary-pad-y:6px;
@@ -24,10 +35,10 @@
   --btn-secondary-radius:8px;
   --btn-secondary-bg:#f5f1e9;
   --btn-secondary-bg-hover:#ded4c6;
-  --btn-secondary-fg:#cc501e;
+  --btn-secondary-fg:var(--brand-text);
   --btn-secondary-border:#d9cebd;
   --btn-secondary-shadow:0 1px 3px rgba(66,50,23,.12);
-  /* primary: #fff on #c44c1c is 4.8:1, on the #a83f15 hover 6.2:1 (the site orange #eb622c would be 3.3:1) */
+  /* primary: #fff on --brand is 4.78:1, on --brand-hover 6.1:1 */
   --btn-primary-min-height:36px;
   --btn-primary-pad-y:0;
   --btn-primary-pad-x:16px;
@@ -35,8 +46,8 @@
   --btn-primary-font-weight:700;
   --btn-primary-line-height:1;
   --btn-primary-radius:999px;
-  --btn-primary-bg:#c44c1c;
-  --btn-primary-bg-hover:#a83f15;
+  --btn-primary-bg:var(--brand);
+  --btn-primary-bg-hover:var(--brand-hover);
   --btn-primary-fg:#fff;
 }
 

@@ -54,7 +54,7 @@ describe('gallery card "…" button (browser)', () => {
     await page.waitForTimeout(200);
     const s = await btn.evaluate((b) => ({ bg: getComputedStyle(b).backgroundColor, transform: getComputedStyle(b).transform }));
     expect(s.bg).not.toBe('rgba(0, 0, 0, 0)');
-    expect(s.bg).not.toBe('rgb(235, 98, 44)');
+    expect(s.bg).not.toBe('rgb(196, 76, 28)');
     expect(s.transform).toBe('none');
   });
 
@@ -75,7 +75,7 @@ describe('gallery card "…" button (browser)', () => {
     await page.keyboard.press('Tab'); // keyboard focus, so :focus-visible applies
     expect(await btn.evaluate((b) => b === document.activeElement)).toBe(true);
     expect(await btn.evaluate((b) => { const cs = getComputedStyle(b); return `${cs.outlineStyle} ${cs.outlineWidth} ${cs.outlineColor} ${cs.outlineOffset}`; }))
-      .toBe('solid 2px rgb(235, 98, 44) 2px');
+      .toBe('solid 2px rgb(196, 76, 28) 2px');
     await page.keyboard.press('Enter');
     expect(await modalOpen(page)).toBe(true);
     expect(await page.locator('#manualTitle').textContent()).toBe('ChatGPT');

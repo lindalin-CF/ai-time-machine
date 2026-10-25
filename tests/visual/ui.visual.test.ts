@@ -4,7 +4,8 @@ import 'vitest-visual-diff';
 
 let cachedStyles: string | null = null;
 async function mount(html: string) {
-  cachedStyles ??= await fetch('/styles.css').then((r) => r.text());
+  // The homepage's two stylesheets, in its order: buttons.css holds the --brand tokens styles.css reads.
+  cachedStyles ??= (await Promise.all(['/buttons.css', '/styles.css'].map((f) => fetch(f).then((r) => r.text())))).join('\n');
   document.head.innerHTML = `<style>${cachedStyles}</style>`;
   document.body.innerHTML = `
     <main style="padding:24px;background:var(--cf-bg-page);min-height:100vh">
@@ -51,7 +52,7 @@ test('Week dropdown selected/focus state uses the site orange palette, not blue'
   const selected = document.querySelector('.week-option[aria-selected="true"]') as HTMLElement;
   const styles = getComputedStyle(selected);
   expect(styles.backgroundColor).not.toBe('rgb(0, 122, 255)');
-  expect(styles.backgroundColor).toBe('rgb(235, 98, 44)');
+  expect(styles.backgroundColor).toBe('rgb(196, 76, 28)'); // --brand
 });
 
 test('View more manual card keeps edit and share actions visible', async () => {

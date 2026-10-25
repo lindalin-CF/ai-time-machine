@@ -15,6 +15,19 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "one-brand-orange",
+    date: "2026-10-24",
+    time: "21:03",
+    title: "One Orange Everywhere",
+    subtitle: "The Compare button's orange is now the site's only orange",
+    bullets: [
+      { lead: "One colour", text: "Buttons, the chat button, focus rings, the homepage's moving annotations and the orb all use the same orange as the Compare button. Light tints and glows are made from it too, so no older, brighter orange is left." },
+      { lead: "Easier to read", text: "Small orange text, like the current page in the top bar, links and the changelog's anchors, uses a slightly darker shade of the same orange, so it is at least 4.5:1 against every background it sits on. White text on the orange buttons stays above 4.5:1." },
+      { lead: "Honest label", text: "The colour annotation in the homepage hero now reads #C44C1C, the colour it shows." },
+    ],
+    closing: "Open the homepage.",
+  },
+  {
     slug: "shared-buttons",
     date: "2026-10-24",
     time: "20:39",

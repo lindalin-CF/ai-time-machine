@@ -109,7 +109,7 @@ describe('landing page controls (browser)', () => {
       await page.locator('#searchInput').focus();
       await page.keyboard.press('Tab');
       const ring = await page.evaluate(() => { const el = document.activeElement!; const cs = getComputedStyle(el); return `${el.id} ${cs.outlineWidth} ${cs.outlineStyle} ${cs.outlineColor}`; });
-      expect(ring).toBe('compareBtn 2px solid rgb(235, 98, 44)');
+      expect(ring).toBe('compareBtn 2px solid rgb(196, 76, 28)');
       const b = (await page.locator('#compareBtn').boundingBox())!;
       await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
       await page.mouse.down();
@@ -312,7 +312,7 @@ describe('landing page controls (browser)', () => {
       expect(await active()).toBe('DeepSeek'); // focus lands on its chip in the row
       expect(await cardNames(page)).toEqual(['DeepSeek']);
       const ring = await page.evaluate(() => { const cs = getComputedStyle(document.activeElement!); return `${cs.outlineWidth} ${cs.outlineStyle} ${cs.outlineColor}`; });
-      expect(ring).toBe('2px solid rgb(235, 98, 44)');
+      expect(ring).toBe('2px solid rgb(196, 76, 28)');
       await page.context().close();
     });
 
@@ -507,7 +507,7 @@ describe('landing page controls (browser)', () => {
       const library = await weekStyles('', '.controls');
       const compare = await weekStyles(`#compare?view=table&mode=portals&week=${WEEKS[0]}`, '#anWeek');
       expect(library).toEqual(compare);
-      expect((library.focused as Record<string, string>)['outline-color']).toBe('rgb(235, 98, 44)');
+      expect((library.focused as Record<string, string>)['outline-color']).toBe('rgb(196, 76, 28)');
       expect(library.texts).toEqual(WEEKS.map(label));
     });
 
@@ -604,7 +604,7 @@ describe('landing page controls (browser)', () => {
       await page.locator('#searchInput').fill('grok');
       await expect.poll(() => cardNames(page)).toEqual(['Grok']);
       const ring = () => page.locator('.controls .searchbar').evaluate((el) => { const cs = getComputedStyle(el); return `${cs.outlineWidth} ${cs.outlineStyle} ${cs.outlineColor} ${cs.borderColor}`; });
-      await expect.poll(ring).toBe('2px solid rgb(235, 98, 44) rgb(235, 98, 44)');
+      await expect.poll(ring).toBe('2px solid rgb(196, 76, 28) rgb(196, 76, 28)');
       await page.locator('#searchInput').fill('');
       await expect.poll(() => cardNames(page)).toHaveLength(7);
       await page.context().close();

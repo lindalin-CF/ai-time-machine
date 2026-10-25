@@ -98,7 +98,7 @@ describe('design rules (browser)', () => {
       const cs = getComputedStyle(el);
       return { option: el.classList.contains('an-wp-item'), outline: `${cs.outlineWidth} ${cs.outlineStyle} ${cs.outlineColor}` };
     });
-    expect(ring).toEqual({ option: true, outline: '2px solid rgb(235, 98, 44)' });
+    expect(ring).toEqual({ option: true, outline: '2px solid rgb(196, 76, 28)' });
     await page.context().close();
   });
 

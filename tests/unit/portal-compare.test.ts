@@ -163,7 +163,7 @@ describe('portal page Compare button (browser)', () => {
       };
     });
     const base = {
-      radius: '8px', border: '1px solid rgb(217, 206, 189)', bg: 'rgb(245, 241, 233)', color: 'rgb(204, 80, 30)',
+      radius: '8px', border: '1px solid rgb(217, 206, 189)', bg: 'rgb(245, 241, 233)', color: 'rgb(159, 62, 23)',
       font: '600 12.5px "Space Grotesk"', padding: '6px 11px', shadow: 'rgba(66, 50, 23, 0.12) 0px 1px 3px 0px', underline: 'none', outline: 'none',
     };
     expect(await look()).toEqual(base);
@@ -176,7 +176,7 @@ describe('portal page Compare button (browser)', () => {
     await page.keyboard.press('Tab'); // keyboard focus, so :focus-visible applies
     expect(await page.evaluate(() => document.activeElement?.className)).toBe('btn-secondary compare-cta');
     await page.locator('.compare-cta').evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished))); // hover fade-out
-    expect(await look()).toEqual({ ...base, outline: '2px solid rgb(235, 98, 44) 2px' });
+    expect(await look()).toEqual({ ...base, outline: '2px solid rgb(196, 76, 28) 2px' });
     await page.context().close();
   });
 });

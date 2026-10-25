@@ -592,14 +592,14 @@ function card(c) {
     : `<img loading="lazy" src="${esc(thumbUrl(shot.src))}" alt="${esc(shotAlt(c.portal, mobile ? "mobile" : "desktop", c.week || state.week))}"${sizeAttrs(shotSize(c, mobile))} />`;
   return `
   <article class="card">
-    <div class="shot${mobile ? " mobile" : ""}" style="--brand:${esc(c.brand)}">
+    <div class="shot${mobile ? " mobile" : ""}" style="--portal-brand:${esc(c.brand)}">
       ${badge}
       ${inner}
     </div>
     <div class="card-body">
       <div class="card-head">
         <div class="portal-id">
-          <span class="brand-logo" style="--brand:${esc(c.brand)}" data-icon="${esc(iconUrl(c.slug))}" title="${esc(c.company)}">
+          <span class="brand-logo" style="--portal-brand:${esc(c.brand)}" data-icon="${esc(iconUrl(c.slug))}" title="${esc(c.company)}">
             <img alt="${esc(c.portal)} logo"${sizeAttrs(iconSize(c.slug))} loading="lazy" />
           </span>
           <div>
@@ -748,7 +748,7 @@ function renderCollection() {
         : `<img loading="lazy" src="${esc(thumbUrl(shot.src))}" alt="${esc(shotAlt(c.portal, mobile ? "mobile" : "desktop", c.week || state.week))}"${sizeAttrs(shotSize(c, mobile))} />`;
       return `
     <figure class="col-item">
-      <div class="shot${mobile ? " mobile" : ""}" style="--brand:${esc(c.brand)}">
+      <div class="shot${mobile ? " mobile" : ""}" style="--portal-brand:${esc(c.brand)}">
         ${inner}
       </div>
       <figcaption class="col-cap">

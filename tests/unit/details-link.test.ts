@@ -57,7 +57,7 @@ describe('gallery card Details link (browser)', () => {
     expect(await page.evaluate(() => [...document.styleSheets].flatMap((sh) => [...sh.cssRules] as CSSStyleRule[])
       .find((r) => r.selectorText === '.btn-secondary')!.style.display)).toBe('inline-flex');
     expect(await style()).toEqual({ h: 32, display: 'flex', align: 'center', gap: '6px', pad: '11px 11px',
-      border: '1px solid rgb(217, 206, 189)', radius: '8px', bg: 'rgb(245, 241, 233)', color: 'rgb(204, 80, 30)',
+      border: '1px solid rgb(217, 206, 189)', radius: '8px', bg: 'rgb(245, 241, 233)', color: 'rgb(159, 62, 23)',
       font: '"Space Grotesk" 600 12.5px', underline: 'none', shadow: 'rgba(66, 50, 23, 0.12) 0px 1px 3px 0px' });
 
     await link.hover();
@@ -69,7 +69,7 @@ describe('gallery card Details link (browser)', () => {
     await page.keyboard.press('Tab'); // keyboard focus, so :focus-visible applies
     expect(await link.evaluate((a) => a === document.activeElement)).toBe(true);
     expect(await link.evaluate((a) => { const cs = getComputedStyle(a); return `${cs.outlineStyle} ${cs.outlineWidth} ${cs.outlineColor} ${cs.outlineOffset}`; }))
-      .toBe('solid 2px rgb(235, 98, 44) 2px');
+      .toBe('solid 2px rgb(196, 76, 28) 2px');
   });
 
   for (const width of [1280, 390, 360]) {
