@@ -279,6 +279,18 @@ describe('lint: cross-week', () => {
     expect(rules(lint(a), 'cross-week')[0].message).toMatch(/promotional_content differs/);
   });
 
+  it('treats a context field missing from an older previous analysis as unknown, not a difference', () => {
+    const a = base();
+    a.context.promotional_content = { value: true, note: 'card' };
+    a.context.conversation_open = true;
+    a.changes_vs_previous = [{ id: 'L1', previous: 'no card', current: 'card [400, 500, 400, 100]', status: 'changed', note: '' }];
+    setSentence(a, 7, 'A card below the message box differs from the week of 2026-10-12.', ['L1']);
+    const p = prev();
+    delete p.context.promotional_content;
+    delete p.context.conversation_open;
+    expect(rules(lint(a, { previous: { analysis: p, source: 'v1.3' } }), 'cross-week')).toEqual([]);
+  });
+
   it('flags "looks the same" when there are changes', () => {
     const a = base();
     a.changes_vs_previous = [{ id: 'N1', change: 'added', previous: null, current: 'Tasks', region: 'sidebar', status: 'changed', note: '' }];

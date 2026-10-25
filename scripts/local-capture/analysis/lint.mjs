@@ -600,10 +600,14 @@ function ruleCrossWeek(a, prev, push, previousWeek) {
   const pc = prev?.analysis?.context ?? null;
   const cc = a.context ?? {};
   const premiseBroken = prev?.analysis
-    ? ["viewport", "scope"].filter((k) => prev.analysis[k] !== a[k]).concat(["color_scheme", "account_type"].filter((k) => pc?.[k] !== cc[k]))
+    ? ["viewport", "scope"].filter((k) => prev.analysis[k] !== undefined && prev.analysis[k] !== a[k])
+      .concat(["color_scheme", "account_type"].filter((k) => pc?.[k] !== undefined && pc[k] !== cc[k]))
     : [];
-  const differing = pc ? Object.keys(CONFOUND_TABLE).filter((k) => JSON.stringify(ctxValue(pc[k])) !== JSON.stringify(ctxValue(cc[k]))) : [];
-  const convDiffers = pc && Boolean(pc.conversation_open) !== Boolean(cc.conversation_open);
+  // A field missing from either week (older guideline versions lacked promotional_content and
+  // conversation_open) is unknown, not a difference.
+  const known = (k) => pc && pc[k] !== undefined && cc[k] !== undefined;
+  const differing = pc ? Object.keys(CONFOUND_TABLE).filter((k) => known(k) && JSON.stringify(ctxValue(pc[k])) !== JSON.stringify(ctxValue(cc[k]))) : [];
+  const convDiffers = known("conversation_open") && Boolean(pc.conversation_open) !== Boolean(cc.conversation_open);
   const prevSidebar = prev ? metricMap(prev.analysis).N1?.sidebar : undefined;
   const curSidebar = metricMap(a).N1?.sidebar;
 
