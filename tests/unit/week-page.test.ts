@@ -295,11 +295,11 @@ describe('sitemap, llms.txt, feed, /changes and homepage', () => {
   });
 
   it('links the homepage week heading to its digest, and public/app.js follows the picked week', () => {
-    expect(INDEX_HTML).toContain('<a class="section-link" id="weekDigest" href="/weeks" hidden>');
+    expect(INDEX_HTML).toContain('<a class="btn-secondary" id="weekDigest" href="/weeks" hidden>');
     const stats = { screenshots: 1, portals: 1, weeks: 1 };
     const out = renderHomepage(INDEX_HTML, stats, { week: PENDING, label: 'Week of Oct 19, 2026', captures: [] });
-    expect(out).toContain(`<a class="section-link" id="weekDigest" href="/weeks/${PENDING}">This week&#39;s changes`);
-    expect(renderHomepage(INDEX_HTML, stats, null)).toContain('<a class="section-link" id="weekDigest" href="/weeks" hidden>');
+    expect(out).toContain(`<a class="btn-secondary" id="weekDigest" href="/weeks/${PENDING}">This week&#39;s changes`);
+    expect(renderHomepage(INDEX_HTML, stats, null)).toContain('<a class="btn-secondary" id="weekDigest" href="/weeks" hidden>');
     expect(APP_JS).toContain('digest.href = `/weeks/${encodeURIComponent(state.week)}`;');
   });
 });

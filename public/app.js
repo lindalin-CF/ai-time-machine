@@ -620,7 +620,7 @@ function card(c) {
           <button class="manual-open" type="button" data-slug="${esc(c.slug)}" data-portal="${esc(c.portal)}" aria-label="More snapshots for ${esc(c.portal)}" title="More snapshots for ${esc(c.portal)}" aria-haspopup="dialog">
             <svg viewBox="0 0 18 18" width="18" height="18" aria-hidden="true"><circle cx="3.5" cy="9" r="1.25" fill="currentColor"/><circle cx="9" cy="9" r="1.25" fill="currentColor"/><circle cx="14.5" cy="9" r="1.25" fill="currentColor"/></svg>
           </button>
-          <a class="details-link" href="${esc(portalHref(c))}" aria-label="Details for ${esc(c.portal)}, week of ${esc(shortWeekLabel(c.week || state.week))}">Details <span class="arrow" aria-hidden="true">&rarr;</span></a>
+          <a class="btn-secondary details-link" href="${esc(portalHref(c))}" aria-label="Details for ${esc(c.portal)}, week of ${esc(shortWeekLabel(c.week || state.week))}">Details <span class="arrow" aria-hidden="true">&rarr;</span></a>
         </div>
       </div>
     </div>
@@ -1778,7 +1778,7 @@ function anPageLink(c, latest) {
   const { slug, week } = c.cap;
   const href = latest.get(slug) === week ? `/portals/${encodeURIComponent(slug)}` : `/portals/${encodeURIComponent(slug)}/${encodeURIComponent(week)}`;
   const date = shortWeekLabel(week);
-  return `<a class="an-page-link" href="${esc(href)}" aria-label="${esc(`Open the ${c.portalName} page for the week of ${date}`)}">${esc(`${c.portalName} · ${date}`)} <span aria-hidden="true">→</span></a>`;
+  return `<a class="btn-secondary an-page-link" href="${esc(href)}" aria-label="${esc(`Open the ${c.portalName} page for the week of ${date}`)}">${esc(`${c.portalName} · ${date}`)} <span aria-hidden="true">→</span></a>`;
 }
 
 // Canvas view: the same selection as the table, always desktop screenshots (findings describe the desktop capture only).

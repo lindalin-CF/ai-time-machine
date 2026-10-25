@@ -47,7 +47,7 @@ export function renderHomepage(html: string, stats: Stats, latest: Captures, cov
     .replace(/(<dd data-stat="(screenshots|portals|weeks)">)–(<\/dd>)/g, (_, open: string, key: keyof Stats, close: string) => `${open}${stats[key]}${close}`)
     .replace('<h2 id="weekHeading">Loading…</h2>', `<h2 id="weekHeading">${esc(heading)}</h2>`)
     // The heading's week links to its digest; public/app.js points it at the week picked later.
-    .replace('<a class="section-link" id="weekDigest" href="/weeks" hidden>', () => latest?.week ? `<a class="section-link" id="weekDigest" href="/weeks/${esc(latest.week)}">` : '<a class="section-link" id="weekDigest" href="/weeks" hidden>')
+    .replace('<a class="btn-secondary" id="weekDigest" href="/weeks" hidden>', () => latest?.week ? `<a class="btn-secondary" id="weekDigest" href="/weeks/${esc(latest.week)}">` : '<a class="btn-secondary" id="weekDigest" href="/weeks" hidden>')
     // The static WebSite block (kept for when the database can't be read) becomes WebSite + Dataset.
     .replace(/ *<script type="application\/ld\+json">[\s\S]*?<\/script>\n/, () => jsonLdScript(homepageJsonLd(coverage)))
     .replace(/(<ul class="portal-index" id="portalIndex"[^>]*>)(<\/ul>)/, (_, open: string, close: string) => `${open}${items}${items ? "\n      " : ""}${close}`);

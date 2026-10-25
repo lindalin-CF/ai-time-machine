@@ -168,6 +168,8 @@ ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts
   <!-- Body text font (all weights in one file): fetch it before CSS discovers it, as the homepage does. -->
   <link rel="preload" href="/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/fonts/fonts.css" />
+  <!-- The site's shared buttons (.btn-primary, .btn-secondary), as on the homepage. -->
+  <link rel="stylesheet" href="/buttons.css" />
   <style>
     /* The homepage's fonts (public/styles.css --font-sans, --font-mono): Space Grotesk for text, headings and controls. */
     body{margin:0;font:16px/1.6 'Space Grotesk','Inter',system-ui,-apple-system,sans-serif;background:#f4efe8;color:#231f1a}
@@ -292,18 +294,12 @@ export function compareWeeks(curWeek: string | null, prevWeek: string | null, ne
 
 /**
  * Portal pages with a Compare button: it sits at the right end of the week links' row (on its own line, left-aligned,
- * when the row wraps). A cream button with orange text and a small shadow (a link, not a selection, so not the dark selected fill).
+ * when the row wraps). A .btn-secondary (public/buttons.css): a link, not a selection, so not the dark selected fill.
  */
 const COMPARE_HEAD = `  <style>
     .weeknav-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;margin:0 0 24px}
     .weeknav-row.solo{justify-content:flex-end}
     .weeknav-row .weeknav{margin:0}
-    .compare-cta{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid #d9cebd;border-radius:8px;background:#f5f1e9;color:#cc501e;
-      font:600 12.5px/1.2 'Space Grotesk','Inter',system-ui,-apple-system,sans-serif;text-decoration:none;white-space:nowrap;box-shadow:0 1px 3px rgba(66,50,23,.12);
-      transition:background-color .15s ease-out,transform 160ms ease-out}
-    .compare-cta:hover{background:#ded4c6}
-    @media (prefers-reduced-motion:no-preference){.compare-cta:active{transform:scale(.97)}}
-    .compare-cta:focus-visible{outline:2px solid #eb622c;outline-offset:2px}
   </style>
 `;
 
@@ -383,7 +379,7 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
   if (latestWeek && !isLatest) navLinks.push(`<a href="/portals/${esc(slug)}">Latest (${esc(latestWeek)})</a>`);
   const nav = navLinks.length ? `<nav class="weeknav" aria-label="${esc(name)} weekly captures">${navLinks.join(" ")}</nav>` : "";
   const compareLink = compareHash
-    ? `<a class="compare-cta" href="/${esc(compareHash)}" aria-label="Compare ${esc(name)} week by week">Compare <span class="arrow" aria-hidden="true">&rarr;</span></a>`
+    ? `<a class="btn-secondary compare-cta" href="/${esc(compareHash)}" aria-label="Compare ${esc(name)} week by week">Compare <span class="arrow" aria-hidden="true">&rarr;</span></a>`
     : "";
   // Compare shares the week links' row, at its right end (alone on the right when there are no week links).
   const weekNav = compareLink

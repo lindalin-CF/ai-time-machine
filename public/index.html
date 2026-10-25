@@ -40,6 +40,7 @@
   <!-- Hero title and sub copy font (all weights in one file): fetch it before CSS discovers it, so the swap doesn't shift the animated words. -->
   <link rel="preload" href="/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/fonts/fonts.css" />
+  <link rel="stylesheet" href="/buttons.css" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
@@ -125,7 +126,7 @@
           <label for="searchInput" class="sr-only">Search captures</label>
           <input id="searchInput" type="search" class="search-input" placeholder="Search…" aria-label="Search captures" autocomplete="off" />
         </div>
-        <button class="fb-compare" id="compareBtn" type="button" aria-label="Compare the selected portals">Compare <span aria-hidden="true">→</span></button>
+        <button class="btn-primary fb-compare" id="compareBtn" type="button" aria-label="Compare the selected portals">Compare <span aria-hidden="true">→</span></button>
       </div>
     </section>
 
@@ -133,7 +134,7 @@
     <div class="section-head">
       <h2 id="weekHeading">Loading…</h2>
       <span class="section-rule" aria-hidden="true"></span>
-      <a class="section-link" id="weekDigest" href="/weeks" hidden>This week&#39;s changes <span aria-hidden="true">&rarr;</span></a>
+      <a class="btn-secondary" id="weekDigest" href="/weeks" hidden>This week&#39;s changes <span aria-hidden="true">&rarr;</span></a>
     </div>
 
     <!-- gallery -->

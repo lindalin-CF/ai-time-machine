@@ -30,7 +30,7 @@ const render = async (env: ReturnType<typeof makeEnv>['env'], path: string, orig
 /** The Compare link's href as it appears in the HTML (& escaped). */
 const href = (newer: string, older: string) =>
   `/#compare?view=canvas&amp;mode=time&amp;portal=chatgpt&amp;weeks=${newer},${older}&amp;device=desktop`;
-const cta = (html: string) => html.match(/<a class="compare-cta"[^>]*>[\s\S]*?<\/a>/)?.[0] ?? null;
+const cta = (html: string) => html.match(/<a class="btn-secondary compare-cta"[^>]*>[\s\S]*?<\/a>/)?.[0] ?? null;
 
 describe('portal page Compare button', () => {
   let t: ReturnType<typeof makeEnv>;
@@ -38,8 +38,8 @@ describe('portal page Compare button', () => {
 
   it('on the hub: latest and previous week, labelled for screen readers, at the end of the week links\' row', async () => {
     const html = await render(t.env, '/portals/chatgpt');
-    expect(cta(html)).toBe(`<a class="compare-cta" href="${href(WEEKS[0], WEEKS[1])}" aria-label="Compare ChatGPT week by week">Compare <span class="arrow" aria-hidden="true">&rarr;</span></a>`);
-    expect(html).toMatch(/<div class="weeknav-row">\s*<nav class="weeknav" aria-label="ChatGPT weekly captures">[\s\S]*?<\/nav>\s*<a class="compare-cta"[^>]*>[\s\S]*?<\/a>\s*<\/div>/);
+    expect(cta(html)).toBe(`<a class="btn-secondary compare-cta" href="${href(WEEKS[0], WEEKS[1])}" aria-label="Compare ChatGPT week by week">Compare <span class="arrow" aria-hidden="true">&rarr;</span></a>`);
+    expect(html).toMatch(/<div class="weeknav-row">\s*<nav class="weeknav" aria-label="ChatGPT weekly captures">[\s\S]*?<\/nav>\s*<a class="btn-secondary compare-cta"[^>]*>[\s\S]*?<\/a>\s*<\/div>/);
     expect(html).toMatch(/<p class="meta">OpenAI &middot; captured week of [^<]+<\/p>\n/); // the meta line is back to itself
   });
 
@@ -174,7 +174,7 @@ describe('portal page Compare button (browser)', () => {
     await page.locator('.compare-cta').focus();
     await page.keyboard.press('Shift+Tab');
     await page.keyboard.press('Tab'); // keyboard focus, so :focus-visible applies
-    expect(await page.evaluate(() => document.activeElement?.className)).toBe('compare-cta');
+    expect(await page.evaluate(() => document.activeElement?.className)).toBe('btn-secondary compare-cta');
     await page.locator('.compare-cta').evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished))); // hover fade-out
     expect(await look()).toEqual({ ...base, outline: '2px solid rgb(235, 98, 44) 2px' });
     await page.context().close();

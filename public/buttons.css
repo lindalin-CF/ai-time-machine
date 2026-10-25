@@ -1,0 +1,70 @@
+/* ---------- buttons ----------
+   The site's two button styles, loaded by the homepage (public/index.html) and every server-rendered page
+   (src/portal-page.ts page()). Use them on <a> or <button>.
+
+   When to use which: one primary per view, secondary for supporting actions.
+   .btn-primary   Filled orange: the view's main action (the Library filter bar's Compare →). Never two in one view.
+   .btn-secondary Cream with orange-ink text, a 1px border and a soft shadow: supporting actions and links onward
+                  (Compare → on portal pages, Open in Compare, Details →, This week's changes →, Compare's PAGE links).
+
+   Size, shape and colour come from the --btn-* tokens below. An instance that needs another size sets the tokens on
+   itself (for example .details-link: 32px tall), so the class rules stay the same everywhere.
+   Colours are the --cf-* palette in public/styles.css, written out because server-rendered pages don't load it. */
+:root{
+  --btn-font:'Space Grotesk','Inter',system-ui,-apple-system,sans-serif;
+  --btn-gap:6px;
+  --btn-focus-ring:#eb622c;
+  /* secondary */
+  --btn-secondary-height:auto;
+  --btn-secondary-pad-y:6px;
+  --btn-secondary-pad-x:11px;
+  --btn-secondary-font-size:12.5px;
+  --btn-secondary-font-weight:600;
+  --btn-secondary-line-height:1.2;
+  --btn-secondary-radius:8px;
+  --btn-secondary-bg:#f5f1e9;
+  --btn-secondary-bg-hover:#ded4c6;
+  --btn-secondary-fg:#cc501e;
+  --btn-secondary-border:#d9cebd;
+  --btn-secondary-shadow:0 1px 3px rgba(66,50,23,.12);
+  /* primary: #fff on #c44c1c is 4.8:1, on the #a83f15 hover 6.2:1 (the site orange #eb622c would be 3.3:1) */
+  --btn-primary-min-height:36px;
+  --btn-primary-pad-y:0;
+  --btn-primary-pad-x:16px;
+  --btn-primary-font-size:13px;
+  --btn-primary-font-weight:700;
+  --btn-primary-line-height:1;
+  --btn-primary-radius:999px;
+  --btn-primary-bg:#c44c1c;
+  --btn-primary-bg-hover:#a83f15;
+  --btn-primary-fg:#fff;
+}
+
+.btn-secondary{
+  display:inline-flex;align-items:center;gap:var(--btn-gap);box-sizing:border-box;height:var(--btn-secondary-height);
+  padding:var(--btn-secondary-pad-y) var(--btn-secondary-pad-x);
+  border:1px solid var(--btn-secondary-border);border-radius:var(--btn-secondary-radius);
+  background:var(--btn-secondary-bg);color:var(--btn-secondary-fg);box-shadow:var(--btn-secondary-shadow);
+  font:var(--btn-secondary-font-weight) var(--btn-secondary-font-size)/var(--btn-secondary-line-height) var(--btn-font);
+  text-decoration:none;white-space:nowrap;cursor:pointer;
+  transition:background-color .15s ease-out,transform 160ms ease-out;
+}
+.btn-secondary:hover{background:var(--btn-secondary-bg-hover)}
+
+.btn-primary{
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--btn-gap);box-sizing:border-box;
+  min-height:var(--btn-primary-min-height);padding:var(--btn-primary-pad-y) var(--btn-primary-pad-x);
+  border:1px solid var(--btn-primary-bg);border-radius:var(--btn-primary-radius);
+  background:var(--btn-primary-bg);color:var(--btn-primary-fg);
+  font:var(--btn-primary-font-weight) var(--btn-primary-font-size)/var(--btn-primary-line-height) var(--btn-font);
+  text-decoration:none;white-space:nowrap;cursor:pointer;
+  transition:background-color .15s ease-out,border-color .15s ease-out,transform .1s ease-out;
+}
+@media (hover:hover){.btn-primary:hover{background:var(--btn-primary-bg-hover);border-color:var(--btn-primary-bg-hover)}}
+.btn-primary:active{transform:scale(.97)}
+@media (prefers-reduced-motion:reduce){.btn-primary{transition:background-color .15s ease-out,border-color .15s ease-out}}
+
+/* Pressed: a little smaller (transform only, on the compositor); the secondary doesn't scale with reduced motion. */
+@media (prefers-reduced-motion:no-preference){.btn-secondary:active{transform:scale(.97)}}
+.btn-primary:focus-visible,.btn-secondary:focus-visible{outline:2px solid var(--btn-focus-ring);outline-offset:2px}
+.btn-primary[hidden],.btn-secondary[hidden]{display:none}

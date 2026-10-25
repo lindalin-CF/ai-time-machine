@@ -157,7 +157,7 @@ describe('/compare/chatgpt-vs-claude', () => {
     expect(page).toContain('<a href="/portals/chatgpt">ChatGPT UI screenshots &amp; interface changes, week by week</a>');
     expect(page).toContain('<a href="/portals/claude">Claude UI screenshots &amp; interface changes, week by week</a>');
     expect(compareTableHash('claude', 'chatgpt', NEW)).toBe(`#compare?view=table&mode=portals&week=${NEW}&portals=chatgpt,claude&device=desktop`);
-    expect(page).toContain(`<a class="cmp-open" href="/#compare?view=table&amp;mode=portals&amp;week=${NEW}&amp;portals=chatgpt,claude&amp;device=desktop">Open in Compare`);
+    expect(page).toContain(`<a class="btn-secondary cmp-open" href="/#compare?view=table&amp;mode=portals&amp;week=${NEW}&amp;portals=chatgpt,claude&amp;device=desktop">Open in Compare`);
   });
 
   it('describes itself as a WebPage with a breadcrumb and both screenshots', () => {

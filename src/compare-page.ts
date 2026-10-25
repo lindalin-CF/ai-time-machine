@@ -44,14 +44,9 @@ function notFound(request: Request): Response {
   return new Response(html, { status: 404, headers: { ...HTML_HEADERS, "cache-control": PRIVATE_HTML_CACHE } });
 }
 
-/** Two screenshots side by side (stacked on phones), the two finding lists, menu changes, and the Open in Compare link. */
+/** Two screenshots side by side (stacked on phones), the two finding lists and menu changes. Open in Compare is a .btn-secondary. */
 const COMPARE_PAGE_HEAD = `  <style>
     .cmp-summary{font-size:1.1rem;margin:0 0 16px;max-width:720px}
-    .cmp-open{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border:1px solid #d9cebd;border-radius:8px;background:#f5f1e9;color:#cc501e;
-      font:600 12.5px/1.2 'Space Grotesk','Inter',system-ui,-apple-system,sans-serif;text-decoration:none;white-space:nowrap;box-shadow:0 1px 3px rgba(66,50,23,.12);
-      transition:background-color .15s ease-out,transform 160ms ease-out}
-    .cmp-open:hover{background:#ded4c6}
-    @media (prefers-reduced-motion:no-preference){.cmp-open:active{transform:scale(.97)}}
     .cmp-shots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin:24px 0 0}
     .cmp-shots figure{margin:0;min-width:0}
     .cmp-shots img{display:block;width:100%;height:auto;border:1px solid #d8cfc2;border-radius:8px;background:#fff}
@@ -117,7 +112,7 @@ export async function handleComparePage(request: Request, env: Env): Promise<Res
       <h1>${esc(compareHeading(pair))}</h1>
       <p class="meta">${esc(pair.a.company)} &middot; ${esc(pair.b.company)}${pair.week ? ` &middot; week of ${esc(weekInWords(pair.week))}` : ""}</p>
       <p class="cmp-summary">${esc(summary)}</p>
-      <a class="cmp-open" href="${esc(compareHref)}">Open in Compare <span aria-hidden="true">&rarr;</span></a>
+      <a class="btn-secondary cmp-open" href="${esc(compareHref)}">Open in Compare <span aria-hidden="true">&rarr;</span></a>
 ${figures ? `      <section class="cmp-shots" aria-label="Desktop screenshots">\n${figures}\n      </section>\n` : ""}      <div class="cmp-lists">
         <section><h2>Differences</h2>
         ${list(pair.findings?.differences, pair.findings ? "No differences found." : noData)}

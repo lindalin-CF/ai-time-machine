@@ -15,6 +15,18 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "shared-buttons",
+    date: "2026-10-24",
+    time: "20:39",
+    title: "One Look for Buttons",
+    subtitle: "The site's buttons now come from two shared styles, primary and secondary",
+    bullets: [
+      { lead: "Primary and secondary", text: "The filled orange Compare → in the Library filter bar is the primary button, for the one main action on a page. The cream secondary button, with orange text, a thin border and a soft shadow, is for supporting actions: Compare → on portal pages, Open in Compare, Details → on gallery cards and the PAGE links in Compare's table. They look the same as before." },
+      { lead: "This week's changes", text: "The link next to the homepage's week heading is now a secondary button, with the same label and the same digest page." },
+    ],
+    closing: "Open the homepage.",
+  },
+  {
     slug: "weekly-digests",
     date: "2026-10-24",
     time: "19:50",
