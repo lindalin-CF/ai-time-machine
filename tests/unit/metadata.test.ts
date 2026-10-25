@@ -303,6 +303,8 @@ describe('JSON-LD', () => {
       const shownWeek = html.match(/captured week of ([^<]+)<\/p>/)![1];
       expect(webPages[0]['@id']).toBe(crumbs.at(-1).item);
       expect(weekInWords(webPages[0].dateModified)).toBe(shownWeek);
+      expect(Object.keys(webPages[0]).sort()).toEqual(['@id', '@type', 'dateModified', 'name', 'url']);
+      expect(html).not.toContain('Key facts'); // removed from portal pages
       for (const a of articles) {
         expect(Object.keys(a).sort()).toEqual(['@type', 'about', 'dateModified', 'datePublished', 'headline', 'image']);
         expect(a.about).toEqual({ '@type': 'SoftwareApplication', name: crumbs[1].name, publisher: { '@type': 'Organization', name: expect.any(String) } });

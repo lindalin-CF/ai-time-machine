@@ -181,8 +181,6 @@ describe('Markdown portal pages', () => {
       '- Week: week of October 5, 2026 (2026-10-05)',
       `- Page: ${ORIGIN}/portals/chatgpt/2026-10-05`,
       `- Compare week by week: ${ORIGIN}/#compare?view=canvas&mode=time&portal=chatgpt&weeks=2026-10-05,2026-09-28&device=desktop`, '',
-      '## Key facts', '',
-      'As of Oct 5, 2026, ChatGPT shows a sidebar with 3 menu items. It uses a dark color scheme. Most recent menu change (week of Oct 5, 2026): the sidebar item Scheduled is now labeled Tasks.', '',
       '## Design analysis', '',
       'This shows the desktop version of chatgpt for the week of 2026-10-05, before scrolling. The message box stands out most.', '',
       '## Menu items', '',
