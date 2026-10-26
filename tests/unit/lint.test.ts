@@ -231,6 +231,73 @@ describe('lint: menu items', () => {
     expect(rules(lint(a), 'menu-items')[0].message).toMatch(/"Library" is named as a current menu item but isn't in N1/);
   });
 
+  describe('possible reorder (§9.3, guideline 1.7.0)', () => {
+    const renamed = (previous: string, current: string, change = 'renamed') =>
+      ({ id: 'N1', change, previous, current, region: 'sidebar', status: 'changed', note: '', ...(change === 'icon_changed' ? { icon_only: true } : {}) });
+    const reorderFindings = (a: Json, p: Json = prev()) =>
+      rules(lint(a, { previous: { analysis: p, source: 'test' } }), 'menu-items').filter((f) => /reorder|move|position|icon differs/.test(f.message));
+
+    it('passes one rename that keeps its icon and position', () => {
+      const a = base();
+      const p = prev();
+      metric(p, 'N1').value[2].label = 'Scheduled';
+      a.changes_vs_previous = [renamed('Scheduled', 'Tasks')];
+      expect(reorderFindings(a, p)).toEqual([]);
+    });
+
+    it('flags several renamed / icon_changed entries in one region as a possible reorder', () => {
+      const a = base();
+      const p = prev();
+      metric(p, 'N1').value[2].label = 'Scheduled';
+      metric(p, 'N1').value[1].icon_label = 'puzzle icon';
+      a.changes_vs_previous = [renamed('Scheduled', 'Tasks'), renamed('puzzle icon', 'magnifier icon', 'icon_changed')];
+      expect(reorderFindings(a, p)[0].message).toMatch(/2 renamed\/icon_changed N1 entries this week \(2 in the sidebar\): possibly a reordered menu/);
+    });
+
+    it('flags a "rename" whose old name is still in the menu', () => {
+      const a = base();
+      a.changes_vs_previous = [renamed('New chat', 'Tasks')];
+      expect(reorderFindings(a)[0].message).toMatch(/"New chat" is still in this week's sidebar, so this is a move/);
+    });
+
+    it('flags a rename whose icon differs', () => {
+      const a = base();
+      const p = prev();
+      Object.assign(metric(p, 'N1').value[2], { label: 'Scheduled', icon: 'box icon' });
+      a.changes_vs_previous = [renamed('Scheduled', 'Tasks')];
+      expect(reorderFindings(a, p)[0].message).toMatch(/renamed but the icon differs/);
+    });
+
+    it('flags a rename whose position differs', () => {
+      const a = base();
+      const p = prev();
+      Object.assign(metric(p, 'N1').value[0], { label: 'Scheduled', icon: 'clock icon' });
+      Object.assign(metric(p, 'N1').value[2], { label: 'New chat', icon: 'pencil icon' });
+      a.changes_vs_previous = [renamed('Scheduled', 'Tasks')];
+      expect(reorderFindings(a, p).map((f) => f.message).join('\n')).toMatch(/position differs \(the items next to it changed\)/);
+    });
+
+    it('passes a rename whose order number shifted only because an item above it was removed', () => {
+      const a = base();
+      const p = prev();
+      metric(p, 'N1').value.splice(1, 0, { label: 'Projects', region: 'sidebar', order: 2, icon: 'folder icon', badge: null });
+      metric(p, 'N1').value.forEach((it: Json, i: number) => { if (it.region === 'sidebar') it.order = i + 1; });
+      metric(p, 'N1').value[3].label = 'Scheduled'; // order 4 last week, order 3 now, same neighbours
+      a.changes_vs_previous = [renamed('Scheduled', 'Tasks'), { id: 'N1', change: 'removed', previous: 'Projects', current: null, region: 'sidebar', status: 'changed', note: '' }];
+      expect(reorderFindings(a, p)).toEqual([]);
+    });
+
+    it('matches icons only among items without a label', () => {
+      const a = base();
+      const p = prev();
+      metric(p, 'N1').value[2].label = 'Scheduled';
+      metric(p, 'N1').value[0].icon = 'clock icon'; // a labelled item with the same icon shape is not the icon-only item
+      metric(a, 'N1').value[2] = { label: null, icon_label: 'clock icon', region: 'sidebar', order: 3, icon: 'clock icon', badge: null };
+      a.changes_vs_previous = [renamed('Scheduled', 'clock icon')];
+      expect(reorderFindings(a, p).filter((f) => /already in the previous week/.test(f.message))).toEqual([]);
+    });
+  });
+
   it('flags an N1 item without a label or icon_label', () => {
     const a = base();
     delete metric(a, 'N1').value[1].icon_label;

@@ -1,7 +1,7 @@
 ---
 name: portal-design-analysis
 description: 依 AI Surface Library 規範分析 AI portal 的桌面截圖，產出可追溯到指標、證據等級與位置的 Design analysis。使用者提供 portal 桌面截圖並要求 design analysis、跑規範、或比較不同週次截圖時使用。
-version: 1.6.0
+version: 1.7.0
 ---
 
 # AI Portal 桌面截圖 Design Analysis 規範
@@ -311,13 +311,15 @@ version: 1.6.0
 
 每筆變動輸出：`{ "id", "previous", "current", "status": "changed" | "possibly_confounded" | "confounded", "note" }`。沒有達門檻的變動時，`changes_vs_previous` 為空陣列。
 
-**N1 的變動判定**，依序：
+**N1 的變動判定**：先用文字、再用圖示配對，最後才看位置。**只有順序改變一律不是變動**（項目換了位置、或因為上方有項目增減而順序號碼改變，都不記）。依序：
 
-1. 同一 `region` 內 `label` 相同的項目視為同一項；`badge` 不同（包括 `null` 與有值之間）記 `badge_changed`。
-2. **改名**：前一週的某項目在本週不見了，但同一 `region`、同一 `order` 位置（或同樣 `icon`）出現了不同名字的項目，記為 `renamed`，**不要拆成一個 `removed` 加一個 `added`**。例：前一週側欄某位置是 "Scheduled"（clock icon），本週同位置、同圖示變成 "Tasks" → `renamed`。
-3. **圖示改變**：兩週在同一 `region`、同一 `order` 位置都是沒有文字的項目（`label` 都是 `null`），但圖示形狀不同（`icon_label` 不同），記為 `icon_changed`，**不要拆成一個 `removed` 加一個 `added`**。只有圖示的細部角度或描述用字不同、形狀其實相同時不算。例：前一週頂列某位置是 bubble-clock icon，本週同位置變成 dashed bubble icon → `icon_changed`。
-4. 前一週剩下沒配對的記 `removed`，本週剩下沒配對的記 `added`。
-5. **模型選擇器**：兩週都有 `role: "model_picker"` 的項目時視為同一項；`current` 顯示的模型名稱不同**一律不是變動**，不寫入 `changes_vs_previous`（不記 `renamed`，也不拆成 `removed` 加 `added`）。只有選擇器本身出現或消失才記 `added`／`removed`，`previous`／`current` 寫 `"model picker"`。前一週 JSON 是 1.6 版以前、選擇器記成模型名稱的項目時，照同樣規則把它當成模型選擇器比較。
+1. **用文字配對**：同一 `region` 內 `label` 相同的項目視為同一項，不論 `order` 是否相同；`badge` 不同（包括 `null` 與有值之間）記 `badge_changed`。
+2. **用圖示配對**：剩下沒配對、沒有文字的項目，同一 `region` 內 `icon_label`（圖示形狀）相同的視為同一項，不論 `order` 是否相同。只有圖示的細部角度或描述用字不同、形狀其實相同時，也算同一項。
+3. **同一位置**的定義（第 4、5 條用）：緊鄰的前一項與後一項在兩週都是已配對的同一項（或在該區開頭／結尾）。上方有項目增減而使 `order` 號碼不同時，仍算同一位置。換句話說，項目留在原處，周圍的順序沒有變。
+4. **改名**：前一週剩下的某個有文字項目，和本週剩下的某個有文字項目，在同一 `region`、**同一位置**、而且**圖示相同**（`icon` 形狀相同，或兩週都沒有圖示），只有文字不同，記為 `renamed`，不要拆成 `removed` 加 `added`。文字消失、只剩同一個圖示時也算 `renamed`（`current` 寫 `icon_label`）。圖示不同或位置不同時**不是**改名，記一個 `removed` 加一個 `added`。例：前一週側欄 "Scheduled"（clock icon），本週同位置、同圖示變成 "Tasks" → `renamed`；"Manus Desktop"（螢幕圖示）位置上出現 "Choose project"（方塊圖示）→ `removed` 加 `added`。
+5. **圖示改變**：前一週剩下的某個沒有文字項目，和本週剩下的某個沒有文字項目，在同一 `region`、**同一位置**，但圖示形狀不同，記為 `icon_changed`，不要拆成 `removed` 加 `added`。周圍順序有變（例如側欄重新排列）時不適用，改記 `removed` 加 `added`。例：前一週頂列唯一的 bubble-clock icon，本週同位置變成 dashed bubble icon → `icon_changed`。
+6. 前一週剩下沒配對的記 `removed`，本週剩下沒配對的記 `added`。同一週同一區出現 2 筆以上 `renamed` 或 `icon_changed` 時，先確認不是重新排列造成的誤配對。
+7. **模型選擇器**：兩週都有 `role: "model_picker"` 的項目時視為同一項；`current` 顯示的模型名稱不同**一律不是變動**，不寫入 `changes_vs_previous`（不記 `renamed`，也不拆成 `removed` 加 `added`）。只有選擇器本身出現或消失才記 `added`／`removed`，`previous`／`current` 寫 `"model picker"`。前一週 JSON 是 1.6 版以前、選擇器記成模型名稱的項目時，照同樣規則把它當成模型選擇器比較。
 
 **前一週 JSON 沒有 N1**（用 1.5 版以前的規範分析）：有前一週 PNG 時，依第 7.2 節規則從前一週截圖列出它的 N1 再比較，`note` 寫 `"Previous items read from the previous screenshot; the previous analysis predates N1."`；沒有前一週 PNG 時不比較 N1。
 
@@ -341,7 +343,7 @@ N1 每筆變動一筆紀錄：
 
 ```json
 {
-  "guideline_version": "1.6.0",
+  "guideline_version": "1.7.0",
   "portal": "example",
   "week": "2026-09-21",
   "previous_week": "2026-09-14",
@@ -467,10 +469,11 @@ N1 每筆變動一筆紀錄：
 6. 摘要與 note 中沒有第 8 節的禁止類型；無標籤圖示與按鈕（包括送出、麥克風）只描述形狀；每句只講一件事。
 7. 有前一週資料時，每筆變動都達第 9.3 節門檻，干擾判定與問候語輪換規則已套用。
 8. 第 1.1 節表列的 portal 已套用對應的收錄方式。
-9. N1 只列產品內建、可以點擊的項目，沒有帳號專屬清單、無法確定的項目、基本輸入控制（送出、麥克風／語音、附件／加號）或不能點擊的區段標題；輸入區的工具、模式、模型、設定等功能按鈕有列入；模型選擇器只有一項 `label: "model picker"`、`role: "model_picker"`，顯示的模型名稱只在 `current`，模型名稱不同沒有記成 N1 變動；沒有文字的項目有 `icon_label`；翻譯過的 `label` 沒有 "(translated from …)"，語言記在 `translated_from`；側欄收合時 `sidebar` 為 `not_visible`，頂列和輸入區的項目照常記錄；跨週比較中同位置或同圖示的名稱改變記為 `renamed`、沒有文字的項目同位置圖示形狀改變記為 `icon_changed`，都沒有拆成移除加新增；有選單變化時比較句先寫選單。
+9. N1 只列產品內建、可以點擊的項目，沒有帳號專屬清單、無法確定的項目、基本輸入控制（送出、麥克風／語音、附件／加號）或不能點擊的區段標題；輸入區的工具、模式、模型、設定等功能按鈕有列入；模型選擇器只有一項 `label: "model picker"`、`role: "model_picker"`，顯示的模型名稱只在 `current`，模型名稱不同沒有記成 N1 變動；沒有文字的項目有 `icon_label`；翻譯過的 `label` 沒有 "(translated from …)"，語言記在 `translated_from`；側欄收合時 `sidebar` 為 `not_visible`，頂列和輸入區的項目照常記錄；跨週比較先用文字、再用圖示配對，只有順序改變沒有記成變動；`renamed` 只用在同一位置、同一圖示、只有文字不同的項目，`icon_changed` 只用在同一位置、周圍順序不變的無文字項目，其餘未配對的記移除加新增；有選單變化時比較句先寫選單。
 
 ## 版本紀錄
 
+- **1.7.0**：N1 跨週配對改為先比文字、再比圖示，不再依位置配對；只有順序改變一律不是變動。`renamed` 必須同一位置、同一圖示、只有文字不同；`icon_changed` 必須同一位置且周圍順序不變；其餘記 `removed` 加 `added`（第 9.3 節）。起因：位置配對把重新排列的側欄記成多筆改名與圖示改變。
 - **1.6.0**：輸入區的模型選擇器在 N1 只記一項 `{ label: "model picker", role: "model_picker", current }`；畫面顯示的模型名稱是工作階段狀態，不是導覽項目，名稱改變不記為 N1 變動（第 7.2、9.3 節）。網站在顯示時也用同樣規則整理較舊的分析（`src/model-picker.ts`），不修改已發布的資料。
 
 ## Repo integration

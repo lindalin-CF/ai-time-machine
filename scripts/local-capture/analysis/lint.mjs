@@ -511,6 +511,7 @@ function ruleMenuItems(a, prev, push) {
       }
     }
   }
+  ruleReorder(a, items, prevItems, push);
   // N1 change entries that contradict this week's N1
   if (items) {
     for (const [i, c] of (a.changes_vs_previous ?? []).entries()) {
@@ -526,7 +527,53 @@ function ruleMenuItems(a, prev, push) {
   }
 }
 
-const COMPARISON = /\b(no longer|differs?|differ from|looks the same|is the same as|are the same as|unlike|compared with|now|changed from)\b|\bweek of \d{4}-\d{2}-\d{2}|^An? new .+ appears?\b/i;
+/** Same icon shape, ignoring "-shaped" and wording like "pencil-on-square icon" vs "pencil-square icon". */
+const iconKey = (it) => norm(it?.icon_label ?? it?.icon ?? "").replace(/-shaped/g, "").replace(/[-\s]+/g, " ").replace(/ icon$/, "");
+
+/**
+ * §9.3 (1.7.0): items are matched by label, then icon; a reorder alone is never a change. Flags
+ * renamed / icon_changed entries that look like a reordered menu matched by position.
+ */
+function ruleReorder(a, items, prevItems, push) {
+  const moved = (a.changes_vs_previous ?? []).map((c, i) => ({ c, i }))
+    .filter(({ c }) => c?.id === "N1" && (c.change === "renamed" || c.change === "icon_changed") && c.status !== "confounded");
+  if (!moved.length) return;
+  const byRegion = {};
+  for (const { c } of moved) byRegion[c.region] = (byRegion[c.region] ?? 0) + 1;
+  const crowded = Object.entries(byRegion).filter(([, n]) => n >= 2);
+  if (moved.length >= 3 || crowded.length) {
+    const where = crowded.length ? crowded.map(([r, n]) => `${n} in the ${r}`).join(", ") : `${moved.length} in total`;
+    push("menu-items", `${moved.length} renamed/icon_changed N1 entries this week (${where}): possibly a reordered menu matched by position; match by label, then icon (§9.3)`, "changes_vs_previous");
+  }
+  for (const { c, i } of moved) {
+    const where = `changes_vs_previous[${i}] (N1 ${c.change})`;
+    const region = (list) => (list ?? []).filter((it) => it?.region === c.region);
+    // By label for labelled items; by icon shape only among items without a label (§9.3 rules 1-2).
+    const findBy = (list, name) => region(list).find((it) => (it?.label && norm(it.label) === norm(name)) ||
+      (!it?.label && name && (norm(it?.icon_label) === norm(name) || iconKey(it) === iconKey({ icon_label: name }))));
+    // The "old" item is still in this week's menu: it moved, it wasn't renamed.
+    const stillThere = items && c.previous && findBy(items, c.previous);
+    if (stillThere) { push("menu-items", `"${c.previous}" is still in this week's ${c.region}, so this is a move, not a ${c.change} (§9.3: a reorder alone is never a change)`, where); continue; }
+    const prevNow = items && c.current && prevItems && findBy(prevItems, c.current);
+    if (prevNow) { push("menu-items", `"${c.current}" was already in the previous week's ${c.region}, so this is a move, not a ${c.change}`, where); continue; }
+    if (!items || !prevItems) continue;
+    const p = findBy(prevItems, c.previous), q = findBy(items, c.current);
+    if (!p || !q) continue;
+    if (c.change === "renamed" && iconKey(p) !== iconKey(q)) push("menu-items", `renamed but the icon differs (${p.icon ?? "none"} → ${q.icon ?? "none"}); §9.3 records removed + added`, where);
+    // Same position = same neighbours before and after (or the region's edge); the order number may shift
+    // when items above it are added or removed.
+    const key = (it) => (it ? (it.label ? `l:${norm(it.label)}` : `i:${iconKey(it)}`) : "edge");
+    const around = (list, it) => {
+      const r = region(list).slice().sort((x, y) => (x.order ?? 0) - (y.order ?? 0));
+      const k = r.indexOf(it);
+      return [key(r[k - 1]), key(r[k + 1])];
+    };
+    const [pb, pa] = around(prevItems, p), [qb, qa] = around(items, q);
+    if (pb !== qb || pa !== qa) push("menu-items", `${c.change} but the position differs (the items next to it changed); §9.3 records removed + added`, where);
+  }
+}
+
+const COMPARISON =/\b(no longer|differs?|differ from|looks the same|is the same as|are the same as|unlike|compared with|now|changed from)\b|\bweek of \d{4}-\d{2}-\d{2}|^An? new .+ appears?\b/i;
 const DEFINITE = /\b(now|no longer|new|changed|unlike|brighter|darker|fainter|lighter|smaller|larger|bigger|narrower|wider|lower|higher|moved)\b/i;
 const POPUP = /pop-?up|popover|onboarding|feature tour|\btour\b|survey|welcome (?:card|dialog|modal|pop)|cookie|promo|promotional|upgrade card|banner/i;
 
