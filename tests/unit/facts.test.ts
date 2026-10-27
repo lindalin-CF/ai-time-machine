@@ -131,7 +131,7 @@ describe('page', () => {
     const chatgpt = await entry('chatgpt');
     expect(chatgpt).toContain('<img class="fx-logo" src="/icons/chatgpt.png" alt="" width="32" height="32" loading="lazy" />');
     expect(chatgpt).toContain('<h2>ChatGPT</h2>');
-    expect(chatgpt).toContain('<span class="fx-week">Week of October 19, 2026</span>');
+    expect(chatgpt).toContain('<span class="fx-week">Week of Oct 19, 2026</span>'); // short in the left column; long in the Markdown
     expect(chatgpt).toContain('<a href="/portals/chatgpt">ChatGPT screenshots</a> <a href="/compare/chatgpt-vs-claude">Compare with Claude</a>');
     expect(await entry('claude')).toContain('<a href="/compare/chatgpt-vs-claude">Compare with ChatGPT</a>');
     expect(await entry('poe')).toContain('<a href="/compare/chatgpt-vs-poe">Compare with ChatGPT</a>');

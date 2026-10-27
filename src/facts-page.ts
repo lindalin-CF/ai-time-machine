@@ -2,7 +2,7 @@
 // (src/facts.ts), laid out like /changelog. Linked from the footer only, not the top bar.
 import type { Env } from "./types";
 import { consentMode, PRIVATE_HTML_CACHE } from "./consent";
-import { weekInWords } from "./format";
+import { weekInWords, weekShort } from "./format";
 import { comparePath } from "./compare";
 import { factsUpdated, portalFacts, type PortalFacts } from "./facts";
 import { BRAND, HTML_HEADERS, MARKDOWN_HEADERS, ORIGIN, esc, page } from "./portal-page";
@@ -27,7 +27,7 @@ const FACTS_HEAD = `  <style>
     .fx-who{display:grid;grid-template-columns:32px minmax(0,1fr);column-gap:12px;align-items:center;align-content:start;padding-right:24px}
     .fx-logo{display:block;width:32px;height:32px;border-radius:8px;background:#fffdf9;box-shadow:0 0 0 4px #f4efe8}
     .fx-who h2{font-size:20px;line-height:1.2;letter-spacing:-.01em;margin:0;overflow-wrap:anywhere}
-    .fx-week{grid-column:2;font-size:.85rem;color:#6b6257}
+    .fx-week{grid-column:2;font-size:.85rem;color:#6b6257;white-space:nowrap}
     .fx-body{font-size:18px;line-height:1.6;min-width:0}
     .fx-body ul{list-style:disc;margin:0 0 16px;padding-left:1.2em}
     .fx-body li{margin:0 0 8px}
@@ -68,7 +68,7 @@ function entryHtml(f: PortalFacts): string {
   return `      <li class="fx-entry" id="${esc(f.slug)}">
         <div class="fx-who">
           <img class="fx-logo" src="/icons/${esc(f.slug)}.png" alt="" width="32" height="32" loading="lazy" />
-          <h2>${esc(f.name)}</h2>${f.week ? `\n          <span class="fx-week">Week of ${esc(weekInWords(f.week))}</span>` : ""}
+          <h2>${esc(f.name)}</h2>${f.week ? `\n          <span class="fx-week">Week of ${esc(weekShort(f.week))}</span>` : ""}
         </div>
         <div class="fx-body">
           <ul>
