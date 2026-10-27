@@ -8,6 +8,7 @@ export const LEGAL_LINE =
   '&copy; 2026 AI Interface Library. Analyses licensed under CC BY 4.0 &middot; ' +
   '<a href="/license">License</a> &middot; ' +
   '<a href="/changelog">Changelog</a> &middot; ' +
+  '<a href="/facts">Key facts</a> &middot; ' +
   '<button type="button" class="linkbtn" data-dialog="disclaimer" aria-haspopup="dialog">Disclaimer</button> &middot; ' +
   '<button type="button" class="linkbtn" data-dialog="contact" aria-haspopup="dialog">Contact</button> &middot; ' +
   '<a href="/privacy">Privacy</a> &middot; ' +

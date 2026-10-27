@@ -15,6 +15,19 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "key-facts",
+    date: "2026-10-26",
+    time: "19:40",
+    title: "Key Facts for Every Portal",
+    subtitle: "A new page, /facts, sums up each AI portal's interface in its latest capture",
+    bullets: [
+      { lead: "A few facts each", text: "For every portal: the sidebar, the number of menu items and where the message box sits; suggested prompts, the color scheme and whether a note about the AI's limits is shown; and the most recent menu change, with its week. A fact without data is left out." },
+      { lead: "Same rules as the timeline", text: "The latest menu change follows the portal page's How the UI changed timeline: a new model name in the model picker is not a change, and changes that could come from the account, the plan or a pop-up are left out." },
+      { lead: "Easy to link", text: "Each portal has its own anchor, such as /facts#chatgpt, and links to its portal page and a comparison. Key facts is in the footer, next to Changelog, and has a Markdown version at /facts.md." },
+    ],
+    closing: "Open /facts.",
+  },
+  {
     slug: "screenshot-lightbox",
     date: "2026-10-24",
     time: "21:19",

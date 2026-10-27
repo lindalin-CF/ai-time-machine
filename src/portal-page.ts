@@ -10,6 +10,7 @@ import { captureMetrics } from "./capture-metrics";
 import { changeEntries, navChangeSentence, navItemName, type ChangeEntry } from "./nav-changes";
 import { COMPARE_WITH_LINKS, POPULAR_PAIRINGS, comparePath, indexablePairs } from "./compare";
 import { weekDigests, latestIndexableWeek } from "./weeks";
+import { portalFacts, factsUpdated } from "./facts";
 import { CHANGELOG, CHANGELOG_UPDATED, changelogDate, changelogDatetime, utcOffsetLabel, type ChangelogEntry } from "./changelog";
 
 export const ORIGIN = "https://ai-portal-library.dev";
@@ -34,7 +35,7 @@ function shortText(s: string, max: number): string {
 }
 
 /** Footer copyright and license line (with License, Privacy and Cookie preferences) + Disclaimer and Contact dialogs. The homepage (public/index.html) carries the same markup; both use /footer-dialogs.js. */
-const FOOTER_LEGAL = `      <div class="legal">&copy; 2026 AI Interface Library. Analyses licensed under CC BY 4.0 &middot; <a href="/license">License</a> &middot; <a href="/changelog">Changelog</a> &middot; <button type="button" class="linkbtn" data-dialog="disclaimer" aria-haspopup="dialog">Disclaimer</button> &middot; <button type="button" class="linkbtn" data-dialog="contact" aria-haspopup="dialog">Contact</button> &middot; <a href="/privacy">Privacy</a> &middot; <button type="button" class="linkbtn" data-consent-open>Cookie preferences</button></div>
+const FOOTER_LEGAL = `      <div class="legal">&copy; 2026 AI Interface Library. Analyses licensed under CC BY 4.0 &middot; <a href="/license">License</a> &middot; <a href="/changelog">Changelog</a> &middot; <a href="/facts">Key facts</a> &middot; <button type="button" class="linkbtn" data-dialog="disclaimer" aria-haspopup="dialog">Disclaimer</button> &middot; <button type="button" class="linkbtn" data-dialog="contact" aria-haspopup="dialog">Contact</button> &middot; <a href="/privacy">Privacy</a> &middot; <button type="button" class="linkbtn" data-consent-open>Cookie preferences</button></div>
       <dialog id="disclaimer" class="site-dialog" aria-labelledby="disclaimer-title">
         <form method="dialog">
           <button type="submit" class="site-dialog-x" aria-label="Close">&times;</button>
@@ -773,6 +774,9 @@ export async function handleSitemap(env: Env): Promise<Response> {
     const changesMod = changesLastmod(await changes(env));
     if (changesMod) entries.push({ loc: `${ORIGIN}/changes`, lastmod: changesMod, images: [] });
     entries.push({ loc: CHANGELOG_URL, lastmod: CHANGELOG_UPDATED, images: [] });
+    // /facts once it has facts, dated by the newest week they come from.
+    const factsMod = factsUpdated(await portalFacts(env));
+    if (factsMod) entries.push({ loc: `${ORIGIN}/facts`, lastmod: factsMod, images: [] });
     // Weekly digests (src/weeks.ts): the indexable weeks, and /weeks once it lists one.
     const digests = (await weekDigests(env)).filter((d) => d.indexable);
     if (digests.length) entries.push({ loc: `${ORIGIN}/weeks`, lastmod: digests.map((d) => d.lastmod).filter((t): t is string => !!t).sort().at(-1), images: [] });

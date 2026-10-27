@@ -139,7 +139,7 @@ describe('/llms.txt', () => {
     expect(lines[0]).toBe('# AI Interface Library');
     expect(lines[2]).toMatch(/^> Each week, AI Interface Library captures the first screen of 3 AI products/);
     expect(lines[2]).toContain('a person reviews every analysis before it is published');
-    expect([...text.matchAll(/^## (.+)$/gm)].map((m) => m[1])).toEqual(['Portals', 'Weekly digests', 'Changes', 'Method', 'Feeds']);
+    expect([...text.matchAll(/^## (.+)$/gm)].map((m) => m[1])).toEqual(['Key facts', 'Portals', 'Weekly digests', 'Changes', 'Method', 'Feeds']);
     expect(text).toContain(`- [ChatGPT](${ORIGIN}/portals/chatgpt): OpenAI.`);
     expect(text).toContain(`([Markdown](${ORIGIN}/portals/chatgpt.md))`);
     expect(text).toContain(`- [Menu changes](${ORIGIN}/changes)`);

@@ -7,6 +7,7 @@ import { handleLlmsTxt, handleLlmsFullTxt } from "./aeo";
 import { handleComparePage } from "./compare-page";
 import { handleWeeks } from "./week-page";
 import { handleHomepage } from "./homepage";
+import { handleFacts } from "./facts-page";
 import { isVoiceRoomPath } from "./voice-room";
 import { expireLegacyRoom } from "./voice";
 import { QUESTION_LOG_CRON, purgeOldQuestions, withQuestionLogPermission } from "./question-log";
@@ -40,6 +41,7 @@ async function route(request: Request, url: URL, env: Env, ctx: ExecutionContext
     if (url.pathname === "/privacy" || url.pathname === "/privacy/") return handlePrivacy(request);
     if (url.pathname === "/license" || url.pathname === "/license/") return handleLicense(request);
     if (url.pathname === "/changelog" || url.pathname === "/changelog/") return handleChangelog(request);
+    if (url.pathname === "/facts" || url.pathname === "/facts/" || url.pathname === "/facts.md") return await handleFacts(request, env);
     if (url.pathname === "/changes" || url.pathname === "/changes/") return await handleChanges(request, env);
     if (url.pathname === "/llms.txt") return await handleLlmsTxt(request, env);
     if (url.pathname === "/llms-full.txt") return await handleLlmsFullTxt(request, env);
