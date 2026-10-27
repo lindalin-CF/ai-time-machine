@@ -45,6 +45,8 @@ describe('/how-we-analyze', () => {
       'An analysis only describes what is visible in one screenshot. It does not judge whether a product is easy to use, predict what people will do, or certify that a product meets accessibility standards. Measurements taken from a screenshot are close estimates, not official test results. Mobile screenshots are shown but not analyzed.',
       'Week-to-week changes',
       "When the previous week's analysis exists, the two weeks are compared. Differences that could come from the account, the time of day or a rotating greeting are not reported as redesigns.",
+      'One account per portal',
+      'Each portal is captured with one logged-in account, so a screenshot shows what that one account saw that week. Features can differ by plan (Free, Pro or Enterprise), region, language and gradual rollouts, so other people may see a different screen. Some accounts changed plans over time, and the week of a plan change is not counted as a product change.',
       'Special cases',
       'Kimi is captured while signed out, because no account is used for it. Muse always opens on a conversation, so only the interface around it is analyzed.',
       'Privacy',

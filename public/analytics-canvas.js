@@ -95,6 +95,19 @@ function navFindings(a, b, A, B, ma, mb, changeLines, brief = false) {
   return { diff, same: picker, missing: [] };
 }
 
+// ---- account plan (src/plan.ts) -------------------------------------------------
+// Two weeks of one product captured on different account plans: their differences may come from the plan, so
+// the lists carry this note. The newer week's recorded menu changes are already dropped (captureMetrics()).
+
+export const PLAN_CHANGE_NOTE = "This week's differences may come from the account plan change, not a product update.";
+
+/** PLAN_CHANGE_NOTE for two weeks of the same product whose plans are known and differ; otherwise "". */
+export function planNote(a, b) {
+  const pa = a && a.metrics && a.metrics.plan, pb = b && b.metrics && b.metrics.plan;
+  const sameProduct = !!a && !!b && !!a.slug && a.slug === b.slug && a.week !== b.week;
+  return sameProduct && pa && pb && pa !== pb ? PLAN_CHANGE_NOTE : "";
+}
+
 const RULES = [
   {
     key: "inputAreaPct",
@@ -208,6 +221,7 @@ const cardLabel = (c) => (c && c.label) || "this capture";
  * order; similarities: the same order. `missing` has one "No data for <card>: <fields>" phrase per card
  * that lacks fields. Only the whitelisted metrics and the thresholds above are used. `navChangeLines` caps
  * the recorded menu changes listed one by one (the Canvas box shows 2). `brief` gives the Table's wording (BRIEF above).
+ * `note`: PLAN_CHANGE_NOTE when the two weeks were captured on different account plans (planNote), otherwise "".
  */
 export function findingLists(a, b, { navChangeLines = NAV_CHANGE_LINES, brief = false } = {}) {
   let A = cardLabel(a), B = cardLabel(b), A2 = A, B2 = B;
@@ -233,7 +247,7 @@ export function findingLists(a, b, { navChangeLines = NAV_CHANGE_LINES, brief = 
     .map(([label, m]) => [label, [...(nav.missing.includes(label) ? [MENU] : []), ...RULES.filter((r) => !has(m, r.key)).map((r) => r.name)]])
     .filter(([, names]) => names.length)
     .map(([label, names]) => `No data for ${label}: ${names.join(", ")}`);
-  return { differences, similarities, missing };
+  return { differences, similarities, missing, note: planNote(a, b) };
 }
 
 /**
@@ -261,7 +275,7 @@ const TABLE_SIMILARITIES = 5;
  * at most 5 similarities. Null when the two cards have no field in common.
  */
 export function tableFindings(a, b) {
-  const { differences, similarities } = findingLists(a, b, { navChangeLines: Infinity, brief: true });
+  const { differences, similarities, note } = findingLists(a, b, { navChangeLines: Infinity, brief: true });
   if (!differences.length && !similarities.length) return null;
   const shown = TABLE_DIFFERENCES - 1;
   return {
@@ -269,12 +283,14 @@ export function tableFindings(a, b) {
       ? [...differences.slice(0, shown), `and ${differences.length - shown} more differences`]
       : differences,
     similarities: similarities.slice(0, TABLE_SIMILARITIES),
+    note,
   };
 }
 
 /**
  * One Table cell's content for one list ("differences" | "similarities"): a muted heading ("vs Oct 5"),
- * an optional muted note, then the bullet list, or a muted line when there is nothing to list.
+ * an optional muted note, then the bullet list, or a muted line when there is nothing to list. Listed differences
+ * between two weeks on different account plans also get the plan-change note (findings.note).
  * `findings` is tableFindings() output (null: not enough data). All text is escaped.
  */
 export function findingsCellHTML(findings, kind, { heading = "", note = "" } = {}) {
@@ -283,7 +299,8 @@ export function findingsCellHTML(findings, kind, { heading = "", note = "" } = {
   if (!findings) return `${head}<div class="an-cmp-empty">Not enough data to compare</div>`;
   const list = findings[kind];
   if (!list.length) return `${head}${sub}<div class="an-cmp-empty">${kind === "differences" ? "No differences found" : "No similarities found"}</div>`;
-  return `${head}${sub}<ul class="an-cmp-list">${list.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>`;
+  const plan = kind === "differences" && findings.note ? `<div class="an-cmp-note an-cmp-plan">${esc(findings.note)}</div>` : "";
+  return `${head}${sub}${plan}<ul class="an-cmp-list">${list.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>`;
 }
 
 // ---- layout geometry -------------------------------------------------------
@@ -394,7 +411,8 @@ function boxHTML(a, b, removable) {
   const x = removable
     ? `<button class="anc-box-x" type="button" data-remove aria-label="Remove comparison of ${esc(a.label)} and ${esc(b.label)}" title="Remove">×</button>`
     : "";
-  return `<div class="anc-box-head"><span>${esc(a.label)} → ${esc(b.label)}</span>${x}</div><ul class="anc-box-list">${lines.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>`;
+  const note = planNote(a, b);
+  return `<div class="anc-box-head"><span>${esc(a.label)} → ${esc(b.label)}</span>${x}</div>${note ? `<p class="anc-box-note">${esc(note)}</p>` : ""}<ul class="anc-box-list">${lines.map((l) => `<li>${esc(l)}</li>`).join("")}</ul>`;
 }
 
 /** Narrow screens: cards one after another, with a comparison box between neighbours. */

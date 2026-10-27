@@ -60,7 +60,7 @@ const EXPECTED = {
   colorScheme: 'dark', sidebarPct: 23, inputAreaPct: 6.5, inputPosition: 'middle',
   clickableApprox: 18, textSizes: 2, suggestedPrompts: 2, aiNote: true,
   // The v1.4 fixture has no N1 and no changes_vs_previous.
-  navItems: null, navSidebarVisible: null, navChanges: null,
+  navItems: null, navSidebarVisible: null, navChanges: null, plan: null, planChange: null,
 };
 
 /** A v1.5 N1 value: labelled and icon-only items in three regions. */

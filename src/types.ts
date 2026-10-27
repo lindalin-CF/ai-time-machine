@@ -59,6 +59,10 @@ export interface CaptureRow {
   analysis_json: string | null;     // full guideline JSON; never exposed publicly
   analysis_version: string | null;
   analysis_published_at?: string | null;
+  /** Account plan of the capture (src/plan.ts); null before migration 0010 or when unknown. */
+  plan?: string | null;
+  /** Plan of the same portal's previous successful capture (selected with PREVIOUS_PLAN in src/db.ts). */
+  previous_plan?: string | null;
   status: string;
   captured_at: string;
 }

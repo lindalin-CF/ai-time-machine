@@ -4,6 +4,7 @@ import { listPortals, listWeeks, latestWeek, capturesForWeek, getPortal, updateC
 import { hasCookieSecret, storeCapture, invalidate } from "./capture";
 import { validateAnalysis } from "./analysis";
 import { captureMetrics } from "./capture-metrics";
+import { PLANS, isPlan } from "./plan";
 import { imageSizeOf, sampleSize, type ImageSize } from "./image-size";
 
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8" };
@@ -67,6 +68,8 @@ async function shapeCapture(env: Env, row: CaptureRow) {
     palette, analysis: row.analysis, analysisBy: row.analysis_by,
     status: row.status, sample: !row.r2_key, capturedAt: row.captured_at,
     signedIn: !!row.r2_key && row.r2_key.endsWith(".local.png"),
+    // The account plan the capture was taken with (src/plan.ts), for scripts/local-capture/analysis/prepare.mjs.
+    plan: isPlan(row.plan) ? row.plan : null,
     // Whitelisted numbers from the private guideline JSON for the Analytics canvas; null when unavailable.
     metrics: captureMetrics(row),
   };
@@ -401,9 +404,11 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     if (authError) return authError;
 
     const body = await request
-      .json<{ slug?: string; week?: string; imageBase64?: string; variant?: string }>()
-      .catch(() => ({} as { slug?: string; week?: string; imageBase64?: string; variant?: string }));
+      .json<{ slug?: string; week?: string; imageBase64?: string; variant?: string; plan?: unknown }>()
+      .catch(() => ({} as { slug?: string; week?: string; imageBase64?: string; variant?: string; plan?: unknown }));
     if (!body.slug || !body.imageBase64) return json({ error: "slug and imageBase64 required" }, 400);
+    // The account plan from scripts/local-capture/config.mjs (src/plan.ts); optional for older scripts.
+    if (body.plan !== undefined && !isPlan(body.plan)) return json({ error: `plan must be one of ${PLANS.join(", ")}` }, 400);
 
     const portal = await getPortal(env, body.slug);
     if (!portal) return json({ error: "unknown slug: " + body.slug }, 400);
@@ -421,8 +426,8 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     }
     if (png.length < 100) return json({ error: "image too small" }, 400);
 
-    await storeCapture(env, week, portal, png, "local", variant);
-    return json({ ok: true, slug: body.slug, week, variant, bytes: png.length });
+    await storeCapture(env, week, portal, png, "local", variant, isPlan(body.plan) ? body.plan : null);
+    return json({ ok: true, slug: body.slug, week, variant, bytes: png.length, plan: isPlan(body.plan) ? body.plan : null });
   }
 
   // Guideline analysis produced locally (scripts/local-capture/analysis/publish.mjs). Token-gated.

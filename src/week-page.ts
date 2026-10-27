@@ -10,6 +10,7 @@ import { shotAlt, weekInWords, weekShort } from "./format";
 import { SYSTEM_TEST_WEEKS } from "./analysis";
 import { BRAND, HTML_HEADERS, MARKDOWN_HEADERS, ORIGIN, SITE_PERSON, compareWeeksHash, esc, page, shotUrl, type PreviewImage } from "./portal-page";
 import { weekDigests, weekLine, weekSummary, type WeekDigest } from "./weeks";
+import { PLAN_CHANGE_NOTE } from "./plan";
 
 export const WEEKS_URL = `${ORIGIN}/weeks`;
 
@@ -55,6 +56,7 @@ const WEEK_PAGE_HEAD = `  <style>
     .wk-portal li{margin:0 0 4px}
     .wk-links{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:.95rem}
     .wk-unchanged{margin:32px 0 0;padding-top:24px;border-top:1px solid #d8cfc2}
+    .wk-plan{margin:24px 0 0;color:#6b6257}
     .wk-list{padding-left:1.25em}
     .wk-list li{margin:0 0 6px}
     @media (max-width:640px){
@@ -85,7 +87,8 @@ export async function handleWeeks(request: Request, env: Env): Promise<Response>
   const caps = await capturesForWeek(env, week);
   const canonical = `${ORIGIN}/weeks/${week}`;
   const summary = weekSummary(d);
-  const changedSlugs = new Set(d.changed.map((p) => p.slug));
+  // A portal whose account plan changed has its own muted line (PLAN_CHANGE_NOTE), not the "no changes" list.
+  const changedSlugs = new Set([...d.changed, ...(d.planChanged ?? [])].map((p) => p.slug));
   const unchanged = d.captured.filter((p) => !changedSlugs.has(p.slug));
   const sections = d.changed.map((p) => {
     const cap = caps.find((c) => c.slug === p.slug && c.status === "ok");
@@ -119,6 +122,7 @@ ${s.portal.changes.map((c) => `            <li>${esc(c.phrase)}</li>`).join("\n"
           <p class="wk-links"><a href="${esc(s.weekly)}">${esc(s.portal.name)}, week of ${esc(weekShort(week))}</a><a href="${esc(s.compare)}" aria-label="See ${esc(s.portal.name)} this week vs last week">See this week vs last week</a></p>
         </div>
       </section>`).join("\n");
+  const planHtml = (d.planChanged ?? []).map((p) => `      <p class="wk-plan"><a href="/portals/${esc(p.slug)}/${esc(week)}">${esc(p.name)}</a>: ${esc(PLAN_CHANGE_NOTE)}</p>\n`).join("");
   const unchangedHtml = unchanged.length
     ? `      <p class="wk-unchanged">No recorded menu changes: ${unchanged.map((p) => `<a href="/portals/${esc(p.slug)}/${esc(week)}">${esc(p.name)}</a>`).join(", ")}.</p>\n`
     : "";
@@ -128,7 +132,7 @@ ${s.portal.changes.map((c) => `            <li>${esc(c.phrase)}</li>`).join("\n"
       <p class="meta">Weekly digest &middot; ${esc(weekLine(d))}</p>
       <p class="wk-summary">${esc(summary)}</p>
       <nav class="weeknav" aria-label="Weekly digests">${navLinks.join(" ")}</nav>
-${sectionsHtml ? `${sectionsHtml}\n` : ""}${unchangedHtml}      <p class="method"><a href="/changes">Every menu change</a> &middot; <a href="/how-we-analyze">How the analysis is made</a></p>
+${sectionsHtml ? `${sectionsHtml}\n` : ""}${planHtml}${unchangedHtml}      <p class="method"><a href="/changes">Every menu change</a> &middot; <a href="/how-we-analyze">How the analysis is made</a></p>
     </main>`;
 
   const first = sections.find((s) => s.shot)?.shot;
@@ -251,6 +255,7 @@ function weekMarkdown(o: {
       ...(s.shot ? [`- Desktop screenshot: ${ORIGIN}${s.shot.url}`] : []),
       "",
     ]),
+    ...(o.d.planChanged ?? []).flatMap((p) => [`${p.name}: ${PLAN_CHANGE_NOTE}`, ""]),
     ...(o.unchanged.length ? [`No recorded menu changes: ${o.unchanged.map((p) => p.name).join(", ")}.`, ""] : []),
   ].join("\n");
 }

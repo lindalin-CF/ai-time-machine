@@ -1,7 +1,8 @@
 // /facts (src/facts-page.ts): a few short facts per active portal from its latest published analysis. Built
 // only from listPortals() and captureMetrics() data; the latest menu change comes from changeEntries(), the
 // same rules as the portal timeline and /changes (model-picker normalization, only "changed" N1 entries, so
-// possibly_confounded and confounded weeks such as a plan change are left out). Nothing new is generated.
+// possibly_confounded and confounded weeks are left out, and so is a week whose account plan changed, src/plan.ts).
+// Nothing new is generated.
 import type { Env } from "./types";
 import { listPortals, publishedCaptures } from "./db";
 import { cached } from "./api";
@@ -9,12 +10,15 @@ import { isPublishedAnalysis, SYSTEM_TEST_WEEKS } from "./analysis";
 import { captureMetrics, type CaptureMetrics } from "./capture-metrics";
 import { changeEntries } from "./nav-changes";
 import { POPULAR_PAIRINGS } from "./compare";
+import { isPlan, type Plan } from "./plan";
 
 export type PortalFacts = {
   slug: string;
   name: string;
   /** The week of the analysis the facts come from; null without a published analysis. */
   week: string | null;
+  /** The account plan of that capture (src/plan.ts); null when unknown. */
+  plan: Plan | null;
   /** "A sidebar, 9 menu items, message box in the middle third of the screen."; null when all three are missing. */
   layout: string | null;
   /** "3 suggested prompts, light color scheme, a note about the AI's limits is shown."; null when all three are missing. */
@@ -60,11 +64,11 @@ export async function portalFacts(env: Env): Promise<PortalFacts[]> {
     const changes = changeEntries(rows); // newest week first
     return portals.map((p) => {
       // rows are newest week first per portal: the first one with metrics is the latest published analysis.
-      let week: string | null = null, m: CaptureMetrics | null = null;
+      let week: string | null = null, plan: Plan | null = null, m: CaptureMetrics | null = null;
       for (const r of rows) {
         if (r.slug !== p.slug || SYSTEM_TEST_WEEKS.includes(r.week) || !isPublishedAnalysis(r)) continue;
         m = captureMetrics(r);
-        if (m) { week = r.week; break; }
+        if (m) { week = r.week; plan = isPlan(r.plan) ? r.plan : null; break; }
       }
       const mine = changes.filter((e) => e.slug === p.slug);
       const latest = mine[0]?.week;
@@ -73,6 +77,7 @@ export async function portalFacts(env: Env): Promise<PortalFacts[]> {
         slug: p.slug,
         name: p.name,
         week,
+        plan,
         layout: m ? layoutFact(m) : null,
         start: m ? startFact(m) : null,
         latestChange: latest ? { week: latest, phrases: mine.filter((e) => e.week === latest).map((e) => e.phrase) } : null,

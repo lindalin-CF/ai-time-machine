@@ -33,7 +33,7 @@ import readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { WORKER_URL, UPLOAD_TOKEN } from "./config.mjs";
+import { WORKER_URL, UPLOAD_TOKEN, planFor } from "./config.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROFILE_DIR = join(__dirname, ".capture-profile");
@@ -44,7 +44,8 @@ async function uploadShot(slug, week, buf, variant) {
   const res = await fetch(`${WORKER_URL}/api/upload`, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${UPLOAD_TOKEN}` },
-    body: JSON.stringify({ slug, week, variant, imageBase64: Buffer.from(buf).toString("base64") }),
+    // The account plan from config.mjs is stored with the capture (src/plan.ts).
+    body: JSON.stringify({ slug, week, variant, plan: planFor(slug), imageBase64: Buffer.from(buf).toString("base64") }),
   });
   return res;
 }

@@ -137,7 +137,7 @@ describe('/compare/chatgpt-vs-claude', () => {
     const [a, b] = [card('chatgpt', 'ChatGPT'), card('claude', 'Claude')];
     const expected = findingLists(a, b, { navChangeLines: Infinity, brief: true });
     // The Table's cells show the same lines (it has room for all of them here).
-    expect(tableFindings(a, b)).toEqual({ differences: expected.differences, similarities: expected.similarities });
+    expect(tableFindings(a, b)).toEqual({ differences: expected.differences, similarities: expected.similarities, note: '' });
     const section = (h: string) => [...page.match(new RegExp(`<h2>${h}</h2>([\\s\\S]*?)</section>`))![1].matchAll(/<li>([^<]+)<\/li>/g)].map((m) => m[1].replace(/&#39;/g, "'"));
     expect(section('Differences')).toEqual(expected.differences);
     expect(section('Similarities')).toEqual(expected.similarities);

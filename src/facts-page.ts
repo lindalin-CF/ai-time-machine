@@ -5,6 +5,7 @@ import { consentMode, PRIVATE_HTML_CACHE } from "./consent";
 import { weekInWords, weekShort } from "./format";
 import { comparePath } from "./compare";
 import { factsUpdated, portalFacts, type PortalFacts } from "./facts";
+import { planAccount } from "./plan";
 import { BRAND, HTML_HEADERS, MARKDOWN_HEADERS, ORIGIN, esc, page } from "./portal-page";
 
 export const FACTS_URL = `${ORIGIN}/facts`;
@@ -12,8 +13,8 @@ const TITLE = "Key facts about AI portal interfaces";
 const DESCRIPTION = "Key facts about ChatGPT, Claude, Gemini and other AI portals in their latest weekly capture: layout, suggested prompts, color scheme and the latest menu change.";
 const INTRO = "What each AI portal's interface looks like in its latest capture.";
 const ONE_ACCOUNT = "Each portal is captured with one account, so details can differ by plan.";
-/** Where the second intro sentence links: /how-we-analyze has no "One account per portal" section yet. */
-const ONE_ACCOUNT_HREF = "/how-we-analyze";
+/** Where the second intro sentence links: the "One account per portal" section of /how-we-analyze. */
+const ONE_ACCOUNT_HREF = "/how-we-analyze#one-account-per-portal";
 
 /** The changelog's layout (CHANGELOG_HEAD in src/portal-page.ts), with the portal's logo where the changelog has its dot. */
 const FACTS_HEAD = `  <style>
@@ -27,7 +28,8 @@ const FACTS_HEAD = `  <style>
     .fx-who{display:grid;grid-template-columns:32px minmax(0,1fr);column-gap:12px;align-items:center;align-content:start;padding-right:24px}
     .fx-logo{display:block;width:32px;height:32px;border-radius:8px;background:#fffdf9;box-shadow:0 0 0 4px #f4efe8}
     .fx-who h2{font-size:20px;line-height:1.2;letter-spacing:-.01em;margin:0;overflow-wrap:anywhere}
-    .fx-week{grid-column:2;font-size:.85rem;color:#6b6257;white-space:nowrap}
+    .fx-week,.fx-plan{grid-column:2;font-size:.85rem;color:#6b6257}
+    .fx-week{white-space:nowrap}
     .fx-body{font-size:18px;line-height:1.6;min-width:0}
     .fx-body ul{list-style:disc;margin:0 0 16px;padding-left:1.2em}
     .fx-body li{margin:0 0 8px}
@@ -44,6 +46,9 @@ const FACTS_HEAD = `  <style>
     }
   </style>
 `;
+
+/** "Captured on a Pro account", under the week. */
+export const planLine = (f: PortalFacts) => (f.plan ? `Captured on ${planAccount(f.plan)}` : null);
 
 type Bullet = { lead: string; text: string; href?: string };
 
@@ -68,7 +73,7 @@ function entryHtml(f: PortalFacts): string {
   return `      <li class="fx-entry" id="${esc(f.slug)}">
         <div class="fx-who">
           <img class="fx-logo" src="/icons/${esc(f.slug)}.png" alt="" width="32" height="32" loading="lazy" />
-          <h2>${esc(f.name)}</h2>${f.week ? `\n          <span class="fx-week">Week of ${esc(weekShort(f.week))}</span>` : ""}
+          <h2>${esc(f.name)}</h2>${f.week ? `\n          <span class="fx-week">Week of ${esc(weekShort(f.week))}</span>` : ""}${planLine(f) ? `\n          <span class="fx-plan">${esc(planLine(f))}</span>` : ""}
         </div>
         <div class="fx-body">
           <ul>
@@ -81,11 +86,12 @@ ${bullets.join("\n")}
 
 export function factsMarkdown(facts: PortalFacts[]): string {
   const updated = factsUpdated(facts);
-  const lines = [`# Key facts`, "", `${INTRO} ${ONE_ACCOUNT} [How we analyze](${ORIGIN}${ONE_ACCOUNT_HREF})`, ""];
+  const lines = [`# Key facts`, "", `${INTRO} ${ONE_ACCOUNT} [One account per portal](${ORIGIN}${ONE_ACCOUNT_HREF})`, ""];
   if (updated) lines.push(`Last updated ${weekInWords(updated)}.`, "");
   for (const f of facts) {
     lines.push(`## ${f.name}`, "");
     if (f.week) lines.push(`- Week of ${weekInWords(f.week)}`);
+    if (planLine(f)) lines.push(`- ${planLine(f)}`);
     for (const b of factBullets(f)) lines.push(`- ${b.lead}: ${b.href ? `[${b.text}](${ORIGIN}${b.href})` : b.text}`);
     lines.push(`- Page: ${ORIGIN}/portals/${f.slug}`);
     if (f.compareWith) lines.push(`- Compare with ${f.compareWith.name}: ${ORIGIN}${comparePath(f.slug, f.compareWith.slug)}`);
@@ -104,7 +110,9 @@ export function factsJsonLd(facts: PortalFacts[]): unknown {
         "@type": "ItemList",
         name: "AI portals",
         numberOfItems: facts.length,
-        itemListElement: facts.map((f, i) => ({ "@type": "ListItem", position: i + 1, name: f.name, url: `${ORIGIN}/portals/${f.slug}` })),
+        itemListElement: facts.map((f, i) => ({
+          "@type": "ListItem", position: i + 1, name: f.name, url: `${ORIGIN}/portals/${f.slug}`, ...(planLine(f) ? { description: `${planLine(f)}.` } : {}),
+        })),
       },
     ],
   };

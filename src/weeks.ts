@@ -6,7 +6,7 @@ import { listPortals, listWeeks, publishedCaptures, sitemapCaptures } from "./db
 import { cached } from "./api";
 import { isPublishedAnalysis, SYSTEM_TEST_WEEKS } from "./analysis";
 import { weekInWords } from "./format";
-import { changes } from "./portal-page";
+import { changes, planChanges } from "./portal-page";
 
 export type DigestChange = { phrase: string; sentence: string; weight: number };
 /** A portal with recorded menu changes in the week, against the week its analysis compared with. */
@@ -20,6 +20,8 @@ export type WeekDigest = {
   published: number;
   /** Portals with recorded menu changes, portal order. */
   changed: DigestPortal[];
+  /** Portals whose account plan changed this week (src/plan.ts), portal order: their differences are not product changes. */
+  planChanged: { slug: string; name: string }[];
   /** False for the system-test weeks and weeks without a published analysis: noindex, and left out of the sitemap, llms.txt and /weeks. */
   indexable: boolean;
   /** Newest capture or analysis publish of the week (W3C datetime, whole seconds). */
@@ -34,6 +36,7 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 export async function weekDigests(env: Env): Promise<WeekDigest[]> {
   return await cached(env, "cache:week-digests", 300, async () => {
     const [weeks, portals, caps, published, entries] = await Promise.all([listWeeks(env), listPortals(env), sitemapCaptures(env), publishedCaptures(env), changes(env)]);
+    const plans = await planChanges(env);
     const order = new Map(portals.map((p, i) => [p.slug, i]));
     const names = new Map(portals.map((p) => [p.slug, p.name]));
     const byOrder = (a: { slug: string }, b: { slug: string }) => order.get(a.slug)! - order.get(b.slug)!;
@@ -48,6 +51,7 @@ export async function weekDigests(env: Env): Promise<WeekDigest[]> {
         p.changes.push({ phrase: e.phrase, sentence: e.sentence, weight: e.weight ?? 0 });
       }
       changed.sort(byOrder);
+      const planChanged = plans.filter((e) => e.week === week && names.has(e.slug)).map((e) => ({ slug: e.slug, name: names.get(e.slug)! })).sort(byOrder);
       const times = [...mine.map((c) => c.captured_at), ...pub.map((r) => r.analysis_published_at)].map((t) => Date.parse(t ?? "")).filter((n) => !Number.isNaN(n));
       const images = changed
         .map((p) => mine.find((c) => c.slug === p.slug))
@@ -58,6 +62,7 @@ export async function weekDigests(env: Env): Promise<WeekDigest[]> {
         captured: mine.map((c) => ({ slug: c.slug, name: names.get(c.slug)! })),
         published: pub.length,
         changed,
+        planChanged,
         indexable: !SYSTEM_TEST_WEEKS.includes(week) && pub.length > 0,
         ...(times.length ? { lastmod: new Date(Math.max(...times)).toISOString().replace(/\.\d{3}Z$/, "Z") } : {}),
         images,

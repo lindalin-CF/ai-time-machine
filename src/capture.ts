@@ -1,5 +1,6 @@
 import puppeteer from "@cloudflare/puppeteer";
 import type { Env, PortalRow, CaptureRow } from "./types";
+import type { Plan } from "./plan";
 import { parseImageSize } from "./image-size";
 import { getPortal, paletteFromBrand, upsertCapture, refreshWeekCount, upsertWeek, upsertMobileCapture, CACHE_VERSION } from "./db";
 
@@ -54,6 +55,8 @@ export async function storeCapture(
   png: Uint8Array,
   source: "cloud" | "local" = "cloud",
   variant: "desktop" | "mobile" = "desktop",
+  /** The account plan the screenshot was taken with (src/plan.ts); cloud captures don't know it. */
+  plan: Plan | null = null,
 ): Promise<void> {
   const id = `${portal.slug}-${week}`;
 
@@ -65,7 +68,7 @@ export async function storeCapture(
       : `shots/${week}/${portal.slug}.mobile.png`;
     await upsertWeek(env, week, weekLabelLocal(week));
     await env.SHOTS.put(mobileKey, png, { httpMetadata: { contentType: "image/png" } });
-    await upsertMobileCapture(env, week, portal, mobileKey);
+    await upsertMobileCapture(env, week, portal, mobileKey, plan);
     await refreshWeekCount(env, week);
     await invalidate(env, week);
     return;
@@ -87,6 +90,7 @@ export async function storeCapture(
     ...baseRow(portal, week, id, r2Key, "ok"),
     width: size.width,
     height: size.height,
+    plan,
     palette: JSON.stringify(paletteFromBrand(portal.brand)),
     analysis: "",
     analysis_by: "pending",

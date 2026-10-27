@@ -15,6 +15,19 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "account-plans",
+    date: "2026-10-26",
+    time: "19:52",
+    title: "Account Plans and Plan Changes",
+    subtitle: "Each capture now records the account plan it was taken with, and a week with a new plan is not counted as a product change",
+    bullets: [
+      { lead: "One plan per capture", text: "Every capture is marked Free, Pro or Enterprise. Claude is captured on a Pro account, Grok on a Pro account since the week of Oct 19, 2026, and Microsoft Copilot on an Enterprise account since the week of Aug 24, 2026. The rest use Free accounts." },
+      { lead: "Plan changes are not product changes", text: "When a product's plan differs from the week before, that week's differences may come from the plan, so they are left out of the portal timeline, weekly digests, /changes, /facts and the comparison pages. Where a week's differences are listed, such as in Compare, a note says they may come from the plan change. This covers Grok's week of Oct 19 and Copilot's week of Aug 24." },
+      { lead: "On /facts", text: "Each entry now says which plan its latest capture was taken on, and the intro links to the new One account per portal section of How we analyze." },
+    ],
+    closing: "Open /facts.",
+  },
+  {
     slug: "key-facts",
     date: "2026-10-26",
     time: "19:40",

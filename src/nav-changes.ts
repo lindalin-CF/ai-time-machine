@@ -70,3 +70,17 @@ export function changeEntries(rows: PublishedCapture[]): ChangeEntry[] {
   // Stable sort keeps portal order (and each analysis's own order) within a week.
   return out.sort((a, b) => (a.week === b.week ? 0 : a.week < b.week ? 1 : -1));
 }
+
+export type PlanChangeEntry = { slug: string; name: string; week: string };
+
+/**
+ * Published analyses whose account plan differs from the portal's previous capture (src/plan.ts), newest week first:
+ * their menu changes are left out of changeEntries(), and the surfaces that list a week's differences show
+ * PLAN_CHANGE_NOTE instead. Rows come from publishedCaptures(); system-test weeks are left out.
+ */
+export function planChangeEntries(rows: PublishedCapture[]): PlanChangeEntry[] {
+  return rows
+    .filter((r) => !SYSTEM_TEST_WEEKS.includes(r.week) && isPublishedAnalysis(r) && captureMetrics(r)?.planChange)
+    .map((r) => ({ slug: r.slug, name: r.name, week: r.week }))
+    .sort((a, b) => (a.week === b.week ? 0 : a.week < b.week ? 1 : -1));
+}

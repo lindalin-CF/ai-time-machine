@@ -7,7 +7,8 @@ import { desktopSize, mobileSize } from "./api";
 import { MOBILE_CAPTURE_SIZE } from "./image-size";
 import { shotAlt, weekInWords, weekShort } from "./format";
 import { captureMetrics } from "./capture-metrics";
-import { changeEntries, navChangeSentence, navItemName, type ChangeEntry } from "./nav-changes";
+import { changeEntries, navChangeSentence, navItemName, planChangeEntries, type ChangeEntry, type PlanChangeEntry } from "./nav-changes";
+import { PLAN_CHANGE_NOTE } from "./plan";
 import { COMPARE_WITH_LINKS, POPULAR_PAIRINGS, comparePath, indexablePairs } from "./compare";
 import { weekDigests, latestIndexableWeek } from "./weeks";
 import { portalFacts, factsUpdated } from "./facts";
@@ -84,18 +85,25 @@ export function hubDescription(name: string, aliases: string[], changed: boolean
   return latest && (d + latest).length <= DESCRIPTION_SHOWN ? d + latest : d;
 }
 
-/** One timeline line per week with menu changes, newest first: the week and its changes as short phrases. */
-export type TimelineWeek = { week: string; phrases: string[] };
+/**
+ * One timeline line per week with menu changes, newest first: the week and its changes as short phrases. A week whose
+ * account plan changed (src/plan.ts) has no phrases and `planChange`: it is shown as a muted line with PLAN_CHANGE_NOTE.
+ */
+export type TimelineWeek = { week: string; phrases: string[]; planChange?: true };
 
-function timelineWeeks(entries: ChangeEntry[]): TimelineWeek[] {
+function timelineWeeks(entries: ChangeEntry[], plans: PlanChangeEntry[] = []): TimelineWeek[] {
   const out: TimelineWeek[] = [];
   for (const e of entries) { // already newest week first
     const last = out.at(-1);
     if (last && last.week === e.week) last.phrases.push(e.phrase);
     else out.push({ week: e.week, phrases: [e.phrase] });
   }
-  return out;
+  for (const p of plans) out.push({ week: p.week, phrases: [], planChange: true });
+  return out.sort((a, b) => (a.week < b.week ? 1 : a.week > b.week ? -1 : 0));
 }
+
+/** A timeline line's text after the week: its changes, or the plan-change note. */
+const timelineText = (w: TimelineWeek) => (w.planChange ? PLAN_CHANGE_NOTE : w.phrases.join("; "));
 
 export type PreviewImage = { url: string; width: number; height: number; alt: string };
 
@@ -235,6 +243,7 @@ ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts
     .timeline{margin:32px 0}
     .timeline ul{padding-left:1.25em;margin:0}
     .timeline li{margin:0 0 6px}
+    .plan-note{color:#6b6257}
     .method{font-size:.85rem;color:#6b6257}
     .compare-with{margin:32px 0}
     .compare-with ul{padding-left:1.25em;margin:0}
@@ -370,9 +379,11 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
   const summary = weekParam !== null && cap ? summaryDescription(cap) : null;
   const aliases = PORTAL_ALIASES[slug] ?? [];
   // The hub's "How the <Name> UI changed" timeline: recorded menu changes of this portal only.
-  const timeline = weekParam === null ? timelineWeeks((await changes(env)).filter((e) => e.slug === slug)) : [];
+  const timeline = weekParam === null
+    ? timelineWeeks((await changes(env)).filter((e) => e.slug === slug), (await planChanges(env)).filter((e) => e.slug === slug))
+    : [];
   const description = weekParam === null
-    ? hubDescription(name, aliases, timeline.length > 0, cap?.week ?? null)
+    ? hubDescription(name, aliases, timeline.some((w) => !w.planChange), cap?.week ?? null)
     : summary ?? shortText(`${name} UI screenshots by ${portal.company} from the week of ${weekInWords(weekParam)}, on desktop and mobile, with a short design analysis of the interface. ${analysis}`, 300);
 
   let shots = "";
@@ -409,7 +420,7 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
 
   const timelineHtml = weekParam !== null ? "" : `      <section class="timeline"><h2>How the ${esc(name)} UI changed</h2>
 ${timeline.length
-    ? `        <ul>\n${timeline.map((w) => `          <li><a href="/portals/${esc(slug)}/${esc(w.week)}">${esc(weekInWords(w.week))}</a> \u2014 ${esc(w.phrases.join("; "))}</li>`).join("\n")}\n        </ul>`
+    ? `        <ul>\n${timeline.map((w) => `          <li${w.planChange ? ' class="plan-note"' : ""}><a href="/portals/${esc(slug)}/${esc(w.week)}">${esc(weekInWords(w.week))}</a> \u2014 ${esc(timelineText(w))}</li>`).join("\n")}\n        </ul>`
     : `        <p>No menu changes have been recorded for ${esc(name)} yet.</p>`}
       </section>\n`;
 
@@ -526,6 +537,8 @@ const HOW_WE_ANALYZE = `    <main class="howto">
       <p>An analysis only describes what is visible in one screenshot. It does not judge whether a product is easy to use, predict what people will do, or certify that a product meets accessibility standards. Measurements taken from a screenshot are close estimates, not official test results. Mobile screenshots are shown but not analyzed.</p>
       <h2>Week-to-week changes</h2>
       <p>When the previous week&#39;s analysis exists, the two weeks are compared. Differences that could come from the account, the time of day or a rotating greeting are not reported as redesigns.</p>
+      <h2 id="one-account-per-portal">One account per portal</h2>
+      <p>Each portal is captured with one logged-in account, so a screenshot shows what that one account saw that week. Features can differ by plan (Free, Pro or Enterprise), region, language and gradual rollouts, so other people may see a different screen. Some accounts changed plans over time, and the week of a plan change is not counted as a product change.</p>
       <h2>Special cases</h2>
       <p>Kimi is captured while signed out, because no account is used for it. Muse always opens on a conversation, so only the interface around it is analyzed.</p>
       <h2>Privacy</h2>
@@ -541,7 +554,7 @@ const HOW_WE_ANALYZE = `    <main class="howto">
     </main>`;
 
 /** Last content change of /how-we-analyze (YYYY-MM-DD), for its sitemap <lastmod>. Update it with the text. */
-export const HOW_WE_ANALYZE_UPDATED = "2026-10-10";
+export const HOW_WE_ANALYZE_UPDATED = "2026-10-26";
 
 /** /how-we-analyze: how the weekly screenshots and design analyses are made. */
 export function handleHowWeAnalyze(request: Request): Response {
@@ -835,6 +848,11 @@ ${built ? `    <lastBuildDate>${built}</lastBuildDate>\n` : ""}${items.join("\n"
   return new Response(xml, { headers: { "content-type": "application/rss+xml; charset=utf-8", "cache-control": "public, max-age=3600" } });
 }
 
+/** Published analyses whose account plan changed, newest week first (cached like changes()). */
+export async function planChanges(env: Env): Promise<PlanChangeEntry[]> {
+  return await cached(env, "cache:plan-changes", 300, async () => planChangeEntries(await publishedCaptures(env)));
+}
+
 /** Every recorded menu change, newest week first (cached like the sitemap and feed). */
 export async function changes(env: Env): Promise<ChangeEntry[]> {
   return await cached(env, "cache:changes", 300, async () => changeEntries(await publishedCaptures(env)));
@@ -892,7 +910,7 @@ function portalMarkdown(o: { name: string; slug: string; company: string; canoni
   const lines = [`# ${o.name}`, "", `- Company: ${o.company}`];
   // Hub only: the same "How the <Name> UI changed" list as the HTML page.
   const timeline = o.timeline === null ? [] : [`## How the ${o.name} UI changed`, "", ...(o.timeline.length
-    ? o.timeline.map((w) => `- [${weekInWords(w.week)}](${ORIGIN}/portals/${o.slug}/${w.week}) \u2014 ${w.phrases.join("; ")}`)
+    ? o.timeline.map((w) => `- [${weekInWords(w.week)}](${ORIGIN}/portals/${o.slug}/${w.week}) \u2014 ${timelineText(w)}`)
     : [`No menu changes have been recorded for ${o.name} yet.`]), ""];
   const compareWith = o.compareWith.length ? ["## Compare with other products", "", ...o.compareWith.map((c) => `- [Compare with ${c.name}](${c.url})`), ""] : [];
   if (!o.cap) return [...lines, `- Page: ${o.canonical}`, "", `No captures yet for ${o.name}.`, "", ...timeline, ...compareWith].join("\n");
@@ -911,7 +929,9 @@ function portalMarkdown(o: { name: string; slug: string; company: string; canoni
     lines.push("No menu item data for this week.");
   }
   lines.push("", "## Menu changes", "");
-  if (m?.navChanges) {
+  if (m?.navChanges && m.planChange) {
+    lines.push(`Compared with the week of ${weekInWords(m.navChanges.previousWeek)}: ${PLAN_CHANGE_NOTE}`);
+  } else if (m?.navChanges) {
     const nc = m.navChanges;
     lines.push(nc.items.length
       ? `Compared with the week of ${weekInWords(nc.previousWeek)}:\n\n${nc.items.map((c) => `- ${navChangeSentence(c)[0].toUpperCase()}${navChangeSentence(c).slice(1)}`).join("\n")}`

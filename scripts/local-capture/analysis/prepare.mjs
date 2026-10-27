@@ -10,7 +10,8 @@
  *   current.png    desktop screenshot for <week>
  *   previous.png   desktop screenshot for the nearest older week (if any)
  *   previous.json  that week's stored analysis JSON (if any)
- *   input.json     { portal, company, slug, week, previous_week }
+ *   input.json     { portal, company, slug, week, previous_week, plan, previous_plan }
+ *                  (plan / previous_plan: the account plans stored with the two captures; SKILL.md §9.1)
  *
  * Screenshot safety (CLAUDE.md): an existing current.png / previous.png is never deleted or
  * overwritten; it is renamed to current.<UTC timestamp>.png / previous.<UTC timestamp>.png first.
@@ -106,7 +107,7 @@ async function main() {
     console.log("· no previous week with a desktop capture");
   }
 
-  const input = { portal: current.portal, company: current.company, slug, week, previous_week: previousWeek };
+  const input = { portal: current.portal, company: current.company, slug, week, previous_week: previousWeek, plan: current.plan ?? null, previous_plan: previous?.plan ?? null };
   await writeFile(join(dir, "input.json"), JSON.stringify(input, null, 2) + "\n");
   console.log(`✓ input.json\n→ ${dir}`);
 }

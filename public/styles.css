@@ -1011,6 +1011,7 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
   font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--cf-text-soft)}
 .anc-box-x{border:none;background:transparent;color:var(--cf-text-soft);font-size:16px;line-height:1;padding:2px 5px;border-radius:6px;cursor:pointer}
 .anc-box-x:hover{color:var(--brand-text);background:color-mix(in srgb,var(--brand) 10%,transparent)}
+.anc-box-note{margin:0 0 6px;font-size:12px;line-height:1.4;font-style:italic;color:var(--cf-text-soft)}
 .anc-box-list{margin:0;padding:0 0 0 16px;font-size:12px;line-height:1.4;color:var(--cf-text)}
 .anc-box-list li+li{margin-top:4px}
 /* Narrow screens: stacked cards with the comparison between neighbours. */

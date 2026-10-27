@@ -11,7 +11,11 @@
 // one of the known shapes is null ("No data") and the others are still returned.
 // The input area's model/mode selector is collapsed to one "model picker" item, and changes that only
 // rename it are dropped (src/model-picker.ts): the model it shows is session state, not a menu change.
+// A capture whose account plan differs from the portal's previous capture (src/plan.ts) is possibly
+// confounded: planChange is set and its recorded menu changes are dropped, so no surface shows them as
+// product changes. Applied here at display time, from the stored plans, so past weeks are covered too.
 import { SYSTEM_TEST_WEEKS } from "./analysis";
+import { isPlan, planChange, type Plan, type PlanChange } from "./plan";
 import { isModelPickerItem, looksLikeModelName, MODEL_PICKER_LABEL } from "./model-picker";
 
 /** Every field is null when its stored value could not be parsed with confidence. */
@@ -37,6 +41,10 @@ export interface CaptureMetrics {
   navSidebarVisible: boolean | null;
   /** N1 changes with status "changed", against the week the analysis compared with. */
   navChanges: { previousWeek: string; items: NavChange[] } | null;
+  /** The account plan the capture was taken with. */
+  plan: Plan | null;
+  /** Set when the plan differs from the previous capture's: navChanges then has no items. */
+  planChange: PlanChange | null;
 }
 
 export type NavRegion = "sidebar" | "top bar" | "input area";
@@ -59,7 +67,7 @@ export interface NavChange {
   picker?: true;
 }
 
-type Row = { week?: string | null; slug?: string | null; analysis_by?: string | null; analysis_json?: string | null };
+type Row = { week?: string | null; slug?: string | null; analysis_by?: string | null; analysis_json?: string | null; plan?: string | null; previous_plan?: string | null };
 
 const isCount = (v: unknown): v is number => typeof v === "number" && Number.isInteger(v) && v >= 0;
 const isObject = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
@@ -251,6 +259,8 @@ export function captureMetrics(row: Row): CaptureMetrics | null {
   };
   const value = (id: string): unknown => metric(id)?.value;
   const scheme = context.color_scheme;
+  const plan = planChange(row.previous_plan, row.plan);
+  const nav = navChanges(a.changes_vs_previous, a.previous_week, row.week);
   return {
     colorScheme: scheme === "light" || scheme === "dark" ? scheme : null,
     sidebarPct: percent(value("L2")),
@@ -262,6 +272,8 @@ export function captureMetrics(row: Row): CaptureMetrics | null {
     aiNote: aiNote(value("D6")),
     navItems: navItems(value("N1")),
     navSidebarVisible: navSidebarVisible(metric("N1")),
-    navChanges: navChanges(a.changes_vs_previous, a.previous_week, row.week),
+    navChanges: nav && plan ? { previousWeek: nav.previousWeek, items: [] } : nav,
+    plan: isPlan(row.plan) ? row.plan : null,
+    planChange: plan,
   };
 }

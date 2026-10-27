@@ -1,7 +1,7 @@
 ---
 name: portal-design-analysis
 description: 依 AI Surface Library 規範分析 AI portal 的桌面截圖，產出可追溯到指標、證據等級與位置的 Design analysis。使用者提供 portal 桌面截圖並要求 design analysis、跑規範、或比較不同週次截圖時使用。
-version: 1.7.1
+version: 1.8.0
 ---
 
 # AI Portal 桌面截圖 Design Analysis 規範
@@ -85,6 +85,7 @@ version: 1.7.1
 4. 同一 portal 前一週的分析 JSON（用於第 9 節比較）
 5. 截圖者補充的情境（例如「這週有關掉 cookie banner」「用的是免費方案帳號」）
 6. 同一 portal 前一週的桌面截圖 PNG（用於第 9.2 節像素比對）
+7. 兩週擷取時的帳號方案：`input.json` 的 `plan` 與 `previous_plan`（`Free` / `Pro` / `Enterprise`，由 `scripts/local-capture/config.mjs` 隨截圖一起存入；用於第 9.1 節）
 
 ## 4. 執行環境
 
@@ -272,11 +273,14 @@ version: 1.7.1
 
 **彈窗與提示類內容**：歡迎彈窗、onboarding 提示、新功能介紹浮層、評分或意見問卷一律歸入 `promotional_content`。這類元素在兩週之間出現或消失時，因此產生的變動（該元素本身，以及與它重疊或被它推開的所有指標，不限上表列出的指標）一律標 `possibly_confounded`，不標 `changed`；`note` 寫 "Pop-ups, onboarding tips, feature tours and surveys come and go between visits; a single screenshot cannot show a lasting change." 這條規則也適用於 N1。
 
+**帳號方案變動**：輸入第 7 項的 `plan` 與 `previous_plan` 都有值且不同時（例如 `Free` → `Pro`），兩週不是同一個方案看到的畫面。本週**所有**變動（包括 N1）一律標 `possibly_confounded`，不標 `changed`；`note` 寫 `"account plan changed (Free → Pro)"`（填入實際的兩個方案）。摘要的比較句只能用中性字眼（第 10.2 節），不得寫成產品改版。這條規則以儲存的方案為準，不看畫面上的 `plan_tier_visible`；網站顯示時也依同樣的儲存方案套用（`src/plan.ts`），所以較舊的週次不必重新分析。
+
 **問候語輪換**：D7 文字改變一律標 `possibly_confounded`，`note` 寫 "Greetings may rotate between visits; a single screenshot cannot rule this out."
 
 **N1 的干擾判定**（比上表更嚴格，以此為準）：
 
 - `ui_language` 或 `plan_tier_visible` 與前一週不同時，N1 的所有變動標 `confounded`。
+- `plan` 與 `previous_plan`（輸入第 7 項）不同時，N1 的所有變動標 `possibly_confounded`，`note` 寫 `"account plan changed (Free → Pro)"`（見上方「帳號方案變動」）。
 - 兩週的 `sidebar` 不同（例如一週 `"visible"`、另一週 `"not_visible"`）時，只有 sidebar 區的變動標 `confounded`；頂列和輸入區照常判定。
 - `hover_or_focus_visible` 只影響 badge 判斷：與前一週不同時，只有 `badge_changed` 標 `possibly_confounded`，N1 的其他變動不受影響。
 
@@ -343,7 +347,7 @@ N1 每筆變動一筆紀錄：
 
 ```json
 {
-  "guideline_version": "1.7.1",
+  "guideline_version": "1.8.0",
   "portal": "example",
   "week": "2026-09-21",
   "previous_week": "2026-09-14",
@@ -467,12 +471,13 @@ N1 每筆變動一筆紀錄：
 4. H1 三個名次的依據數值都並列寫出，或標 `low`。
 5. `summary_sentences` 每句都有 `sources`，且句中數值與 JSON 一致；頁面摘要中沒有指標 ID、E1／E2、欄位值、hex、座標或 10.2 對照表左欄的術語，每句不超過 20 字。
 6. 摘要與 note 中沒有第 8 節的禁止類型；無標籤圖示與按鈕（包括送出、麥克風）只描述形狀；每句只講一件事。
-7. 有前一週資料時，每筆變動都達第 9.3 節門檻，干擾判定與問候語輪換規則已套用。
+7. 有前一週資料時，每筆變動都達第 9.3 節門檻，干擾判定、帳號方案變動與問候語輪換規則已套用。
 8. 第 1.1 節表列的 portal 已套用對應的收錄方式。
 9. N1 只列產品內建、可以點擊的項目，沒有帳號專屬清單、無法確定的項目、基本輸入控制（送出、麥克風／語音、附件／加號）或不能點擊的區段標題；輸入區的工具、模式、模型、設定等功能按鈕有列入；模型選擇器只有一項 `label: "model picker"`、`role: "model_picker"`，顯示的模型名稱只在 `current`，模型名稱不同沒有記成 N1 變動；沒有文字的項目有 `icon_label`；翻譯過的 `label` 沒有 "(translated from …)"，語言記在 `translated_from`；側欄收合時 `sidebar` 為 `not_visible`，頂列和輸入區的項目照常記錄；跨週比較先用文字、再用圖示配對，只有順序改變沒有記成變動；`renamed` 只用在同一位置、同一圖示、只有文字不同的項目，`icon_changed` 只用在同一位置、周圍順序不變的無文字項目，其餘未配對的記移除加新增；有選單變化時比較句先寫選單。
 
 ## 版本紀錄
 
+- **1.8.0**：第 9.1 節新增「帳號方案變動」：本週與前一週擷取時的帳號方案（`input.json` 的 `plan`、`previous_plan`，Free / Pro / Enterprise）不同時，所有變動（包括 N1）標 `possibly_confounded`，`note` 寫 `"account plan changed (Free → Pro)"`。方案隨截圖存入（`scripts/local-capture/config.mjs`），與私有的 `plan_tier_visible` 分開。網站顯示時依儲存的方案套用，涵蓋 Grok 2026-10-19 與 Microsoft Copilot 2026-08-24。
 - **1.7.1**：第 6 節明訂頂列或側欄裡每週出現在同一位置的方案連結（"Upgrade" 等）是導覽項目、不是宣傳內容；只有短期的橫幅、卡片與彈窗才算。起因：ChatGPT 2026-10-12 把頂列 Upgrade 連結的移除誤標為 `possibly_confounded`。
 - **1.7.0**：N1 跨週配對改為先比文字、再比圖示，不再依位置配對；只有順序改變一律不是變動。`renamed` 必須同一位置、同一圖示、只有文字不同；`icon_changed` 必須同一位置且周圍順序不變；其餘記 `removed` 加 `added`（第 9.3 節）。起因：位置配對把重新排列的側欄記成多筆改名與圖示改變。
 - **1.6.0**：輸入區的模型選擇器在 N1 只記一項 `{ label: "model picker", role: "model_picker", current }`；畫面顯示的模型名稱是工作階段狀態，不是導覽項目，名稱改變不記為 N1 變動（第 7.2、9.3 節）。網站在顯示時也用同樣規則整理較舊的分析（`src/model-picker.ts`），不修改已發布的資料。

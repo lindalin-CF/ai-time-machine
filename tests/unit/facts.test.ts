@@ -118,7 +118,7 @@ describe('page', () => {
     expect(s).toMatch(/<meta name="description" content="Key facts about ChatGPT, Claude, Gemini and other AI portals[^"]+" \/>/);
     expect(s).toContain('<meta name="robots" content="max-image-preview:large" />');
     expect(s).toContain('<h1>Key facts</h1>');
-    expect(s).toContain('<p class="meta">What each AI portal&#39;s interface looks like in its latest capture. <a href="/how-we-analyze">Each portal is captured with one account, so details can differ by plan.</a></p>');
+    expect(s).toContain('<p class="meta">What each AI portal&#39;s interface looks like in its latest capture. <a href="/how-we-analyze#one-account-per-portal">Each portal is captured with one account, so details can differ by plan.</a></p>');
     expect(s).toContain('<p class="fx-updated">Last updated October 19, 2026</p>');
     expect(s).toContain(`<link rel="alternate" type="text/markdown" href="${ORIGIN}/facts.md" />`);
   });
@@ -224,7 +224,7 @@ describe('/facts.md', () => {
     expect(res.headers.get('content-type')).toBe('text/markdown; charset=utf-8');
     expect(res.headers.get('link')).toBe(`<${ORIGIN}/facts>; rel="canonical"`);
     const md = await res.text();
-    expect(md).toContain(`# Key facts\n\nWhat each AI portal's interface looks like in its latest capture. Each portal is captured with one account, so details can differ by plan. [How we analyze](${ORIGIN}/how-we-analyze)\n\nLast updated October 19, 2026.`);
+    expect(md).toContain(`# Key facts\n\nWhat each AI portal's interface looks like in its latest capture. Each portal is captured with one account, so details can differ by plan. [One account per portal](${ORIGIN}/how-we-analyze#one-account-per-portal)\n\nLast updated October 19, 2026.`);
     expect([...md.matchAll(/^## (.+)$/gm)].map((m) => m[1])).toEqual(['ChatGPT', 'Claude', 'Gemini', 'Poe']);
     expect(md).toContain([
       '## ChatGPT', '',
