@@ -20,3 +20,4 @@ Screenshots are irreplaceable: a portal's UI for a given week can never be captu
 ## Deploying
 
 - Always commit and push to main before telling the user to deploy. The live site must never be ahead of git.
+- If a change needs a database migration, run the remote migration before deploying, and say so explicitly in the deploy instructions.

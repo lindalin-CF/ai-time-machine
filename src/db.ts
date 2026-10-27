@@ -9,6 +9,25 @@ export const CACHE_VERSION = "v5-week-digests";
  */
 export const PREVIOUS_PLAN = `(SELECT pp.plan FROM captures pp WHERE pp.slug = c.slug AND pp.week < c.week AND pp.status = 'ok' ORDER BY pp.week DESC LIMIT 1) AS previous_plan`;
 
+const planColumnSeen = new WeakSet<object>();
+
+/**
+ * Whether captures.plan exists (migration 0010). A Worker deployed before the migration treats every plan as
+ * unknown instead of failing. Only a found column is remembered, so running the migration later needs no redeploy.
+ */
+export async function hasPlanColumn(env: Env): Promise<boolean> {
+  if (planColumnSeen.has(env.DB)) return true;
+  const { results } = await env.DB.prepare(`PRAGMA table_info(captures)`).all<{ name: string }>();
+  const found = (results ?? []).some((r) => r.name === "plan");
+  if (found) planColumnSeen.add(env.DB);
+  return found;
+}
+
+/** PREVIOUS_PLAN, or a NULL previous_plan when the plan column doesn't exist yet. */
+async function previousPlan(env: Env): Promise<string> {
+  return (await hasPlanColumn(env)) ? PREVIOUS_PLAN : "NULL AS previous_plan";
+}
+
 /** All active portals, capture order. */
 export async function listPortals(env: Env): Promise<PortalRow[]> {
   const { results } = await env.DB.prepare(
@@ -37,7 +56,7 @@ export async function latestWeek(env: Env): Promise<string | null> {
 /** Captures for a given week (or the latest week when omitted). */
 export async function capturesForWeek(env: Env, week: string): Promise<CaptureRow[]> {
   const { results } = await env.DB.prepare(
-    `SELECT c.*, ${PREVIOUS_PLAN} FROM captures c
+    `SELECT c.*, ${await previousPlan(env)} FROM captures c
      JOIN portals p ON p.slug = c.slug
      WHERE c.week = ? AND p.active = 1
      ORDER BY p.sort_order ASC, c.portal ASC`
@@ -60,20 +79,22 @@ export async function refreshWeekCount(env: Env, week: string): Promise<void> {
 }
 
 export async function upsertCapture(env: Env, row: CaptureRow): Promise<void> {
+  // Without the plan column (before migration 0010) the capture is stored without its plan.
+  const plan = await hasPlanColumn(env);
   await env.DB.prepare(
     `INSERT INTO captures
-      (id, week, slug, portal, company, url, brand, r2_key, width, height, palette, analysis, analysis_by, analysis_json, analysis_version, status, captured_at, plan)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      (id, week, slug, portal, company, url, brand, r2_key, width, height, palette, analysis, analysis_by, analysis_json, analysis_version, status, captured_at${plan ? ", plan" : ""})
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?${plan ? ",?" : ""})
      ON CONFLICT(id) DO UPDATE SET
       r2_key=excluded.r2_key, width=excluded.width, height=excluded.height,
       palette=excluded.palette, analysis=excluded.analysis, analysis_by=excluded.analysis_by,
       analysis_json=excluded.analysis_json, analysis_version=excluded.analysis_version,
-      status=excluded.status, captured_at=excluded.captured_at,
-      plan=COALESCE(excluded.plan, captures.plan)`
+      status=excluded.status, captured_at=excluded.captured_at${plan ? `,
+      plan=COALESCE(excluded.plan, captures.plan)` : ""}`
   ).bind(
     row.id, row.week, row.slug, row.portal, row.company, row.url, row.brand,
     row.r2_key, row.width, row.height, row.palette, row.analysis, row.analysis_by,
-    row.analysis_json, row.analysis_version, row.status, row.captured_at, row.plan ?? null
+    row.analysis_json, row.analysis_version, row.status, row.captured_at, ...(plan ? [row.plan ?? null] : [])
   ).run();
 }
 
@@ -103,16 +124,17 @@ export async function upsertMobileCapture(
 ): Promise<void> {
   const id = `${portal.slug}-${week}`;
   const now = new Date().toISOString();
+  const withPlan = await hasPlanColumn(env);
   await env.DB.prepare(
     `INSERT INTO captures
-      (id, week, slug, portal, company, url, brand, r2_key, r2_key_mobile, width, height, palette, analysis, analysis_by, status, captured_at, plan)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      (id, week, slug, portal, company, url, brand, r2_key, r2_key_mobile, width, height, palette, analysis, analysis_by, status, captured_at${withPlan ? ", plan" : ""})
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?${withPlan ? ",?" : ""})
      ON CONFLICT(id) DO UPDATE SET
-      r2_key_mobile=excluded.r2_key_mobile, captured_at=excluded.captured_at, plan=COALESCE(captures.plan, excluded.plan)`
+      r2_key_mobile=excluded.r2_key_mobile, captured_at=excluded.captured_at${withPlan ? ", plan=COALESCE(captures.plan, excluded.plan)" : ""}`
   ).bind(
     id, week, portal.slug, portal.name, portal.company, portal.url, portal.brand,
     null, r2KeyMobile, 390, 844, JSON.stringify(paletteFromBrand(portal.brand)),
-    "", "sample", "ok", now, plan
+    "", "sample", "ok", now, ...(withPlan ? [plan] : [])
   ).run();
 }
 
@@ -146,14 +168,14 @@ export function paletteFromBrand(brand: string): string[] {
 /** Newest successful capture for one portal (read-only). */
 export async function latestCaptureForPortal(env: Env, slug: string): Promise<CaptureRow | null> {
   return await env.DB.prepare(
-    `SELECT c.*, ${PREVIOUS_PLAN} FROM captures c WHERE c.slug = ? AND c.status = 'ok' ORDER BY c.week DESC LIMIT 1`
+    `SELECT c.*, ${await previousPlan(env)} FROM captures c WHERE c.slug = ? AND c.status = 'ok' ORDER BY c.week DESC LIMIT 1`
   ).bind(slug).first<CaptureRow>();
 }
 
 /** Successful capture for one portal in one week (read-only). */
 export async function captureForPortalWeek(env: Env, slug: string, week: string): Promise<CaptureRow | null> {
   return await env.DB.prepare(
-    `SELECT c.*, ${PREVIOUS_PLAN} FROM captures c WHERE c.slug = ? AND c.week = ? AND c.status = 'ok' LIMIT 1`
+    `SELECT c.*, ${await previousPlan(env)} FROM captures c WHERE c.slug = ? AND c.week = ? AND c.status = 'ok' LIMIT 1`
   ).bind(slug, week).first<CaptureRow>();
 }
 
@@ -169,7 +191,7 @@ export async function captureWeeksForPortal(env: Env, slug: string): Promise<str
 export async function compareCaptures(env: Env, slugs?: string[]): Promise<CaptureRow[]> {
   const only = slugs ? ` AND c.slug IN (${slugs.map(() => "?").join(", ")})` : "";
   const { results } = await env.DB.prepare(
-    `SELECT c.*, ${PREVIOUS_PLAN} FROM captures c JOIN portals p ON p.slug = c.slug
+    `SELECT c.*, ${await previousPlan(env)} FROM captures c JOIN portals p ON p.slug = c.slug
      WHERE c.status = 'ok' AND p.active = 1 AND c.r2_key IS NOT NULL${only}
      ORDER BY p.sort_order ASC, p.name ASC, c.week DESC`
   ).bind(...(slugs ?? [])).all<CaptureRow>();
@@ -214,7 +236,7 @@ export async function publishedCaptures(env: Env): Promise<PublishedCapture[]> {
   const { results } = await env.DB.prepare(
     `SELECT c.slug AS slug, c.week AS week, p.name AS name, p.company AS company, c.status AS status, c.analysis AS analysis,
             c.analysis_by AS analysis_by, c.analysis_json AS analysis_json, c.captured_at AS captured_at,
-            c.analysis_published_at AS analysis_published_at, c.plan AS plan, ${PREVIOUS_PLAN}
+            c.analysis_published_at AS analysis_published_at, ${(await hasPlanColumn(env)) ? "c.plan" : "NULL"} AS plan, ${await previousPlan(env)}
      FROM captures c JOIN portals p ON p.slug = c.slug
      WHERE c.status = 'ok' AND p.active = 1 AND c.analysis_by LIKE 'guideline-v%' AND TRIM(COALESCE(c.analysis, '')) != ''
      ORDER BY p.sort_order ASC, p.name ASC, c.week DESC`

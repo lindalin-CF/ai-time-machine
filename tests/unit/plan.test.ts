@@ -5,7 +5,7 @@ import { handleApi } from '../../src/api';
 import { captureMetrics } from '../../src/capture-metrics';
 import { publishedCaptures } from '../../src/db';
 import { handleFacts } from '../../src/facts-page';
-import { handleChanges, handleHowWeAnalyze, handlePortalPage } from '../../src/portal-page';
+import { handleChanges, handleHowWeAnalyze, handlePortalPage, handleSitemap } from '../../src/portal-page';
 import { handleWeeks } from '../../src/week-page';
 import { handleComparePage } from '../../src/compare-page';
 import { handleLlmsFullTxt } from '../../src/aeo';
@@ -282,6 +282,56 @@ describe('POST /api/upload stores the plan', () => {
     const res = await upload({ plan: 'Team' });
     expect(res.status).toBe(400);
     expect(plan()).toBeUndefined();
+  });
+});
+
+describe('before migration 0010 (no plan column)', () => {
+  // A deploy that runs ahead of the migration treats every plan as unknown instead of failing.
+  beforeEach(() => { t.db.exec('ALTER TABLE captures DROP COLUMN plan'); });
+  const get = (path: string, handler: (r: Request, e: typeof t.env) => Promise<Response>) => handler(new Request(`${ORIGIN}${path}`), t.env);
+
+  it('serves every page that reads plans, with no plan notes or plan lines', async () => {
+    const pages: [string, Promise<Response>][] = [
+      ['/portals/grok', get('/portals/grok', handlePortalPage)],
+      ['/portals/grok/2026-10-19', get('/portals/grok/2026-10-19', handlePortalPage)],
+      ['/portals/grok/2026-10-19.md', get('/portals/grok/2026-10-19.md', handlePortalPage)],
+      ['/weeks/2026-10-19', get('/weeks/2026-10-19', handleWeeks)],
+      ['/compare/copilot-vs-grok', get('/compare/copilot-vs-grok', handleComparePage)],
+      ['/changes', get('/changes', handleChanges)],
+      ['/facts', get('/facts', handleFacts)],
+      ['/llms-full.txt', get('/llms-full.txt', handleLlmsFullTxt)],
+      ['/sitemap.xml', handleSitemap(t.env)],
+      ['/api/captures', handleApi(new Request(`${ORIGIN}/api/captures?week=2026-10-19`), t.env, ctx)],
+    ];
+    for (const [path, res] of pages) {
+      const r = await res;
+      expect(r.status, path).toBe(200);
+      const body = await r.text();
+      expect(body, path).not.toContain('account plan change');
+      expect(body, path).not.toMatch(/Captured on an? (?:Free|Pro|Enterprise) account/);
+    }
+    // Plans unknown: Grok's 10-19 changes count as menu changes again.
+    expect(await portal('/portals/grok')).toContain('SuperGrok');
+    const rows = await publishedCaptures(t.env);
+    expect(rows.every((r) => r.plan === null && r.previous_plan === null)).toBe(true);
+    expect(captureMetrics(rows.find((r) => r.slug === 'grok' && r.week === '2026-10-19')!)!.planChange).toBeNull();
+  });
+
+  it('stores uploads without a plan', async () => {
+    const res = await handleApi(new Request(`${ORIGIN}/api/upload`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: 'Bearer test-token' },
+      body: JSON.stringify({ slug: 'grok', week: '2026-10-26', imageBase64: Buffer.alloc(200, 1).toString('base64'), plan: 'Pro' }),
+    }), t.env, ctx);
+    expect(res.status).toBe(200);
+    expect(t.db.prepare(`SELECT id FROM captures WHERE id = 'grok-2026-10-26'`).get()).toEqual({ id: 'grok-2026-10-26' });
+  });
+
+  it('picks up the plans once the migration runs, without a redeploy', async () => {
+    expect(await text(get('/facts', handleFacts))).not.toContain('<span class="fx-plan">');
+    t.db.exec(MIGRATION);
+    t.kv.clear();
+    expect(await text(get('/facts', handleFacts))).toContain('<span class="fx-plan">Captured on a Pro account</span>');
   });
 });
 
