@@ -79,18 +79,19 @@ function skeletons(n = 6) {
 async function boot() {
   skeletons();
   try {
-    const [stats, portals, weeks] = await Promise.all([
-      getJSON("/api/stats"),
+    // The stats count up as soon as they arrive; nothing waits for the count.
+    const [, portals, weeks] = await Promise.all([
+      getJSON("/api/stats").then(renderStats),
       getJSON("/api/portals"),
       getJSON("/api/weeks"),
     ]);
-    renderStats(stats);
     state.portals = portals.portals || [];
     state.weeks = weeks.weeks || [];
     renderFilters();
     renderWeekSelect();
     await loadWeek(null);
   } catch (err) {
+    showStats();
     $("#grid").innerHTML = "";
     $("#weekHeading").textContent = "Could not load the library";
     const e = $("#empty");
@@ -100,21 +101,44 @@ async function boot() {
   }
 }
 
-function renderStats(s) {
-  for (const key of ["screenshots", "portals", "weeks"]) {
-    const el = document.querySelector(`[data-stat="${key}"]`);
-    const target = Number(s[key] || 0);
-    // The Worker already rendered the numbers into the page; only animate when they changed.
-    if (el && el.textContent !== String(target)) countUp(el, target);
-  }
+const STAT_KEYS = ["screenshots", "portals", "weeks"];
+const statEl = (key) => document.querySelector(`[data-stat="${key}"]`);
+
+/** Show the numbers the Worker rendered into the page as they are (styles.css hides them until then, see .stat dd). */
+function showStats() {
+  for (const key of STAT_KEYS) statEl(key)?.setAttribute("data-counted", "");
 }
 
-function countUp(el, target) {
-  const dur = 650, t0 = performance.now();
+// The hero's three numbers count up from 0 once per page load, when /api/stats arrives (boot() is the only caller).
+// With reduced motion, or with the hero already out of view, they show the final values straight away.
+function renderStats(s) {
+  const hero = document.querySelector(".hero")?.getBoundingClientRect();
+  const animate = !window.matchMedia("(prefers-reduced-motion:reduce)").matches &&
+    !!hero && hero.bottom > 0 && hero.top < innerHeight && hero.width > 0;
+  STAT_KEYS.forEach((key, i) => {
+    const el = statEl(key);
+    if (!el) return;
+    const target = Number(s[key] || 0);
+    // Past styles.css's 3s fallback the page's numbers are already showing: don't take them back to 0.
+    if (animate && getComputedStyle(el).visibility !== "visible") countUp(el, target, i * 100);
+    else el.textContent = String(target);
+    el.setAttribute("data-counted", "");
+  });
+}
+
+// Counts on an aria-hidden copy, with the final value in a visually hidden one, so screen readers read only the
+// final value. The copy is held at the final value's width (tabular digits) so nothing beside it moves.
+function countUp(el, target, delay) {
+  const dur = 900, t0 = performance.now() + delay;
+  el.innerHTML = `<span class="stat-count" aria-hidden="true">${target}</span><span class="sr-only">${target}</span>`;
+  const count = el.firstChild;
+  count.style.minWidth = `${count.getBoundingClientRect().width}px`;
+  count.textContent = "0";
   const step = (t) => {
-    const p = Math.min(1, (t - t0) / dur);
-    el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3))).toString();
+    const p = Math.min(1, Math.max(0, (t - t0) / dur));
+    count.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 5))));
     if (p < 1) requestAnimationFrame(step);
+    else el.textContent = String(target);
   };
   requestAnimationFrame(step);
 }

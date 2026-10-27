@@ -15,6 +15,19 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "stats-count-up",
+    date: "2026-10-27",
+    time: "15:28",
+    title: "Counting Stats on the Homepage",
+    subtitle: "The homepage's three numbers count up from 0 when they load",
+    bullets: [
+      { lead: "A short count", text: "Screenshots, Portals tracked and Weeks archived count up to their values in under a second, one after another, as soon as the numbers arrive. Nothing else on the page waits for it." },
+      { lead: "Nothing moves", text: "Each number keeps its final width while it counts, so the labels and the hero stay where they are." },
+      { lead: "Only when it helps", text: "It runs once per visit, not again when you come back to the Library. With reduced motion turned on, or when the hero is already scrolled away, the final numbers show at once. Screen readers hear only the final numbers." },
+    ],
+    closing: "Open the homepage.",
+  },
+  {
     slug: "no-color-scheme",
     date: "2026-10-26",
     time: "22:09",

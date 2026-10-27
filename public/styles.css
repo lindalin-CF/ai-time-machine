@@ -239,6 +239,11 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .stat dt{font-family:var(--font-mono);font-size:12px;text-transform:uppercase;letter-spacing:.10em;color:var(--cf-text-soft)}
 .stat-short{display:none}
 .stat dd{margin:2px 0 0;font-size:22px;font-weight:700;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:var(--cf-text)}
+.stat-count{display:inline-block}
+/* With JavaScript the numbers wait for /api/stats, then count up from 0 (app.js renderStats). Hidden, not removed, so
+   they keep their space; shown after 3s in case app.js never gets that far. */
+@media (prefers-reduced-motion:no-preference){html.js .stat dd:not([data-counted]){animation:stat-wait 0s 3s both}}
+@keyframes stat-wait{from{visibility:hidden}to{visibility:visible}}
 
 /* Short desktop screens (e.g. Windows laptops at 125–150% scaling, ~600–730px tall): the hero follows the viewport
    height too, so the filter bar starts in the first screen. At 900px tall and up every value below resolves to the

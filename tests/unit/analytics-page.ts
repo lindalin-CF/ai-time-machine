@@ -23,16 +23,21 @@ const API: Record<string, unknown> = {
   '/api/weeks': { weeks: WEEKS.map((week) => ({ week, label: `Week of ${week}` })) },
 };
 type Portal = { slug: string; name: string; brand: string };
+/** The page with its stats filled in, like src/homepage.ts renderHomepage. */
+const withStats = (html: string, stats: Stats) =>
+  html.replace(/(<dd data-stat="(screenshots|portals|weeks)">)–(<\/dd>)/g, (_, open: string, key: keyof Stats, close: string) => `${open}${stats[key]}${close}`);
 const PORTALS: Portal[] = [{ slug: 'chatgpt', name: 'ChatGPT', brand: '#10a37f' }, { slug: 'claude', name: 'Claude', brand: '#d97757' }];
 const captures = (week: string, portals: Portal[], metrics: Record<string, unknown>, statuses: Record<string, string>) =>
   ({ week, label: `Week of ${week}`, captures: portals.map((p) => cap(p.slug, p.name, week, metrics[`${p.slug}@${week}`] ?? null, statuses[`${p.slug}@${week}`] ?? 'ok')) });
 
 type SiteOpts = { width?: number; height?: number; hasTouch?: boolean; javaScriptEnabled?: boolean; reducedMotion?: 'reduce' | 'no-preference'; clipboard?: boolean; storage?: Record<string, string>; initScript?: string; shotShaped?: boolean; shotPng?: Buffer; weeks?: string[]; clock?: boolean; pages?: Record<string, string>;
-  portals?: Portal[]; metrics?: Record<string, unknown>; statuses?: Record<string, string> };
+  portals?: Portal[]; metrics?: Record<string, unknown>; statuses?: Record<string, string>; stats?: Stats; statsDelay?: number };
+type Stats = { screenshots: number; portals: number; weeks: number };
 
 /** The homepage at `hash` ("" for the gallery), loaded. `storage` is put in localStorage and `initScript` runs before the page does;
  * `weeks` (newest first) replaces the archived weeks, `portals` the products, and `metrics` (by "<slug>@<week>") gives captures their metrics; `statuses` (same keys) their status ('ok' by default). `pages` serves more HTML pages by path (for example a server-rendered portal page), and `shotPng` is the image every /img/ path returns. `clock` installs Playwright's fake timers before the page runs (time still
- * flows until a test pauses it with pauseClock()). */
+ * flows until a test pauses it with pauseClock()). `stats` is rendered into the page, as the Worker does, and returned by /api/stats
+ * `statsDelay` ms after it is asked for. */
 export async function openSite(browser: Browser, hash: string, opts: SiteOpts = {}): Promise<Page> {
   const context = await browser.newContext({ viewport: { width: opts.width ?? 1280, height: opts.height ?? 900 }, hasTouch: opts.hasTouch, javaScriptEnabled: opts.javaScriptEnabled, reducedMotion: opts.reducedMotion });
   if (opts.clipboard) await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: 'https://site.test' });
@@ -41,7 +46,11 @@ export async function openSite(browser: Browser, hash: string, opts: SiteOpts = 
   await context.route('**/*', async (route) => {
     const url = new URL(route.request().url());
     if (url.host !== 'site.test') return route.abort();
-    if (url.pathname === '/') return route.fulfill({ contentType: 'text/html', body: INDEX_HTML });
+    if (url.pathname === '/') return route.fulfill({ contentType: 'text/html', body: opts.stats ? withStats(INDEX_HTML, opts.stats) : INDEX_HTML });
+    if (url.pathname === '/api/stats' && (opts.stats || opts.statsDelay)) {
+      if (opts.statsDelay) await new Promise((r) => setTimeout(r, opts.statsDelay));
+      return route.fulfill({ json: opts.stats ?? API['/api/stats'] });
+    }
     if (opts.pages?.[url.pathname]) return route.fulfill({ contentType: 'text/html', body: opts.pages[url.pathname] });
     if (url.pathname === '/api/captures') return route.fulfill({ json: captures(url.searchParams.get('week') || WEEKS[0], opts.portals ?? PORTALS, opts.metrics ?? {}, opts.statuses ?? {}) });
     if (url.pathname === '/api/portals' && opts.portals) return route.fulfill({ json: { portals: opts.portals } });
