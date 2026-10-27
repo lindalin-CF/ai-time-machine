@@ -1,7 +1,7 @@
 ---
 name: portal-design-analysis
 description: 依 AI Surface Library 規範分析 AI portal 的桌面截圖，產出可追溯到指標、證據等級與位置的 Design analysis。使用者提供 portal 桌面截圖並要求 design analysis、跑規範、或比較不同週次截圖時使用。
-version: 1.8.0
+version: 1.9.0
 ---
 
 # AI Portal 桌面截圖 Design Analysis 規範
@@ -107,7 +107,7 @@ version: 1.8.0
 
 | 欄位 | 值 | 說明 |
 |---|---|---|
-| `color_scheme` | `light` / `dark` | 依背景主色判斷 |
+| `color_scheme` | `light` / `dark` | 依背景主色判斷。**只反映截圖那台電腦當時的系統外觀設定，不是產品的特性**：只用於第 9.1 節的可比較前提，不得出現在摘要、`note` 的比較文字或任何跨 portal／跨週比較中（見第 8 節） |
 | `modal_present` | `none` / `partial` | Step 0 已排除完全遮擋 |
 | `account_type` | `personal` / `work` / `school` / `unknown` | 只依畫面上明示的標籤判斷，例如 "Work" 字樣；不寫組織名稱 |
 | `plan_tier_visible` | 畫面上看到的方案字樣（英文），否則 `unknown` | 例如 "Plus"、"Premium"、"Upgrade"；不寫組織名稱 |
@@ -250,6 +250,7 @@ version: 1.8.0
 | 錯誤元件名稱 | 把聊天輸入框叫 search bar、把登入後介面叫 landing page | 用 prompt input、logged-in home screen |
 | 圖示意義推測 | the shield icon shows data is protected | 只描述形狀與位置 |
 | 把變動說成改版 | Copilot redesigned its greeting、updated the sidebar | 用中性字眼：the greeting text differs from… |
+| 把深淺色外觀說成產品特性 | dark screen、light screen、dark mode、light mode、dark theme、light theme | 刪除。`color_scheme` 只反映截圖電腦的系統設定（第 6 節）。對比句不受影響，例如 the text is dark enough against the background… |
 
 ## 9. 跨週比較（Step 6）
 
@@ -347,7 +348,7 @@ N1 每筆變動一筆紀錄：
 
 ```json
 {
-  "guideline_version": "1.8.0",
+  "guideline_version": "1.9.0",
   "portal": "example",
   "week": "2026-09-21",
   "previous_week": "2026-09-14",
@@ -417,6 +418,7 @@ N1 每筆變動一筆紀錄：
 - **一句只講一件事**：不要用 and、but、with 把兩個不同指標的觀察接在同一句（例如「建議提示」和「沒有錯誤聲明」要分成兩句）。唯一例外是 C4 為 `approx_unclear` 時的固定句型。句數不夠放時，優先刪掉較不重要的觀察，而不是合併句子。
 - 用日常用字，目標是一般國中生讀得懂。不用分號、不用括號裡再塞說明。
 - 第一句固定：`This shows the desktop version of {portal name} for the week of {week}, before scrolling.`
+- 不寫畫面是深色或淺色（dark／light screen、mode、theme）：`color_scheme` 只反映截圖電腦的系統設定，不是產品特性（第 6 節）。
 - 之後依序涵蓋：整體版面、畫面上最顯眼的東西、文字與顏色、使用者從哪裡開始（含問候語、建議提示與「可能出錯」聲明）；有比較結果時最後寫變動（選單變化在前，見下）。
 - 只能使用 JSON 中已存在的數值與觀察，不得新增資訊。數字可以保留，但要換成一般人懂的說法（見下表）。
 - 比較句只能根據 `changes_vs_previous`：`changed` 可以寫；`possibly_confounded` 只能用中性字眼寫（"differs from"），不得寫成改版；`confounded` 不寫。完全沒有變動時寫 "The main screen looks the same as the week of {previous week}."
@@ -477,6 +479,7 @@ N1 每筆變動一筆紀錄：
 
 ## 版本紀錄
 
+- **1.9.0**：`color_scheme` 只反映截圖電腦當時的系統外觀設定，不是產品特性（第 6 節）：仍記錄並用於第 9.1 節的可比較前提，但不得出現在摘要或任何比較中；第 8 節新增「把深淺色外觀說成產品特性」（dark／light screen、mode、theme）。網站也不再在 /facts、Compare、比較頁、語音導覽與 llms 檔案中顯示深淺色。已發布的摘要不修改。
 - **1.8.0**：第 9.1 節新增「帳號方案變動」：本週與前一週擷取時的帳號方案（`input.json` 的 `plan`、`previous_plan`，Free / Pro / Enterprise）不同時，所有變動（包括 N1）標 `possibly_confounded`，`note` 寫 `"account plan changed (Free → Pro)"`。方案隨截圖存入（`scripts/local-capture/config.mjs`），與私有的 `plan_tier_visible` 分開。網站顯示時依儲存的方案套用，涵蓋 Grok 2026-10-19 與 Microsoft Copilot 2026-08-24。
 - **1.7.1**：第 6 節明訂頂列或側欄裡每週出現在同一位置的方案連結（"Upgrade" 等）是導覽項目、不是宣傳內容；只有短期的橫幅、卡片與彈窗才算。起因：ChatGPT 2026-10-12 把頂列 Upgrade 連結的移除誤標為 `possibly_confounded`。
 - **1.7.0**：N1 跨週配對改為先比文字、再比圖示，不再依位置配對；只有順序改變一律不是變動。`renamed` 必須同一位置、同一圖示、只有文字不同；`icon_changed` 必須同一位置且周圍順序不變；其餘記 `removed` 加 `added`（第 9.3 節）。起因：位置配對把重新排列的側欄記成多筆改名與圖示改變。

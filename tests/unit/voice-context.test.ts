@@ -81,7 +81,7 @@ describe('voice keyterms', () => {
     const terms = voiceKeyterms(await listPortals(t.env));
     expect(terms).toEqual(['ChatGPT', 'OpenAI', 'Grok', 'xAI', 'Claude', 'Anthropic', ...VOICE_TERMS]); // portal sort order
     expect(terms).not.toContain('Retired');
-    expect(VOICE_TERMS).toEqual(['portal', 'sidebar', 'menu', 'message box', 'dark mode', 'light mode', 'suggested prompts']);
+    expect(VOICE_TERMS).toEqual(['portal', 'sidebar', 'menu', 'message box', 'suggested prompts']);
   });
 
   it('follows the portals table, with no duplicates', async () => {
@@ -122,15 +122,15 @@ describe('voice context', () => {
 
   it("has one history line per product with each week's measures, newest first", async () => {
     const text = await context();
-    expect(text).toContain('- ChatGPT: 2026-10-05: dark, 20, 3.3, middle, 18, 3, no; 2026-09-28: dark, 21, 3.1, middle, 18, 3, yes');
-    expect(text).toContain('- Claude: 2026-10-05: light, 20, 6.5, middle, 18, 0, no');
+    expect(text).toContain('- ChatGPT: 2026-10-05: 20, 3.3, middle, 18, 3, no; 2026-09-28: 21, 3.1, middle, 18, 3, yes');
+    expect(text).toContain('- Claude: 2026-10-05: 20, 6.5, middle, 18, 0, no');
   });
 
   it('leaves out system-test weeks, unpublished analyses, retired portals and private text', async () => {
     const text = await context({ links: true });
     for (const p of PRIVATE) expect(text, p).not.toContain(p);
     expect(text).not.toContain('2026-08-03');
-    expect(text).not.toContain('Claude: 2026-10-05: light, 20, 6.5, middle, 18, 0, no; 2026-09-28'); // unpublished week
+    expect(text).not.toContain('Claude: 2026-10-05: 20, 6.5, middle, 18, 0, no; 2026-09-28'); // unpublished week
   });
 
   it('includes Grok only once it has a published analysis', async () => {
@@ -159,7 +159,7 @@ describe('voice context', () => {
     const logs: string[] = [];
     const text = await context({ log: (m) => logs.push(m), max: 4000 });
     expect(text.length).toBeLessThanOrEqual(4000);
-    expect(text).toContain('2026-10-05: dark'); // newest week kept
+    expect(text).toContain('2026-10-05: 20'); // newest week kept
     expect(text).not.toContain('2025-01-06'); // oldest week dropped
     expect(text).not.toContain('New0'); // and its menu change
     expect(logs).toHaveLength(1);
@@ -194,7 +194,10 @@ describe('worked-out lists', () => {
 
   it('groups every product, with counts, from its latest analysis', async () => {
     const text = await context();
-    expect(text).toContain('- Color (latest analyses, week of Oct 5): Dark theme: ChatGPT (1 of 2). Light theme: Claude (1 of 2).');
+    expect(text).not.toContain('- Color (');
+    // The color scheme follows the capture machine's setting: never in the context (history, groups or changes).
+    chatgptWeeks();
+    expect(await context()).not.toMatch(/\b(?:dark|light)\b|color scheme|theme/i);
     expect(text).toContain('- Note that the AI can make mistakes (latest analyses, week of Oct 5): Shown: none (0 of 2). Not shown: ChatGPT, Claude (2 of 2).');
     expect(text).toContain('- Sidebar (latest analyses, week of Oct 5): Has a sidebar: ChatGPT, Claude (2 of 2). No sidebar: none (0 of 2).');
     expect(text).toContain('- Message box position (latest analyses, week of Oct 5): Top third: none (0 of 2). Middle third: ChatGPT, Claude (2 of 2). Bottom third: none (0 of 2).');
@@ -204,7 +207,6 @@ describe('worked-out lists', () => {
     add('pi', 'Pi', 'Inflection AI', '2026-09-28', analysis('pi', '2026-09-28', '2026-09-21', { note: true, L2: '0%', L3: 'bottom' }));
     t.db.exec(`UPDATE captures SET analysis_json = json_set(analysis_json, '$.context.color_scheme', 'unknown') WHERE id = 'claude-2026-10-05'`);
     const text = await context();
-    expect(text).toContain('Dark theme: ChatGPT, Pi (week of Sep 28) (2 of 3). Light theme: none (0 of 3). Not measured: Claude (1 of 3).');
     expect(text).toContain('Shown: Pi (week of Sep 28) (1 of 3).');
     expect(text).toContain('No sidebar: Pi (week of Sep 28) (1 of 3).');
     expect(text).toContain('Bottom third: Pi (week of Sep 28) (1 of 3).');
@@ -213,7 +215,7 @@ describe('worked-out lists', () => {
   it("works out ChatGPT's changes across its weeks with the guideline thresholds", async () => {
     chatgptWeeks();
     expect(await context()).toContain(
-      '- ChatGPT changes (6 weeks, Aug 17 to Oct 5): color scheme light \u2192 dark (Aug 24); clickable items 17 \u2192 23 (Aug 24) \u2192 26 (Sep 21) \u2192 23 (Sep 28); '
+      '- ChatGPT changes (6 weeks, Aug 17 to Oct 5): clickable items 17 \u2192 23 (Aug 24) \u2192 26 (Sep 21) \u2192 23 (Sep 28); '
       + 'seen Oct 5: the sidebar item Scheduled is now labeled Tasks; seen Oct 5: The question above the message box differs from the week of Sep 28.');
   });
 
@@ -325,10 +327,17 @@ describe('voice system prompt', () => {
     expect(p).toMatch(/do not call a change a\s+redesign, launch or new feature/);
   });
 
+  it('never states a color scheme, and says why when asked', async () => {
+    const p = prompt(true);
+    expect(p).not.toContain('dark theme"');
+    expect(p).toContain('- Do not say whether a product uses a dark or light theme or mode. If asked, say the screenshots follow the color');
+    expect(p).toContain('setting of the computer that took them, so the library does not record a product\'s color scheme.');
+  });
+
   it('handles misheard, unclear and frustrated questions', () => {
     const p = prompt(true);
     expect(p).toContain('"potter" is probably "portal"');
-    expect(p).toContain('"dark sea" may be "DeepSeek"');
+    expect(p).toContain('"dark sea" is probably "DeepSeek"');
     expect(p).toContain("If you're asking about DeepSeek: ...");
     expect(p).toMatch(/only a product name .* Reply\s+with one question only/s);
     expect(p).toMatch(/frustrated .* give one example\s+question/s);

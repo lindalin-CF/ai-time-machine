@@ -10,7 +10,7 @@ import { BRAND, HTML_HEADERS, MARKDOWN_HEADERS, ORIGIN, esc, page } from "./port
 
 export const FACTS_URL = `${ORIGIN}/facts`;
 const TITLE = "Key facts about AI portal interfaces";
-const DESCRIPTION = "Key facts about ChatGPT, Claude, Gemini and other AI portals in their latest weekly capture: layout, suggested prompts, color scheme and the latest menu change.";
+const DESCRIPTION = "Key facts about ChatGPT, Claude, Gemini and other AI portals in their latest weekly capture: layout, suggested prompts, the note about the AI's limits and the latest menu change.";
 const INTRO = "What each AI portal's interface looks like in its latest capture.";
 const ONE_ACCOUNT = "Each portal is captured with one account, so details can differ by plan.";
 /** Where the second intro sentence links: the "One account per portal" section of /how-we-analyze. */

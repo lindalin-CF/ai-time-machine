@@ -140,19 +140,20 @@ describe('page', () => {
   it('builds the facts from the latest published analysis', async () => {
     expect(bullets(await entry('chatgpt'))).toEqual([
       'Layout: A sidebar, 4 menu items, message box in the middle third of the screen.',
-      'Start screen: 3 suggested prompts, light color scheme, a note about the AI&#39;s limits is shown.',
+      'Start screen: 3 suggested prompts, a note about the AI&#39;s limits is shown.',
       'Latest menu change: Week of October 12, 2026: More renamed to Explore.',
     ]);
     expect(bullets(await entry('gemini'))).toEqual([
       'Layout: No sidebar, 1 menu item.',
-      'Start screen: No suggested prompts, light color scheme, no note about the AI&#39;s limits.',
+      'Start screen: No suggested prompts, no note about the AI&#39;s limits.',
       'Latest menu change: Week of October 19, 2026: Gems added to the top bar.',
     ]);
   });
 
   it('skips every fact whose value is missing', async () => {
     const claude = await entry('claude');
-    expect(bullets(claude)).toEqual(['Start screen: Dark color scheme.', 'Menu changes: No menu changes recorded yet.']);
+    // Its analysis records only the color scheme, which is never shown, so it has no Start screen line.
+    expect(bullets(claude)).toEqual(['Menu changes: No menu changes recorded yet.']);
     // No published analysis: no week, only the menu changes line.
     const poe = await entry('poe');
     expect(poe).not.toContain('fx-week');
@@ -201,6 +202,18 @@ describe('latest menu change rules (the portal timeline\'s)', () => {
   });
 });
 
+describe('color scheme', () => {
+  // The color scheme follows the capture machine's system setting, not the product.
+  it('is never shown, in the HTML, the Markdown or the JSON-LD', async () => {
+    const color = /\b(?:dark|light)\b|color scheme|colour scheme|\bmode\b|theme/i;
+    const page = await html();
+    const visible = page.replace(/<style>[\s\S]*?<\/style>|<script(?! type="application\/ld\+json")[\s\S]*?<\/script>/g, '');
+    expect(visible).not.toMatch(color);
+    expect(JSON.stringify(jsonLd(page))).not.toMatch(color);
+    expect(await html('/facts.md')).not.toMatch(color);
+  });
+});
+
 describe('structured data', () => {
   it('has a WebPage dated by the latest week and an ItemList of the portals', async () => {
     const [ld] = jsonLd(await html());
@@ -230,7 +243,7 @@ describe('/facts.md', () => {
       '## ChatGPT', '',
       '- Week of October 19, 2026',
       '- Layout: A sidebar, 4 menu items, message box in the middle third of the screen.',
-      "- Start screen: 3 suggested prompts, light color scheme, a note about the AI's limits is shown.",
+      "- Start screen: 3 suggested prompts, a note about the AI's limits is shown.",
       `- Latest menu change: [Week of October 12, 2026: More renamed to Explore.](${ORIGIN}/portals/chatgpt/2026-10-12)`,
       `- Page: ${ORIGIN}/portals/chatgpt`,
       `- Compare with Claude: ${ORIGIN}/compare/chatgpt-vs-claude`,

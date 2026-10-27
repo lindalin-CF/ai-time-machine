@@ -79,8 +79,9 @@ describe('compareFindings', () => {
 
   it('names missing fields on both sides in one line', () => {
     const a = { label: 'A', metrics: { ...base, aiNote: null } };
-    const b = { label: 'B', metrics: { ...base, colorScheme: null } };
-    expect(compareFindings(a, b).at(-1)).toBe('No data for A: menu items, note about AI limits; No data for B: menu items, color scheme.');
+    const b = { label: 'B', metrics: { ...base, colorScheme: null, textSizes: null } };
+    // The color scheme is never compared, so it is never reported missing either.
+    expect(compareFindings(a, b).at(-1)).toBe('No data for A: menu items, note about AI limits; No data for B: menu items, text sizes.');
   });
 
   it('says No comparable data when no field is on both sides', () => {

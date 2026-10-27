@@ -15,6 +15,19 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "no-color-scheme",
+    date: "2026-10-26",
+    time: "22:09",
+    title: "Dark or Light Is Not a Product Fact",
+    subtitle: "Whether a screenshot is dark or light comes from the capturing computer's setting, so it is no longer shown as a fact about a product",
+    bullets: [
+      { lead: "Why", text: "Each screenshot follows the appearance setting of the computer that took it, not a choice the product made. Calling a product dark or light was misleading." },
+      { lead: "Where it is gone", text: "/facts no longer lists a color scheme. Compare's Table and Canvas, and the comparison pages, no longer list \"captured in dark mode\" as a similarity or dark vs light as a difference. The voice guide and the llms files leave it out too." },
+      { lead: "What stays", text: "Contrast findings, such as whether text is dark enough against its background, are unchanged. Some comparison pages may show one finding fewer." },
+    ],
+    closing: "Open /facts.",
+  },
+  {
     slug: "account-plans",
     date: "2026-10-26",
     time: "19:52",

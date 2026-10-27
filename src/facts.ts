@@ -21,7 +21,7 @@ export type PortalFacts = {
   plan: Plan | null;
   /** "A sidebar, 9 menu items, message box in the middle third of the screen."; null when all three are missing. */
   layout: string | null;
-  /** "3 suggested prompts, light color scheme, a note about the AI's limits is shown."; null when all three are missing. */
+  /** "3 suggested prompts, a note about the AI's limits is shown."; null when both are missing. */
   start: string | null;
   /** The newest week with recorded menu changes, and its changes as timeline phrases. */
   latestChange: { week: string; phrases: string[] } | null;
@@ -47,13 +47,15 @@ export function layoutFact(m: CaptureMetrics): string | null {
   return sentence([sidebar, items, input]);
 }
 
-/** Suggested prompts, color scheme and the note about the AI's limits; each part is skipped when its value is missing. */
+/**
+ * Suggested prompts and the note about the AI's limits; each part is skipped when its value is missing. The color
+ * scheme is left out: it follows the capture machine's system setting, not the product.
+ */
 export function startFact(m: CaptureMetrics): string | null {
   const prompts = m.suggestedPrompts === null ? null
     : m.suggestedPrompts === 0 ? "no suggested prompts" : plural(m.suggestedPrompts, "suggested prompt", "suggested prompts");
-  const scheme = m.colorScheme ? `${m.colorScheme} color scheme` : null;
   const note = m.aiNote === null ? null : m.aiNote ? "a note about the AI's limits is shown" : "no note about the AI's limits";
-  return sentence([prompts, scheme, note]);
+  return sentence([prompts, note]);
 }
 
 /** One entry per active portal, in the homepage chips' order (listPortals()). */

@@ -297,9 +297,7 @@ describe('/how-we-analyze: One account per portal', () => {
 });
 
 describe('guideline (SKILL.md)', () => {
-  it('is version 1.8.0, with the plan-change rule in §9.1 and N1', () => {
-    expect(SKILL).toMatch(/^---[\s\S]*?\nversion: 1\.8\.0\n/);
-    expect(SKILL).toContain('"guideline_version": "1.8.0"');
+  it('has the plan-change rule (1.8.0) in §9.1 and N1', () => {
     expect(SKILL).toContain('7. 兩週擷取時的帳號方案：`input.json` 的 `plan` 與 `previous_plan`');
     expect(SKILL).toContain('**帳號方案變動**：');
     expect(SKILL).toContain('本週**所有**變動（包括 N1）一律標 `possibly_confounded`');

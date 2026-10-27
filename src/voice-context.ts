@@ -13,7 +13,7 @@ import { weekInWords } from "./format";
 export const VOICE_CONTEXT_MAX = 24_000;
 
 /** Words the speech recognizer should favour: every active portal name and company, plus the site's own terms. */
-export const VOICE_TERMS = ["portal", "sidebar", "menu", "message box", "dark mode", "light mode", "suggested prompts"] as const;
+export const VOICE_TERMS = ["portal", "sidebar", "menu", "message box", "suggested prompts"] as const;
 export function voiceKeyterms(portals: Pick<PortalRow, "name" | "company">[]): string[] {
   return [...new Set([...portals.flatMap((p) => [p.name, p.company]), ...VOICE_TERMS].map((t) => t.trim()).filter(Boolean))];
 }
@@ -97,10 +97,13 @@ function menuLine(m: CaptureMetrics | null): string {
   return `Menu items, ${regions.join("; ")}${m.navSidebarVisible === false ? " (sidebar collapsed, its items not visible)" : ""}.`;
 }
 
-/** One history entry: "2026-10-05: dark, 20, 3.3, middle, 23, 3, no". */
+/**
+ * One history entry: "2026-10-05: 20, 3.3, middle, 23, 3, no". The color scheme is left out of the voice guide: it
+ * follows the capture machine's system setting, not the product.
+ */
 function historyEntry(r: Row): string {
   const m = r.metrics;
-  return `${r.week}: ${m?.colorScheme ?? "?"}, ${num(m?.sidebarPct)}, ${num(m?.inputAreaPct)}, ${m?.inputPosition ?? "?"}, ${num(m?.clickableApprox)}, ${num(m?.suggestedPrompts)}, ${yesNo(m?.aiNote)}`;
+  return `${r.week}: ${num(m?.sidebarPct)}, ${num(m?.inputAreaPct)}, ${m?.inputPosition ?? "?"}, ${num(m?.clickableApprox)}, ${num(m?.suggestedPrompts)}, ${yesNo(m?.aiNote)}`;
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -133,7 +136,6 @@ export function productGroups(latest: Latest[]): string[] {
   };
   const when = `(latest analyses, week of ${shortWeek(week)})`;
   return [
-    `- Color ${when}: ${group("Dark theme", (m) => m?.colorScheme === "dark")} ${group("Light theme", (m) => m?.colorScheme === "light")}${unknown("Not measured", (m) => !m?.colorScheme)}`,
     `- Note that the AI can make mistakes ${when}: ${group("Shown", (m) => m?.aiNote === true)} ${group("Not shown", (m) => m?.aiNote === false)}${unknown("Not measured", (m) => m?.aiNote == null)}`,
     `- Sidebar ${when}: ${group("Has a sidebar", (m) => (m?.sidebarPct ?? 0) > 0)} ${group("No sidebar", (m) => m?.sidebarPct === 0)}${unknown("Not measured", (m) => m?.sidebarPct == null)}`,
     `- Message box position ${when}: ${group("Top third", (m) => m?.inputPosition === "top")} ${group("Middle third", (m) => m?.inputPosition === "middle")} ${group("Bottom third", (m) => m?.inputPosition === "bottom")}${unknown("Not measured", (m) => !m?.inputPosition)}`,
@@ -145,7 +147,6 @@ type Metric = { label: string; get: (m: CaptureMetrics) => string | number | boo
 const metric = <T extends string | number | boolean>(label: string, get: (m: CaptureMetrics) => T | null, differs: (a: T, b: T) => boolean, show: (v: T) => string = String): Metric =>
   ({ label, get, differs, show } as unknown as Metric);
 const TRACKED: Metric[] = [
-  metric("color scheme", (m) => m.colorScheme, (a, b) => a !== b),
   metric("sidebar width", (m) => m.sidebarPct, (a, b) => Math.abs(a - b) >= 5 || (a === 0) !== (b === 0), (v) => `${v}%`),
   metric("message box size", (m) => m.inputAreaPct, (a, b) => Math.abs(a - b) >= 1, (v) => `${v}%`),
   metric("message box position", (m) => m.inputPosition, (a, b) => a !== b, (v) => `${v} third`),
@@ -236,7 +237,7 @@ function statusOf(statuses: Map<string, ChangeStatus[]>, ids: string[], fallback
 
 // The metric each measured change is judged by, so "this week" follows the analysis's own status.
 const METRIC_ID: Record<string, string> = {
-  "color scheme": "C1", "sidebar width": "L2", "message box size": "H2", "message box position": "L3",
+  "sidebar width": "L2", "message box size": "H2", "message box position": "L3",
   "clickable items": "L4", "suggested prompts": "D5", "note about AI mistakes": "D6",
 };
 
@@ -363,7 +364,7 @@ export function buildVoiceContext(
       `LATEST ANALYSIS PER PRODUCT${opts.links ? " (the week is in each page path)" : ""}`,
       ...latest,
       "",
-      "WEEKLY MEASURES PER PRODUCT, newest week first. Each entry is week: color scheme, sidebar width as % of the screen width, message box area as % of the screen, vertical third the message box sits in, approximate number of clickable items, number of suggested prompts, note about AI mistakes shown (? means not measured).",
+      "WEEKLY MEASURES PER PRODUCT, newest week first. Each entry is week: sidebar width as % of the screen width, message box area as % of the screen, vertical third the message box sits in, approximate number of clickable items, number of suggested prompts, note about AI mistakes shown (? means not measured).",
       ...history,
     ].join("\n");
   };
@@ -406,6 +407,8 @@ export function voiceSystemPrompt(context: string, spoken: boolean): string {
     "- Only describe what is visible. Do not judge usability or design quality (no \"user-friendly\", \"intuitive\",",
     "  \"clean\", \"better\"), do not predict what users will do, do not guess design intent, and do not call a change a",
     "  redesign, launch or new feature.",
+    "- Do not say whether a product uses a dark or light theme or mode. If asked, say the screenshots follow the color",
+    "  setting of the computer that took them, so the library does not record a product's color scheme.",
     "- Do not mention databases, JSON, context or that you were given data.",
     "- Always write plain text. Never use Markdown: no bold or italics, no headings, no bullet or numbered lists, no",
     "  backticks, no tables. To list things, use full sentences or separate the items with commas.",
@@ -417,8 +420,8 @@ export function voiceSystemPrompt(context: string, spoken: boolean): string {
     "",
     "Understanding the question:",
     "- Questions often come from speech recognition and can contain misheard words, or typos. Product names and site terms",
-    "  may be heard as words that sound alike: \"potter\" is probably \"portal\", \"dark sea\" may be \"DeepSeek\" or",
-    "  \"dark theme\", \"switch button\" may be \"which portals\". Use the product list in the data to guess what was meant.",
+    "  may be heard as words that sound alike: \"potter\" is probably \"portal\", \"dark sea\" is probably \"DeepSeek\",",
+    "  \"switch button\" may be \"which portals\". Use the product list in the data to guess what was meant.",
     "- When you had to guess, start the answer with one short sentence that says what you understood, for example",
     "  \"If you're asking about DeepSeek: ...\".",
     "- If the question is only a product name or a few words (for example \"CoPilot.\"), do not describe the product. Reply",

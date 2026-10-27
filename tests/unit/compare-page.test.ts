@@ -113,7 +113,7 @@ describe('/compare/chatgpt-vs-claude', () => {
     expect(page).toContain('<h1>ChatGPT vs Claude: UI comparison</h1>');
     expect(page).toContain('<title>ChatGPT vs Claude UI comparison — Oct 12, 2026 | AI Interface Library</title>');
     const summary = page.match(/<p class="cmp-summary">([^<]+)<\/p>/)?.[1];
-    expect(summary).toBe('How ChatGPT (OpenAI) and Claude (Anthropic) compare on a desktop screen in the week of October 12, 2026: 5 differences and 2 similarities, measured from each product&#39;s weekly screenshot.');
+    expect(summary).toBe('How ChatGPT (OpenAI) and Claude (Anthropic) compare on a desktop screen in the week of October 12, 2026: 4 differences and 2 similarities, measured from each product&#39;s weekly screenshot.');
     expect(page).toContain(`<meta name="description" content="${summary}" />`);
     expect(page).toContain(`<link rel="canonical" href="${ORIGIN}/compare/chatgpt-vs-claude" />`);
     expect(page).toContain(`<link rel="alternate" type="text/markdown" href="${ORIGIN}/compare/chatgpt-vs-claude.md" />`);
@@ -221,10 +221,11 @@ describe('noindex', () => {
       slug, week: NEW, r2_key: `shots/${NEW}/${slug}.local.png`, captured_at: `${NEW}T09:00:00Z`, analysis: 'x', analysis_by: 'guideline-v1.5.2',
       analysis_json: JSON.stringify({ portal: slug, week: NEW, variant: 'desktop', status: 'ok', context: { color_scheme: 'dark' }, metrics }),
     }) as unknown as CaptureRow;
-    const two = comparePair(p('a'), p('b'), [cap('a', [{ id: 'H3', value: 3 }]), cap('b', [{ id: 'H3', value: 4 }])]);
+    // The shared color scheme is not a finding.
+    const two = comparePair(p('a'), p('b'), [cap('a', [{ id: 'H3', value: 3 }, { id: 'D6', value: 'none' }]), cap('b', [{ id: 'H3', value: 4 }, { id: 'D6', value: 'none' }])]);
     expect(two.counts.differences + two.counts.similarities).toBe(2);
     expect(two.indexable).toBe(false);
-    const three = comparePair(p('a'), p('b'), [cap('a', [{ id: 'H3', value: 3 }, { id: 'D6', value: 'none' }]), cap('b', [{ id: 'H3', value: 4 }, { id: 'D6', value: 'none' }])]);
+    const three = comparePair(p('a'), p('b'), [cap('a', [{ id: 'H3', value: 3 }, { id: 'D6', value: 'none' }, { id: 'L3', value: { vertical_third: 'middle' } }]), cap('b', [{ id: 'H3', value: 4 }, { id: 'D6', value: 'none' }, { id: 'L3', value: { vertical_third: 'middle' } }])]);
     expect(three.indexable).toBe(true);
   });
 });

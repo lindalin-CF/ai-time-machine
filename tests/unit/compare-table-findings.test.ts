@@ -54,7 +54,8 @@ describe('Compare Table: Differences and Similarities (browser)', () => {
       expect(r.cells[0].head).toBe('Oct 12, 2026 vs Oct 5, 2026');
     }
     expect(diff.cells[0].items.slice(0, 2)).toEqual(['The sidebar item More is now labeled Explore.', 'The Upgrade item no longer appears in the top bar.']);
-    expect(same.cells[0].items).toContain('Both were captured in dark mode.'); // the heading names the weeks
+    expect(same.cells[0].items).toContain('Both message boxes sit in the middle third of the screen.'); // the heading names the weeks
+    expect([...diff.cells[0].items, ...same.cells[0].items].join(' ')).not.toMatch(/captured in|dark|light mode|color scheme/i);
     expect(same.cells[0].items.length).toBeLessThanOrEqual(5);
     await page.context().close();
   });
@@ -121,7 +122,8 @@ describe('Compare Table: Differences and Similarities (browser)', () => {
     expect(s.map((x) => ('card' in x ? x.card : x.vs))).toEqual(['Oct 12, 2026', 'Oct 12, 2026 vs Oct 5, 2026', 'Oct 5, 2026']);
     expect(s[0]).toMatchObject({ fields, shot: true });
     expect(s[1]).toMatchObject({ kinds: ['Differences', 'Similarities'] });
-    expect((s[1] as { items: string[] }).items).toContain('Both were captured in dark mode.');
+    expect((s[1] as { items: string[] }).items).toContain('Both message boxes sit in the middle third of the screen.');
+    expect((s[1] as { items: string[] }).items.join(' ')).not.toMatch(/captured in|dark|light mode|color scheme/i);
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
     await page.context().close();
   });

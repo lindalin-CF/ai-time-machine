@@ -98,7 +98,18 @@ describe('lint: banned wording (read from SKILL.md)', () => {
     for (const p of ['viewport', 'prompt input', 'visual hierarchy', 'suggestion chips', 'send button', 'contrast ratio']) expect(summary).toContain(p);
   });
 
-  it('flags a forbidden phrase in the summary and quotes the sentence', () => {
+  it('flags the screen\'s color scheme as a product property (guideline 1.9.0), but not contrast wording', () => {
+    const any = banned.anywhere.map((p: Json) => p.text);
+    for (const p of ['dark screen', 'light screen', 'dark mode', 'light mode', 'dark theme', 'light theme']) expect(any).toContain(p);
+    const a = base();
+    setSentence(a, 2, 'The message box sits in the middle of a mostly empty dark screen.');
+    expect(rules(lint(a), 'banned-wording').map((x) => x.message).join(' ')).toMatch(/dark screen/);
+    const ok = base();
+    setSentence(ok, 2, 'The text is dark enough against the background to meet a common guideline.');
+    expect(rules(lint(ok), 'banned-wording')).toEqual([]);
+  });
+
+    it('flags a forbidden phrase in the summary and quotes the sentence', () => {
     const a = base();
     setSentence(a, 2, 'The portal launched a new feature in the message box.');
     const f = rules(lint(a), 'banned-wording');

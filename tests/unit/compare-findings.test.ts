@@ -17,28 +17,49 @@ const base = { colorScheme: 'dark', sidebarPct: 20, inputAreaPct: 4, inputPositi
 const synthetic = (label: string, metrics: Record<string, unknown> | null, extra = {}) => ({ label, slug: label.toLowerCase(), week: '2026-10-12', metrics, ...extra });
 
 describe('findingLists', () => {
-  it('splits ChatGPT Oct 12 vs Oct 5: menu changes first among differences, the dark scheme among similarities', () => {
+  it('splits ChatGPT Oct 12 vs Oct 5: menu changes first among differences, the rules on one side each', () => {
     const { differences, similarities, missing } = findingLists(oct12, oct5);
     expect(differences.slice(0, 2)).toEqual(['The sidebar item More is now labeled Explore.', 'The Upgrade item no longer appears in the top bar.']);
-    expect(similarities).toContain('Oct 12 and Oct 5 were both captured in dark mode.');
     expect(missing).toEqual([]);
-    // Every rule lands on exactly one side.
-    expect(differences.length - 2 + similarities.length).toBe(8);
+    // Every rule lands on exactly one side; the color scheme is not a rule.
+    expect(differences.length - 2 + similarities.length).toBe(7);
   });
 
-  it('names the fields each card is missing', () => {
-    const a = synthetic('A', { ...base, aiNote: null }), b = synthetic('B', { ...base, colorScheme: null });
-    expect(findingLists(a, b).missing).toEqual(['No data for A: menu items, note about AI limits', 'No data for B: menu items, color scheme']);
+  it('names the fields each card is missing, never the color scheme', () => {
+    const a = synthetic('A', { ...base, aiNote: null }), b = synthetic('B', { ...base, colorScheme: null, textSizes: null });
+    expect(findingLists(a, b).missing).toEqual(['No data for A: menu items, note about AI limits', 'No data for B: menu items, text sizes']);
+  });
+
+  // The color scheme follows the capture machine's system setting, so it is never a finding.
+  it('never compares the color scheme, the same or different', () => {
+    for (const [x, y] of [['dark', 'dark'], ['dark', 'light'], ['light', 'light']]) {
+      for (const brief of [false, true]) {
+        const a = synthetic('A', { ...base, colorScheme: x }), b = synthetic('B', { ...base, colorScheme: y });
+        const { differences, similarities } = findingLists(a, b, { brief });
+        expect([...differences, ...similarities].join(' ')).not.toMatch(/\b(?:dark|light)\b|color scheme|colour scheme|\bmode\b|theme/i);
+        expect(findingLists(a, b, { brief })).toEqual(findingLists(synthetic('A', { ...base, colorScheme: 'dark' }), synthetic('B', { ...base, colorScheme: 'dark' }), { brief }));
+      }
+    }
   });
 });
 
 describe('compareFindings (Canvas box) is unchanged by the refactor', () => {
-  it(`gives the recorded output for all ${SNAP.cases.length} real card pairs`, () => {
+  // Recorded before the color scheme stopped being a finding: pairs without a color-scheme line must match exactly;
+  // the others lose that line and keep every other recorded line, in order (a similarity may take its place).
+  const colorLine = (l: string) => /captured in (?:dark|light) mode/.test(l);
+  it(`gives the recorded output for all ${SNAP.cases.length} real card pairs, without the color scheme`, () => {
+    let withColor = 0;
     for (const c of SNAP.cases) {
       const a = c.weekLabels ? card(c.a, c.a.split('@')[1]) : card(c.a);
       const b = c.weekLabels ? card(c.b, c.b.split('@')[1]) : card(c.b);
-      expect(compareFindings(a, b), `${c.a} vs ${c.b}`).toEqual(c.out);
+      const out = compareFindings(a, b);
+      expect(out.join(' '), `${c.a} vs ${c.b}`).not.toMatch(/captured in|color scheme/);
+      if (!c.out.some(colorLine)) { expect(out, `${c.a} vs ${c.b}`).toEqual(c.out); continue; }
+      withColor++;
+      const kept = c.out.filter((l) => !colorLine(l) && !l.startsWith('No data for'));
+      expect(out.filter((l) => kept.includes(l)), `${c.a} vs ${c.b}`).toEqual(kept);
     }
+    expect(withColor).toBe(22);
   });
 });
 
@@ -56,7 +77,7 @@ describe('tableFindings and findingsCellHTML (Table rows)', () => {
   it('more than 6 differences: 5 lines, then "and N more differences"', () => {
     const items = ['A', 'B', 'C', 'D'].map((x) => ({ change: 'renamed', previous: x, current: `${x}2`, region: 'sidebar' }));
     const newer = synthetic('New', { ...base, navChanges: { previousWeek: '2026-10-05', items } }, { slug: 'p' });
-    const older = synthetic('Old', { ...base, sidebarPct: 40, textSizes: 7, suggestedPrompts: 2, colorScheme: 'light' }, { slug: 'p', week: '2026-10-05' });
+    const older = synthetic('Old', { ...base, sidebarPct: 40, textSizes: 7, suggestedPrompts: 2, aiNote: true }, { slug: 'p', week: '2026-10-05' });
     const all = findingLists(newer, older, { navChangeLines: Infinity, brief: true }).differences;
     expect(all).toHaveLength(8); // 4 menu changes + 4 rules
     const t = tableFindings(newer, older)!;
@@ -72,7 +93,7 @@ describe('tableFindings and findingsCellHTML (Table rows)', () => {
 
   it('at most 5 similarities', () => {
     const a = synthetic('A', { ...base, navItems: [], navSidebarVisible: true }), b = synthetic('B', { ...base, navItems: [], navSidebarVisible: true });
-    expect(findingLists(a, b).similarities).toHaveLength(9); // same menu items + 8 rules
+    expect(findingLists(a, b).similarities).toHaveLength(8); // same menu items + 7 rules
     const t = tableFindings(a, b)!;
     expect(t.similarities).toEqual(findingLists(a, b, { brief: true }).similarities.slice(0, 5));
     expect(t.differences).toEqual([]);
@@ -95,7 +116,6 @@ describe('tableFindings and findingsCellHTML (Table rows)', () => {
       'Both message boxes cover about 4% of the screen.',
       'Both use 4 text sizes.',
       "Neither shows a note about the AI's limits.",
-      'Both were captured in dark mode.',
       'Both message boxes sit in the middle third of the screen.',
     ]);
     expect([...t.differences, ...t.similarities].join(' ')).not.toMatch(/Oct \d/);

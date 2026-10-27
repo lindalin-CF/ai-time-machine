@@ -12,6 +12,7 @@ const esc = (s) =>
 // ---- findings -------------------------------------------------------------
 // Each finding states only what its metric measures, with both values. Thresholds for calling two
 // values different follow the guideline's week-over-week reporting thresholds (section 9.3).
+// The color scheme (metrics.colorScheme) is never compared: it follows the capture machine's system setting.
 
 const fmtPct = (n) => `${Number.isInteger(n) ? n : n.toFixed(1)}%`;
 const word = (n, one, many) => `${n} ${n === 1 ? one : many}`;
@@ -166,14 +167,6 @@ const RULES = [
       : `${a ? A : B} shows a note about the AI's limits, ${a ? B : A} does not.`,
   },
   {
-    key: "colorScheme",
-    name: "color scheme",
-    differs: (a, b) => a !== b,
-    text: (A, B, a, b) => a === b
-      ? `${A} and ${B} were both captured in ${a} mode.`
-      : `${A} was captured in ${a} mode, ${B} in ${b} mode.`,
-  },
-  {
     key: "inputPosition",
     name: "message box position",
     differs: (a, b) => a !== b,
@@ -207,7 +200,6 @@ const BRIEF = {
   aiNote: (A, B, a, b, A2, B2) => a === b
     ? (a ? "Both show a note about the AI's limits." : "Neither shows a note about the AI's limits.")
     : `${a ? A : B} shows a note about the AI's limits; ${a ? B2 : A2} does not.`,
-  colorScheme: (A, B, a, b, A2, B2) => a === b ? `Both were captured in ${a} mode.` : `${A} was captured in ${a} mode; ${B2} in ${b} mode.`,
 };
 /** A rule's line in the Table's wording, or in the Canvas wording where the brief one has nothing shorter to say. */
 const briefText = (r, A, B, a, b, A2, B2) => (BRIEF[r.key] && BRIEF[r.key](A, B, a, b, A2, B2)) || r.text(A, B, a, b);

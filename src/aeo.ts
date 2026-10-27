@@ -35,7 +35,7 @@ export async function handleLlmsTxt(request: Request, env: Env): Promise<Respons
       "",
       "## Key facts",
       "",
-      `- [Key facts](${ORIGIN}/facts): what each AI portal's interface looks like in its latest capture: layout, suggested prompts, color scheme and the latest menu change ([Markdown](${ORIGIN}/facts.md))`,
+      `- [Key facts](${ORIGIN}/facts): what each AI portal's interface looks like in its latest capture: layout, suggested prompts, the note about the AI's limits and the latest menu change ([Markdown](${ORIGIN}/facts.md))`,
       "",
       "## Portals",
       "",
