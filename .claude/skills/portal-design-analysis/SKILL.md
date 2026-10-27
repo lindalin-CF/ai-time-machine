@@ -1,7 +1,7 @@
 ---
 name: portal-design-analysis
 description: 依 AI Surface Library 規範分析 AI portal 的桌面截圖，產出可追溯到指標、證據等級與位置的 Design analysis。使用者提供 portal 桌面截圖並要求 design analysis、跑規範、或比較不同週次截圖時使用。
-version: 1.7.0
+version: 1.7.1
 ---
 
 # AI Portal 桌面截圖 Design Analysis 規範
@@ -113,7 +113,7 @@ version: 1.7.0
 | `personalized_content` | `true` / `false` | 主內容區是否有個人化內容（排除區以外）。只寫類型，例如 "greeting includes [name]" |
 | `time_dependent_content` | `true` / `false` + 簡述 | 例如早安／晚安問候。問候語是否會輪換無法從單張截圖判斷，不在此猜測 |
 | `hover_or_focus_visible` | `true` / `false` + 元件類型 | 某元件呈現亮起、底色或外框，而且不像是「目前選取」的狀態（例如游標停在某個圖示上）。只寫元件類型，例如 "sidebar toggle icon"；信心通常為 `low` |
-| `promotional_content` | `true` / `false` + 類型 | 宣傳卡片、升級橫幅、下載 app 提示等短期行銷元素，以及歡迎彈窗、onboarding 提示、新功能介紹浮層、評分或意見問卷（見第 9.1 節）。浮在畫面上的同時記 `modal_present: "partial"`；把頁面推開的橫幅只記這裡 |
+| `promotional_content` | `true` / `false` + 類型 | 宣傳卡片、升級橫幅、下載 app 提示等短期行銷元素，以及歡迎彈窗、onboarding 提示、新功能介紹浮層、評分或意見問卷（見第 9.1 節）。浮在畫面上的同時記 `modal_present: "partial"`；把頁面推開的橫幅只記這裡。**不屬於**宣傳內容：頂列或側欄裡每週出現在同一位置的方案連結（例如 "Upgrade"、"Get Plus"、"Try Pro"），這是導覽項目，照第 7.2 節列入 N1，它的新增或移除照常記 `changed`。只有短期的橫幅、卡片與彈窗才算宣傳內容 |
 | `conversation_open` | `true` / `false` | 見第 1.1 節 |
 | `ui_language` | 語言代碼 | 依介面文字判斷 |
 | `privacy_flag` | `true` / `false` | 見第 2.3 節 |
@@ -343,7 +343,7 @@ N1 每筆變動一筆紀錄：
 
 ```json
 {
-  "guideline_version": "1.7.0",
+  "guideline_version": "1.7.1",
   "portal": "example",
   "week": "2026-09-21",
   "previous_week": "2026-09-14",
@@ -473,6 +473,7 @@ N1 每筆變動一筆紀錄：
 
 ## 版本紀錄
 
+- **1.7.1**：第 6 節明訂頂列或側欄裡每週出現在同一位置的方案連結（"Upgrade" 等）是導覽項目、不是宣傳內容；只有短期的橫幅、卡片與彈窗才算。起因：ChatGPT 2026-10-12 把頂列 Upgrade 連結的移除誤標為 `possibly_confounded`。
 - **1.7.0**：N1 跨週配對改為先比文字、再比圖示，不再依位置配對；只有順序改變一律不是變動。`renamed` 必須同一位置、同一圖示、只有文字不同；`icon_changed` 必須同一位置且周圍順序不變；其餘記 `removed` 加 `added`（第 9.3 節）。起因：位置配對把重新排列的側欄記成多筆改名與圖示改變。
 - **1.6.0**：輸入區的模型選擇器在 N1 只記一項 `{ label: "model picker", role: "model_picker", current }`；畫面顯示的模型名稱是工作階段狀態，不是導覽項目，名稱改變不記為 N1 變動（第 7.2、9.3 節）。網站在顯示時也用同樣規則整理較舊的分析（`src/model-picker.ts`），不修改已發布的資料。
 

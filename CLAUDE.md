@@ -12,6 +12,11 @@ Screenshots are irreplaceable: a portal's UI for a given week can never be captu
 - **Never overwrite a local original.** Write edited versions under new names (for example `redacted-v2.png`, `redacted-v3.png`), and never pass an original as the output of `redact.mjs` or any other script.
 - **To take a screenshot off the site, change what the site displays** (for example D1 data or the Worker's rendering), never remove the file from R2 or disk.
 
+## Avatars in screenshots (decided 2026-10-26)
+
+- Avatars (photos or initials badges) are covered with the circle mask from the week of **2026-10-19 onward**.
+- Screenshots from weeks **before 2026-10-19** are intentionally left as they are, even when an avatar (such as Manus's initials badge) is visible. Don't re-redact them, don't flag them in reviews, lint or privacy checks, and don't raise them again. Other account details (names, emails, conversation titles and so on) are still covered in every week.
+
 ## Deploying
 
 - Always commit and push to main before telling the user to deploy. The live site must never be ahead of git.

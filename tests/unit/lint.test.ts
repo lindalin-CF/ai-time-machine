@@ -358,6 +358,31 @@ describe('lint: cross-week', () => {
     expect(rules(lint(a, { previous: { analysis: p, source: 'v1.3' } }), 'cross-week')).toEqual([]);
   });
 
+  describe('plan links are navigation (§6, guideline 1.7.1)', () => {
+    const withUpgrade = () => {
+      const p = prev();
+      metric(p, 'N1').value.push({ label: 'Upgrade', region: 'top bar', order: 1, icon: 'four-pointed-star icon', badge: null });
+      return p;
+    };
+    const removal = (status: string) => {
+      const a = base();
+      a.changes_vs_previous = [{ id: 'N1', change: 'removed', previous: 'Upgrade', current: null, region: 'top bar', status, note: '' }];
+      setSentence(a, 7, 'The Upgrade item no longer appears in the top bar.', ['N1']);
+      return a;
+    };
+    const planFindings = (a: Json, p: Json) => rules(lint(a, { previous: { analysis: p, source: 'test' } }), 'cross-week').filter((f) => /plan link/.test(f.message));
+
+    it('passes the removal of a top-bar Upgrade link marked changed', () => {
+      expect(planFindings(removal('changed'), withUpgrade())).toEqual([]);
+    });
+    it('flags the removal of a top-bar Upgrade link marked possibly_confounded', () => {
+      expect(planFindings(removal('possibly_confounded'), withUpgrade())[0].message).toMatch(/"Upgrade" was a plan link in the top bar last week: that is a navigation item/);
+    });
+    it("doesn't flag it when the link wasn't in that region last week", () => {
+      expect(planFindings(removal('possibly_confounded'), prev())).toEqual([]);
+    });
+  });
+
   it('flags "looks the same" when there are changes', () => {
     const a = base();
     a.changes_vs_previous = [{ id: 'N1', change: 'added', previous: null, current: 'Tasks', region: 'sidebar', status: 'changed', note: '' }];
@@ -387,6 +412,18 @@ describe('lint: privacy', () => {
     const f = rules(lint(a), 'privacy').map((x) => x.message).join('\n');
     expect(f).toMatch(/excluded area/);
     expect(f).toMatch(/privacy_flag is false/);
+  });
+
+  it("doesn't flag avatars visible in screenshots before 2026-10-19 (CLAUDE.md: left as they are)", () => {
+    const a = base();
+    a.week = '2026-09-28';
+    a.previous_week = null;
+    setSentence(a, 0, 'This shows the desktop version of Example for the week of 2026-09-28, before scrolling.');
+    a.summary_sentences.pop();
+    a.summary = a.summary_sentences.map((s: Json) => s.text).join(' ');
+    metric(a, 'L1').value.push({ region: 'account-specific area (excluded)', location: [10, 750, 40, 40] }); // the avatar spot
+    metric(a, 'L1').note = 'An initials avatar is visible at the bottom left; it is part of the excluded area.';
+    expect(rules(lint(a, { previous: null }), 'privacy')).toEqual([]);
   });
 
   it('passes [name] placeholders and recorded counts of personalized suggestions', () => {

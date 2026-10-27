@@ -575,6 +575,8 @@ function ruleReorder(a, items, prevItems, push) {
 
 const COMPARISON =/\b(no longer|differs?|differ from|looks the same|is the same as|are the same as|unlike|compared with|now|changed from)\b|\bweek of \d{4}-\d{2}-\d{2}|^An? new .+ appears?\b/i;
 const DEFINITE = /\b(now|no longer|new|changed|unlike|brighter|darker|fainter|lighter|smaller|larger|bigger|narrower|wider|lower|higher|moved)\b/i;
+// §6 (1.7.1): a plan link in the top bar or sidebar is navigation, not promotional content.
+const PLAN_LINK = /^(?:[+✦]\s*)?(?:upgrade(?: plan| to \w+)?|get (?:plus|pro|premium|\w+ pro)|try (?:plus|pro|premium)|go pro|subscribe|see plans|view plans)$/i;
 const POPUP = /pop-?up|popover|onboarding|feature tour|\btour\b|survey|welcome (?:card|dialog|modal|pop)|cookie|promo|promotional|upgrade card|banner/i;
 
 // §9.1: context field → metrics whose changes are possibly_confounded when it differs.
@@ -676,6 +678,11 @@ function ruleCrossWeek(a, prev, push, previousWeek) {
       const pickers = (n1Items(a) ?? []).filter((it) => it?.role === "model_picker").map((it) => norm(it.current));
       if (c.change === "renamed" && c.current && pickers.includes(norm(c.current))) push("cross-week", `the model picker's shown name changed; that is session state, not an N1 change (§9.3 rule 5)`, where);
       if (c.status === "changed" && POPUP.test(`${str(c.previous)} ${str(c.current)} ${str(c.note)}`)) push("cross-week", `pop-up or promotional element marked changed; it must be possibly_confounded (§9.1)`, where);
+      const plan = c.change === "removed" ? c.previous : null;
+      const wasThere = plan && (n1Items(prev?.analysis) ?? []).some((it) => it?.region === c.region && norm(it.label) === norm(plan));
+      if (c.status === "possibly_confounded" && plan && PLAN_LINK.test(String(plan).trim()) && ["top bar", "sidebar"].includes(c.region) && wasThere) {
+        push("cross-week", `"${plan}" was a plan link in the ${c.region} last week: that is a navigation item, not promotional content, so its removal is changed (§6)`, where);
+      }
       continue;
     }
     if (c.status !== "changed") continue;
