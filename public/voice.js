@@ -66,7 +66,7 @@ style.textContent = `
 .voice-fab .vf-tip{position:absolute;right:calc(100% + 10px);top:50%;transform:translateY(-50%);
   padding:6px 10px;border-radius:8px;white-space:nowrap;pointer-events:none;
   font-family:var(--font-sans);font-weight:600;font-size:13px;line-height:1.2;
-  background:var(--cf-text,#521000);color:var(--cf-bg-100,#fffdfa);
+  background:var(--ink-fill,#0b0b0c);color:var(--ink-fill-fg,#f5f1e9);
   opacity:0;visibility:hidden;transition:opacity .15s ease-out,visibility .15s}
 .voice-fab:hover .vf-tip,.voice-fab:focus-visible .vf-tip{opacity:1;visibility:visible}
 .voice-fab.tip-dismissed .vf-tip{opacity:0;visibility:hidden}

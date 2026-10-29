@@ -311,7 +311,6 @@ function initCompareButton() {
   });
 }
 
-// The filter bar sticks right under the sticky top bar, whose height changes with the viewport (and its wrapping).
 /** Scroll a chip row sideways (never the page) so `chip` is in full view, clear of the 24px edge fades. The row snaps
  * each chip's start to 24px in (scroll-padding), so it stops on such a snap point, or the end, instead of being pulled off. */
 function revealChip(row, chip, pad = 24) {
@@ -358,6 +357,8 @@ function initFilterEdges() {
   }
 }
 
+// Above 640px the filter bar sticks right under the sticky top bar, whose height changes with the viewport (and its
+// wrapping). On phones the bar is static and ignores --topbar-h.
 function trackTopbarHeight() {
   const bar = $(".topbar");
   const controls = $(".controls");

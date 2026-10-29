@@ -4,7 +4,7 @@ import { chromium, type Browser, type Page } from 'playwright';
 import { libraryCompareHash, parseAnalyticsHash } from '../../public/analytics-share.js';
 import { frames, openSite, probe, WEEKS } from './analytics-page';
 
-// The landing page's controls: one slim sticky filter bar (portal chips with a "+N more" menu, Desktop | Mobile, week,
+// The landing page's controls: one slim filter bar, sticky above 640px (portal chips with a "+N more" menu, Desktop | Mobile, week,
 // search, Compare →). Compare → opens #compare with the bar's portals, week and device.
 
 const PORTALS = [
@@ -334,7 +334,7 @@ describe('landing page controls (browser)', () => {
     });
   });
 
-  describe('sticky filter bar', () => {
+  describe('filter bar: sticky above 640px, static on phones', () => {
     const geometry = (page: Page) => page.evaluate(() => {
       const r = (s: string) => document.querySelector(s)!.getBoundingClientRect();
       const bar = r('.controls');
@@ -343,7 +343,7 @@ describe('landing page controls (browser)', () => {
         position: getComputedStyle(document.querySelector('.controls')!).position };
     });
 
-    it.each([1440, 1024, 390])('at %ipx: stays pinned right under the top bar while scrolling, above the cards', async (width) => {
+    it.each([1440, 1024])('at %ipx: stays pinned right under the top bar while scrolling, above the cards', async (width) => {
       const page = await open({ width });
       const atTop = await geometry(page);
       expect(atTop.position).toBe('sticky');
@@ -360,9 +360,25 @@ describe('landing page controls (browser)', () => {
       await page.context().close();
     });
 
-    it('the phone menu opens over the pinned bar', async () => {
+    it('at 390px: scrolls away with the page; only the top bar stays at the top', async () => {
       const page = await open({ width: 390 });
-      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      const atTop = await geometry(page);
+      expect(atTop.position).toBe('static');
+      await page.evaluate((y) => window.scrollTo(0, y + 200), atTop.barBottom); // measured at scrollY 0
+      await page.waitForTimeout(100);
+      const scrolled = await geometry(page);
+      expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(atTop.barBottom); // really scrolled past it
+      expect(scrolled.barBottom).toBeLessThan(0); // the filter bar is off the top of the viewport
+      expect(scrolled.topbarBottom).toBeGreaterThan(0); // the top bar is still pinned
+      expect(await page.evaluate(() => document.querySelector('.topbar')!.getBoundingClientRect().top)).toBe(0);
+      expect(await page.evaluate(() => !!document.elementFromPoint(195, document.querySelector('.topbar')!.getBoundingClientRect().bottom + 20)?.closest('.controls'))).toBe(false);
+      await page.context().close();
+    });
+
+    it('the phone menu opens over the filter bar', async () => {
+      const page = await open({ width: 390 });
+      // Scroll the (static) bar up to just under the top bar, where the open menu covers it.
+      await page.evaluate(() => window.scrollTo(0, document.querySelector('.controls')!.getBoundingClientRect().top - document.querySelector('.topbar')!.getBoundingClientRect().bottom));
       await page.locator('.topnav-toggle').click();
       await page.waitForTimeout(250);
       const covered = await page.evaluate(() => {

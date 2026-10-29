@@ -13,9 +13,10 @@
   --cf-border-strong:#c8bba4;
   --accent-blue:#0055dc;
   /* "Selected": the active product chip and the active option of every segmented toggle (.vt-btn.active).
-     #f5f1e9 on #423217 is about 11:1. The top nav's current page stays orange ("where you are", not a selection). */
-  --selected-bg:var(--cf-text);
-  --selected-fg:var(--cf-bg-100);
+     The ink fill (public/buttons.css): #f5f1e9 on #0b0b0c is about 18:1. The top nav's current page stays orange
+     ("where you are", not a selection). */
+  --selected-bg:var(--ink-fill);
+  --selected-fg:var(--ink-fill-fg);
   /* Segmented toggles (.viewtoggle, .vt-btn) and the Compare week dropdown (.an-wp-btn) read these, so the Compare
      mode toggle, the Desktop/Mobile toggle and the dropdown keep one height, padding, font and radius. */
   --toggle-track-pad:3px;
@@ -273,7 +274,9 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 
 /* ---------- controls ---------- */
 /* One slim filter bar, pinned under the sticky top bar (--topbar-h is the top bar's measured height, set by app.js).
-   Above the cards (z-index 1 inside), below the top bar and its phone menu (z-index 70). */
+   Above the cards (z-index 1 inside), below the top bar and its phone menu (z-index 70).
+   On phones (≤ 640px) it scrolls away with the page instead (below), so it never eats a third of the screen;
+   its open menus (z-index 30 and 90) still sit above the cards and below the top bar. */
 .controls{
   position:sticky;top:var(--topbar-h,0px);z-index:60;
   display:flex;align-items:center;gap:10px 12px;flex-wrap:nowrap;margin-bottom:26px;
@@ -305,6 +308,9 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .chip[aria-selected="true"],.chip[aria-pressed="true"]{
   background:var(--selected-bg);color:var(--selected-fg);border-color:var(--selected-bg);
 }
+/* A selected chip can be clicked again to drop it: hover and pressed lift the fill 12% toward white (--ink-fill-hover). */
+@media(hover:hover){.chip[aria-pressed="true"]:hover{background:var(--ink-fill-hover);border-color:var(--ink-fill-hover);color:var(--selected-fg)}}
+.chip[aria-pressed="true"]:active{background:var(--ink-fill-hover);border-color:var(--ink-fill-hover)}
 .chip .swatch{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:middle}
 .weekpick{display:flex;align-items:center;gap:10px}
 .weekpick label{font-family:var(--font-mono);font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:var(--cf-text-soft)}
@@ -453,8 +459,8 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   border:1px solid var(--cf-border-strong);background:var(--cf-bg-100);color:var(--cf-text)}
 .contact-copy:hover{border-color:var(--cf-text-soft)}
 .contact-mail{display:inline-flex;align-items:center;font:600 13px/1 var(--font-sans);padding:10px 18px;border-radius:999px;
-  background:var(--cf-text);color:var(--cf-bg-100);text-decoration:none}
-.contact-mail:hover{background:var(--brand-hover)}
+  background:var(--ink-fill);color:var(--ink-fill-fg);text-decoration:none;transition:background-color .15s ease-out}
+.contact-mail:hover,.contact-mail:active{background:var(--ink-fill-hover)}
 @media(max-width:480px){.site-dialog form{padding:22px 18px 18px}}
 
 @media(max-width:640px){
@@ -803,7 +809,7 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
 .manual-edit-btn,.manual-share-btn{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;cursor:pointer;background:var(--cf-bg-100);border:1px solid var(--cf-border);color:var(--cf-text-soft);transition:color .15s ease-out,border-color .15s ease-out,background-color .15s ease-out}
 .manual-edit-btn:hover,.manual-share-btn:hover{color:var(--brand-text);border-color:var(--brand);background:color-mix(in srgb,var(--brand) 8%,transparent)}
 .manual-toast{position:absolute;left:50%;bottom:16px;transform:translate(-50%,8px);z-index:5;
-  background:var(--cf-text);color:var(--cf-bg-100);font:600 12px/1 var(--font-sans);
+  background:var(--ink-fill);color:var(--ink-fill-fg);font:600 12px/1 var(--font-sans);
   padding:9px 14px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .18s ease-out,transform .18s ease-out;
   box-shadow:0 10px 24px -12px rgba(21,14,5,.6)}
 .manual-toast.show{opacity:1;transform:translate(-50%,0)}
@@ -887,7 +893,7 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
   .controls .searchbar,.controls .searchbar:focus-within{flex:1 1 auto;width:auto;min-width:0}
 }
 @media(max-width:640px){
-  .controls{gap:10px;padding:10px 12px;margin-bottom:20px}
+  .controls{position:static;gap:10px;padding:10px 12px;margin-bottom:20px}
   .controls-right{flex-wrap:wrap;gap:8px}
   .controls-right .viewtoggle{flex:1 1 auto}
   .controls-right .viewtoggle .vt-btn{flex:1;justify-content:center}

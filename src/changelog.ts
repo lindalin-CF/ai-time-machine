@@ -15,6 +15,18 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "ink-fills-phone-filter-bar",
+    date: "2026-10-29",
+    time: "10:49",
+    title: "Near-Black Selections and a Lighter Phone Filter Bar",
+    subtitle: "Selected options match the hero's near-black, and on phones the filter bar scrolls away",
+    bullets: [
+      { lead: "One dark", text: "Selected portal chips, the active option of every toggle, the contact dialog's Open email app button and the short confirmations under screenshots now use the hero's near-black instead of dark brown. Hovering or pressing them lightens them a little." },
+      { lead: "More room on phones", text: "On screens 640px wide or less, the Library's filter bar scrolls away with the page, so the screenshots get the whole screen. The top bar still stays at the top. On wider screens the filter bar stays pinned as before." },
+    ],
+    closing: "Open the Library on a phone.",
+  },
+  {
     slug: "sand-hero",
     date: "2026-10-28",
     time: "23:46",

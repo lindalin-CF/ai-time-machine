@@ -81,7 +81,7 @@ describe('Compare portal row (browser)', () => {
     await page.locator('#anPortals .chip[data-v="chatgpt"]').click();
     await page.waitForTimeout(250);
     const look = await page.locator('#anPortals .chip[data-v="chatgpt"]').evaluate((el) => [getComputedStyle(el).backgroundColor, getComputedStyle(el).color]);
-    expect(look).toEqual(['rgb(66, 50, 23)', 'rgb(245, 241, 233)']); // --selected-bg / --selected-fg
+    expect(look).toEqual(['rgb(11, 11, 12)', 'rgb(245, 241, 233)']); // --selected-bg / --selected-fg
     await page.context().close();
   });
 

@@ -6,7 +6,8 @@ import { openAnalytics, openSite, showCanvas } from './analytics-page';
 // product chip's fill and text (--selected-bg / --selected-fg). Inactive and disabled options, and the top nav's
 // current page (orange: "where you are"), keep their own looks.
 
-const DARK = 'rgb(66, 50, 23)'; // --cf-text
+const DARK = 'rgb(11, 11, 12)'; // --ink-fill (--selected-bg)
+const TEXT = 'rgb(66, 50, 23)'; // --cf-text (text stays brown; only fills are ink)
 const CREAM = 'rgb(245, 241, 233)'; // --cf-bg-100
 const SOFT = 'rgb(111, 94, 71)'; // --cf-text-soft
 const ORANGE = 'rgb(196, 76, 28)'; // --brand (focus rings)
@@ -106,7 +107,7 @@ describe('selected style (browser)', () => {
     await btn.hover();
     await settle(page);
     const h = await look(page, '#analyticsView [data-mode="weeks"]');
-    expect([h.bg, h.color]).toEqual([NONE, DARK]);
+    expect([h.bg, h.color]).toEqual([NONE, TEXT]);
     // Hovering the active option keeps it selected-looking.
     await page.locator('#analyticsView [data-mode="portals"]').hover();
     await settle(page);

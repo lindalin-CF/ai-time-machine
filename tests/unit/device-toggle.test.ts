@@ -74,7 +74,7 @@ describe('gallery device toggle and other toggles (browser)', () => {
     const colours = (page: Page, sel: string) => page.locator(sel).evaluate((el) => {
       const cs = getComputedStyle(el); return { bg: cs.backgroundColor, fg: cs.color, line: `${cs.textDecorationLine} ${cs.textDecorationStyle}` };
     });
-    const SELECTED = { bg: 'rgb(66, 50, 23)', fg: 'rgb(245, 241, 233)', line: 'none solid' };
+    const SELECTED = { bg: 'rgb(11, 11, 12)', fg: 'rgb(245, 241, 233)', line: 'none solid' };
 
     it('renders the same toggle, with both icons, on the Library bar, the Collection and Compare', async () => {
       const page = await openSite(browser, '');

@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { chromium, type Browser, type Locator, type Page } from 'playwright';
 import { handlePortalPage } from '../../src/portal-page';
 import { handleComparePage } from '../../src/compare-page';
@@ -78,6 +78,21 @@ describe('shared button classes', () => {
     const t = makeEnv(); seed(t);
     const html = await (await handlePortalPage(new Request('https://x/portals/chatgpt'), t.env)).text();
     expect(html).toContain('<link rel="stylesheet" href="/buttons.css" />');
+  });
+
+  it('the one dark fill is --ink-fill (the hero\'s #0b0b0c), documented at the top; nothing fills with --cf-text or #423217', () => {
+    expect(BUTTONS_CSS).toMatch(/--ink-fill:#0b0b0c;/);
+    expect(BUTTONS_CSS).toMatch(/--ink-fill-fg:#f5f1e9;/);
+    expect(BUTTONS_CSS).toMatch(/--ink-fill-hover:color-mix\(in srgb,var\(--ink-fill\) 88%,#fff\);/);
+    const note = BUTTONS_CSS.slice(0, BUTTONS_CSS.indexOf('*/'));
+    for (const t of ['--ink-fill ', '--ink-fill-fg', '--ink-fill-hover']) expect(note).toContain(t);
+    const styles = readFileSync(new URL('../../public/styles.css', import.meta.url), 'utf8');
+    expect(styles).toContain('--selected-bg:var(--ink-fill);');
+    const dir = (d: string, ext: RegExp) => readdirSync(new URL(`../../${d}/`, import.meta.url)).filter((f) => ext.test(f))
+      .map((f) => [`${d}/${f}`, readFileSync(new URL(`../../${d}/${f}`, import.meta.url), 'utf8')] as const);
+    for (const [file, text] of [...dir('public', /\.(css|js)$/), ...dir('src', /\.ts$/)]) {
+      expect(text.match(/background(-color)?:\s*(var\(--cf-text\b[^)]*\)|#423217)/gi), file).toBeNull();
+    }
   });
 });
 

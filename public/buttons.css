@@ -17,11 +17,20 @@
    --brand-text  The same hue, darkened to reach 4.5:1 on every background it sits on: 5.87:1 on --cf-bg-100,
                  5.43:1 on --cf-bg-200, 4.52:1 on --cf-bg-300, 5.01:1 on the page (#e7dfd4), 5.78:1 on server pages
                  (#f4efe8). For all smaller orange text: the current nav item, links, accents.
-   --brand-hover Hover and pressed fills, mixed from --brand. Tints, glows and shadows are color-mix() of --brand too. */
+   --brand-hover Hover and pressed fills, mixed from --brand. Tints, glows and shadows are color-mix() of --brand too.
+
+   Ink fill: the site's one dark fill, the hero's near-black, also here so every page has it.
+   --ink-fill       #0b0b0c. Selected chips and toggle options (--selected-bg in public/styles.css), the contact
+                    dialog's "Open email app", toasts and tooltips. Text is still --cf-text; only fills use this.
+   --ink-fill-fg    Text and icons on it: #f5f1e9, about 18:1.
+   --ink-fill-hover Hover and pressed: 12% toward white, so it stays visibly dark (#f5f1e9 on it is about 15:1). */
 :root{
   --brand:#c44c1c;
   --brand-text:#9f3e17;
   --brand-hover:color-mix(in srgb,var(--brand) 86%,#000);
+  --ink-fill:#0b0b0c;
+  --ink-fill-fg:#f5f1e9;
+  --ink-fill-hover:color-mix(in srgb,var(--ink-fill) 88%,#fff);
   --btn-font:'Space Grotesk','Inter',system-ui,-apple-system,sans-serif;
   --btn-gap:6px;
   --btn-focus-ring:var(--brand);

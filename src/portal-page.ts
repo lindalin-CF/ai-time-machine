@@ -269,8 +269,8 @@ ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts
     .contact-address{font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.95rem;padding:6px 10px;border:1px solid #d8cfc2;border-radius:8px;background:#f4efe8;user-select:all;overflow-wrap:anywhere}
     .contact-copy{font:inherit;font-size:.9rem;min-width:5.5em;padding:6px 12px;border:1px solid #d8cfc2;border-radius:8px;background:#fffdf9;color:#231f1a;cursor:pointer}
     .contact-copy:hover{border-color:#6b6257}
-    .contact-mail{display:inline-flex;align-items:center;padding:8px 16px;border-radius:8px;background:#231f1a;color:#fffdf9;text-decoration:none}
-    .contact-mail:hover{background:#3a332b}
+    .contact-mail{display:inline-flex;align-items:center;padding:8px 16px;border-radius:8px;background:var(--ink-fill);color:var(--ink-fill-fg);text-decoration:none;transition:background-color .15s ease-out}
+    .contact-mail:hover,.contact-mail:active{background:var(--ink-fill-hover)}
     .shot-link{display:block;border-radius:8px;cursor:zoom-in}
     .shot-link img{display:block}
   </style>
