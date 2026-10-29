@@ -1,0 +1,391 @@
+<title>Sand Hero Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a 2.2:1 charcoal hero inside the site's device frame. One tilted ring of white sand sits right of
+   centre (crisp lower-right edge, dusty upper-left); the left third stays dark for the type. 10s seamless loop.
+   Single look by design: cream page around a dark hero. */
+:root{
+  --page:#e7dfd4;
+  --page-text:#423217;
+  --page-soft:#6f5e47;
+  --card:#f5f1e9;
+  --line:#d9cebd;
+  --night:#0b0b0c;
+  --frame-a:#1d160c;
+  --frame-b:#0f0b05;
+  --ink:#f2f0ec;
+  --ink-soft:rgba(242,240,236,.6);
+  --brand:#c44c1c;
+  --brand-glow:#ec8a5f;
+  --font-sans:'Space Grotesk','Inter',system-ui,-apple-system,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',monospace;
+  --ease-out:cubic-bezier(0.23,1,0.32,1);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--page-text);font-family:var(--font-sans);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:18px}
+
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px}
+.bar h2{margin:0;font-size:15px;font-weight:600}
+.bar p{margin:2px 0 0;font-size:13px;color:var(--page-soft)}
+.actions{display:flex;gap:8px;align-items:center}
+.clock{font:400 12px/1 var(--font-mono);color:var(--page-soft);font-variant-numeric:tabular-nums;min-width:7ch;text-align:right}
+.btn{font:600 13px/1 var(--font-sans);border-radius:8px;padding:10px 14px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--page-text);transition:background-color .15s,transform .16s var(--ease-out)}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+@media (hover:hover) and (pointer:fine){.btn:hover{background:#ded4c6}}
+
+/* ---------- hero ---------- */
+.hero-frame{border-radius:34px;padding:20px;background:linear-gradient(180deg,var(--frame-a),var(--frame-b));
+  box-shadow:0 44px 90px -50px rgba(21,14,5,.75),0 12px 30px -22px rgba(21,14,5,.9)}
+.hero-panel{position:relative;aspect-ratio:2.2/1;min-height:420px;max-width:100%;overflow:hidden;border-radius:18px;background:var(--night);isolation:isolate;color:var(--ink)}
+#sand{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0}
+.grain{position:absolute;inset:-50%;z-index:2;pointer-events:none;opacity:.11;mix-blend-mode:screen;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  animation:grain 1s steps(6) infinite}
+@keyframes grain{0%{transform:translate(0,0)}20%{transform:translate(-3%,2%)}40%{transform:translate(2%,-3%)}60%{transform:translate(-2%,-1%)}80%{transform:translate(3%,3%)}100%{transform:translate(0,0)}}
+
+/* type lives in the left third */
+.layer{position:absolute;inset:0;z-index:3;display:grid;grid-template-columns:minmax(0,46%) 1fr auto;grid-template-rows:auto 1fr auto;padding:30px 34px;gap:16px;pointer-events:none}
+.copy{grid-column:1;grid-row:2;align-self:center;display:grid;gap:16px}
+.copy h1{margin:0;font-size:clamp(42px,6.4vw,74px);line-height:.9;font-weight:700;letter-spacing:-.05em;max-width:9ch} /* live .hero-title size */
+.copy p{margin:0;max-width:42ch;font-size:clamp(16px,1.75vw,22px);line-height:1.18;letter-spacing:-.035em;font-weight:400;color:var(--ink-soft);text-wrap:pretty}
+.copy p em{font-style:normal;font-weight:500;color:var(--brand-glow)}
+
+/* ---- same text motion as the live hero (styles.css), recoloured for the dark panel ---- */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+.title-mask{display:block;overflow:hidden;line-height:1;padding:.04em 0 .08em}
+.title-line{display:block;transform:translateY(110%);animation:title-rise .8s cubic-bezier(.16,1,.3,1) forwards;will-change:transform}
+.title-mask:nth-child(2) .title-line{animation-delay:.08s}
+@keyframes title-rise{to{transform:translateY(0)}}
+.hero-sub{pointer-events:auto}
+.hero-sub .w{display:inline-block;animation:word-in .9s cubic-bezier(.22,1,.36,1) backwards;animation-delay:calc(.15s + var(--c)*5ms)}
+@keyframes word-in{from{opacity:0;transform:translateY(.16em)}to{opacity:1;transform:none}}
+.hero-sub .w.l1{color:var(--ink)}
+.hero-sub .kw{position:relative;display:inline-block}
+.hero-sub .ann{position:absolute;pointer-events:none;opacity:0}
+.hero-sub .tag{bottom:calc(150% - 9.5px);left:-2px;display:flex;align-items:center;gap:5px;white-space:nowrap;
+  font-family:var(--font-mono);font-size:10px;font-weight:500;line-height:1;text-transform:uppercase;letter-spacing:.06em;
+  background:var(--ink);color:var(--night);padding:5px 7px 4px;border-radius:5px}
+.hero-sub .tag.orange{background:var(--brand);color:#fff}
+.hero-sub .kw-layout .tag{left:auto;right:-6px}
+.hero-sub .w.ls .tag{left:-2px;right:auto}
+.hero-sub .box{inset:-3px -6px -2px;border:1.5px solid var(--brand)}
+.hero-sub .box i{position:absolute;width:6px;height:6px;box-sizing:border-box;background:var(--night);border:1.5px solid var(--brand)}
+.hero-sub .box i:nth-child(1){top:-3.75px;left:-3.75px}
+.hero-sub .box i:nth-child(2){top:-3.75px;right:-3.75px}
+.hero-sub .box i:nth-child(3){bottom:-3.75px;left:-3.75px}
+.hero-sub .box i:nth-child(4){bottom:-3.75px;right:-3.75px}
+.hero-sub .rule{left:0;right:0;bottom:-3px;height:1.5px;background:var(--ink);transform-origin:left}
+.hero-sub .rule.o{background:var(--brand)}
+.hero-sub .bars{display:inline-flex;align-items:flex-end;gap:2px;height:9px}
+.hero-sub .bars b{width:3px;background:currentColor}
+.hero-sub .bars b:nth-child(1){height:9px}
+.hero-sub .bars b:nth-child(2){height:6px}
+.hero-sub .bars b:nth-child(3){height:3px}
+.hero-sub .sw{width:9px;height:9px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 1.5px #fff}
+.hero-sub.annot .tag{animation:ann-tag 1.7s cubic-bezier(.16,1,.3,1) both}
+.hero-sub.annot .box{animation:ann-box 1.7s cubic-bezier(.16,1,.3,1) both}
+.hero-sub.annot .rule{animation:ann-rule 1.7s cubic-bezier(.16,1,.3,1) both}
+.hero-sub.annot .sw{animation:ann-sw 1.7s ease-out both}
+.hero-sub.annot .kw-hier .ann{animation-delay:1.5s}
+.hero-sub.annot .kw-colour .ann,.hero-sub.annot .kw-colour .sw{animation-delay:3s}
+@keyframes ann-tag{0%{opacity:0;transform:translateY(5px)}10%,82%{opacity:1;transform:none}92%,100%{opacity:0;transform:translateY(-3px)}}
+@keyframes ann-box{0%{opacity:1;clip-path:inset(-4px 100% -4px -4px)}16%,82%{opacity:1;clip-path:inset(-4px -4px -4px -4px)}100%{opacity:0;clip-path:inset(-4px -4px -4px -4px)}}
+@keyframes ann-rule{0%{opacity:1;transform:scaleX(0)}16%,82%{opacity:1;transform:scaleX(1)}100%{opacity:0;transform:scaleX(1)}}
+@keyframes ann-sw{0%,12%{background:#fff}40%,100%{background:var(--brand)}}
+@media (prefers-reduced-motion:reduce){
+  .hero-sub .w,.title-line{animation:none;opacity:1;transform:none}
+  .hero-sub .ann{display:none}
+}
+.stats{grid-column:3;grid-row:1;display:flex;gap:30px;margin:0}
+.stat{margin:0}
+.stat dt{font:400 10.5px/1.2 var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+.stat dd{margin:6px 0 0;font-size:22px;font-weight:500;letter-spacing:-.02em;font-variant-numeric:tabular-nums;min-width:3ch}
+.week{grid-column:1;grid-row:3;align-self:end;font-size:14px;line-height:1.35;font-weight:300}
+.week span{display:block;font:400 10.5px/1.2 var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:5px}
+.week b{font-weight:700}
+
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:0;padding:0;list-style:none}
+.notes li{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.45;color:var(--page-soft);min-width:0}
+.notes b{display:block;color:var(--page-text);font-weight:600;margin-bottom:2px}
+
+/* between phone and wide desktop the 2.2:1 box is too short for the large title: let it grow */
+@media (max-width:1180px) and (min-width:761px){
+  .hero-panel{aspect-ratio:auto;min-height:max(540px,calc((100vw - 80px) / 2.2))}
+  .copy h1{font-size:clamp(42px,5.3vw,74px)}
+}
+@media (max-width:760px){
+  .hero-frame{padding:10px;border-radius:24px}
+  .hero-panel{aspect-ratio:auto;min-height:620px;border-radius:14px}
+  .layer{grid-template-columns:1fr;grid-template-rows:auto 1fr auto auto;padding:20px 18px;gap:14px}
+  .stats{grid-column:1;grid-row:1;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .stat dd{font-size:20px}
+  .copy{grid-row:3;align-self:end}
+  .week{grid-row:4}
+}
+/* camera focus: everything outside a soft window around the cursor is slightly defocused */
+.focus-blur{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity .5s var(--ease-out);
+  -webkit-backdrop-filter:blur(2.4px);backdrop-filter:blur(2.4px);
+  -webkit-mask-image:radial-gradient(ellipse 190px 150px at var(--fx,50%) var(--fy,50%),transparent 40%,#000 100%);
+  mask-image:radial-gradient(ellipse 190px 150px at var(--fx,50%) var(--fy,50%),transparent 40%,#000 100%)}
+.reticle{position:absolute;left:0;top:0;z-index:4;width:150px;height:108px;pointer-events:none;opacity:0;
+  transform:translate3d(var(--rx,0px),var(--ry,0px),0);margin:-54px 0 0 -75px;transition:opacity .25s var(--ease-out)}
+.reticle-box{position:absolute;inset:0;transform:scale(1.14);transition:transform .32s var(--ease-out)}
+.reticle-box i{position:absolute;width:14px;height:14px;border:0 solid rgba(242,240,236,.7);transition:border-color .2s}
+.reticle-box i:nth-child(1){left:0;top:0;border-left-width:1px;border-top-width:1px}
+.reticle-box i:nth-child(2){right:0;top:0;border-right-width:1px;border-top-width:1px}
+.reticle-box i:nth-child(3){left:0;bottom:0;border-left-width:1px;border-bottom-width:1px}
+.reticle-box i:nth-child(4){right:0;bottom:0;border-right-width:1px;border-bottom-width:1px}
+.reticle-box b{position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%;border:1px solid rgba(242,240,236,.55)}
+.reticle-label{position:absolute;left:0;top:calc(100% + 8px);font:400 10px/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:rgba(242,240,236,.55);white-space:nowrap;font-variant-numeric:tabular-nums}
+.hero-panel.is-focusing{cursor:none}
+.hero-panel.is-focusing .focus-blur,.hero-panel.is-focusing .reticle{opacity:1}
+.hero-panel.is-locked .reticle-box{transform:scale(1)}
+.hero-panel.is-locked .reticle-box i{border-color:var(--brand-glow)}
+.hero-panel.is-locked .reticle-label{color:var(--brand-glow)}
+@media (hover:none),(pointer:coarse){.focus-blur,.reticle{display:none}}
+@media (prefers-reduced-motion:reduce){.grain{animation:none}.reticle-box{transition:none}}
+</style>
+
+<div class="wrap">
+  <div class="bar">
+    <div>
+      <h2>Hero prototype: flowing sand ring</h2>
+      <p>10-second seamless loop. Move the cursor over the hero to pull focus.</p>
+    </div>
+    <div class="actions">
+      <span class="clock" id="clock" aria-live="off">0.0s</span>
+      <button class="btn" id="toggle" type="button" aria-pressed="false">Pause</button>
+    </div>
+  </div>
+
+  <section class="hero-frame" aria-label="AI Interface Library overview">
+    <div class="hero-panel" id="panel">
+      <canvas id="sand" aria-hidden="true"></canvas>
+      <div class="focus-blur" aria-hidden="true"></div>
+      <div class="grain" aria-hidden="true"></div>
+      <div class="reticle" aria-hidden="true"><div class="reticle-box"><i></i><i></i><i></i><i></i><b></b></div><span class="reticle-label" id="afLabel">AF · f/1.8</span></div>
+      <div class="layer">
+        <dl class="stats">
+          <div class="stat"><dt>Screenshots</dt><dd data-to="157">0</dd></div>
+          <div class="stat"><dt>Portals</dt><dd data-to="15">0</dd></div>
+          <div class="stat"><dt>Weeks</dt><dd data-to="11">0</dd></div>
+        </dl>
+        <div class="copy">
+          <h1 aria-label="AI Interface Library">
+            <span class="title-mask"><span class="title-line">AI Interface</span></span>
+            <span class="title-mask"><span class="title-line">Library</span></span>
+          </h1>
+          <p class="hero-sub">
+            <span class="sr-only">Find UI references from AI products, updated weekly, and compare layout, hierarchy and colour for your next design.</span>
+            <span aria-hidden="true">
+            <span class="w" style="--c:0">Find</span>
+            <span class="w" style="--c:5">UI</span>
+            <span class="w" style="--c:8">references</span>
+            <span class="w" style="--c:19">from</span>
+            <span class="w" style="--c:24">AI</span>
+            <span class="w" style="--c:27">products,</span>
+            <span class="w" style="--c:37">updated</span>
+            <span class="w" style="--c:45">weekly,</span>
+            <span class="w" style="--c:53">and</span>
+            <span class="w" style="--c:57">compare</span>
+            <span class="w" style="--c:65"><span class="kw kw-layout">layout<span class="ann box"><i></i><i></i><i></i><i></i></span><span class="ann tag orange">Layout · 4 × 3 grid</span></span>,</span>
+            <span class="w" style="--c:73"><span class="kw kw-hier">hierarchy<span class="ann rule"></span><span class="ann tag"><span class="bars"><b></b><b></b><b></b></span>H1 74 · Body 22</span></span></span>
+            <span class="w" style="--c:83">and</span>
+            <span class="w" style="--c:87"><span class="kw kw-colour">colour<span class="ann rule o"></span><span class="ann tag orange"><span class="sw"></span>#C44C1C</span></span></span>
+            <span class="w" style="--c:94">for</span>
+            <span class="w" style="--c:98">your</span>
+            <span class="w" style="--c:103"><em>next&nbsp;design</em>.</span>
+            </span>
+          </p>
+        </div>
+        <div class="week"><span>Latest capture</span>Week of <b>Oct 19</b>, 2026</div>
+      </div>
+    </div>
+  </section>
+
+  <ul class="notes">
+    <li><b>Ring</b>One tilted ellipse of fine white grains, right of centre. Crisp and bright at the lower right, loosening into dust at the upper left. The silhouette stays put.</li>
+    <li><b>Motion</b>Grains drift slowly along the ring, fade in where they gather and dissolve as they loosen, with light turbulence, short trails and a slow breathing of the shape.</li>
+    <li><b>Loop</b>Every motion repeats exactly every 10 seconds, so the end meets the start with no jump. The timer above shows where the loop is.</li>
+    <li><b>Focus</b>With a mouse, the hero gets a shallow depth of field: sharp around the cursor, softly blurred elsewhere. Corner brackets follow with a little lag, then lock in orange when the cursor rests. Touch screens skip it.</li>
+    <li><b>Cost</b>One canvas, no libraries. Fewer grains on phones, paused off screen, a still frame under reduced motion.</li>
+  </ul>
+</div>
+
+<script>
+(function(){
+  const panel=document.getElementById('panel');
+  const canvas=document.getElementById('sand');
+  const ctx=canvas.getContext('2d');
+  const btn=document.getElementById('toggle');
+  const clock=document.getElementById('clock');
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU=Math.PI*2, T=10000;          // loop length (ms)
+  const LEVELS=10;                        // alpha buckets for batched drawing
+  let W=0,H=0,DPR=1,N=0,P=null,running=false,userPaused=false,visible=true,raf=0,elapsed=0,lastTs=0;
+  const buckets=Array.from({length:LEVELS},()=>[]);
+
+  // seeded random so the ring looks the same on every load
+  let seed=7;const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
+  const gauss=()=>{let u=0,v=0;while(!u)u=rnd();while(!v)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(TAU*v)};
+
+  function build(){
+    const r=panel.getBoundingClientRect();
+    W=r.width;H=r.height;DPR=Math.min(1.75,window.devicePixelRatio||1);
+    canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    seed=7;
+    N=Math.round(Math.min(18000,Math.max(6000,W*H/26)));
+    // per grain: start angle, travel, cycles per loop (integer), phase, spread, side jitter, turbulence phases, size
+    P=new Float32Array(N*9);
+    for(let i=0;i<N;i++){
+      const o=i*9;
+      P[o]=rnd()*TAU;
+      P[o+1]=0.35+rnd()*0.55;                 // radians travelled per life
+      P[o+2]=rnd()<0.6?1:2;                   // lives per 10s loop: 1 or 2 (keeps the loop exact)
+      P[o+3]=rnd();
+      P[o+4]=Math.min(2.6,Math.abs(gauss()))*(rnd()<0.12?-0.25:1); // mostly outward: crisp inner edge
+      P[o+5]=gauss();
+      P[o+6]=rnd()*TAU;
+      P[o+7]=rnd()*TAU;
+      P[o+8]=0.55+rnd()*0.6;
+    }
+    ctx.fillStyle='#0b0b0c';ctx.fillRect(0,0,W,H);
+  }
+
+  const BRIGHT=1.12;                      // angle (before tilt) of the crisp lower-right edge
+  function angDist(a,b){let d=Math.abs(a-b)%TAU;return d>Math.PI?TAU-d:d}
+
+  function draw(ms,trail){
+    const u=(ms%T)/T, w=TAU*u;           // loop phase
+    const narrow=W<760;
+    const cx=W*(narrow?0.5:0.715), cy=H*(narrow?0.36:0.53);
+    const breathe=Math.sin(w), breathe2=Math.sin(w+1.1);
+    const a=(narrow?W*0.34:W*0.19)*(1+0.012*breathe);
+    const b=(narrow?H*0.16:H*0.29)*(1+0.018*breathe2);
+    const tilt=-0.46+0.012*Math.sin(w+0.4);
+    const ct=Math.cos(tilt), st=Math.sin(tilt);
+
+    ctx.globalCompositeOperation='source-over';
+    if(trail){ctx.fillStyle='rgba(11,11,12,0.24)';ctx.fillRect(0,0,W,H)}
+    else{ctx.fillStyle='#0b0b0c';ctx.fillRect(0,0,W,H)}
+
+    for(let k=0;k<LEVELS;k++)buckets[k].length=0;
+
+    for(let i=0;i<N;i++){
+      const o=i*9;
+      let f=(u*P[o+2]+P[o+3])%1;               // life progress 0..1
+      const th=P[o]+P[o+1]*f;                   // drifts clockwise along the ring
+      const d=angDist(th,BRIGHT);               // 0 at the crisp edge, PI at the dusty side
+      const loose=Math.pow(d/Math.PI,1.7);      // 0 crisp .. 1 dusty
+      const spread=0.004+0.30*loose;
+      // gentle turbulence, integer frequencies so it loops
+      const turb=Math.sin(w+P[o+6]+th*3)*0.5+Math.sin(2*w+P[o+7]-th*2)*0.5;
+      const rr=1+P[o+4]*spread+turb*(0.003+0.035*loose);
+      const side=P[o+5]*spread*0.16+turb*0.02*loose;
+      const cth=Math.cos(th), sth=Math.sin(th);
+      const ex=cth*a*rr - sth*a*side;
+      const ey=sth*b*rr + cth*b*side;
+      const x=cx+ex*ct-ey*st, y=cy+ex*st+ey*ct;
+      const env=Math.pow(Math.sin(Math.PI*f),1.15);  // gather in, dissolve out
+      const lum=0.17+0.83*Math.exp(-(d*d)/0.6);     // bright at the crisp edge
+      const al=env*lum*(1-0.35*loose);
+      if(al<0.02)continue;
+      const lvl=Math.min(LEVELS-1,(al*LEVELS)|0);
+      buckets[lvl].push(x,y,P[o+8]*(1-0.25*loose));
+    }
+
+    ctx.globalCompositeOperation='lighter';
+    for(let k=0;k<LEVELS;k++){
+      const arr=buckets[k];if(!arr.length)continue;
+      ctx.fillStyle=`rgba(244,242,238,${((k+0.5)/LEVELS*0.78).toFixed(3)})`;
+      for(let j=0;j<arr.length;j+=3){const s=arr[j+2];ctx.fillRect(arr[j],arr[j+1],s,s)}
+    }
+    clock.textContent=((ms%T)/1000).toFixed(1)+'s';
+  }
+
+  function loop(ts){
+    if(!running)return;
+    if(lastTs)elapsed+=Math.min(50,ts-lastTs);
+    lastTs=ts;
+    draw(elapsed,true);
+    raf=requestAnimationFrame(loop);
+  }
+  function warm(){ // settle the trails so the first visible frame already has them
+    for(let k=12;k>0;k--)draw(elapsed-k*16,true);
+  }
+  function start(){if(running||userPaused||!visible||document.hidden||reduce)return;running=true;lastTs=0;raf=requestAnimationFrame(loop)}
+  function stop(){running=false;cancelAnimationFrame(raf)}
+
+  // stats count up once they arrive (from /api/stats on the site)
+  const ease=x=>1-Math.pow(1-x,5);
+  function countUp(){
+    document.querySelectorAll('dd[data-to]').forEach((el,i)=>{
+      const to=+el.dataset.to;if(reduce){el.textContent=to;return}
+      let s=null;const step=ts=>{if(s===null)s=ts+i*100;const k=Math.min(1,Math.max(0,(ts-s)/900));el.textContent=Math.round(ease(k)*to);if(k<1)requestAnimationFrame(step)};
+      requestAnimationFrame(step);
+    });
+  }
+
+  function init(){build();if(reduce){draw(2500,false)}else{warm();start()}}
+  init();
+  setTimeout(countUp,350);
+
+  // keyword annotations: same timing as initHeroAnnotations() in app.js
+  (function(){
+    const sub=document.querySelector('.hero-sub');
+    const PLAY_MS=4800;let playingUntil=0;
+    const play=()=>{
+      if(reduce||Date.now()<playingUntil)return;
+      playingUntil=Date.now()+PLAY_MS;
+      sub.classList.remove('annot');void sub.offsetWidth;sub.classList.add('annot');
+    };
+    const words=[...sub.querySelectorAll('.w')];
+    const wordIn=words.at(-1)?.getAnimations().find(a=>a.animationName==='word-in');
+    if(wordIn){const t=wordIn.effect.getComputedTiming();setTimeout(play,Math.max(0,t.delay+t.duration*0.55-(wordIn.currentTime??0)))}else play();
+    sub.addEventListener('mouseenter',play);
+    const mark=()=>{
+      const top=words[0].offsetTop,left=words[0].offsetLeft;
+      words.forEach(w=>{w.classList.toggle('l1',Math.abs(w.offsetTop-top)<2);w.classList.toggle('ls',Math.abs(w.offsetLeft-left)<2)});
+    };
+    mark();document.fonts?.addEventListener('loadingdone',mark);addEventListener('resize',mark);
+  })();
+  let rt=0;new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(()=>{stop();init()},120)}).observe(panel);
+  new IntersectionObserver(es=>{visible=es[0].isIntersecting;visible?start():stop()}).observe(panel);
+  document.addEventListener('visibilitychange',()=>document.hidden?stop():start());
+  // camera focus that follows a mouse pointer
+  const fine=matchMedia('(hover: hover) and (pointer: fine)').matches;
+  if(fine){
+    const label=document.getElementById('afLabel');
+    let tx=0,ty=0,x=0,y=0,on=false,fr=0,lockT=0;
+    const set=()=>{
+      panel.style.setProperty('--rx',x+'px');panel.style.setProperty('--ry',y+'px');
+      panel.style.setProperty('--fx',x+'px');panel.style.setProperty('--fy',y+'px');
+    };
+    const follow=()=>{
+      const k=reduce?1:0.16;x+=(tx-x)*k;y+=(ty-y)*k;set();
+      if(on&&(Math.abs(tx-x)>0.3||Math.abs(ty-y)>0.3))fr=requestAnimationFrame(follow);else fr=0;
+    };
+    const lock=()=>{panel.classList.add('is-locked');label.textContent='AF-L · f/1.8'};
+    panel.addEventListener('pointermove',e=>{
+      if(e.pointerType!=='mouse')return;
+      const r=panel.getBoundingClientRect();tx=e.clientX-r.left;ty=e.clientY-r.top;
+      if(!on){on=true;x=tx;y=ty;set();panel.classList.add('is-focusing')}
+      panel.classList.remove('is-locked');label.textContent='AF · f/1.8';
+      clearTimeout(lockT);lockT=setTimeout(lock,260);
+      if(!fr)fr=requestAnimationFrame(follow);
+    });
+    panel.addEventListener('pointerleave',()=>{on=false;clearTimeout(lockT);cancelAnimationFrame(fr);fr=0;panel.classList.remove('is-focusing','is-locked')});
+  }
+
+  btn.addEventListener('click',()=>{userPaused=!userPaused;btn.textContent=userPaused?'Play':'Pause';btn.setAttribute('aria-pressed',String(userPaused));userPaused?stop():start()});
+  if(reduce){btn.disabled=true;btn.textContent='Reduced motion on'}
+})();
+</script>

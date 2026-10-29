@@ -300,6 +300,9 @@ describe('sitemap, llms.txt, feed, /changes and homepage', () => {
     const out = renderHomepage(INDEX_HTML, stats, { week: PENDING, label: 'Week of Oct 19, 2026', captures: [] });
     expect(out).toContain(`<a class="btn-secondary" id="weekDigest" href="/weeks/${PENDING}">This week&#39;s changes`);
     expect(renderHomepage(INDEX_HTML, stats, null)).toContain('<a class="btn-secondary" id="weekDigest" href="/weeks" hidden>');
+    // The hero's "Latest capture" line is in the first paint, so filling it in later never shifts the hero.
+    expect(out).toContain('<span id="heroWeek">Week of <b>Oct 19</b>, 2026</span>');
+    expect(renderHomepage(INDEX_HTML, stats, null)).toContain('<span id="heroWeek">–</span>');
     expect(APP_JS).toContain('digest.href = `/weeks/${encodeURIComponent(state.week)}`;');
   });
 });

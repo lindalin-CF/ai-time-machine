@@ -130,20 +130,25 @@ describe('homepage hero (browser)', () => {
     }
   });
 
-  it('follows the viewport height on desktop: short screens show the filter bar, 900px+ keeps the 500px panel', async () => {
+  it('follows the viewport height on wide desktops: short screens show the filter bar, 900px+ keeps the 500px panel', async () => {
     for (const [width, height, panel] of [[1280, 600, 400], [1536, 730, 443], [1440, 900, 500], [1920, 1080, 500]]) {
       const page = await openSite(browser, '', { width, height });
       const m = await page.evaluate(() => {
         const hero = document.querySelector('.hero')!;
         const rect = (s: string) => document.querySelector(s)!.getBoundingClientRect();
-        const panel = rect('.hero-panel'), title = rect('.hero-title'), sub = rect('.hero-sub'), stats = rect('.stats');
+        const frame = rect('.hero-frame'), panel = rect('.hero-panel'), title = rect('.hero-title'), sub = rect('.hero-sub'), stats = rect('.stats'), week = rect('.hero-week');
+        // The stats have their own column on the right, so the copy may sit beside them as well as below.
+        const clear = (r: DOMRect) => r.right < stats.left || r.top > stats.bottom;
         return {
           panel: Math.round(panel.height),
+          // The height cap must not narrow the panel (aspect-ratio would, without width:100%).
+          fullWidth: Math.round(frame.width - panel.width) === Math.round(2 * parseFloat(getComputedStyle(document.querySelector('.hero-frame')!).paddingLeft)),
           heroEnd: hero.getBoundingClientRect().bottom + parseFloat(getComputedStyle(hero).marginBottom),
-          inside: [title, sub].every((r) => r.top >= panel.top && r.bottom <= panel.bottom),
-          clearOfStats: sub.top > stats.bottom && title.top > stats.bottom,
+          inside: [title, sub, week].every((r) => r.top >= panel.top && r.bottom <= panel.bottom),
+          clearOfStats: clear(title) && clear(sub),
         };
       });
+      expect(m.fullWidth, `${width}×${height}`).toBe(true);
       expect(m.panel, `${width}×${height}`).toBe(panel);
       expect(m.inside && m.clearOfStats, `${width}×${height}`).toBe(true);
       if (height === 600) expect(m.heroEnd).toBeLessThanOrEqual(560);

@@ -15,6 +15,20 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "sand-hero",
+    date: "2026-10-28",
+    time: "23:46",
+    title: "A Darker Homepage Hero",
+    subtitle: "The homepage opens on a dark panel with a ring of flowing sand",
+    bullets: [
+      { lead: "Flowing sand", text: "A tilted ring of fine white grains drifts slowly beside the title, crisp on one side and loosening into dust on the other. It repeats every 10 seconds without a jump, and pauses when the hero is out of view." },
+      { lead: "Camera focus", text: "With a mouse, the hero gets a shallow depth of field around the cursor, and corner brackets follow it, locking in orange when you stop. Touch screens skip it." },
+      { lead: "Calmer type", text: "The title and the line under it are smaller, so the hero has more room. The latest capture week now sits at the bottom of the panel." },
+      { lead: "Reduced motion", text: "With reduced motion turned on, the ring is one still picture and nothing follows the cursor." },
+    ],
+    closing: "Open the homepage.",
+  },
+  {
     slug: "stats-count-up",
     date: "2026-10-27",
     time: "15:28",

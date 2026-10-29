@@ -25,11 +25,12 @@ const unguardedHoverTransforms = (page: Page) => page.evaluate(() => {
   return out;
 });
 
-/** Visible text smaller than 11px, or mono text smaller than 12px (the hero's animated annotation tags excepted). */
+/** Visible text smaller than 11px, or mono text smaller than 12px (the hero's animated annotation tags and its camera-focus
+ * reticle label, decorations shown only for a moment, excepted). */
 const smallText = (page: Page) => page.evaluate(() => {
   const out: string[] = [];
   for (const el of document.querySelectorAll('body *')) {
-    if (!(el instanceof HTMLElement) || el.closest('.hero-sub .ann, .sr-only, .stat-full')) continue;
+    if (!(el instanceof HTMLElement) || el.closest('.hero-sub .ann, .hero-reticle, .sr-only, .stat-full')) continue;
     const own = [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent!.trim());
     if (!own || !el.checkVisibility()) continue;
     const cs = getComputedStyle(el), size = parseFloat(cs.fontSize);

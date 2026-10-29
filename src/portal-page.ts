@@ -111,8 +111,8 @@ export const FEED_URL = `${ORIGIN}/feed.xml`;
 /** Channel description: the same as the homepage's meta description. */
 export const FEED_DESCRIPTION = "Weekly screenshots of AI chatbot interfaces — ChatGPT, Claude, Gemini, Perplexity, Copilot and more — on desktop and mobile, with design analysis and UI changes week by week.";
 
-/** The site-wide link preview (public/og-image.png), used where a page has no screenshot of its own. */
-export const SITE_PREVIEW: PreviewImage = { url: `${ORIGIN}/og-image.png`, width: 1200, height: 630, alt: "AI Interface Library" };
+/** The site-wide link preview (public/og-image-v2.png, scripts/local-capture/og-image.mjs), used where a page has no screenshot of its own. */
+export const SITE_PREVIEW: PreviewImage = { url: `${ORIGIN}/og-image-v2.png`, width: 1200, height: 630, alt: "AI Interface Library" };
 
 /** Link preview and search metadata for an indexable page (one with a canonical URL). */
 function socialMeta(title: string, description: string, canonical: string, image: PreviewImage): string {

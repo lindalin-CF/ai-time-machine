@@ -26,7 +26,7 @@
   <meta property="og:site_name" content="AI Interface Library" />
   <meta property="og:title" content="AI Interface Library — weekly UI screenshots of ChatGPT, Claude, Gemini &amp; more" />
   <meta property="og:description" content="Weekly screenshots of AI chatbot interfaces — ChatGPT, Claude, Gemini, Perplexity, Copilot and more — on desktop and mobile, with design analysis and UI changes week by week." />
-  <meta property="og:image" content="https://ai-portal-library.dev/og-image.png" />
+  <meta property="og:image" content="https://ai-portal-library.dev/og-image-v2.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="AI Interface Library" />
@@ -34,7 +34,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="AI Interface Library — weekly UI screenshots of ChatGPT, Claude, Gemini &amp; more" />
   <meta name="twitter:description" content="Weekly screenshots of AI chatbot interfaces — ChatGPT, Claude, Gemini, Perplexity, Copilot and more — on desktop and mobile, with design analysis and UI changes week by week." />
-  <meta name="twitter:image" content="https://ai-portal-library.dev/og-image.png" />
+  <meta name="twitter:image" content="https://ai-portal-library.dev/og-image-v2.png" />
   <meta name="twitter:image:alt" content="AI Interface Library" />
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"AI Interface Library","url":"https://ai-portal-library.dev/","description":"Weekly screenshots of AI chatbot interfaces — ChatGPT, Claude, Gemini, Perplexity, Copilot and more — on desktop and mobile, with design analysis and UI changes week by week.","inLanguage":"en","publisher":{"@type":"Person","name":"Linda"}}</script>
   <!-- Hero title and sub copy font (all weights in one file): fetch it before CSS discovers it, so the swap doesn't shift the animated words. -->
@@ -64,10 +64,13 @@
     <section class="hero" aria-label="AI Interface Library overview">
       <div class="hero-frame">
         <div class="hero-panel">
-          <div class="hero-grid" aria-hidden="true"></div>
-          <div class="hero-noise" aria-hidden="true"></div>
-          <div class="hero-orb" aria-hidden="true"></div>
+          <!-- The sand ring, the camera-focus blur and reticle: public/sand-hero.js (prototype: docs/prototypes/sand-hero.html). -->
+          <canvas class="hero-sand" aria-hidden="true"></canvas>
+          <div class="hero-focus" aria-hidden="true"></div>
+          <div class="hero-grain" aria-hidden="true"></div>
+          <div class="hero-reticle" aria-hidden="true"><div class="hero-reticle-box"><i></i><i></i><i></i><i></i><b></b></div><span class="hero-reticle-label">AF · f/1.8</span></div>
 
+          <div class="hero-layer">
           <div class="hero-copy">
             <h1 class="hero-title" aria-label="AI Interface Library">
               <span class="title-mask"><span class="title-line">AI Interface</span></span>
@@ -87,12 +90,12 @@
               <span class="w" style="--c:53">and</span>
               <span class="w" style="--c:57">compare</span>
               <span class="w" style="--c:65"><span class="kw kw-layout">layout<span class="ann box" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="ann tag orange" aria-hidden="true">Layout · 4 × 3 grid</span></span>,</span>
-              <span class="w" style="--c:73"><span class="kw kw-hier">hierarchy<span class="ann rule" aria-hidden="true"></span><span class="ann tag" aria-hidden="true"><span class="bars"><b></b><b></b><b></b></span>H1 92 · Body 28</span></span></span>
+              <span class="w" style="--c:73"><span class="kw kw-hier">hierarchy<span class="ann rule" aria-hidden="true"></span><span class="ann tag" aria-hidden="true"><span class="bars"><b></b><b></b><b></b></span>H1 74 · Body 22</span></span></span>
               <span class="w" style="--c:83">and</span>
               <span class="w" style="--c:87"><span class="kw kw-colour">colour<span class="ann rule o" aria-hidden="true"></span><span class="ann tag orange" aria-hidden="true"><span class="sw"></span>#C44C1C</span></span></span>
               <span class="w" style="--c:94">for</span>
               <span class="w" style="--c:98">your</span>
-              <span class="w" style="--c:103">next&nbsp;design.</span>
+              <span class="w" style="--c:103"><em>next&nbsp;design</em>.</span>
               </span>
             </p>
           </div>
@@ -102,6 +105,10 @@
             <div class="stat"><dt><span class="stat-full">Portals tracked</span><span class="stat-short" aria-hidden="true">Portals</span></dt><dd data-stat="portals">–</dd></div>
             <div class="stat"><dt><span class="stat-full">Weeks archived</span><span class="stat-short" aria-hidden="true">Weeks</span></dt><dd data-stat="weeks">–</dd></div>
           </dl>
+
+          <!-- The Worker fills in the latest week (src/homepage.ts); app.js does if it couldn't. -->
+          <p class="hero-week"><span class="hero-week-label">Latest capture</span><span id="heroWeek">–</span></p>
+          </div>
         </div>
       </div>
     </section>
@@ -267,6 +274,7 @@
     </dialog>
   </footer>
 
+  <script src="/sand-hero.js" defer></script>
   <script src="/app.js" type="module"></script>
   <script src="/voice.js" type="module"></script>
   <script src="/footer-dialogs.js" defer></script>

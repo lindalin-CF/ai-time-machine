@@ -141,8 +141,8 @@ describe('robots and link previews', () => {
       expect(meta(html, 'twitter:card')).toBe('summary_large_image');
       expect(meta(html, 'twitter:image')).toBe(SITE_PREVIEW.url);
     }
-    // og-image.png really is 1200x630.
-    const b = readFileSync(new URL('../../public/og-image.png', import.meta.url));
+    // og-image-v2.png really is 1200x630.
+    const b = readFileSync(new URL('../../public/og-image-v2.png', import.meta.url));
     expect([b.readUInt32BE(16), b.readUInt32BE(20)]).toEqual([1200, 630]);
   });
 

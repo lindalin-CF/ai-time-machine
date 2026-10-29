@@ -97,60 +97,58 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   background:linear-gradient(180deg,#1d160c,#0f0b05);
   box-shadow:0 44px 90px -50px rgba(21,14,5,.75),0 12px 30px -22px rgba(21,14,5,.9);
 }
+/* The dark sand hero (docs/prototypes/sand-hero.html): a 2.2:1 charcoal panel with a ring of flowing sand right of centre
+   (public/sand-hero.js), the type in the left third. Contrast on --night: --ink 18:1, --ink-soft 6.7:1, --brand-glow 7.6:1. */
 .hero-panel{
-  position:relative;min-height:500px;overflow:hidden;border-radius:18px;
-  background:var(--cf-bg-100);border:1px solid rgba(66,50,23,.20);
-  box-shadow:inset 0 0 0 1px rgba(245,241,233,.72);
+  --night:#0b0b0c;
+  --ink:#f2f0ec;
+  --ink-soft:rgba(242,240,236,.6);
+  --brand-glow:#ec8a5f;
+  /* Where sand-hero.js draws the ring: its centre as fractions of the panel, its radii as fractions of the panel's
+     width (a) and height (b). Set per layout below so the ring stays clear of the type. */
+  --ring-x:.72;--ring-y:.585;--ring-a:.185;--ring-b:.28;
+  position:relative;width:100%;aspect-ratio:2.2/1;min-height:420px;overflow:hidden;border-radius:18px;
+  background:var(--night);color:var(--ink);isolation:isolate;
 }
-.hero-grid{
-  position:absolute;inset:0;z-index:0;
-  background-image:
-    linear-gradient(90deg,transparent calc(25% - .5px),rgba(66,50,23,.16) calc(25% - .5px) calc(25% + .5px),transparent calc(25% + .5px),transparent calc(50% - .5px),rgba(66,50,23,.16) calc(50% - .5px) calc(50% + .5px),transparent calc(50% + .5px),transparent calc(75% - .5px),rgba(66,50,23,.16) calc(75% - .5px) calc(75% + .5px),transparent calc(75% + .5px)),
-    linear-gradient(0deg,transparent calc(33.333% - .5px),rgba(66,50,23,.14) calc(33.333% - .5px) calc(33.333% + .5px),transparent calc(33.333% + .5px),transparent calc(66.666% - .5px),rgba(66,50,23,.14) calc(66.666% - .5px) calc(66.666% + .5px),transparent calc(66.666% + .5px));
-}
-.hero-noise{
-  position:absolute;inset:0;z-index:1;pointer-events:none;opacity:.22;mix-blend-mode:multiply;
-  background-image:
-    radial-gradient(circle at 11% 17%,rgba(66,50,23,.09) 0 1px,transparent 1.8px),
-    radial-gradient(circle at 78% 63%,rgba(66,50,23,.07) 0 1px,transparent 1.6px),
-    radial-gradient(circle at 44% 48%,rgba(66,50,23,.055) 0 1px,transparent 1.5px);
-  background-size:19px 23px,31px 29px,17px 13px;
-}
-.hero-orb{
-  --orb-angle:210deg;
-  position:absolute;left:calc(25% + 10px);top:calc(38% - 10px);width:150px;height:150px;z-index:2;
-  border-radius:50%;transform-origin:center;pointer-events:none;will-change:transform;
-}
-.hero-orb::before{
-  content:"";position:absolute;inset:0;border-radius:50%;
-  background:
-    radial-gradient(circle at 22% 31%,rgba(245,241,233,.36) 0 1px,transparent 1.7px),
-    radial-gradient(circle at 68% 54%,rgba(66,50,23,.18) 0 .8px,transparent 1.5px),
-    radial-gradient(circle at 42% 76%,rgba(245,241,233,.22) 0 .7px,transparent 1.4px),
-    conic-gradient(from var(--orb-angle),rgba(66,50,23,.20),color-mix(in srgb,var(--brand) 95%,transparent),color-mix(in srgb,var(--brand) 78%,transparent),rgba(66,50,23,.16),rgba(66,50,23,.20));
-  background-size:17px 19px,23px 29px,11px 13px,auto;
-  background-blend-mode:soft-light,multiply,overlay,normal;
-  opacity:.78;transform-origin:center;
-  animation:orb-flow 14s linear infinite;
-  -webkit-mask:radial-gradient(circle,transparent 0 35%,#000 36% 66%,transparent 67%);
-          mask:radial-gradient(circle,transparent 0 35%,#000 36% 66%,transparent 67%);
-}
-.hero-orb::after{
-  content:"";position:absolute;left:50%;top:50%;width:10%;height:10%;z-index:2;
-  transform:translate(-50%,-50%);
-  background:
-    linear-gradient(#bdb2aa,#bdb2aa) center/2px 100% no-repeat,
-    linear-gradient(#bdb2aa,#bdb2aa) center/100% 2px no-repeat;
-  opacity:.92;
-}
-@keyframes orb-flow{
-  0%{transform:rotate(0deg)}
-  100%{transform:rotate(360deg)}
-}
-.hero-copy{position:absolute;z-index:3;left:18px;right:18px;bottom:22px;display:grid;grid-template-columns:1fr minmax(280px,48%);gap:40px;align-items:end}
+.hero-sand{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0}
+.hero-grain{position:absolute;inset:-50%;z-index:2;pointer-events:none;opacity:.11;mix-blend-mode:screen;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  animation:grain 1s steps(6) infinite}
+.hero-panel[data-sand="paused"] .hero-grain{animation-play-state:paused}
+@keyframes grain{0%{transform:translate(0,0)}20%{transform:translate(-3%,2%)}40%{transform:translate(2%,-3%)}60%{transform:translate(-2%,-1%)}80%{transform:translate(3%,3%)}100%{transform:translate(0,0)}}
+
+/* Camera focus (mouse only, sand-hero.js): everything outside a soft window around the cursor is slightly defocused,
+   and corner brackets follow with a little lag, then lock in orange when the cursor rests. */
+.hero-focus{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity .5s cubic-bezier(.23,1,.32,1);
+  -webkit-backdrop-filter:blur(2.4px);backdrop-filter:blur(2.4px);
+  -webkit-mask-image:radial-gradient(ellipse 190px 150px at var(--fx,50%) var(--fy,50%),transparent 40%,#000 100%);
+  mask-image:radial-gradient(ellipse 190px 150px at var(--fx,50%) var(--fy,50%),transparent 40%,#000 100%)}
+.hero-reticle{position:absolute;left:0;top:0;z-index:4;width:150px;height:108px;pointer-events:none;opacity:0;
+  transform:translate3d(var(--rx,0px),var(--ry,0px),0);margin:-54px 0 0 -75px;transition:opacity .25s cubic-bezier(.23,1,.32,1)}
+.hero-reticle-box{position:absolute;inset:0;transform:scale(1.14);transition:transform .32s cubic-bezier(.23,1,.32,1)}
+.hero-reticle-box i{position:absolute;width:14px;height:14px;border:0 solid rgba(242,240,236,.7);transition:border-color .2s}
+.hero-reticle-box i:nth-child(1){left:0;top:0;border-left-width:1px;border-top-width:1px}
+.hero-reticle-box i:nth-child(2){right:0;top:0;border-right-width:1px;border-top-width:1px}
+.hero-reticle-box i:nth-child(3){left:0;bottom:0;border-left-width:1px;border-bottom-width:1px}
+.hero-reticle-box i:nth-child(4){right:0;bottom:0;border-right-width:1px;border-bottom-width:1px}
+.hero-reticle-box b{position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%;border:1px solid rgba(242,240,236,.55)}
+.hero-reticle-label{position:absolute;left:0;top:calc(100% + 8px);font:400 10px/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:rgba(242,240,236,.55);white-space:nowrap;font-variant-numeric:tabular-nums}
+.hero-panel.is-focusing{cursor:none}
+.hero-panel.is-focusing .hero-focus,.hero-panel.is-focusing .hero-reticle{opacity:1}
+.hero-panel.is-locked .hero-reticle-box{transform:scale(1)}
+.hero-panel.is-locked .hero-reticle-box i{border-color:var(--brand-glow)}
+.hero-panel.is-locked .hero-reticle-label{color:var(--brand-glow)}
+@media (hover:none),(pointer:coarse){.hero-focus,.hero-reticle{display:none}}
+@media (prefers-reduced-motion:reduce){.hero-grain{animation:none}.hero-reticle-box{transition:none}}
+
+/* The type, over the canvas: copy in the left column, stats top right, the latest week bottom left. The stats have their
+   own column, so the copy is centred over their row too and the latest week always has room below it. */
+.hero-layer{position:absolute;inset:0;z-index:3;display:grid;grid-template-columns:minmax(0,46%) 1fr;grid-template-rows:auto 1fr auto;
+  padding:30px 34px;gap:16px;pointer-events:none}
+.hero-copy{grid-column:1;grid-row:1 / 3;align-self:center;display:grid;gap:16px}
 .hero-title{
-  font-size:clamp(52px,8vw,92px);line-height:.9;font-weight:700;
-  letter-spacing:-.05em;margin:0;max-width:9ch;color:var(--cf-text);
+  font-size:clamp(42px,6.4vw,74px);line-height:.9;font-weight:700;
+  letter-spacing:-.05em;margin:0;max-width:9ch;color:var(--ink);
 }
 .title-mask{display:block;overflow:hidden;line-height:1;padding:.04em 0 .08em}
 .title-line{display:block;transform:translateY(110%);animation:title-rise .8s cubic-bezier(.16,1,.3,1) forwards;will-change:transform}
@@ -158,14 +156,12 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .title-mask:nth-child(2) .title-line{animation-delay:.08s}
 .title-mask:nth-child(3) .title-line{animation-delay:.16s}
 @keyframes title-rise{to{transform:translateY(0)}}
-@media (prefers-reduced-motion:reduce){.title-line,.hero-orb::before{animation:none;transform:none}}
-.hero-sub{margin:0;max-width:42ch;color:var(--cf-text-soft);font-size:clamp(18px,2.2vw,28px);line-height:1.18;letter-spacing:-.035em}
-.hero-sub::first-line{color:var(--cf-text)}
+@media (prefers-reduced-motion:reduce){.title-line{animation:none;transform:none}}
+.hero-sub{margin:0;max-width:42ch;color:var(--ink-soft);font-size:clamp(16px,1.75vw,22px);line-height:1.18;letter-spacing:-.035em;pointer-events:auto}
+.hero-sub::first-line{color:var(--ink)}
+.hero-sub em{font-style:normal;font-weight:500;color:var(--brand-glow)}
 
-/* hero motion: grid draws in, sub copy rises word by word, keywords get design annotations */
-.hero-grid{animation:grid-draw .6s cubic-bezier(.16,1,.3,1) both}
-/* Same units in both keyframes, so Chrome can interpolate and composite the clip. */
-@keyframes grid-draw{from{clip-path:inset(50% 50% 50% 50%)}to{clip-path:inset(0% 0% 0% 0%)}}
+/* hero motion: sub copy rises word by word, keywords get design annotations */
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
 /* Words breathe in as one soft wave, left to right: each fades up from a slight drop, starting
    at its character offset (--c) in the sentence. Durations overlap their neighbours many times
@@ -178,31 +174,34 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   from{opacity:0;transform:translateY(.16em)}
   to{opacity:1;transform:none}
 }
-.hero-sub .w.l1{color:var(--cf-text)} /* first line, marked by app.js; ::first-line can't style inline-blocks */
+.hero-sub .w.l1{color:var(--ink)} /* first line, marked by app.js; ::first-line can't style inline-blocks */
 .hero-sub .kw{position:relative;display:inline-block}
 .hero-sub .ann{position:absolute;pointer-events:none;opacity:0}
 .hero-sub .tag{
-  bottom:calc(100% + 7px);left:-2px;display:flex;align-items:center;gap:5px;white-space:nowrap;
+  /* Centred on the line above: the 19px tag's middle at half a line (.59em of the sub at line-height 1.18) above this
+     line. Written as 50% of the keyword's box, which is one line tall, because em here would be the tag's own 10px. */
+  bottom:calc(150% - 9.5px);left:-2px;display:flex;align-items:center;gap:5px;white-space:nowrap;
   font-family:var(--font-mono);font-size:10px;font-weight:500;line-height:1;text-transform:uppercase;letter-spacing:.06em;
-  background:var(--cf-text);color:var(--cf-bg-100);padding:5px 7px 4px;border-radius:5px;
+  background:var(--ink);color:var(--night);padding:5px 7px 4px;border-radius:5px;
 }
-.hero-sub .tag.orange{background:var(--brand)}
+.hero-sub .tag.orange{background:var(--brand);color:#fff}
 .hero-sub .kw-layout .tag{left:auto;right:-6px}
+.hero-sub .w.le .tag{left:auto;right:-6px} /* tag would run past the copy's right edge (marked by app.js): anchor it right */
 .hero-sub .w.ls .tag{left:-2px;right:auto} /* keyword starts a line (marked by app.js): keep its tag inside the panel */
 .hero-sub .box{inset:-3px -6px -2px;border:1.5px solid var(--brand)}
-.hero-sub .box i{position:absolute;width:6px;height:6px;box-sizing:border-box;background:var(--cf-bg-100);border:1.5px solid var(--brand)}
+.hero-sub .box i{position:absolute;width:6px;height:6px;box-sizing:border-box;background:var(--night);border:1.5px solid var(--brand)}
 .hero-sub .box i:nth-child(1){top:-3.75px;left:-3.75px}
 .hero-sub .box i:nth-child(2){top:-3.75px;right:-3.75px}
 .hero-sub .box i:nth-child(3){bottom:-3.75px;left:-3.75px}
 .hero-sub .box i:nth-child(4){bottom:-3.75px;right:-3.75px}
-.hero-sub .rule{left:0;right:0;bottom:-3px;height:1.5px;background:var(--cf-text);transform-origin:left}
+.hero-sub .rule{left:0;right:0;bottom:-3px;height:1.5px;background:var(--ink);transform-origin:left}
 .hero-sub .rule.o{background:var(--brand)}
 .hero-sub .bars{display:inline-flex;align-items:flex-end;gap:2px;height:9px}
 .hero-sub .bars b{width:3px;background:currentColor}
 .hero-sub .bars b:nth-child(1){height:9px}
 .hero-sub .bars b:nth-child(2){height:6px}
 .hero-sub .bars b:nth-child(3){height:3px}
-.hero-sub .sw{width:9px;height:9px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 1.5px var(--cf-bg-100)} /* the tag's hex, ringed so it shows on the orange tag */
+.hero-sub .sw{width:9px;height:9px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 1.5px #fff} /* the tag's hex, ringed so it shows on the orange tag */
 /* annotations play only while .annot is on (added/replayed by app.js) */
 .hero-sub.annot .tag{animation:ann-tag 1.7s cubic-bezier(.16,1,.3,1) both}
 .hero-sub.annot .box{animation:ann-box 1.7s cubic-bezier(.16,1,.3,1) both}
@@ -230,33 +229,46 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   16%,82%{opacity:1;transform:scaleX(1)}
   100%{opacity:0;transform:scaleX(1)}
 }
-@keyframes ann-sw{0%,12%{background:var(--cf-bg-100)}40%,100%{background:var(--brand)}}
+@keyframes ann-sw{0%,12%{background:#fff}40%,100%{background:var(--brand)}}
 @media (prefers-reduced-motion:reduce){
-  .hero-grid,.hero-sub .w,.title-line{animation:none;opacity:1;transform:none;clip-path:none;filter:none}
+  .hero-sub .w,.title-line{animation:none;opacity:1;transform:none;clip-path:none;filter:none}
   .hero-sub .ann{display:none}
 }
-.stats{position:absolute;z-index:3;left:18px;right:18px;top:18px;display:flex;justify-content:flex-end;gap:42px;margin:0;padding:0}
-.stat dt{font-family:var(--font-mono);font-size:12px;text-transform:uppercase;letter-spacing:.10em;color:var(--cf-text-soft)}
+.stats{grid-column:2;grid-row:1;justify-self:end;display:flex;gap:30px;margin:0;padding:0}
+.stat dt{font-family:var(--font-mono);font-size:12px;text-transform:uppercase;letter-spacing:.10em;color:var(--ink-soft)}
 .stat-short{display:none}
-.stat dd{margin:2px 0 0;font-size:22px;font-weight:700;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:var(--cf-text)}
+.stat dd{margin:2px 0 0;font-size:22px;font-weight:700;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:var(--ink)}
 .stat-count{display:inline-block}
 /* With JavaScript the numbers wait for /api/stats, then count up from 0 (app.js renderStats). Hidden, not removed, so
    they keep their space; shown after 3s in case app.js never gets that far. */
 @media (prefers-reduced-motion:no-preference){html.js .stat dd:not([data-counted]){animation:stat-wait 0s 3s both}}
 @keyframes stat-wait{from{visibility:hidden}to{visibility:visible}}
+.hero-week{grid-column:1;grid-row:3;align-self:end;margin:0;font-size:14px;line-height:1.35;font-weight:400;color:var(--ink)}
+.hero-week-label{display:block;margin-bottom:5px;font-family:var(--font-mono);font-size:12px;line-height:1.2;letter-spacing:.10em;text-transform:uppercase;color:var(--ink-soft)}
+.hero-week b{font-weight:700}
 
-/* Short desktop screens (e.g. Windows laptops at 125–150% scaling, ~600–730px tall): the hero follows the viewport
-   height too, so the filter bar starts in the first screen. At 900px tall and up every value below resolves to the
-   one above. The vh line is the fallback for browsers without svh. 761px+ only: narrower widths use the phone layout. */
-@media(min-width:761px){
-  .hero-panel{min-height:clamp(320px,calc(200px + 33.333vh),500px);min-height:clamp(320px,calc(200px + 33.333svh),500px)}
-  .hero-title{font-size:clamp(48px,min(8vw,11vh),92px);font-size:clamp(48px,min(8vw,11svh),92px)}
-  .hero-sub{font-size:clamp(18px,min(2.2vw,4.4vh),28px);font-size:clamp(18px,min(2.2vw,4.4svh),28px)}
+/* Wide desktop screens that are short (e.g. Windows laptops at 125–150% scaling, ~600–730px tall): the panel's height
+   follows the viewport too, so the filter bar starts in the first screen. At 900px tall and up the cap is 500px, about
+   the 2.2:1 height anyway. The vh lines are the fallback for browsers without svh. */
+@media(min-width:1181px){
+  .hero-panel{min-height:320px;max-height:clamp(320px,calc(200px + 33.333vh),500px);max-height:clamp(320px,calc(200px + 33.333svh),500px)}
+  .hero-title{font-size:clamp(42px,min(6.4vw,8.8vh),74px);font-size:clamp(42px,min(6.4vw,8.8svh),74px)}
+  .hero-sub{font-size:clamp(16px,min(1.75vw,3.5vh),22px);font-size:clamp(16px,min(1.75vw,3.5svh),22px)}
 }
-@media(min-width:761px) and (max-height:820px){
+@media(min-width:1181px) and (max-height:820px){
   .hero{margin-bottom:20px;padding:18px 0 22px}
   .hero-frame{padding:12px;border-radius:28px}
-  .stats{top:14px}
+  .hero-layer{padding:22px 30px}
+  .hero-panel{--ring-y:.6;--ring-b:.225}
+}
+/* Between phone and wide desktop the 2.2:1 box is too short for the large title: let it grow. */
+@media(max-width:1180px) and (min-width:761px){
+  .hero-panel{aspect-ratio:auto;min-height:max(540px,calc((100vw - 96px) / 2.2));--ring-x:.78;--ring-y:.58;--ring-a:.155;--ring-b:.25}
+  /* the copy column is wider here, so the stats get the whole top row and the copy sits below them */
+  .hero-layer{grid-template-columns:minmax(0,54%) 1fr}
+  .stats{grid-column:1 / -1}
+  .hero-copy{grid-row:2}
+  .hero-title{font-size:clamp(42px,5.3vw,74px)}
 }
 
 /* ---------- controls ---------- */
@@ -446,13 +458,6 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 @media(max-width:480px){.site-dialog form{padding:22px 18px 18px}}
 
 @media(max-width:640px){
-  .hero{padding-top:16px}
-  .hero-frame{padding:10px;border-radius:24px}
-  .hero-panel{min-height:620px;border-radius:14px}
-  .hero-copy{grid-template-columns:1fr;gap:16px;bottom:18px}
-  .hero-title{font-size:clamp(48px,17vw,78px)}
-  .hero-sub{font-size:18px}
-  .stats{left:18px;right:auto;gap:20px;flex-direction:column}
   main{padding:0 18px 48px}
   .topbar{padding:16px 18px}
 }
@@ -570,21 +575,29 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
   main{padding:0 14px 48px}
 
   .hero{margin-top:6px;margin-bottom:24px;padding:16px 0 14px}
-  .hero-frame{padding:9px;border-radius:22px}
-  /* Content sets the height (min-height is only a floor), so long copy grows the panel instead of being clipped. */
+  .hero-frame{padding:10px;border-radius:24px}
+  /* Phone layout: stats on top, the ring in the upper half, the copy and the latest week below it. The type layer is in
+     the flow here, so content sets the height (min-height is only a floor) and long copy grows the panel instead of
+     being clipped. */
   .hero-panel{
-    min-height:472px;
+    aspect-ratio:auto;
+    min-height:620px;
     border-radius:14px;
-    display:flex;
-    flex-direction:column;
-    padding:14px 14px 18px;
+    display:grid;
+    --ring-x:.52;--ring-y:.34;--ring-a:.33;--ring-b:.135;
   }
-  /* Sits in the empty band between the stats row and the title, on the right. */
-  .hero-orb{left:calc(100% - 96px - 18px);top:112px;width:96px;height:96px}
-  .stats{
+  .hero-layer{
     position:relative;
-    order:-1; /* after .hero-copy in the markup; shown first */
     inset:auto;
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:auto 1fr auto auto;
+    padding:20px 18px;
+    gap:14px;
+  }
+  .stats{
+    grid-column:1;
+    grid-row:1;
+    justify-self:stretch;
     display:grid;
     grid-template-columns:repeat(3,minmax(0,1fr));
     grid-template-rows:auto auto;
@@ -595,13 +608,11 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
   .stat dt{font-size:12px;letter-spacing:.04em;white-space:nowrap}
   .stat dd{font-size:20px}
   .hero-copy{
-    position:relative;
-    inset:auto;
-    margin-top:auto;
-    padding-top:24px;
-    grid-template-columns:1fr;
+    grid-row:3;
+    align-self:end;
     gap:18px;
   }
+  .hero-week{grid-row:4}
   .hero-title{
     font-size:clamp(38px,13vw,62px);
     max-width:100%;
@@ -663,11 +674,12 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
 
   .voice-panel{width:calc(100vw - 32px)} /* position and size on phones: public/voice.js */
 }
+/* Wider phones: a panel this wide would stretch the ring into the stats and the title, so keep it narrower. */
+@media(min-width:481px) and (max-width:760px){.hero-panel{--ring-y:.36;--ring-a:.24;--ring-b:.14}}
 
 @media(max-width:420px){
   .topbar{flex-direction:column;align-items:flex-start}
   .topnav{width:100%;justify-content:flex-start}
-  .hero-panel{min-height:512px}
   .stats{column-gap:10px}
   .hero-title{font-size:clamp(36px,12.5vw,54px)}
   .collection-grid{grid-template-columns:1fr}

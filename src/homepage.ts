@@ -30,9 +30,15 @@ export function homepageJsonLd(coverage: Coverage): unknown {
   };
 }
 
+/** The hero's "Latest capture" line from a week label: "Week of Oct 19, 2026" -> "Week of <b>Oct 19</b>, 2026". */
+export function heroWeekHtml(label: string): string {
+  const m = /^Week of (.+), (\d{4})$/.exec(label);
+  return m ? `Week of <b>${esc(m[1])}</b>, ${esc(m[2])}` : esc(label);
+}
+
 /**
  * Fill the static homepage (public/index.html) with real content so crawlers see more than
- * placeholders: the three stats, the week heading, and a link to every portal in the latest week.
+ * placeholders: the three stats, the hero's latest week, the week heading, and a link to every portal in the latest week.
  * public/app.js later renders the same stats and heading, and the .js class hides the link list
  * (the cards link to the same pages), so visitors with JavaScript see no change.
  */
@@ -45,6 +51,7 @@ export function renderHomepage(html: string, stats: Stats, latest: Captures, cov
     .join("");
   return html
     .replace(/(<dd data-stat="(screenshots|portals|weeks)">)–(<\/dd>)/g, (_, open: string, key: keyof Stats, close: string) => `${open}${stats[key]}${close}`)
+    .replace('<span id="heroWeek">–</span>', () => latest ? `<span id="heroWeek">${heroWeekHtml(latest.label)}</span>` : '<span id="heroWeek">–</span>')
     .replace('<h2 id="weekHeading">Loading…</h2>', `<h2 id="weekHeading">${esc(heading)}</h2>`)
     // The heading's week links to its digest; public/app.js points it at the week picked later.
     .replace('<a class="btn-secondary" id="weekDigest" href="/weeks" hidden>', () => latest?.week ? `<a class="btn-secondary" id="weekDigest" href="/weeks/${esc(latest.week)}">` : '<a class="btn-secondary" id="weekDigest" href="/weeks" hidden>')

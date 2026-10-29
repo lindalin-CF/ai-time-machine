@@ -89,6 +89,7 @@ async function boot() {
     state.weeks = weeks.weeks || [];
     renderFilters();
     renderWeekSelect();
+    renderHeroWeek();
     await loadWeek(null);
   } catch (err) {
     showStats();
@@ -141,6 +142,16 @@ function countUp(el, target, delay) {
     else el.textContent = String(target);
   };
   requestAnimationFrame(step);
+}
+
+// The hero's "Latest capture" line. The Worker renders it into the page (src/homepage.ts heroWeekHtml); this fills it in
+// only when it couldn't, from the newest week's label ("Week of Oct 19, 2026" -> "Week of <b>Oct 19</b>, 2026").
+function renderHeroWeek() {
+  const el = $("#heroWeek");
+  const label = state.weeks[0]?.label;
+  if (!el || !label || el.textContent.trim() !== "–") return;
+  const m = /^Week of (.+), (\d{4})$/.exec(label);
+  el.innerHTML = m ? `Week of <b>${esc(m[1])}</b>, ${esc(m[2])}` : esc(label);
 }
 
 // Portal chips in the sticky filter bar: "All portals" and the first FILTER_CHIPS portals in one scrolling row, then a
@@ -870,77 +881,6 @@ function updateManualResults() {
   renderManualResults();
 }
 
-// ---- desktop-only hero interaction: orb follows cursor ---------------------
-function initHeroOrbFollow() {
-  const panel = document.querySelector(".hero-panel");
-  const orb = document.querySelector(".hero-orb");
-  if (!panel || !orb) return;
-
-  const reduced = window.matchMedia("(prefers-reduced-motion:reduce)");
-  let raf = 0;
-  let target = null;
-  let current = null;
-  let rest = null; // orb's CSS resting position (left/top), relative to the panel
-  let activeTouch = false;
-
-  const stop = () => {
-    target = null;
-    activeTouch = false;
-    if (raf) cancelAnimationFrame(raf);
-    raf = 0;
-  };
-
-  const reset = () => {
-    stop();
-    current = null;
-    rest = null;
-    orb.style.transform = "";
-  };
-
-  const tick = () => {
-    if (!target) { raf = 0; return; }
-    if (!current) current = { ...target };
-    current.x += (target.x - current.x) * 0.18;
-    current.y += (target.y - current.y) * 0.18;
-    // Translate from the resting position instead of setting left/top, so
-    // moving the orb stays on the compositor and doesn't trigger layout.
-    const dx = current.x - rest.x;
-    const dy = current.y - rest.y;
-    orb.style.transform = `translate3d(${dx.toFixed(2)}px, ${dy.toFixed(2)}px, 0)`;
-    raf = requestAnimationFrame(tick);
-  };
-
-  const follow = (e) => {
-    if (reduced.matches) { reset(); return; }
-    if (!rest) {
-      const cs = getComputedStyle(orb);
-      rest = { x: parseFloat(cs.left) || 0, y: parseFloat(cs.top) || 0 };
-    }
-    const rect = panel.getBoundingClientRect();
-    target = {
-      x: e.clientX - rect.left - orb.offsetWidth / 2,
-      y: e.clientY - rect.top - orb.offsetHeight / 2,
-    };
-    if (!raf) raf = requestAnimationFrame(tick);
-  };
-
-  panel.addEventListener("pointerdown", (e) => {
-    if (e.pointerType !== "mouse") activeTouch = true;
-    follow(e); // mobile tap moves the orb immediately
-  });
-  panel.addEventListener("pointermove", (e) => {
-    // Desktop follows hover; touch follows only while the finger is down.
-    if (e.pointerType !== "mouse" && !activeTouch) return;
-    follow(e);
-  });
-  panel.addEventListener("pointerup", stop);
-  panel.addEventListener("pointercancel", stop);
-  // Keep the orb at its last position when leaving the hero; don't snap back.
-  panel.addEventListener("pointerleave", stop);
-  reduced.addEventListener("change", reset);
-  window.addEventListener("resize", reset);
-}
-
 // ---- hero sub copy: design annotations on the keywords ---------------------
 // Started once, when the homepage is first shown: a link to another view keeps the hero hidden (and its
 // CSS animations unstarted) until the viewer goes to the homepage.
@@ -982,14 +922,19 @@ function initHeroAnnotations() {
   // ::first-line doesn't reach into the inline-block word spans, so mark the
   // first line's words ourselves to keep it in the darker text colour.
   // Also mark words that start a line: a keyword there anchors its tag to its
-  // left edge, so a right-aligned tag (layout) can't run off the panel.
+  // left edge, so a right-aligned tag (layout) can't run off the panel. And mark
+  // keywords whose left-anchored tag would run past the copy's right edge (a
+  // keyword near the end of a line), so their tag anchors to the right instead.
   const markFirstLine = () => {
     if (!words.length) return;
     const top = words[0].offsetTop;
     const left = words[0].offsetLeft;
+    const right = sub.getBoundingClientRect().right;
     words.forEach((w) => {
       w.classList.toggle("l1", Math.abs(w.offsetTop - top) < 2);
       w.classList.toggle("ls", Math.abs(w.offsetLeft - left) < 2);
+      const tag = w.querySelector(".tag");
+      if (tag) w.classList.toggle("le", w.getBoundingClientRect().left - 2 + tag.offsetWidth > right);
     });
   };
   markFirstLine();
@@ -1920,7 +1865,6 @@ initCompareButton();
 initFilterEdges();
 initAnPortalRow();
 trackTopbarHeight();
-initHeroOrbFollow();
 if (document.documentElement.dataset.view === "gallery") startHeroAnnotations();
 // The phone menu can open before route() runs: name the current item for screen readers now (CSS already colours it).
 document.querySelector(`.topnav-link[data-nav="${document.documentElement.dataset.view}"]`)?.setAttribute("aria-current", "page");
