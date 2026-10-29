@@ -506,8 +506,8 @@ function matchesSearch(c, q) {
     .includes(q);
 }
 
-// Keep the section heading's "N portals" count in sync with what's on screen.
-function updateWeekHeading(list) {
+// The section heading: the shown week's label, and its digest link.
+function updateWeekHeading() {
   const heading = $("#weekHeading");
   if (!heading) return;
   // "This week's changes": the shown week's digest page (/weeks/<week>).
@@ -520,8 +520,7 @@ function updateWeekHeading(list) {
     heading.textContent = "No captures yet";
     return;
   }
-  const count = list.filter((c) => c.status === "ok").length;
-  heading.textContent = `${state.label} · ${count} portals`;
+  heading.textContent = state.label;
 }
 
 function renderGrid() {
@@ -532,7 +531,7 @@ function renderGrid() {
       (state.selected.size === 0 || state.selected.has(c.slug)) &&
       matchesSearch(c, q)
   );
-  updateWeekHeading(list);
+  updateWeekHeading();
   const grid = $("#grid");
   const empty = $("#empty");
   if (!list.length) {

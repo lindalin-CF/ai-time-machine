@@ -166,4 +166,19 @@ describe('shared button classes (browser)', () => {
     // The same look as the portal page's Compare (a flex item, so it computes to flex).
     expect(await look(page, link)).toMatchObject({ ...SECONDARY, display: 'flex', h: 29, pad: '6px 11px 6px 11px', font: '"Space Grotesk" 600 12.5px 15px', shadow: SHADOW });
   });
+
+  it.each([390, 1280])('at %ipx the week heading is just the week label, with "This week\'s changes" right-aligned on its row', async (width) => {
+    const page = await openSite(browser, '', { width });
+    await page.locator('#grid .card').first().waitFor();
+    expect(await page.locator('#weekHeading').textContent()).toBe('Week of 2026-09-28');
+    expect(await page.locator('.section-head:has(#weekHeading) > *').evaluateAll((els) => els.map((e) => e.id || e.tagName))).toEqual(['weekHeading', 'weekDigest']);
+    const geo = await page.evaluate(() => {
+      const r = (s: string) => document.querySelector(s)!.getBoundingClientRect();
+      const a = r('#weekDigest'), h = r('#weekHeading'), head = r('.section-head');
+      return { centreDiff: Math.abs((a.top + a.bottom) / 2 - (h.top + h.bottom) / 2), rightGap: Math.round(head.right - a.right), apart: a.left > h.right,
+        noSideScroll: document.documentElement.scrollWidth <= document.documentElement.clientWidth };
+    });
+    expect(geo).toEqual({ centreDiff: 0, rightGap: 0, apart: true, noSideScroll: true });
+    await page.context().close();
+  });
 });

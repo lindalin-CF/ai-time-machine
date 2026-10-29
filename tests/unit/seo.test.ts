@@ -54,7 +54,7 @@ describe('server-rendered homepage', () => {
       ['/portals/claude', 'Claude', 'Anthropic'],
     ]);
     // Same text public/app.js writes, so there is no change once it runs.
-    expect(html).toContain('<h2 id="weekHeading">Week of 2026-09-21 · 1 portals</h2>');
+    expect(html).toContain('<h2 id="weekHeading">Week of 2026-09-21</h2>');
     expect(html).not.toContain('Loading…</h2>');
   });
 

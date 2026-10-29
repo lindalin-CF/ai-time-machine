@@ -354,11 +354,11 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .manual-results .manual-cell figcaption{flex:0 0 auto}
 
 /* ---------- section head ---------- */
-.section-head{display:flex;flex-wrap:wrap;align-items:center;gap:4px 18px;margin-bottom:22px}
-.section-head h2{font-size:16px;font-weight:600;letter-spacing:-.01em;margin:0;white-space:nowrap}
-.section-rule{flex:1;height:1px;background:linear-gradient(90deg,var(--cf-border-strong),transparent)}
-/* The week's digest (/weeks/<week>), a .btn-secondary at the right end of the week heading's row (centred on it by
-   .section-head's align-items). */
+.section-head{display:flex;align-items:center;gap:12px 18px;margin-bottom:22px}
+.section-head h2{font-size:16px;font-weight:600;letter-spacing:-.01em;margin:0;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+/* The week's digest (/weeks/<week>), a .btn-secondary at the right end of the week heading's row at every width
+   (centred on it by .section-head's align-items). */
+#weekDigest{flex:none;margin-left:auto}
 
 /* ---------- gallery ---------- */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:22px}
@@ -641,7 +641,7 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
   .weekpick{flex:1 1 160px;justify-content:flex-end}
   #weekSelect,#collectionWeekSelect{max-width:100%;font-size:13px;padding:8px 32px 8px 12px}
 
-  .section-head{gap:4px 12px;margin-bottom:14px}
+  .section-head{gap:12px;margin-bottom:14px}
   .week-title{font-size:22px}
   .grid{grid-template-columns:1fr;gap:18px}
   .card{border-radius:14px}

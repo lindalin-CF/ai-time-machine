@@ -43,9 +43,7 @@ export function heroWeekHtml(label: string): string {
  * (the cards link to the same pages), so visitors with JavaScript see no change.
  */
 export function renderHomepage(html: string, stats: Stats, latest: Captures, coverage: Coverage = null): string {
-  const heading = latest
-    ? `${latest.label} · ${latest.captures.filter((c) => c.status === "ok").length} portals`
-    : "No captures yet";
+  const heading = latest ? latest.label : "No captures yet";
   const items = (latest?.captures ?? [])
     .map((c) => `\n        <li><a href="/portals/${esc(c.slug)}">${esc(c.portal)}</a> <span>${esc(c.company)}</span></li>`)
     .join("");
