@@ -6,6 +6,9 @@
  *   export UPLOAD_TOKEN=...
  *   node analysis/publish.mjs <slug> <week>
  *
+ * Sends UPLOAD_TOKEN with every request (never printed). Afterwards it checks, with the token, whether the capture
+ * is still held: its analysis stays off the site until /release-week releases the week.
+ *
  * Reads analysis/work/<slug>/<week>/analysis.json. Refuses to upload when:
  *   - the JSON fails the same validation the Worker runs (validate.mjs), or
  *   - any term from analysis/private-terms.txt (one per line, case-insensitive) appears anywhere in it.
@@ -46,14 +49,19 @@ async function main() {
   const hits = terms.filter((t) => haystack.includes(t.toLowerCase()));
   if (hits.length) fail(`privacy check failed: ${hits.length} private term(s) found in analysis.json (line(s) ${hits.map((t) => terms.indexOf(t) + 1).join(", ")} of private-terms.txt)`);
 
+  const auth = { authorization: `Bearer ${UPLOAD_TOKEN}` };
   const res = await fetch(`${WORKER_URL}/api/analysis`, {
     method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${UPLOAD_TOKEN}` },
+    headers: { "content-type": "application/json", ...auth },
     body: JSON.stringify({ slug, week, analysis }),
   });
   const text = await res.text();
   if (!res.ok) fail(`POST /api/analysis -> ${res.status} ${text}`);
   console.log(`✓ published ${slug} ${week} (${analysis.status}) → ${WORKER_URL}/portals/${slug}/${week}`);
+
+  // A held capture's analysis is stored but not shown until the week is released.
+  const caps = await fetch(`${WORKER_URL}/api/captures?week=${encodeURIComponent(week)}`, { headers: auth }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  if (caps?.captures?.find((c) => c.slug === slug)?.held) console.log(`⚠ ${slug} ${week} is still held: it appears on the site after /release-week ${week}`);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

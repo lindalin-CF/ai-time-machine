@@ -1,6 +1,6 @@
 import { zipSync } from "fflate";
 import type { Env, CaptureRow } from "./types";
-import { listPortals, listWeeks, latestWeek, capturesForWeek, getPortal, updateCaptureAnalysis, CACHE_VERSION } from "./db";
+import { listPortals, listWeeks, latestWeek, capturesForWeek, getPortal, updateCaptureAnalysis, notHeld, weekReleased, isHeldImage, releaseWeek, hasHeldColumn, CACHE_VERSION } from "./db";
 import { hasCookieSecret, storeCapture, invalidate } from "./capture";
 import { validateAnalysis } from "./analysis";
 import { captureMetrics } from "./capture-metrics";
@@ -21,6 +21,20 @@ function requireUploadToken(request: Request, env: Env): Response | null {
   if (token !== expected) return json({ error: "unauthorized" }, 401);
   return null;
 }
+
+/**
+ * Whether the request carries the valid UPLOAD_TOKEN. Public endpoints use it to show held captures to the local
+ * scripts for review; a missing or wrong token just gets the public view.
+ */
+export function hasUploadToken(request: Request, env: Env): boolean {
+  const expected = (env as unknown as Record<string, unknown>).UPLOAD_TOKEN;
+  if (typeof expected !== "string" || !expected) return false;
+  const token = (request.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "").trim();
+  return token === expected;
+}
+
+/** Token responses can include held captures, so no shared cache may keep them. */
+const PRIVATE = { "cache-control": "private, no-store" };
 
 function extFromType(type: string): string {
   if (type.includes("jpeg") || type.includes("jpg")) return "jpg";
@@ -53,7 +67,7 @@ export async function mobileSize(env: Env, row: CaptureRow): Promise<ImageSize |
   return row.r2_key_mobile ? await imageSizeOf(env, row.r2_key_mobile, Date.parse(row.captured_at) || 0) : null;
 }
 
-async function shapeCapture(env: Env, row: CaptureRow) {
+async function shapeCapture(env: Env, row: CaptureRow, review = false) {
   let palette: string[] = [];
   try { palette = JSON.parse(row.palette || "[]"); } catch { palette = []; }
   const mobile = imageMobileUrl(row);
@@ -72,6 +86,8 @@ async function shapeCapture(env: Env, row: CaptureRow) {
     plan: isPlan(row.plan) ? row.plan : null,
     // Whitelisted numbers from the private guideline JSON for the Analytics canvas; null when unavailable.
     metrics: captureMetrics(row),
+    // Token requests only (reviewCapturesPayload): whether the capture is still held. Public payloads never have held captures.
+    ...(review ? { held: !!row.held } : {}),
   };
 }
 
@@ -89,15 +105,23 @@ export async function cached<T>(env: Env, key: string, ttl: number, build: () =>
 export async function statsPayload(env: Env): Promise<{ screenshots: number; portals: number; weeks: number }> {
   return await cached(env, "cache:stats", 300, async () => {
     const [shots, portals, weeks] = await Promise.all([
-      env.DB.prepare(`SELECT COUNT(*) AS n FROM captures c JOIN portals p ON p.slug = c.slug WHERE c.status='ok' AND p.active=1`).first<{ n: number }>(),
+      // Held captures and the weeks they are in aren't public yet (src/db.ts).
+      env.DB.prepare(`SELECT COUNT(*) AS n FROM captures c JOIN portals p ON p.slug = c.slug WHERE c.status='ok' AND p.active=1 AND ${await notHeld(env)}`).first<{ n: number }>(),
       env.DB.prepare(`SELECT COUNT(*) AS n FROM portals WHERE active=1`).first<{ n: number }>(),
-      env.DB.prepare(`SELECT COUNT(*) AS n FROM weeks`).first<{ n: number }>(),
+      env.DB.prepare(`SELECT COUNT(*) AS n FROM weeks w WHERE ${await weekReleased(env, "w.week")}`).first<{ n: number }>(),
     ]);
     return { screenshots: shots?.n ?? 0, portals: portals?.n ?? 0, weeks: weeks?.n ?? 0 };
   });
 }
 
-/** One week's captures (GET /api/captures and the server-rendered homepage). */
+/** One week's captures with the held ones, uncached (GET /api/captures with the upload token, for redaction review). */
+export async function reviewCapturesPayload(env: Env, week: string) {
+  const rows = await capturesForWeek(env, week, true);
+  const label = (await listWeeks(env, true)).find((w) => w.week === week)?.label ?? weekLabel(week);
+  return { week, label, captures: await Promise.all(rows.map((r) => shapeCapture(env, r, true))) };
+}
+
+/** One week's public captures (GET /api/captures and the server-rendered homepage). */
 export async function capturesPayload(env: Env, week: string) {
   return await cached(env, `cache:captures:${week}`, 300, async () => {
     const rows = await capturesForWeek(env, week);
@@ -122,6 +146,8 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
   }
 
   if (path === "/api/weeks") {
+    // The upload token also lists weeks that still have held captures (scripts/local-capture/analysis/prepare.mjs).
+    if (hasUploadToken(request, env)) return json({ weeks: await listWeeks(env, true) }, 200, PRIVATE);
     const data = await cached(env, "cache:weeks", 300, async () => await listWeeks(env));
     return json({ weeks: data });
   }
@@ -130,9 +156,30 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
 
   if (path === "/api/captures") {
     const requested = url.searchParams.get("week");
+    // With the upload token: held captures too, each with `held`, for /redact-week, /release-week and prepare.mjs.
+    if (hasUploadToken(request, env)) {
+      const week = requested ?? (await latestWeek(env, true));
+      if (!week) return json({ week: null, label: null, captures: [] }, 200, PRIVATE);
+      return json(await reviewCapturesPayload(env, week), 200, PRIVATE);
+    }
     const week = requested ?? (await latestWeek(env));
     if (!week) return json({ week: null, label: null, captures: [] });
     return json(await capturesPayload(env, week));
+  }
+
+  // Release a week's held captures once they are redacted (the /release-week command). Token-gated.
+  // ?slug= releases one portal only. Clears the KV caches so every page shows them at once.
+  const release = /^\/api\/weeks\/(\d{4}-\d{2}-\d{2})\/release$/.exec(path);
+  if (release && request.method === "POST") {
+    const authError = requireUploadToken(request, env);
+    if (authError) return authError;
+    if (!(await hasHeldColumn(env))) return json({ error: "captures.held is missing: run migration 0011 first" }, 409);
+    const week = release[1];
+    const slug = url.searchParams.get("slug");
+    if (slug !== null && !/^[a-z0-9-]+$/.test(slug)) return json({ error: "bad slug" }, 400);
+    const result = await releaseWeek(env, week, slug);
+    await invalidate(env, week);
+    return json({ ok: true, week, slug, ...result, latestWeek: await latestWeek(env) }, 200, PRIVATE);
   }
 
   // Manual snapshots uploaded from the UI: latest 6 per portal.
@@ -521,12 +568,15 @@ export async function handleImage(request: Request, env: Env): Promise<Response>
   const url = new URL(request.url);
   const key = decodeURIComponent(url.pathname.replace(/^\/img\//, ""));
   if (!key) return new Response("missing key", { status: 400 });
+  // A held capture's screenshot (waiting for redaction) is only served with the upload token, and never cached.
+  const held = key.startsWith("shots/") && (await isHeldImage(env, key));
+  if (held && !hasUploadToken(request, env)) return new Response("not found", { status: 404 });
   const obj = await env.SHOTS.get(key);
   if (!obj) return new Response("not found", { status: 404 });
   const headers = new Headers();
   obj.writeHttpMetadata(headers);
   headers.set("etag", obj.httpEtag);
-  headers.set("cache-control", "public, max-age=86400");
+  headers.set("cache-control", held ? "private, no-store" : "public, max-age=86400");
   return new Response(obj.body, { headers });
 }
 

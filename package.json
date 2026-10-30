@@ -33,6 +33,8 @@
     "db:migrate:analysis-published:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0009_analysis_published_at.sql",
     "db:migrate:plan:local": "wrangler d1 execute ai-portal-library --local --file=./migrations/0010_capture_plan.sql",
     "db:migrate:plan:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0010_capture_plan.sql",
+    "db:migrate:held:local": "wrangler d1 execute ai-portal-library --local --file=./migrations/0011_capture_held.sql",
+    "db:migrate:held:remote": "wrangler d1 execute ai-portal-library --remote --file=./migrations/0011_capture_held.sql",
     "test": "vitest run --config vitest.unit.config.mts"
   },
   "devDependencies": {

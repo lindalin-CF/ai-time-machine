@@ -68,13 +68,14 @@ export async function storeCapture(
       : `shots/${week}/${portal.slug}.mobile.png`;
     await upsertWeek(env, week, weekLabelLocal(week));
     await env.SHOTS.put(mobileKey, png, { httpMetadata: { contentType: "image/png" } });
-    await upsertMobileCapture(env, week, portal, mobileKey, plan);
+    await upsertMobileCapture(env, week, portal, mobileKey, plan, source === "local");
     await refreshWeekCount(env, week);
     await invalidate(env, week);
     return;
   }
 
   // Local (signed-in) uploads use a distinct key so cloud runs can recognise + preserve them.
+  // They are held (never public) until the week is released after redaction; cloud captures are logged out and public.
   const r2Key = source === "local"
     ? `shots/${week}/${portal.slug}.local.png`
     : `shots/${week}/${portal.slug}.png`;
@@ -91,6 +92,7 @@ export async function storeCapture(
     width: size.width,
     height: size.height,
     plan,
+    held: source === "local" ? 1 : 0,
     palette: JSON.stringify(paletteFromBrand(portal.brand)),
     analysis: "",
     analysis_by: "pending",
@@ -231,6 +233,8 @@ export async function invalidate(env: Env, week: string): Promise<void> {
     env.CACHE.delete(`${CACHE_VERSION}:cache:sitemap`),
     env.CACHE.delete(`${CACHE_VERSION}:cache:feed`),
     env.CACHE.delete(`${CACHE_VERSION}:cache:changes`),
+    env.CACHE.delete(`${CACHE_VERSION}:cache:plan-changes`),
+    env.CACHE.delete(`${CACHE_VERSION}:cache:facts`),
     env.CACHE.delete(`${CACHE_VERSION}:cache:compare-pairs`),
     env.CACHE.delete(`${CACHE_VERSION}:cache:week-digests`),
     env.CACHE.delete(`${CACHE_VERSION}:cache:llms`),

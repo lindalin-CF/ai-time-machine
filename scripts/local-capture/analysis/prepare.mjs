@@ -3,7 +3,7 @@
  * Gather the inputs for a guideline design analysis (.claude/skills/portal-design-analysis/SKILL.md).
  *
  * USAGE:
- *   export UPLOAD_TOKEN=...                  # needed to fetch the previous week's analysis JSON
+ *   export UPLOAD_TOKEN=...                  # needed for held captures and the previous week's analysis JSON
  *   node analysis/prepare.mjs <slug> [week]  # week defaults to the latest week with a desktop capture
  *
  * Writes analysis/work/<slug>/<week>/:
@@ -24,10 +24,12 @@ import { keepExisting, writeKeepingOld } from "./keep-existing.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-async function getJson(path, auth = false) {
-  const res = await fetch(`${WORKER_URL}${path}`, {
-    headers: auth ? { authorization: `Bearer ${UPLOAD_TOKEN}` } : {},
-  });
+// Every request sends UPLOAD_TOKEN when it is set, so held captures (not released yet) are visible too:
+// /api/weeks, /api/captures and /img/<key> only show them with the token. The token is never printed.
+const AUTH = UPLOAD_TOKEN ? { authorization: `Bearer ${UPLOAD_TOKEN}` } : {};
+
+async function getJson(path) {
+  const res = await fetch(`${WORKER_URL}${path}`, { headers: AUTH });
   return { status: res.status, body: res.ok ? await res.json() : await res.text() };
 }
 
@@ -40,7 +42,7 @@ async function desktopCapture(slug, week) {
 }
 
 async function download(path, file) {
-  const res = await fetch(`${WORKER_URL}${path}`);
+  const res = await fetch(`${WORKER_URL}${path}`, { headers: AUTH });
   if (!res.ok) throw new Error(`GET ${path} -> ${res.status}`);
   const kept = await writeKeepingOld(file, Buffer.from(await res.arrayBuffer()));
   if (kept) console.log(`· kept earlier file as ${kept}`);
@@ -93,7 +95,7 @@ async function main() {
     if (!UPLOAD_TOKEN) {
       console.log("⚠ UPLOAD_TOKEN not set; skipping previous.json");
     } else {
-      const a = await getJson(`/api/analysis?slug=${encodeURIComponent(slug)}&week=${encodeURIComponent(previousWeek)}`, true);
+      const a = await getJson(`/api/analysis?slug=${encodeURIComponent(slug)}&week=${encodeURIComponent(previousWeek)}`);
       if (a.status === 200 && a.body.analysis) {
         await writeFile(join(dir, "previous.json"), JSON.stringify(a.body.analysis, null, 2) + "\n");
         console.log(`✓ previous.json (guideline v${a.body.analysis_version})`);

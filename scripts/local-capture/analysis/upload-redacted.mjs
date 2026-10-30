@@ -15,12 +15,14 @@
  *      is non-empty and equal to a second fresh read, and that the live SHA-1 equals the row's
  *      expected_live_sha1 (if set, e.g. when replacing an earlier redaction) or else original_sha1.
  *   2. wrangler r2 object put the redacted file.
- *   3. Verify a cache-busted site download and a fresh R2 read both equal redacted_sha1.
+ *   3. Verify a cache-busted site download and a fresh R2 read both equal redacted_sha1. The download sends
+ *      UPLOAD_TOKEN (on curl's stdin, never in its arguments or the output), because a held capture's image is
+ *      a 404 without it until /release-week.
  *   4. Ledger: upload_status "uploaded", uploaded_at, archive path appended (ledger snapshotted first).
  *   5. Bump captures.captured_at by 1 ms (guarded UPDATE, changes must be 1).
  *   6. Delete the KV keys invalidate() in src/capture.ts deletes (read from that file).
  *
- * Env: WORKER_URL (site), ARCHIVE_DIR (default ~/AI-Surface-Archive).
+ * Env: WORKER_URL (site), ARCHIVE_DIR (default ~/AI-Surface-Archive), UPLOAD_TOKEN (needed for held captures).
  */
 import { readFileSync, writeFileSync, mkdirSync, copyFileSync, renameSync, constants } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -57,7 +59,7 @@ export function readProjectConfig(root = REPO_ROOT) {
 
 /** Default command runner: binary-safe stdout, stderr as text. */
 function defaultExec(cmd, args, opts = {}) {
-  const r = spawnSync(cmd, args, { cwd: opts.cwd, maxBuffer: 256 * 1024 * 1024 });
+  const r = spawnSync(cmd, args, { cwd: opts.cwd, input: opts.input, maxBuffer: 256 * 1024 * 1024 });
   return { status: r.status, stdout: r.stdout ?? Buffer.alloc(0), stderr: String(r.stderr ?? r.error ?? "") };
 }
 
@@ -87,7 +89,7 @@ export function selectRows(ledger, week, { except = [], only = [] } = {}) {
 
 /**
  * Upload one week. Dependencies are injectable for tests:
- *   exec(cmd, args, {cwd}) -> {status, stdout: Buffer, stderr}, now() -> Date, log(line).
+ *   exec(cmd, args, {cwd, input}) -> {status, stdout: Buffer, stderr}, now() -> Date, log(line).
  */
 export function uploadWeek(week, opts = {}) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(week)) throw new Error(`week must be YYYY-MM-DD (got "${week}")`);
@@ -95,6 +97,7 @@ export function uploadWeek(week, opts = {}) {
     root = REPO_ROOT,
     archiveDir = process.env.ARCHIVE_DIR || join(homedir(), "AI-Surface-Archive"),
     site = process.env.WORKER_URL || DEFAULT_SITE,
+    token = process.env.UPLOAD_TOKEN,
     exec = defaultExec,
     now = () => new Date(),
     log = (s) => console.log(s),
@@ -105,8 +108,8 @@ export function uploadWeek(week, opts = {}) {
   const { cacheVersion, kvId, cacheKeys } = opts.config ?? readProjectConfig(root);
   const ledgerPath = join(archiveDir, "redaction-ledger.json");
 
-  const run = (cmd, args, what) => {
-    const r = exec(cmd, args, { cwd: root });
+  const run = (cmd, args, what, input) => {
+    const r = exec(cmd, args, { cwd: root, ...(input === undefined ? {} : { input }) });
     if (r.status !== 0) throw new Error(`${what} failed: ${String(r.stderr).slice(-300)}`);
     return r.stdout;
   };
@@ -130,6 +133,7 @@ export function uploadWeek(week, opts = {}) {
 
   const rows = selectRows(readLedger(), week, { except, only });
   log(`${rows.length} image(s) to upload for ${week}${dryRun ? " (dry run)" : ""}`);
+  if (!token && rows.length) log("⚠ UPLOAD_TOKEN is not set: a held capture's image can't be verified through the site (it is a 404 until /release-week)");
   const results = [];
 
   for (const row of rows) {
@@ -160,7 +164,10 @@ export function uploadWeek(week, opts = {}) {
 
       // 3. Verify through the site (cache-busted) and straight from R2.
       const cb = `${now().getTime()}${randomInt(1e5)}`;
-      const viaSite = sha1(run("curl", ["-sf", `${site}/img/${key}?cb=${cb}`], "site download"));
+      // The token goes in a header read from stdin (-H @-), so it is never in curl's arguments or any output.
+      const viaSite = token
+        ? sha1(run("curl", ["-sf", `${site}/img/${key}?cb=${cb}`, "-H", "@-"], "site download", `Authorization: Bearer ${token}\n`))
+        : sha1(run("curl", ["-sf", `${site}/img/${key}?cb=${cb}`], "site download"));
       if (viaSite !== row.redacted_sha1) throw new Error(`site serves ${viaSite}, not the redacted file`);
       if (sha1(liveBytes(key)) !== row.redacted_sha1) throw new Error("R2 object is not the redacted file");
 

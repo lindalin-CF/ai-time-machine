@@ -48,6 +48,7 @@ CREATE TABLE captures (
   analysis_version TEXT,            -- guideline_version of analysis_json
   analysis_published_at TEXT,       -- when POST /api/analysis last stored an analysis (migration 0009)
   plan         TEXT,                -- account plan of the capture: 'Free' | 'Pro' | 'Enterprise' (migration 0010; public)
+  held         INTEGER NOT NULL DEFAULT 0, -- 1 = local upload waiting for redaction, never public (migration 0011)
   status       TEXT DEFAULT 'ok',   -- 'ok' | 'error' | 'pending'
   captured_at  TEXT NOT NULL,
   FOREIGN KEY (week) REFERENCES weeks(week),

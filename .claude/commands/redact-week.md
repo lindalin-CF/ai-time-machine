@@ -5,7 +5,7 @@ argument-hint: <week YYYY-MM-DD>
 
 # Redact week $ARGUMENTS
 
-Batch-redact the public screenshots for week `$ARGUMENTS`, one portal per subagent, then stop for review. **Nothing is uploaded until the user replies "upload all" or "upload all except <slug/variant>, …".**
+Batch-redact the public screenshots for week `$ARGUMENTS`, one portal per subagent, then stop for review. **Nothing is uploaded until the user replies "upload all" or "upload all except <slug/variant>, …".** Weekly order: capture → **`/redact-week`** → upload all → `/release-week` → `/analyze-week` → publish all.
 
 Paths below are relative to `scripts/local-capture/` unless they start with `~`. `W` = `analysis/work/redact/$ARGUMENTS` (gitignored). The site is `$WORKER_URL`, or `https://ai-portal-library.monthtest970509.workers.dev` if it's unset. Bucket `ai-portal-shots`, D1 `ai-portal-library`, KV namespace id `5c7252cb79964f8cab90d2171096c386`, KV key prefix = `CACHE_VERSION` in `src/db.ts`. Run every wrangler command with `npx wrangler … --remote` from the repo root.
 
@@ -24,7 +24,7 @@ CLAUDE.md "Screenshot safety" applies in full. In particular:
 
 `$ARGUMENTS` must match `YYYY-MM-DD`, or stop and ask.
 
-`GET /api/portals` (order) and `GET /api/captures?week=$ARGUMENTS`. A portal has a capture when its entry has `status == "ok"` and `sample` is not true. Its images are the desktop key (from `image`, strip `/img/` and the query) and, if `imageMobile` is set, the mobile key. Other portals: **no capture**.
+`GET /api/portals` (order) and `GET /api/captures?week=$ARGUMENTS` **with the upload token**, because new local captures are held and only show up with it: `curl -sf -H @- "${WORKER_URL:-https://ai-portal-library.monthtest970509.workers.dev}/api/captures?week=$ARGUMENTS" <<<"Authorization: Bearer $UPLOAD_TOKEN"` (the token goes in on stdin; never print, echo or log it, and don't run `env`, `printenv` or `set`; check it exists only with `[ -n "$UPLOAD_TOKEN" ] && echo set || echo missing`, and if it's missing, stop and ask the user to export it). Each entry has `held`. A portal has a capture when its entry has `status == "ok"` and `sample` is not true. Its images are the desktop key (from `image`, strip `/img/` and the query) and, if `imageMobile` is set, the mobile key. Other portals: **no capture**.
 
 ## 2. Ledger pre-check
 
@@ -132,4 +132,10 @@ Pass the user's exclusions with `--except` (a bare slug excludes both variants).
 
 It never deletes an image, an R2 object or an archive file (the KV cache keys are the only thing it deletes). If you need a step it doesn't cover, stop and ask rather than improvising a replacement.
 
-Report each image from the script's output: ✓ (archive path, new SHA-1, new captured_at) or ✗ with the reason. Also confirm the site's API image URLs (`GET /api/captures?week=…`) serve the new SHA-1s. Then list images not uploaded and why. Add an "Upload results" section to `review.html`.
+The script sends `UPLOAD_TOKEN` for the site check (held images are a 404 without it); it reads the token from the environment and never prints it.
+
+Report each image from the script's output: ✓ (archive path, new SHA-1, new captured_at) or ✗ with the reason. Also confirm the site's API image URLs (`GET /api/captures?week=…` and the `/img/…` URLs, both with the token header as in step 1) serve the new SHA-1s. Then list images not uploaded and why. Add an "Upload results" section to `review.html`.
+
+## 7. Then remind the user to release
+
+The week's captures are still **held**: the site shows none of them, and keeps the previous week as the latest, until they are released. **Don't release anything yourself.** End by reminding the user to run `/release-week $ARGUMENTS`, which checks every held capture against the ledger and refuses unredacted ones.

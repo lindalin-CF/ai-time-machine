@@ -63,6 +63,8 @@ export interface CaptureRow {
   plan?: string | null;
   /** Plan of the same portal's previous successful capture (selected with PREVIOUS_PLAN in src/db.ts). */
   previous_plan?: string | null;
+  /** 1 while a local upload waits for redaction (migration 0011): never shown publicly until POST /api/weeks/<week>/release. */
+  held?: number | null;
   status: string;
   captured_at: string;
 }

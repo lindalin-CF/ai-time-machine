@@ -17,7 +17,15 @@ Screenshots are irreplaceable: a portal's UI for a given week can never be captu
 - Avatars (photos or initials badges) are covered with the circle mask from the week of **2026-10-19 onward**.
 - Screenshots from weeks **before 2026-10-19** are intentionally left as they are, even when an avatar (such as Manus's initials badge) is visible. Don't re-redact them, don't flag them in reviews, lint or privacy checks, and don't raise them again. Other account details (names, emails, conversation titles and so on) are still covered in every week.
 
+## Weekly order
+
+capture → `/redact-week` → upload all → `/release-week` → `/analyze-week` → publish all.
+
+- Local uploads (`capture.mjs`, `POST /api/upload`) are **held** (`captures.held = 1`): no public page, API response, feed or `/img/<key>` shows them, and a week with held captures never becomes the latest week. Cron captures are never held.
+- Requests with `Authorization: Bearer $UPLOAD_TOKEN` see held captures. Never print, echo or log the token.
+- Only `/release-week` releases captures, and only redacted ones unless the user says "release anyway <slug>". Never release from `/redact-week` or anywhere else on your own.
+
 ## Deploying
 
 - Always commit and push to main before telling the user to deploy. The live site must never be ahead of git.
-- If a change needs a database migration, run the remote migration before deploying, and say so explicitly in the deploy instructions.
+- If a change needs a database migration, run the remote migration before deploying, and say so explicitly in the deploy instructions (for example `npm run db:migrate:held:remote`, then `npm run deploy`).

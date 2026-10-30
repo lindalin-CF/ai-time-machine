@@ -1,5 +1,5 @@
 // Minimal in-memory Env for calling the Worker handlers from Node:
-// D1 is a shim over node:sqlite, KV is a Map, R2 is a Map with put() and ranged get().
+// D1 is a shim over node:sqlite, KV is a Map, R2 is a Map with put() and ranged get() (enough for GET /img/<key> too).
 import { DatabaseSync } from 'node:sqlite';
 import { readFileSync } from 'node:fs';
 import type { Env } from '../../src/types';
@@ -11,7 +11,7 @@ function d1(db: DatabaseSync) {
     bind: (...a: unknown[]) => statement(sql, a),
     async first<T = Row>() { return (db.prepare(sql).get(...(args as never[])) ?? null) as T | null; },
     async all<T = Row>() { return { results: db.prepare(sql).all(...(args as never[])) as T[], success: true }; },
-    async run() { db.prepare(sql).run(...(args as never[])); return { success: true }; },
+    async run() { const r = db.prepare(sql).run(...(args as never[])); return { success: true, meta: { changes: Number(r.changes) } }; },
   });
   return { prepare: (sql: string) => statement(sql) };
 }
@@ -43,7 +43,11 @@ export function makeEnv() {
         const start = opts?.range?.offset ?? 0;
         const bytes = opts?.range?.length != null ? v.subarray(start, start + opts.range.length) : v.subarray(start);
         r2Reads.push({ key, length: bytes.length });
-        return { async arrayBuffer() { return bytes.slice().buffer; } };
+        return {
+          body: bytes.slice(), httpEtag: `"${key}"`,
+          writeHttpMetadata(h: Headers) { h.set('content-type', 'image/png'); },
+          async arrayBuffer() { return bytes.slice().buffer; },
+        };
       },
     },
     UPLOAD_TOKEN: 'test-token',

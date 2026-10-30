@@ -238,6 +238,8 @@ async function main() {
   await browser.close();
   console.log(`\nDone. ${ok} uploaded, ${fail} failed${skipped.length ? `, ${skipped.length} skipped (logged out): ${skipped.join(", ")}` : ""}.`);
   console.log(`View: ${WORKER_URL}  (week ${week})`);
+  // Uploads are held (not public) until they are redacted and released (SETUP.md "Weekly order").
+  if (ok) console.log(`Uploads are on hold until released. Next: /redact-week ${week} → upload all → /release-week ${week}`);
   if (skipped.length) {
     console.log(`\nTo redo the skipped ones after logging in:\n  node capture.mjs ${skipped.join(" ")}${mobileOnly ? " --mobile-only" : ""}${week === isoMonday() ? "" : ` --week=${week}`}`);
   }

@@ -118,6 +118,9 @@ UPLOAD_TOKEN=<the same token you set in Cloudflare> node capture.mjs
   `npx wrangler secret put UPLOAD_TOKEN`; it stays in the cloud, so you only need
   to pass the same value on the command line when running the script.
 
+Uploads are **on hold**: the site doesn't show them (or make their week the
+latest one) until they are redacted and released. See "Weekly order" below.
+
 Other options:
 
 ```bash
@@ -125,6 +128,43 @@ node capture.mjs claude chatgpt    # only specific portals (by slug)
 node capture.mjs --auto            # no pausing (use once you're already logged in)
 node capture.mjs --auto --wait=10  # wait 10s per page before capturing (default 6)
 node capture.mjs --week=2026-08-10 # store under a specific week
+```
+
+---
+
+## Weekly order
+
+Every week, in this order (run the slash commands in Claude Code, with
+`UPLOAD_TOKEN` exported):
+
+1. **Capture**: `node capture.mjs --auto` in `scripts/local-capture/`. Every
+   upload is stored **on hold** (`captures.held = 1`): no page, API response,
+   feed or `/img/<key>` URL shows it, and the site keeps showing the previous
+   week as the latest one.
+2. **`/redact-week <week>`**: redacts account details and builds a local review page.
+3. **upload all**: reply "upload all" (or "upload all except …") to upload the
+   redacted images. They are still on hold afterwards.
+4. **`/release-week <week>`**: checks every held capture against the redaction
+   ledger, releases the redacted ones (`POST /api/weeks/<week>/release`), and
+   checks the API and homepage show the week. It refuses unredacted captures
+   unless you say "release anyway <slug>".
+5. **`/analyze-week <week>`**: writes the design analyses for review.
+6. **publish all**: reply "publish all" to publish them.
+
+Requests with `Authorization: Bearer $UPLOAD_TOKEN` see held captures
+(`/api/captures?week=…`, `/api/weeks`, `/img/…`); the scripts send it
+themselves and never print it. Cron captures (logged out, desktop) are never held.
+
+---
+
+## Database migrations
+
+Run a new migration on the remote database **before** deploying the code that
+uses it (the Worker tolerates a missing column, but the feature only works
+after the migration). For the on-hold step (migration 0011):
+
+```bash
+npm run db:migrate:held:remote     # then: npm run deploy
 ```
 
 ---
@@ -137,7 +177,7 @@ never overwrites screenshots you uploaded yourself (`.local.png`).
 
 Important limitation: the cron runs in Cloudflare's cloud, which **can't log in
 and doesn't take mobile shots**. So automatic weeks are **logged-out desktop
-only**. To get signed-in + mobile shots for a week, run the local capture script
+only**. These captures are public at once (never on hold). To get signed-in + mobile shots for a week, run the local capture script
 yourself that week (`node capture.mjs --auto`).
 
 ### Pause: Aug 28 – Sep 28, 2026 (already set)

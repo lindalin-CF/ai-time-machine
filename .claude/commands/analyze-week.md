@@ -5,7 +5,7 @@ argument-hint: <week YYYY-MM-DD>
 
 # Analyze week $ARGUMENTS
 
-Batch-run the portal-design-analysis workflow (`.claude/skills/portal-design-analysis/SKILL.md`) for week `$ARGUMENTS`, one portal per subagent, then stop for review. **Nothing is published until the user replies "publish all" or "publish all except <slugs>".**
+Batch-run the portal-design-analysis workflow (`.claude/skills/portal-design-analysis/SKILL.md`) for week `$ARGUMENTS`, one portal per subagent, then stop for review. **Nothing is published until the user replies "publish all" or "publish all except <slugs>".** Weekly order: capture → `/redact-week` → upload all → `/release-week` → **`/analyze-week`** → publish all.
 
 Paths below are relative to `scripts/local-capture/`. The site is `$WORKER_URL`, or `https://ai-portal-library.monthtest970509.workers.dev` if it's unset (same default as `config.mjs`).
 
@@ -17,12 +17,14 @@ Paths below are relative to `scripts/local-capture/`. The site is `$WORKER_URL`,
 
 ## 1. Check the argument
 
-`$ARGUMENTS` must match `YYYY-MM-DD`. If it doesn't, stop and ask for a week. If `UPLOAD_TOKEN` is missing, warn that prepare.mjs will skip `previous.json` (so there will be no week-over-week comparison), then continue.
+`$ARGUMENTS` must match `YYYY-MM-DD`. If it doesn't, stop and ask for a week. If `UPLOAD_TOKEN` is missing, stop and ask the user to export it: held captures are invisible without it, and prepare.mjs would skip `previous.json`.
 
 ## 2. Portal list and captures
 
 - `GET /api/portals` gives every portal (`slug`, `name`, `company`), in order.
-- `GET /api/captures?week=$ARGUMENTS` gives that week's captures.
+- `GET /api/captures?week=$ARGUMENTS` gives that week's captures. Send the upload token, so a capture that is still held shows up too: `curl -sf -H @- "${WORKER_URL:-https://ai-portal-library.monthtest970509.workers.dev}/api/captures?week=$ARGUMENTS" <<<"Authorization: Bearer $UPLOAD_TOKEN"` (the token goes in on stdin and is never printed). `prepare.mjs` and `publish.mjs` send it themselves.
+
+If any capture has `held: true`, the week hasn't been released yet: tell the user to run `/release-week $ARGUMENTS` first (after `/redact-week`), and ask whether to continue anyway. Analyses of held captures are stored but not shown until the release.
 
 A portal has a desktop capture when its entry exists with `status == "ok"` and `sample` is not true. This is the same test `prepare.mjs` uses. Every portal without one gets status **no capture** and no subagent.
 
