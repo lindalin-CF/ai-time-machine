@@ -136,6 +136,39 @@ function navFindings(a, b, A, B, ma, mb, changeLines, brief = false) {
   return { diff, same: picker, missing: [] };
 }
 
+// ---- layout: position and recorded layout changes ----------------------------------
+// Two weeks of one product in a row: the newer week's recorded layout changes (layoutChanges, the analysis's own
+// summary sentences, never confounded ones) say what moved, with the analysis's exact measurements; when the analysis
+// marked that week's layout changes confounded and states none, nothing is said about position. Otherwise the
+// message box and the greeting are compared by the top edge of their published bounding boxes (inputTop,
+// greetingTop: CSS px on the 1280 x 800 screen, on a 10px grid, so "about"). Missing values are skipped silently.
+
+const POSITION_MIN = 16;
+
+function layoutFindings(a, b, A, B, ma, mb) {
+  const weeks = !!a.slug && a.slug === b.slug && !!a.week && !!b.week && a.week !== b.week;
+  if (weeks) {
+    const [newer, olderWeek] = a.week > b.week ? [ma, b.week] : [mb, a.week];
+    const lc = newer.layoutChanges;
+    if (lc && lc.previousWeek === olderWeek && Array.isArray(lc.sentences)) {
+      if (lc.sentences.length) return [...lc.sentences];
+      if (lc.confounded) return [];
+    }
+  }
+  const out = [];
+  for (const [key, what] of [["inputTop", "message box"], ["greetingTop", "greeting"]]) {
+    const ya = ma[key], yb = mb[key];
+    if (typeof ya !== "number" || typeof yb !== "number" || Math.abs(ya - yb) < POSITION_MIN) continue;
+    if (weeks) {
+      const [n, o, yn, yo] = a.week > b.week ? [a, b, ya, yb] : [b, a, yb, ya];
+      out.push(`On ${weekShort(n.week, o.week)} the ${what} sits about ${Math.abs(yn - yo)}px ${yn < yo ? "higher" : "lower"} than on ${weekShort(o.week, n.week)}.`);
+    } else {
+      out.push(`${A}'s ${what} sits about ${Math.abs(ya - yb)}px ${ya < yb ? "higher" : "lower"} than ${B}'s.`);
+    }
+  }
+  return out;
+}
+
 // ---- account plan (src/plan.ts) -------------------------------------------------
 // Two weeks of one product captured on different account plans: their differences may come from the plan, so
 // the lists carry this note. The newer week's recorded menu changes are already dropped (captureMetrics()).
@@ -249,8 +282,8 @@ const cardLabel = (c) => (c && c.label) || "this capture";
 
 /**
  * Every finding for two cards ({ label, slug, week, metrics }), sorted: { differences, similarities, missing }.
- * A field is compared only when both cards have it. Differences: menu findings first, then rules in rule
- * order; similarities: the same order. `missing` has one "No data for <card>: <fields>" phrase per card
+ * A field is compared only when both cards have it. Differences: menu findings first, then layout findings
+ * (layoutFindings above), then rules in rule order; similarities: the same order. `missing` has one "No data for <card>: <fields>" phrase per card
  * that lacks fields. Only the whitelisted metrics and the thresholds above are used. `navChangeLines` caps
  * the recorded menu changes listed one by one (the Canvas box shows 2). `brief` gives the Table's wording (BRIEF above).
  * `note`: PLAN_CHANGE_NOTE when the two weeks were captured on different account plans (planNote), otherwise "".
@@ -265,7 +298,7 @@ export function findingLists(a, b, { navChangeLines = NAV_CHANGE_LINES, brief = 
   const ma = (a && a.metrics) || {}, mb = (b && b.metrics) || {};
   const has = (m, k) => m[k] !== undefined && m[k] !== null;
   const nav = navFindings(a || {}, b || {}, A, B, ma, mb, navChangeLines, brief);
-  const differences = [...nav.diff];
+  const differences = [...nav.diff, ...layoutFindings(a || {}, b || {}, A, B, ma, mb)];
   const similarities = [...nav.same];
   for (const r of RULES) {
     if (!has(ma, r.key) || !has(mb, r.key)) continue;

@@ -61,6 +61,8 @@ const EXPECTED = {
   clickableApprox: 18, textSizes: 2, suggestedPrompts: 2, aiNote: true,
   // The v1.4 fixture has no N1 and no changes_vs_previous.
   navItems: null, navSidebarVisible: null, navChanges: null, plan: null, planChange: null,
+  // No viewport and no bounding boxes; no summary_sentences.
+  inputTop: null, greetingTop: null, layoutChanges: null,
 };
 
 /** A v1.5 N1 value: labelled and icon-only items in three regions. */

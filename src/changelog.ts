@@ -15,6 +15,19 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "layout-in-compare",
+    date: "2026-10-30",
+    time: "23:44",
+    title: "Compare Shows When the Layout Moves",
+    subtitle: "Compare now reports a message box or greeting that moved, not only menu changes",
+    bullets: [
+      { lead: "Week to week", text: "For two weeks in a row, Compare lists the layout changes the newer week's analysis recorded, in its own words, for example \"Since the week of 2026-10-19, the message box moved up 44 pixels, the prompts 40 and the greeting 34.\" Changes that could come from a pop-up, a promo card or the account are left out." },
+      { lead: "Any two captures", text: "Otherwise the message box and the greeting are compared by where they start on the screen: \"On Oct 26 the message box sits about 40px higher than on Oct 12\", or \"Copilot's message box sits about 30px lower than Gemini's\". Moves under 16px are not listed." },
+      { lead: "About", text: "Positions come from the bounding boxes in each published analysis, which are recorded to the nearest 10px, so these lines say \"about\"." },
+    ],
+    closing: "Compare Copilot's weeks of Oct 26 and Oct 19 in Table view.",
+  },
+  {
     slug: "plain-menu-differences",
     date: "2026-10-30",
     time: "22:48",

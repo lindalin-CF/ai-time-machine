@@ -11,10 +11,14 @@
 // one of the known shapes is null ("No data") and the others are still returned.
 // The model/mode selector is collapsed to one "model picker" item in its region, and changes that only
 // rename it are dropped (src/model-picker.ts): the model it shows is session state, not a menu change.
+// Two more exceptions, for Compare's layout findings: the top edge (y, CSS px on the 1280 x 800 desktop screen) of the
+// message box and of the greeting, from their published bounding boxes (L3 and D7 location; the analyses record them
+// on a 10px grid), and, for layout changes recorded against the previous week, the analysis's own published summary
+// sentences about them (src/analysis.ts already shows that summary on every page).
 // A capture whose account plan differs from the portal's previous capture (src/plan.ts) is possibly
 // confounded: planChange is set and its recorded menu changes are dropped, so no surface shows them as
 // product changes. Applied here at display time, from the stored plans, so past weeks are covered too.
-import { SYSTEM_TEST_WEEKS } from "./analysis";
+import { FIXED_SUMMARY_OPENING, SYSTEM_TEST_WEEKS } from "./analysis";
 import { isPlan, planChange, type Plan, type PlanChange } from "./plan";
 import { isModelNameOnly, isModelPickerItem, looksLikeModelName, MODEL_PICKER_LABEL, readsAsModelName } from "./model-picker";
 
@@ -41,6 +45,16 @@ export interface CaptureMetrics {
   navSidebarVisible: boolean | null;
   /** N1 changes with status "changed", against the week the analysis compared with. */
   navChanges: { previousWeek: string; items: NavChange[] } | null;
+  /** Top edge of the message box (L3 location y), CSS px on the 1280 x 800 desktop screen, on the analyses' 10px grid. */
+  inputTop: number | null;
+  /** Top edge of the greeting (D7 location y), same units; null when no greeting is recorded. */
+  greetingTop: number | null;
+  /**
+   * Layout changes (L1-L4) recorded against `previousWeek` with status "changed", none of them confounded, as the
+   * analysis's own summary sentences that state them. `confounded`: some layout change against that week is marked
+   * confounded or possibly confounded (a pop-up, a promo card...). Null without a valid previous_week.
+   */
+  layoutChanges: { previousWeek: string; sentences: string[]; confounded: boolean } | null;
   /** The account plan the capture was taken with. */
   plan: Plan | null;
   /** Set when the plan differs from the previous capture's: navChanges then has no items. */
@@ -237,6 +251,41 @@ function normalizePickerChanges(items: NavChange[]): NavChange[] {
   return out;
 }
 
+/** The y of a metric's location [x, y, w, h] when it lies on the 1280 x 800 screen; otherwise null. */
+function locationTop(m: Record<string, unknown> | undefined): number | null {
+  const l = m?.location;
+  if (!Array.isArray(l) || l.length !== 4 || !l.every((n) => typeof n === "number" && Number.isFinite(n) && n >= 0)) return null;
+  const [, y, , h] = l as number[];
+  return y + h <= 800 ? y : null;
+}
+
+const LAYOUT_IDS = ["L1", "L2", "L3", "L4"];
+/** A summary sentence that states a change: "than in the week of 2026-09-28", "now", "no longer", "since". */
+const STATES_CHANGE = /\b(?:week of \d{4}-\d{2}-\d{2}|now|no longer|since)\b/i;
+
+/**
+ * Summary sentences that state the layout changes recorded against the previous week: every source of the sentence
+ * is a layout metric with a "changed" entry and no confounded or possibly confounded entry, and the sentence states
+ * a change (not the fixed opening, not a caveat).
+ */
+function layoutChanges(a: Record<string, unknown>, week: string): CaptureMetrics["layoutChanges"] {
+  const previousWeek = a.previous_week;
+  if (typeof previousWeek !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(previousWeek) || previousWeek >= week) return null;
+  if (!Array.isArray(a.changes_vs_previous) || !Array.isArray(a.summary_sentences)) return null;
+  const changed = new Set<string>(), confounded = new Set<string>();
+  for (const c of a.changes_vs_previous) {
+    if (!isObject(c) || typeof c.id !== "string" || !LAYOUT_IDS.includes(c.id)) continue;
+    (c.status === "changed" ? changed : confounded).add(c.id);
+  }
+  const clean = (id: unknown) => typeof id === "string" && changed.has(id) && !confounded.has(id);
+  const sentences = a.summary_sentences.flatMap((x) => {
+    if (!isObject(x) || typeof x.text !== "string" || !Array.isArray(x.sources) || !x.sources.length) return [];
+    const text = x.text.trim();
+    return x.sources.every(clean) && STATES_CHANGE.test(text) && !FIXED_SUMMARY_OPENING.test(text) ? [text] : [];
+  });
+  return { previousWeek, sentences, confounded: confounded.size > 0 };
+}
+
 /** N1 metric's sidebar field: "visible" / "not_visible". */
 function navSidebarVisible(n1: unknown): boolean | null {
   if (!isObject(n1)) return null;
@@ -283,6 +332,8 @@ export function captureMetrics(row: Row): CaptureMetrics | null {
   const scheme = context.color_scheme;
   const plan = planChange(row.previous_plan, row.plan);
   const nav = navChanges(a.changes_vs_previous, a.previous_week, row.week);
+  const layout = layoutChanges(a, row.week);
+  const greeting = metric("D7");
   return {
     colorScheme: scheme === "light" || scheme === "dark" ? scheme : null,
     sidebarPct: percent(value("L2")),
@@ -295,6 +346,9 @@ export function captureMetrics(row: Row): CaptureMetrics | null {
     navItems: navItems(value("N1")),
     navSidebarVisible: navSidebarVisible(metric("N1")),
     navChanges: nav && plan ? { previousWeek: nav.previousWeek, items: [] } : nav,
+    inputTop: a.viewport === "1280x800" ? locationTop(metric("L3")) : null,
+    greetingTop: a.viewport === "1280x800" && typeof greeting?.value === "string" && greeting.value.trim() ? locationTop(greeting) : null,
+    layoutChanges: layout && plan ? { ...layout, sentences: [] } : layout,
     plan: isPlan(row.plan) ? row.plan : null,
     planChange: plan,
   };
