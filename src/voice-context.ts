@@ -6,7 +6,7 @@ import { listPortals, type PublishedCapture } from "./db";
 import { cached } from "./api";
 import { isPublishedAnalysis, FIXED_SUMMARY_OPENING, SYSTEM_TEST_WEEKS } from "./analysis";
 import { captureMetrics, type CaptureMetrics } from "./capture-metrics";
-import { changeEntries, type ChangeEntry } from "./nav-changes";
+import { changeEntries, regionName, type ChangeEntry } from "./nav-changes";
 import { weekInWords } from "./format";
 
 /** The context is cut to this many characters (oldest weeks first) so the prompt stays fast. */
@@ -92,9 +92,9 @@ function menuLine(m: CaptureMetrics | null): string {
     const names = items.filter((it) => !it.icon).map((it) => it.label);
     const icons = items.length - names.length;
     const iconText = icons ? `${icons} icon button${icons === 1 ? "" : "s"}` : "";
-    return [`${r}: ${[names.join(", "), iconText].filter(Boolean).join(names.length ? " and " : "")}`];
+    return [`in ${regionName(r)}: ${[names.join(", "), iconText].filter(Boolean).join(names.length ? " and " : "")}`];
   });
-  return `Menu items, ${regions.join("; ")}${m.navSidebarVisible === false ? " (sidebar collapsed, its items not visible)" : ""}.`;
+  return `Menu items, ${regions.join("; ")}${m.navSidebarVisible === false ? " (the side menu is collapsed, its items not visible)" : ""}.`;
 }
 
 /**

@@ -151,7 +151,7 @@ describe('surfaces', () => {
     expect(grok).toContain(`<li class="plan-note"><a href="/portals/grok/2026-10-19">October 19, 2026</a> — ${PLAN_CHANGE_NOTE.replace(/'/g, '&#39;')}</li>`);
     expect(grok).not.toContain('SuperGrok');
     const copilot = await portal('/portals/copilot');
-    expect(copilot).toContain('<a href="/portals/copilot/2026-08-31">August 31, 2026</a> — Pages added to the sidebar</li>');
+    expect(copilot).toContain('<a href="/portals/copilot/2026-08-31">August 31, 2026</a> — Pages added to the side menu</li>');
     expect(copilot).toContain('<li class="plan-note"><a href="/portals/copilot/2026-08-24">August 24, 2026</a>');
     expect(copilot).not.toContain('Labs');
     const md = await portal('/portals/grok.md');
@@ -181,15 +181,15 @@ describe('surfaces', () => {
     const page = await text(handleChanges(new Request(`${ORIGIN}/changes`), t.env));
     expect(page).not.toContain('SuperGrok');
     expect(page).not.toContain('Labs');
-    expect(page).toContain('Microsoft Copilot: a new Pages item appears in the sidebar.');
-    expect(page).toContain('ChatGPT: the sidebar item More is now labeled Explore.');
+    expect(page).toContain('Microsoft Copilot: a new Pages item appears in the side menu.');
+    expect(page).toContain('ChatGPT: the More item in the side menu is now labeled Explore.');
   });
 
   it('/facts: no plan-change week as the latest menu change', async () => {
     const page = await text(handleFacts(new Request(`${ORIGIN}/facts`), t.env));
     const entry = (id: string) => page.match(new RegExp(`<li class="fx-entry" id="${id}">[\\s\\S]*?</li>(?=\\n      </?(?:li|ol))`))![0];
     expect(entry('grok')).toContain('<strong>Menu changes:</strong> No menu changes recorded yet.');
-    expect(entry('copilot')).toContain('Week of August 31, 2026: Pages added to the sidebar.');
+    expect(entry('copilot')).toContain('Week of August 31, 2026: Pages added to the side menu.');
   });
 
   it('/compare pages: their latest menu changes skip the plan-change weeks', async () => {
@@ -218,7 +218,7 @@ describe('surfaces', () => {
     const f = tableFindings(newer, older)!;
     expect(f.note).toBe(PLAN_CHANGE_NOTE);
     // The menus are compared as lists, not as recorded product changes.
-    expect(f.differences[0]).toBe('The newer week shows menu items that the older week does not: Imagine (sidebar).');
+    expect(f.differences[0]).toBe('Only on Oct 19: Imagine (in the side menu).');
     expect(f.differences.join(' ')).not.toMatch(/SuperGrok|now appears|no longer appears/);
     const cell = findingsCellHTML(f, 'differences');
     expect(cell).toContain('<div class="an-cmp-note an-cmp-plan">This week&#39;s differences may come from the account plan change, not a product update.</div>');

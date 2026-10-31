@@ -53,7 +53,7 @@ describe('Compare Table: Differences and Similarities (browser)', () => {
       expect(r.cells[0].span).toBe(2);
       expect(r.cells[0].head).toBe('Oct 12, 2026 vs Oct 5, 2026');
     }
-    expect(diff.cells[0].items.slice(0, 2)).toEqual(['The sidebar item More is now labeled Explore.', 'The Upgrade item no longer appears in the top bar.']);
+    expect(diff.cells[0].items.slice(0, 2)).toEqual(['The More item in the side menu is now labeled Explore.', 'The Upgrade item no longer appears in the bar across the top.']);
     expect(same.cells[0].items).toContain('Both message boxes sit in the middle third of the screen.'); // the heading names the weeks
     expect([...diff.cells[0].items, ...same.cells[0].items].join(' ')).not.toMatch(/captured in|dark|light mode|color scheme/i);
     expect(same.cells[0].items.length).toBeLessThanOrEqual(5);

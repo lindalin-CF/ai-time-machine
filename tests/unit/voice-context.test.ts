@@ -101,7 +101,7 @@ describe('voice context', () => {
   it("gives each product's latest published summary and menu items, without the fixed opening or sentences the measures cover", async () => {
     const text = await context({ links: true });
     expect(text).toContain('- ChatGPT [/portals/chatgpt/2026-10-05]: The message box stands out most in chatgpt 2026-10-05. Three large cards fill the top half. '
-      + 'Menu items, sidebar: New chat, Tasks, Projects and 1 icon button; input area: Think.');
+      + 'Menu items, in the side menu: New chat, Tasks, Projects and 1 icon button; in the message box: Think.');
     expect(text).toContain('- Claude [/portals/claude/2026-10-05]:');
     expect(text).not.toMatch(/This shows the desktop version of chatgpt/);
     expect(text).not.toContain('A sidebar takes up about a fifth'); // L1 + L2: the measures give the width
@@ -117,7 +117,7 @@ describe('voice context', () => {
 
   it('lists every menu change with its week, from the same data as /changes', async () => {
     expect(await context({ links: true })).toContain(
-      '- Week of October 5, 2026 (compared with September 28, 2026), ChatGPT: the sidebar item Scheduled is now labeled Tasks. [/portals/chatgpt/2026-10-05]');
+      '- Week of October 5, 2026 (compared with September 28, 2026), ChatGPT: the Scheduled item in the side menu is now labeled Tasks. [/portals/chatgpt/2026-10-05]');
   });
 
   it("has one history line per product with each week's measures, newest first", async () => {
@@ -216,7 +216,7 @@ describe('worked-out lists', () => {
     chatgptWeeks();
     expect(await context()).toContain(
       '- ChatGPT changes (6 weeks, Aug 17 to Oct 5): clickable items 17 \u2192 23 (Aug 24) \u2192 26 (Sep 21) \u2192 23 (Sep 28); '
-      + 'seen Oct 5: the sidebar item Scheduled is now labeled Tasks; seen Oct 5: The question above the message box differs from the week of Sep 28.');
+      + 'seen Oct 5: the Scheduled item in the side menu is now labeled Tasks; seen Oct 5: The question above the message box differs from the week of Sep 28.');
   });
 
   it('says when a product has no changes, or only one week', async () => {
@@ -250,7 +250,7 @@ describe('worked-out lists', () => {
     const text = await context();
     const section = text.slice(text.indexOf("THIS WEEK'S CHANGES"), text.indexOf('CHANGES PER PRODUCT'));
     expect(section).toContain("THIS WEEK'S CHANGES, week of Oct 5: only changes first seen in the latest week");
-    expect(section).toContain('- ChatGPT (compared with Sep 28): the sidebar item Scheduled is now labeled Tasks.');
+    expect(section).toContain('- ChatGPT (compared with Sep 28): the Scheduled item in the side menu is now labeled Tasks.');
     expect(section).toContain('also differs for: ChatGPT. These are not counted as changes.'); // the question: possibly_confounded
     expect(section).not.toMatch(/clickable items|light \u2192 dark|Sep 21/); // earlier changes stay out
     expect(section).toContain('- No changes this week: Kimi.');

@@ -7,7 +7,7 @@ import { desktopSize, mobileSize } from "./api";
 import { MOBILE_CAPTURE_SIZE } from "./image-size";
 import { shotAlt, weekInWords, weekShort } from "./format";
 import { captureMetrics } from "./capture-metrics";
-import { changeEntries, navChangeSentence, navItemName, planChangeEntries, type ChangeEntry, type PlanChangeEntry } from "./nav-changes";
+import { changeEntries, navChangeSentence, navItemName, planChangeEntries, regionName, type ChangeEntry, type PlanChangeEntry } from "./nav-changes";
 import { PLAN_CHANGE_NOTE } from "./plan";
 import { COMPARE_WITH_LINKS, POPULAR_PAIRINGS, comparePath, indexablePairs } from "./compare";
 import { weekDigests, latestIndexableWeek } from "./weeks";
@@ -922,9 +922,9 @@ function portalMarkdown(o: { name: string; slug: string; company: string; canoni
   if (m?.navItems?.length) {
     for (const region of ["sidebar", "top bar", "input area"] as const) {
       const items = m.navItems.filter((it) => it.region === region);
-      if (items.length) lines.push(`- ${region[0].toUpperCase()}${region.slice(1)}: ${items.map(navItemName).join(", ")}`);
+      if (items.length) lines.push(`- In ${regionName(region)}: ${items.map(navItemName).join(", ")}`);
     }
-    if (m.navSidebarVisible === false) lines.push("- The sidebar is collapsed in this capture, so its items are not listed.");
+    if (m.navSidebarVisible === false) lines.push("- The side menu is collapsed in this capture, so its items are not listed.");
   } else {
     lines.push("No menu item data for this week.");
   }

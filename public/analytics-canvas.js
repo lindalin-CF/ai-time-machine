@@ -25,29 +25,63 @@ const MENU = "menu items";
 const NAV_CHANGE_LINES = 2;
 const NAV_NAMES = 3;
 
-/** One line per recorded change, e.g. "The sidebar item Scheduled is now labeled Tasks." */
+/**
+ * Plain names for the N1 regions, as visitors read them. The stored and API values stay "sidebar", "top bar"
+ * and "input area"; src/nav-changes.ts, src/aeo.ts and the portal pages use these names too.
+ */
+export const REGION_NAMES = { sidebar: "the side menu", "top bar": "the bar across the top", "input area": "the message box" };
+export const regionName = (region) => REGION_NAMES[region] || region;
+
+/** One line per recorded change, e.g. "The Scheduled item in the side menu is now labeled Tasks." */
 function navChangeText(c) {
-  if (c.picker) return c.change === "added" ? "A model picker now appears in the input area." : "The model picker no longer appears in the input area.";
-  if (c.change === "icon_changed") {
-    return `The icon of ${/^[aeiou]/.test(c.region) ? "an" : "a"} ${c.region} button changed (${c.previous} \u2192 ${c.current}).`;
-  }
+  const r = regionName(c.region);
+  if (c.picker) return c.change === "added" ? `A model picker now appears in ${r}.` : `The model picker no longer appears in ${r}.`;
+  if (c.change === "icon_changed") return `The icon of a button in ${r} changed (${c.previous} \u2192 ${c.current}).`;
   if (c.icon) {
     return c.change === "added"
-      ? `An icon button (${c.current}) now appears in the ${c.region}.`
-      : `An icon button (${c.previous}) no longer appears in the ${c.region}.`;
+      ? `An icon button (${c.current}) now appears in ${r}.`
+      : `An icon button (${c.previous}) no longer appears in ${r}.`;
   }
-  if (c.change === "renamed") return `The ${c.region} item ${c.previous} is now labeled ${c.current}.`;
-  if (c.change === "added") return `A new ${c.current} item appears in the ${c.region}.`;
-  return `The ${c.previous} item no longer appears in the ${c.region}.`;
+  if (c.change === "renamed") return `The ${c.previous} item in ${r} is now labeled ${c.current}.`;
+  if (c.change === "added") return `A new ${c.current} item appears in ${r}.`;
+  return `The ${c.previous} item no longer appears in ${r}.`;
 }
 
 /** An item without text is shown by its icon label: "an icon button (clock icon)"; the model picker as "a model picker". */
 const navName = (it) => (it.picker ? `a ${it.label}` : it.icon ? `an icon button (${it.label})` : it.label);
 const navKey = (it) => `${it.region}\u0000${it.icon ? "icon" : "text"}\u0000${it.label}`;
 const navList = (items) => {
-  const names = items.slice(0, NAV_NAMES).map((it) => `${navName(it)} (${it.region})`).join(", ");
+  const names = items.slice(0, NAV_NAMES).map((it) => `${navName(it)} (in ${regionName(it.region)})`).join(", ");
   return items.length > NAV_NAMES ? `${names} and ${items.length - NAV_NAMES} more` : names;
 };
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+/** "2026-10-19" -> "Oct 19", with the year ("Oct 19, 2026") when the other week is in another year. */
+function weekShort(week, other) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(week || "");
+  if (!m) return week;
+  const day = `${MONTHS[Number(m[2]) - 1]} ${Number(m[3])}`;
+  return other && other.slice(0, 4) !== m[1] ? `${day}, ${m[1]}` : day;
+}
+
+/**
+ * Drops, from two lists of items only one week shows, a model picker on one side together with an item on the
+ * other side, in the same region, whose label reads as a model name (captureMetrics' modelName): the same
+ * picker, recorded once by its role and once by the model it showed. Returns the regions paired.
+ */
+function pairPickers(onlyA, onlyB) {
+  const paired = new Set();
+  for (const [x, y] of [[onlyA, onlyB], [onlyB, onlyA]]) {
+    for (const p of x.filter((it) => it.picker)) {
+      const i = y.findIndex((it) => it.modelName && it.region === p.region);
+      if (i < 0) continue;
+      y.splice(i, 1);
+      x.splice(x.indexOf(p), 1);
+      paired.add(p.region);
+    }
+  }
+  return paired;
+}
 
 /**
  * Menu findings for two cards ({ label, slug, week, metrics }): { diff, same, missing }.
@@ -78,11 +112,14 @@ function navFindings(a, b, A, B, ma, mb, changeLines, brief = false) {
   const icons = ma.navItems.some((it) => it.icon) && mb.navItems.some((it) => it.icon);
   const keep = (items) => items.filter((it) => !(noSidebar && it.region === "sidebar") && (icons || !it.icon));
   const ia = keep(ma.navItems), ib = keep(mb.navItems);
-  const where = noSidebar ? " outside the sidebar" : "";
+  const where = noSidebar ? ` outside ${regionName("sidebar")}` : "";
   const kb = new Set(ib.map(navKey)), ka = new Set(ia.map(navKey));
   const onlyA = ia.filter((it) => !kb.has(navKey(it))), onlyB = ib.filter((it) => !ka.has(navKey(it)));
   // The model picker is one item whatever model it shows (src/model-picker.ts), so it never differs by name.
-  const picker = ia.some((it) => it.picker) && ib.some((it) => it.picker) ? ["Both show a model picker in the input area."] : [];
+  const paired = samePortal ? pairPickers(onlyA, onlyB) : new Set();
+  const pickerRegions = ["input area", "top bar", "sidebar"]
+    .filter((r) => paired.has(r) || (ia.some((it) => it.picker && it.region === r) && ib.some((it) => it.picker && it.region === r)));
+  const picker = pickerRegions.map((r) => `Both show a model picker in ${regionName(r)}.`);
   if (!onlyA.length && !onlyB.length) return { diff: [], same: [`Both show the same ${MENU}${where}.`, ...picker], missing: [] };
   if (!samePortal) {
     if (ia.length === ib.length) {
@@ -90,9 +127,12 @@ function navFindings(a, b, A, B, ma, mb, changeLines, brief = false) {
     }
     return { diff: [`${A} shows ${word(ia.length, "menu item", MENU)}${where}${brief ? ";" : ","} ${B} shows ${ib.length}.`], same: [], missing: [] };
   }
+  // Two weeks of one product: "Only on Oct 19: ..." names each item's week by its date.
+  const datesDiffer = a.week && b.week && a.week !== b.week;
+  const only = (card, other, label) => `Only on ${datesDiffer ? weekShort(card.week, other.week) : label}`;
   const diff = [];
-  if (onlyB.length) diff.push(`${B} shows ${MENU} that ${A} does not: ${navList(onlyB)}.`);
-  if (onlyA.length) diff.push(`${A} shows ${MENU} that ${B} does not: ${navList(onlyA)}.`);
+  if (onlyB.length) diff.push(`${only(b, a, B)}: ${navList(onlyB)}.`);
+  if (onlyA.length) diff.push(`${only(a, b, A)}: ${navList(onlyA)}.`);
   return { diff, same: picker, missing: [] };
 }
 

@@ -67,7 +67,7 @@ const html = async (path: string) => (await get(path)).text();
 const jsonLd = (s: string) => [...s.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]));
 const robots = (s: string) => s.match(/<meta name="robots" content="([^"]+)"/)?.[1];
 const SUMMARY = 'In the week of October 12, 2026, AI Interface Library captured 4 AI portals. 2 of them had menu changes compared with the week before. '
-  + 'Most notable changes: in ChatGPT, the sidebar item More is now labeled Explore; in Gemini, a new Gems item appears in the sidebar.';
+  + 'Most notable changes: in ChatGPT, the More item in the side menu is now labeled Explore; in Gemini, a new Gems item appears in the side menu.';
 
 describe('routes', () => {
   it('is routed to the Worker in both configs', () => {
@@ -143,8 +143,8 @@ describe('/weeks/<week>', () => {
     expect(chatgpt).toContain(`<a href="/portals/chatgpt/${NEW}">ChatGPT, week of Oct 12, 2026</a>`);
     expect(chatgpt).toContain(`<a href="/#compare?view=canvas&amp;mode=time&amp;portal=chatgpt&amp;weeks=${NEW},${OLD}&amp;device=desktop" aria-label="See ChatGPT this week vs last week">See this week vs last week</a>`);
     expect(page).not.toContain('href="/compare/');
-    expect(gemini).toContain('<li>Top bar button icon changed (star icon → spark icon)</li>');
-    expect(gemini).toContain('<li>Gems added to the sidebar</li>');
+    expect(gemini).toContain('<li>Button icon in the bar across the top changed (star icon → spark icon)</li>');
+    expect(gemini).toContain('<li>Gems added to the side menu</li>');
     expect(gemini).toContain(`<a href="/#compare?view=canvas&amp;mode=time&amp;portal=gemini&amp;weeks=${NEW},${OLD}&amp;device=desktop" aria-label="See Gemini this week vs last week">See this week vs last week</a>`);
   });
 

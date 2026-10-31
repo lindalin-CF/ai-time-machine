@@ -106,23 +106,23 @@ describe('compareFindings menu items (N1)', () => {
   const oct5 = card('Oct 5', '2026-10-05', { navItems: OCT5, ...changes('2026-09-28', change('renamed', 'Scheduled', 'Tasks')) });
 
   it('adjacent weeks: states a rename first, in either card order', () => {
-    expect(compareFindings(sep28, oct5)[0]).toBe('The sidebar item Scheduled is now labeled Tasks.');
-    expect(compareFindings(oct5, sep28)[0]).toBe('The sidebar item Scheduled is now labeled Tasks.');
+    expect(compareFindings(sep28, oct5)[0]).toBe('The Scheduled item in the side menu is now labeled Tasks.');
+    expect(compareFindings(oct5, sep28)[0]).toBe('The Scheduled item in the side menu is now labeled Tasks.');
     expect(compareFindings(sep28, oct5).length).toBeLessThanOrEqual(4);
   });
 
   it('adjacent weeks: uses the recorded changes even when the older card has no menu data', () => {
     const old = card('Sep 28', '2026-09-28', { navItems: null });
     const lines = compareFindings(old, oct5);
-    expect(lines[0]).toBe('The sidebar item Scheduled is now labeled Tasks.');
+    expect(lines[0]).toBe('The Scheduled item in the side menu is now labeled Tasks.');
     expect(lines.join(' ')).not.toContain('menu items');
   });
 
   it('adjacent weeks: an added and a removed item, one line each', () => {
     const b = card('Oct 5', '2026-10-05', { navItems: OCT5, ...changes('2026-09-28', change('added', null, 'Tasks'), change('removed', 'Library', null)) });
     expect(compareFindings(sep28, b).slice(0, 2)).toEqual([
-      'A new Tasks item appears in the sidebar.',
-      'The Library item no longer appears in the sidebar.',
+      'A new Tasks item appears in the side menu.',
+      'The Library item no longer appears in the side menu.',
     ]);
   });
 
@@ -130,7 +130,7 @@ describe('compareFindings menu items (N1)', () => {
     const b = card('Oct 5', '2026-10-05', { navItems: OCT5, ...changes('2026-09-28',
       change('renamed', 'Scheduled', 'Tasks'), change('added', null, 'Pulse'), change('removed', 'Sora', null, 'top bar')) });
     const lines = compareFindings(sep28, b);
-    expect(lines.slice(0, 2)).toEqual(['The sidebar item Scheduled is now labeled Tasks.', 'and 2 more menu changes.']);
+    expect(lines.slice(0, 2)).toEqual(['The Scheduled item in the side menu is now labeled Tasks.', 'and 2 more menu changes.']);
     expect(lines.filter((l: string) => /Pulse|Sora/.test(l))).toEqual([]);
     expect(lines.length).toBeLessThanOrEqual(4);
   });
@@ -138,8 +138,8 @@ describe('compareFindings menu items (N1)', () => {
   it('non-adjacent weeks of one portal: lists items only one side shows', () => {
     const sep14 = card('Sep 14', '2026-09-14', { navItems: [...SEP28.filter((i) => i.label !== 'Codex'), item('Sora', 'top bar')] });
     expect(compareFindings(sep14, oct5).slice(0, 2)).toEqual([
-      'Oct 5 shows menu items that Sep 14 does not: Tasks (sidebar), Codex (sidebar).',
-      'Sep 14 shows menu items that Oct 5 does not: Scheduled (sidebar), Sora (top bar).',
+      'Only on Oct 5: Tasks (in the side menu), Codex (in the side menu).',
+      'Only on Sep 14: Scheduled (in the side menu), Sora (in the bar across the top).',
     ]);
   });
 
@@ -160,9 +160,9 @@ describe('compareFindings menu items (N1)', () => {
 
   it('leaves out the sidebar when either sidebar is collapsed', () => {
     const collapsed = card('Sep 21', '2026-09-21', { navItems: [item('Upgrade', 'top bar')], navSidebarVisible: false });
-    expect(compareFindings(collapsed, oct5)).toContain('Both show the same menu items outside the sidebar.');
+    expect(compareFindings(collapsed, oct5)).toContain('Both show the same menu items outside the side menu.');
     const claude = card('Claude', '2026-10-05', { navItems: [item('Share', 'top bar'), item('Upgrade', 'top bar')], navSidebarVisible: false }, 'claude');
-    expect(compareFindings(oct5, claude)[0]).toBe('Oct 5 shows 1 menu item outside the sidebar, Claude shows 2.');
+    expect(compareFindings(oct5, claude)[0]).toBe('Oct 5 shows 1 menu item outside the side menu, Claude shows 2.');
   });
 
   it('names menu items in the No data line when either card has none', () => {
@@ -176,8 +176,8 @@ describe('compareFindings menu items (N1)', () => {
       { change: 'added', previous: null, current: 'slider icon', region: 'input area', icon: true },
       { change: 'removed', previous: 'clock icon', current: null, region: 'sidebar', icon: true }) });
     expect(compareFindings(sep28, b).slice(0, 2)).toEqual([
-      'An icon button (slider icon) now appears in the input area.',
-      'An icon button (clock icon) no longer appears in the sidebar.',
+      'An icon button (slider icon) now appears in the message box.',
+      'An icon button (clock icon) no longer appears in the side menu.',
     ]);
   });
 
@@ -185,8 +185,8 @@ describe('compareFindings menu items (N1)', () => {
     const iconChanged = (region: string) => ({ change: 'icon_changed', previous: 'bubble-clock icon', current: 'dashed bubble icon', region, icon: true });
     const b = card('Oct 5', '2026-10-05', { navItems: OCT5, ...changes('2026-09-28', iconChanged('top bar'), iconChanged('input area')) });
     expect(compareFindings(sep28, b).slice(0, 2)).toEqual([
-      'The icon of a top bar button changed (bubble-clock icon \u2192 dashed bubble icon).',
-      'The icon of an input area button changed (bubble-clock icon \u2192 dashed bubble icon).',
+      'The icon of a button in the bar across the top changed (bubble-clock icon \u2192 dashed bubble icon).',
+      'The icon of a button in the message box changed (bubble-clock icon \u2192 dashed bubble icon).',
     ]);
   });
 
@@ -194,7 +194,7 @@ describe('compareFindings menu items (N1)', () => {
     const icon = (label: string, region = 'sidebar') => ({ label, region, icon: true });
     const a = card('Sep 14', '2026-09-14', { navItems: [...SEP28, icon('magnifier icon')] });
     const b = card('Oct 5', '2026-10-05', { navItems: [...SEP28, icon('magnifier icon'), icon('bell icon', 'top bar')] });
-    expect(compareFindings(a, b)[0]).toBe('Oct 5 shows menu items that Sep 14 does not: an icon button (bell icon) (top bar).');
+    expect(compareFindings(a, b)[0]).toBe('Only on Oct 5: an icon button (bell icon) (in the bar across the top).');
   });
 
   it('leaves out items without text when only one card records them', () => {

@@ -4,36 +4,39 @@
 import { captureMetrics, type NavChange, type NavItem } from "./capture-metrics";
 import { isPublishedAnalysis, SYSTEM_TEST_WEEKS } from "./analysis";
 import type { PublishedCapture } from "./db";
+import { regionName } from "../public/analytics-canvas.js";
 
-const article = (region: string) => (/^[aeiou]/.test(region) ? "an" : "a");
+export { regionName };
 
-/** One change as a sentence that continues after "<Portal>: ", e.g. "the sidebar item Scheduled is now labeled Tasks." */
+/** One change as a sentence that continues after "<Portal>: ", e.g. "the Scheduled item in the side menu is now labeled Tasks." */
 export function navChangeSentence(c: NavChange): string {
-  if (c.picker) return c.change === "added" ? "a model picker now appears in the input area." : "the model picker no longer appears in the input area.";
-  if (c.change === "icon_changed") return `the icon of ${article(c.region)} ${c.region} button changed (${c.previous} → ${c.current}).`;
+  const r = regionName(c.region);
+  if (c.picker) return c.change === "added" ? `a model picker now appears in ${r}.` : `the model picker no longer appears in ${r}.`;
+  if (c.change === "icon_changed") return `the icon of a button in ${r} changed (${c.previous} → ${c.current}).`;
   if (c.icon) {
     return c.change === "added"
-      ? `an icon button (${c.current}) now appears in the ${c.region}.`
-      : `an icon button (${c.previous}) no longer appears in the ${c.region}.`;
+      ? `an icon button (${c.current}) now appears in ${r}.`
+      : `an icon button (${c.previous}) no longer appears in ${r}.`;
   }
-  if (c.change === "renamed") return `the ${c.region} item ${c.previous} is now labeled ${c.current}.`;
-  if (c.change === "added") return `a new ${c.current} item appears in the ${c.region}.`;
-  return `the ${c.previous} item no longer appears in the ${c.region}.`;
+  if (c.change === "renamed") return `the ${c.previous} item in ${r} is now labeled ${c.current}.`;
+  if (c.change === "added") return `a new ${c.current} item appears in ${r}.`;
+  return `the ${c.previous} item no longer appears in ${r}.`;
 }
 
-/** One change as a short phrase for a timeline line, e.g. "Scheduled renamed to Tasks" or "Upgrade removed from the top bar". */
+/** One change as a short phrase for a timeline line, e.g. "Scheduled renamed to Tasks" or "Upgrade removed from the bar across the top". */
 export function navChangePhrase(c: NavChange): string {
+  const r = regionName(c.region);
   const p = (() => {
-    if (c.picker) return c.change === "added" ? "model picker added to the input area" : "model picker removed from the input area";
-    if (c.change === "icon_changed") return `${c.region} button icon changed (${c.previous} → ${c.current})`;
+    if (c.picker) return c.change === "added" ? `model picker added to ${r}` : `model picker removed from ${r}`;
+    if (c.change === "icon_changed") return `button icon in ${r} changed (${c.previous} → ${c.current})`;
     if (c.icon) {
       return c.change === "added"
-        ? `icon button (${c.current}) added to the ${c.region}`
-        : `icon button (${c.previous}) removed from the ${c.region}`;
+        ? `icon button (${c.current}) added to ${r}`
+        : `icon button (${c.previous}) removed from ${r}`;
     }
     if (c.change === "renamed") return `${c.previous} renamed to ${c.current}`;
-    if (c.change === "added") return `${c.current} added to the ${c.region}`;
-    return `${c.previous} removed from the ${c.region}`;
+    if (c.change === "added") return `${c.current} added to ${r}`;
+    return `${c.previous} removed from ${r}`;
   })();
   return p[0].toUpperCase() + p.slice(1);
 }

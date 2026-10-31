@@ -9,14 +9,14 @@
 // The whole object is null unless the analysis is a published, ok, matching desktop analysis outside
 // the system-test weeks. Inside one, each field is parsed on its own: a field whose stored shape is not
 // one of the known shapes is null ("No data") and the others are still returned.
-// The input area's model/mode selector is collapsed to one "model picker" item, and changes that only
+// The model/mode selector is collapsed to one "model picker" item in its region, and changes that only
 // rename it are dropped (src/model-picker.ts): the model it shows is session state, not a menu change.
 // A capture whose account plan differs from the portal's previous capture (src/plan.ts) is possibly
 // confounded: planChange is set and its recorded menu changes are dropped, so no surface shows them as
 // product changes. Applied here at display time, from the stored plans, so past weeks are covered too.
 import { SYSTEM_TEST_WEEKS } from "./analysis";
 import { isPlan, planChange, type Plan, type PlanChange } from "./plan";
-import { isModelPickerItem, looksLikeModelName, MODEL_PICKER_LABEL } from "./model-picker";
+import { isModelNameOnly, isModelPickerItem, looksLikeModelName, MODEL_PICKER_LABEL, readsAsModelName } from "./model-picker";
 
 /** Every field is null when its stored value could not be parsed with confidence. */
 export interface CaptureMetrics {
@@ -53,8 +53,13 @@ export interface NavItem {
   label: string;
   region: NavRegion;
   icon?: true;
-  /** The input area's model picker: `label` is always "model picker", never the model it shows. */
+  /** A model picker (usually in the input area): `label` is always "model picker", never the model it shows. */
   picker?: true;
+  /**
+   * A text item whose label reads as a model or mode name but was not taken as a picker ("Manus 2.0 Lite" in the
+   * top bar). Compare pairs it with a model picker the other week shows in the same region (public/analytics-canvas.js).
+   */
+  modelName?: true;
 }
 export interface NavChange {
   change: "added" | "removed" | "renamed" | "icon_changed";
@@ -63,7 +68,7 @@ export interface NavChange {
   region: NavRegion;
   /** previous/current are icon_labels of an item without text. */
   icon?: true;
-  /** The model picker appeared ("added") or disappeared ("removed"); previous/current is "model picker". */
+  /** The model picker appeared ("added") or disappeared ("removed") in `region`; previous/current is "model picker". */
   picker?: true;
 }
 
@@ -160,58 +165,75 @@ function navName(v: unknown, max = LABEL_MAX): string | null {
   return t && t.length <= max && /^[\x20-\x7E]+$/.test(t) ? t : null;
 }
 
-const PICKER_ITEM: NavItem = { label: MODEL_PICKER_LABEL, region: "input area", picker: true };
+const pickerItem = (region: NavRegion): NavItem => ({ label: MODEL_PICKER_LABEL, region, picker: true });
 
 /**
  * N1 value: an array of { label, region, ... }. Malformed items are dropped; a non-array or more than 30
- * kept items is null. The input area's model picker (role "model_picker", or a label that reads as a
- * model name) becomes one "model picker" item at the position of the first one.
+ * kept items is null. A model picker (role "model_picker" in any region, an input-area label that reads as a
+ * model name, or a top-bar label that is only a model name) becomes one "model picker" item per region, at
+ * the position of the first one.
  */
 function navItems(v: unknown): NavItem[] | null {
   if (!Array.isArray(v)) return null;
   const items: NavItem[] = [];
-  let picker = false;
+  const pickers = new Set<NavRegion>();
   for (const it of v) {
     if (!isObject(it) || !isRegion(it.region)) continue;
     const label = navName(it.label);
-    if (it.region === "input area" && (it.role === "model_picker" || (label && isModelPickerItem({ ...it, label })))) {
-      if (!picker) items.push(PICKER_ITEM);
-      picker = true;
+    if (it.role === "model_picker" || (label && isModelPickerItem({ ...it, label }))) {
+      if (!pickers.has(it.region)) items.push(pickerItem(it.region));
+      pickers.add(it.region);
       continue;
     }
     const iconLabel = it.label === null ? navName(it.icon_label, ICON_LABEL_MAX) : null;
-    if (label) items.push({ label, region: it.region });
+    if (label) items.push({ label, region: it.region, ...(readsAsModelName(label) ? { modelName: true as const } : {}) });
     else if (iconLabel) items.push({ label: iconLabel, region: it.region, icon: true });
   }
   return items.length <= NAV_MAX ? items : null;
 }
 
 /**
- * Model-picker changes for display. A rename between two model names, or a removed + added pair of model
- * names, is only a different model picked in the session, so it is dropped. A model name that only appears
- * (or only disappears) means the picker itself appeared (or disappeared): it becomes one "model picker"
- * change. A rename between a model name and a normal item is a picker change plus a normal item change.
+ * Model-picker changes for display, per region. In the input area a model name is any label that reads as one;
+ * in the top bar, a label that is only a model name; anywhere, the label "model picker" (role "model_picker").
+ * A rename between two model names, or a removed + added pair of them, is only a different model picked in
+ * the session, so it is dropped. A model name that only appears (or only disappears) means the picker itself
+ * appeared (or disappeared): it becomes one "model picker" change. A rename between a model name and a normal
+ * item is a picker change plus a normal item change. A label that merely reads as a model name outside the
+ * input area ("Manus 2.0 Lite") counts as the picker only when it pairs with a "model picker" change.
  */
 function normalizePickerChanges(items: NavChange[]): NavChange[] {
-  const model = (s: string | null) => s !== null && looksLikeModelName(s);
-  const inInput = (c: NavChange) => c.region === "input area" && !c.icon;
+  const model = (s: string | null, region: NavRegion) => s !== null &&
+    (s === MODEL_PICKER_LABEL || (region === "input area" ? looksLikeModelName(s) : region === "top bar" && isModelNameOnly(s)));
+  const loose = (s: string | null) => s !== null && (s === MODEL_PICKER_LABEL || readsAsModelName(s));
+  const isPicker = (s: string | null) => s === MODEL_PICKER_LABEL;
+  // Per region: model names added and removed, and changes that read as a model name only loosely, which are
+  // kept unless they pair with an opposite picker change.
+  const state = new Map(NAV_REGIONS.map((r) => [r as NavRegion, { added: 0, removed: 0, looseAdded: [] as NavChange[], looseRemoved: [] as NavChange[] }]));
   const out: NavChange[] = [];
-  let added = 0, removed = 0;
   for (const c of items) {
-    if (!inInput(c)) { out.push(c); continue; }
+    const st = state.get(c.region)!;
+    if (c.icon) { out.push(c); continue; }
     if (c.change === "renamed") {
-      const p = model(c.previous), n = model(c.current);
-      if (p && n) continue;
-      if (p) { removed++; out.push({ change: "added", previous: null, current: c.current, region: c.region }); continue; }
-      if (n) { added++; out.push({ change: "removed", previous: c.previous, current: null, region: c.region }); continue; }
+      const p = model(c.previous, c.region), n = model(c.current, c.region);
+      if ((p && n) || (isPicker(c.previous) && loose(c.current)) || (isPicker(c.current) && loose(c.previous))) continue;
+      if (p) { st.removed++; out.push({ change: "added", previous: null, current: c.current, region: c.region }); continue; }
+      if (n) { st.added++; out.push({ change: "removed", previous: c.previous, current: null, region: c.region }); continue; }
       out.push(c);
-    } else if (c.change === "added" && model(c.current)) added++;
-    else if (c.change === "removed" && model(c.previous)) removed++;
+    } else if (c.change === "added" && model(c.current, c.region)) st.added++;
+    else if (c.change === "removed" && model(c.previous, c.region)) st.removed++;
+    else if (c.change === "added" && loose(c.current) && c.region !== "input area") st.looseAdded.push(c);
+    else if (c.change === "removed" && loose(c.previous) && c.region !== "input area") st.looseRemoved.push(c);
     else out.push(c);
   }
-  // Paired removed + added model names cancel out; what is left is the picker appearing or disappearing.
-  if (added > removed) out.push({ change: "added", previous: null, current: MODEL_PICKER_LABEL, region: "input area", picker: true });
-  if (removed > added) out.push({ change: "removed", previous: MODEL_PICKER_LABEL, current: null, region: "input area", picker: true });
+  for (const [region, st] of state) {
+    // A picker that appears while a loose model name disappears (or the other way round) is the same picker.
+    while (st.added > st.removed && st.looseRemoved.length) { st.looseRemoved.shift(); st.removed++; }
+    while (st.removed > st.added && st.looseAdded.length) { st.looseAdded.shift(); st.added++; }
+    out.push(...st.looseAdded, ...st.looseRemoved);
+    // Paired removed + added model names cancel out; what is left is the picker appearing or disappearing.
+    if (st.added > st.removed) out.push({ change: "added", previous: null, current: MODEL_PICKER_LABEL, region, picker: true });
+    if (st.removed > st.added) out.push({ change: "removed", previous: MODEL_PICKER_LABEL, current: null, region, picker: true });
+  }
   return out;
 }
 

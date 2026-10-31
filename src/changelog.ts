@@ -15,6 +15,20 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "plain-menu-differences",
+    date: "2026-10-30",
+    time: "22:48",
+    title: "Plainer Menu Differences in Compare",
+    subtitle: "Menu differences name the week and the place on screen in plain words, and a model picker in the top bar is no longer a false difference",
+    bullets: [
+      { lead: "Only on Oct 19", text: "When two weeks of one product show different menu items, Compare now says \"Only on Oct 19: Auto (in the bar across the top)\" instead of \"The older week shows menu items that the newer week does not\"." },
+      { lead: "Plain places", text: "Menu items are placed in the side menu, the bar across the top or the message box, in Compare, the How the UI changed timeline, /changes, the weekly pages and the Markdown pages." },
+      { lead: "One model picker", text: "A model or mode selector in the bar across the top, such as Copilot's Auto or Qwen's Qwen3.7-Plus, counts as one model picker, as it already did in the message box. Comparing Copilot, Qwen or Manus on Oct 26 with an earlier week no longer lists the picker as a difference. Upgrade links like Upgrade to Pro still count as menu items." },
+      { lead: "Past weeks too", text: "Applied when pages are shown, so earlier weeks are corrected without editing any published analysis." },
+    ],
+    closing: "Compare Copilot's weeks of Oct 26 and Oct 19 in Table view.",
+  },
+  {
     slug: "ink-fills-phone-filter-bar",
     date: "2026-10-29",
     time: "10:49",

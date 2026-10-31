@@ -146,7 +146,7 @@ describe('page', () => {
     expect(bullets(await entry('gemini'))).toEqual([
       'Layout: No sidebar, 1 menu item.',
       'Start screen: No suggested prompts, no note about the AI&#39;s limits.',
-      'Latest menu change: Week of October 19, 2026: Gems added to the top bar.',
+      'Latest menu change: Week of October 19, 2026: Gems added to the bar across the top.',
     ]);
   });
 
@@ -177,7 +177,7 @@ describe('latest menu change rules (the portal timeline\'s)', () => {
     t.db.prepare('UPDATE captures SET analysis_json = ? WHERE id = ?').run(JSON.stringify(analysis('chatgpt', W3, { previous: W2, metrics: FULL_METRICS, changes: [
       change({ change: 'added', previous: null, current: 'GPT-6', region: 'input area' }),
     ] })), `chatgpt-${W3}`);
-    expect(bullets(await entry('chatgpt'))[2]).toBe('Latest menu change: Week of October 19, 2026: Model picker added to the input area.');
+    expect(bullets(await entry('chatgpt'))[2]).toBe('Latest menu change: Week of October 19, 2026: Model picker added to the message box.');
   });
 
   it('ignores possibly confounded and confounded changes, such as a plan change', async () => {
@@ -190,7 +190,7 @@ describe('latest menu change rules (the portal timeline\'s)', () => {
     addCapture('gemini', '2026-10-26', analysis('gemini', '2026-10-26', { previous: W3, changes: [
       change({ status: 'possibly_confounded', change: 'removed', previous: 'Gems', current: null, region: 'top bar' }),
     ] }));
-    expect(bullets(await entry('gemini')).at(-1)).toBe('Latest menu change: Week of October 19, 2026: Gems added to the top bar.');
+    expect(bullets(await entry('gemini')).at(-1)).toBe('Latest menu change: Week of October 19, 2026: Gems added to the bar across the top.');
   });
 
   it('lists every change of that week, joined like the timeline', async () => {
@@ -198,7 +198,7 @@ describe('latest menu change rules (the portal timeline\'s)', () => {
       change({ change: 'renamed', previous: 'More', current: 'Explore' }),
       change({ change: 'removed', previous: 'Upgrade', current: null, region: 'top bar' }),
     ] })), `chatgpt-${W2}`);
-    expect(bullets(await entry('chatgpt'))[2]).toBe('Latest menu change: Week of October 12, 2026: More renamed to Explore; Upgrade removed from the top bar.');
+    expect(bullets(await entry('chatgpt'))[2]).toBe('Latest menu change: Week of October 12, 2026: More renamed to Explore; Upgrade removed from the bar across the top.');
   });
 });
 

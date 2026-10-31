@@ -7,7 +7,7 @@ import { cached } from "./api";
 import { SYSTEM_TEST_WEEKS } from "./analysis";
 import { captureMetrics } from "./capture-metrics";
 import { PLAN_CHANGE_NOTE } from "./plan";
-import { navChangeSentence, navItemName } from "./nav-changes";
+import { navChangeSentence, navItemName, regionName } from "./nav-changes";
 import { weekInWords } from "./format";
 import { ORIGIN, FEED_URL } from "./portal-page";
 import { comparePath, indexablePairs } from "./compare";
@@ -84,7 +84,7 @@ export async function handleLlmsFullTxt(request: Request, env: Env): Promise<Res
       const r = latest.get(p.slug);
       if (!r) return `## ${p.name} (${p.company})\n\nNo published analysis yet. Page: ${ORIGIN}/portals/${p.slug}\n`;
       const m = captureMetrics(r);
-      const menu = m?.navItems?.length ? `Menu items: ${m.navItems.map((it) => `${navItemName(it)} (${it.region})`).join(", ")}.` : "";
+      const menu = m?.navItems?.length ? `Menu items: ${m.navItems.map((it) => `${navItemName(it)} (in ${regionName(it.region)})`).join(", ")}.` : "";
       const changes = m?.navChanges && m.planChange
         ? `Compared with the week of ${weekInWords(m.navChanges.previousWeek)}: ${PLAN_CHANGE_NOTE}`
         : m?.navChanges

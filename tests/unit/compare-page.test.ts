@@ -149,7 +149,7 @@ describe('/compare/chatgpt-vs-claude', () => {
     const block = page.match(/<h2>Latest menu changes<\/h2>([\s\S]*?)<\/section>/)![1];
     expect(block).toContain('<h3>ChatGPT</h3>');
     expect(block).toContain(`Week of <a href="/portals/chatgpt/${NEW}">October 12, 2026</a>, compared with the week of October 5, 2026:`);
-    expect(block).toContain('<li>The sidebar item More is now labeled Explore.</li>');
+    expect(block).toContain('<li>The More item in the side menu is now labeled Explore.</li>');
     expect(block).toContain('No menu changes have been recorded for Claude yet.');
   });
 
@@ -189,7 +189,7 @@ describe('/compare/chatgpt-vs-claude', () => {
     expect(md).toContain(`- Open in Compare: ${ORIGIN}/#compare?view=table&mode=portals&week=${NEW}&portals=chatgpt,claude&device=desktop`);
     expect(md).toContain('## Differences\n\n- ');
     expect(md).toContain('## Similarities\n\n- Both sidebars take a similar share of the screen width (20% vs 18%).\n- Both message boxes sit in the middle third of the screen.\n');
-    expect(md).toContain('- The sidebar item More is now labeled Explore.');
+    expect(md).toContain('- The More item in the side menu is now labeled Explore.');
     expect(md).toContain(`- ChatGPT: ${ORIGIN}/portals/chatgpt`);
     expect(md).toMatch(new RegExp(`- Claude, desktop: ${ORIGIN}/img/shots/${NEW}/claude\\.local\\.png\\?v=\\d+`));
   });

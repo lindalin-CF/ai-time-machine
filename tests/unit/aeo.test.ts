@@ -77,8 +77,8 @@ describe('/changes', () => {
     const html = await (await get(handleChanges, '/changes')).text();
     const items = [...html.matchAll(/<li><a href="([^"]+)">([^<]+)<\/a><\/li>/g)].map((m) => [m[1], m[2]]);
     expect(items).toEqual([
-      ['/portals/chatgpt/2026-10-05', 'Week of October 5, 2026 — ChatGPT: the sidebar item Scheduled is now labeled Tasks.'],
-      ['/portals/poe/2026-10-05', 'Week of October 5, 2026 — Poe: an icon button (slider icon) now appears in the input area.'],
+      ['/portals/chatgpt/2026-10-05', 'Week of October 5, 2026 — ChatGPT: the Scheduled item in the side menu is now labeled Tasks.'],
+      ['/portals/poe/2026-10-05', 'Week of October 5, 2026 — Poe: an icon button (slider icon) now appears in the message box.'],
     ]);
     for (const leak of LEAKS) expect(html).not.toContain(leak);
   });
@@ -158,8 +158,8 @@ describe('/llms-full.txt', () => {
     expect(text).toContain('## ChatGPT (OpenAI): week of October 5, 2026');
     expect(text).toContain(`Page: ${ORIGIN}/portals/chatgpt/2026-10-05`);
     expect(text).toContain('This shows the desktop version of chatgpt for the week of 2026-10-05, before scrolling. The message box stands out most.');
-    expect(text).toContain('Menu items: New chat (sidebar), Tasks (sidebar), an icon button (magnifier icon) (sidebar), Think (input area).');
-    expect(text).toContain('Menu changes since the week of September 28, 2026: the sidebar item Scheduled is now labeled Tasks.');
+    expect(text).toContain('Menu items: New chat (in the side menu), Tasks (in the side menu), an icon button (magnifier icon) (in the side menu), Think (in the message box).');
+    expect(text).toContain('Menu changes since the week of September 28, 2026: the Scheduled item in the side menu is now labeled Tasks.');
     expect(text).toContain('## Poe (Quora): week of October 5, 2026');
     expect(text).toContain('## Claude (Anthropic): week of October 5, 2026'); // its 09-28 analysis is unpublished
     expect(text).not.toContain('week of September 28, 2026\n\nPage'); // only the latest week per portal
@@ -184,11 +184,11 @@ describe('Markdown portal pages', () => {
       '## Design analysis', '',
       'This shows the desktop version of chatgpt for the week of 2026-10-05, before scrolling. The message box stands out most.', '',
       '## Menu items', '',
-      '- Sidebar: New chat, Tasks, an icon button (magnifier icon)',
-      '- Input area: Think', '',
+      '- In the side menu: New chat, Tasks, an icon button (magnifier icon)',
+      '- In the message box: Think', '',
       '## Menu changes', '',
       'Compared with the week of September 28, 2026:', '',
-      '- The sidebar item Scheduled is now labeled Tasks.', '',
+      '- The Scheduled item in the side menu is now labeled Tasks.', '',
       '## Screenshots', '',
       `- Desktop: ${ORIGIN}/img/shots/2026-10-05/chatgpt.local.png?v=${Date.parse('2026-10-05T09:00:00Z')}`,
       `- Mobile: ${ORIGIN}/img/shots/2026-10-05/chatgpt.mobile.local.png?v=${Date.parse('2026-10-05T09:00:00Z')}`, '',
@@ -203,8 +203,8 @@ describe('Markdown portal pages', () => {
     expect(res.headers.get('link')).toBe(`<${ORIGIN}/portals/poe>; rel="canonical"`);
     const text = await res.text();
     expect(text).toContain('- Week: week of October 5, 2026 (2026-10-05)');
-    expect(text).toContain('- Input area: an icon button (slider icon)');
-    expect(text).toContain('- An icon button (slider icon) now appears in the input area.');
+    expect(text).toContain('- In the message box: an icon button (slider icon)');
+    expect(text).toContain('- An icon button (slider icon) now appears in the message box.');
   });
 
   it('says when there is no menu data or comparison', async () => {
@@ -380,10 +380,10 @@ describe('portal hub search wording', () => {
   it('words every kind of change as a short phrase', () => {
     const c = (change: string, previous: string | null, current: string | null, region = 'sidebar', icon?: true) => navChangePhrase({ change, previous, current, region, ...(icon ? { icon } : {}) } as any);
     expect(c('renamed', 'Scheduled', 'Tasks')).toBe('Scheduled renamed to Tasks');
-    expect(c('added', null, 'Create')).toBe('Create added to the sidebar');
-    expect(c('removed', 'Upgrade', null, 'top bar')).toBe('Upgrade removed from the top bar');
-    expect(c('added', null, 'slider icon', 'input area', true)).toBe('Icon button (slider icon) added to the input area');
-    expect(c('removed', 'clock icon', null, 'top bar', true)).toBe('Icon button (clock icon) removed from the top bar');
-    expect(c('icon_changed', 'bubble-clock icon', 'dashed bubble icon', 'top bar')).toBe('Top bar button icon changed (bubble-clock icon → dashed bubble icon)');
+    expect(c('added', null, 'Create')).toBe('Create added to the side menu');
+    expect(c('removed', 'Upgrade', null, 'top bar')).toBe('Upgrade removed from the bar across the top');
+    expect(c('added', null, 'slider icon', 'input area', true)).toBe('Icon button (slider icon) added to the message box');
+    expect(c('removed', 'clock icon', null, 'top bar', true)).toBe('Icon button (clock icon) removed from the bar across the top');
+    expect(c('icon_changed', 'bubble-clock icon', 'dashed bubble icon', 'top bar')).toBe('Button icon in the bar across the top changed (bubble-clock icon → dashed bubble icon)');
   });
 });
