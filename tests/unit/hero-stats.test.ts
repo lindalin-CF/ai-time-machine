@@ -9,8 +9,8 @@ import { openSite } from './analytics-page';
 const STATS = { screenshots: 1234, portals: 17, weeks: 9 };
 const FINAL = ['1234', '17', '9'];
 
-/** Runs before the page: every animation frame, the numbers as shown (the counting copy when there is one), whether
- * they are visible, each stat's boxes and the width each number takes. Layout shifts inside the hero are summed in __heroShift. */
+/** Runs before the page: every animation frame, its timestamp, whether a number is counting, the numbers as shown (the
+ * counting copy when there is one), whether they are visible, each stat's boxes and the width each number takes. Layout shifts inside the hero are summed in __heroShift. */
 const RECORD = `(() => {
   const frames = window.__statFrames = [];
   window.__heroShift = 0;
@@ -18,9 +18,10 @@ const RECORD = `(() => {
     for (const e of list.getEntries())
       if (e.sources.some((s) => s.node && s.node.closest && s.node.closest('.hero'))) window.__heroShift += e.value;
   }).observe({ type: 'layout-shift', buffered: true });
-  const tick = () => {
+  const tick = (t) => {
     const dds = [...document.querySelectorAll('[data-stat]')];
     if (dds.length === 3 && document.querySelector('link[href="/styles.css"]')?.sheet) frames.push({
+      t, counting: !!document.querySelector('.stat-count'),
       shown: dds.map((d) => (d.querySelector('.stat-count') || d).textContent),
       visible: dds.every((d) => getComputedStyle(d).visibility === 'visible'),
       boxes: [...document.querySelectorAll('.stat, .stat dt, .stat dd')].map((el) => { const r = el.getBoundingClientRect(); return [r.x, r.y, r.width, r.height].join(); }),
@@ -33,7 +34,7 @@ const RECORD = `(() => {
   requestAnimationFrame(tick);
 })();`;
 
-type Frame = { shown: string[]; visible: boolean; boxes: string[]; widths: number[] };
+type Frame = { t: number; counting: boolean; shown: string[]; visible: boolean; boxes: string[]; widths: number[] };
 const recorded = (page: Page) => page.evaluate(() => (window as unknown as { __statFrames: Frame[] }).__statFrames);
 const counted = (page: Page) => page.waitForFunction(() => document.querySelectorAll('[data-stat][data-counted]').length === 3);
 const settled = (page: Page) => page.waitForFunction((final) =>
@@ -71,10 +72,20 @@ describe('hero stats count-up', () => {
 
   it('staggers the three numbers and takes at least 900ms', async () => {
     const page = await openSite(browser, '', { stats: STATS, initScript: RECORD, reducedMotion: 'no-preference' });
-    await counted(page);
-    const t0 = Date.now();
     await settled(page);
-    const took = Date.now() - t0;
+    // Until the recorder has seen a frame after the count ended.
+    await page.waitForFunction(() => {
+      const f = (window as unknown as { __statFrames: { counting: boolean }[] }).__statFrames;
+      return f.some((x) => x.counting) && !f.at(-1)!.counting;
+    });
+    // Measured in the page, from the first frame that shows a counting number to the first frame after the last one
+    // stops, so a busy test machine that is late to look cannot shorten it.
+    const all = await recorded(page);
+    const start = all.findIndex((f) => f.counting);
+    const end = all.findIndex((f, i) => i > start && !f.counting);
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+    const took = all[end].t - all[start].t;
     expect(took).toBeGreaterThan(900);
     expect(took).toBeLessThan(5000); // loose: frames slow down when the suite runs Chromium in parallel
     // While the first number has started, the third is still at 0 for a moment.

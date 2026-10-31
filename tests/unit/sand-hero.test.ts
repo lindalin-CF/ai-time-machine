@@ -15,6 +15,16 @@ const canvasState = (page: Page) => page.evaluate(() => {
   return { lit, sum, w: c.width, h: c.height };
 });
 const sandMode = (page: Page) => page.locator('.hero-panel').getAttribute('data-sand');
+/**
+ * Resolves after `n` animation frames. The sand loop draws on animation frames (at most one draw per ~16ms), so a
+ * canvas that is still unchanged after many frames is not drawing; counting frames instead of milliseconds keeps
+ * that true on a slow, busy machine.
+ */
+const frames = (page: Page, n: number) => page.evaluate((n) => new Promise<void>((done) => {
+  let k = 0;
+  const tick = () => (++k >= n ? done() : requestAnimationFrame(tick));
+  requestAnimationFrame(tick);
+}), n);
 
 describe('sand hero (browser)', () => {
   let browser: Browser;
@@ -26,18 +36,23 @@ describe('sand hero (browser)', () => {
     await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-sand') === 'running');
     const a = await canvasState(page);
     expect(a.lit).toBeGreaterThan(1000); // thousands of grains, not a black panel
-    await page.waitForTimeout(300);
-    expect((await canvasState(page)).sum).not.toBe(a.sum);
+    await expect.poll(async () => (await canvasState(page)).sum).not.toBe(a.sum);
     await page.context().close();
   });
 
   it('pauses while the hero is scrolled off screen, and resumes when it comes back', async () => {
     const page = await openSite(browser, '', { sand: true, height: 700, reducedMotion: 'no-preference' });
     await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-sand') === 'running');
-    await page.evaluate(() => window.scrollTo(0, document.querySelector('.hero')!.getBoundingClientRect().bottom + scrollY + 400));
+    // Room below the hero, so the scroll takes it fully off screen even before the Library below has loaded
+    // (with a 700px window the page is only ~35px taller than needed once it has).
+    await page.evaluate(() => {
+      document.body.style.paddingBottom = '2000px';
+      window.scrollTo(0, document.querySelector('.hero')!.getBoundingClientRect().bottom + scrollY + 400);
+    });
+    await page.waitForFunction(() => document.querySelector('.hero-panel')!.getBoundingClientRect().bottom < 0);
     await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-sand') === 'paused');
     const a = await canvasState(page);
-    await page.waitForTimeout(400);
+    await frames(page, 30);
     expect((await canvasState(page)).sum).toBe(a.sum); // nothing drawn while off screen
     // The film grain stops with it.
     expect(await page.locator('.hero-grain').evaluate((g) => getComputedStyle(g).animationPlayState)).toBe('paused');
@@ -51,7 +66,7 @@ describe('sand hero (browser)', () => {
     expect(await sandMode(page)).toBe('still');
     const a = await canvasState(page);
     expect(a.lit).toBeGreaterThan(1000);
-    await page.waitForTimeout(500);
+    await frames(page, 30);
     expect((await canvasState(page)).sum).toBe(a.sum);
     expect(await page.locator('.hero-grain').evaluate((g) => getComputedStyle(g).animationName)).toBe('none');
     await page.context().close();
@@ -108,7 +123,7 @@ describe('sand hero (browser)', () => {
     const page = await openSite(browser, '', { sand: true, width: 390, height: 844, hasTouch: true, isMobile: true });
     const box = (await page.locator('.hero-panel').boundingBox())!;
     await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 3);
-    await page.waitForTimeout(400);
+    await frames(page, 30);
     expect(await page.locator('.hero-panel').getAttribute('class')).not.toContain('is-focusing');
     expect(await page.locator('.hero-reticle').evaluate((r) => getComputedStyle(r).display)).toBe('none');
     expect(await page.locator('.hero-focus').evaluate((f) => getComputedStyle(f).display)).toBe('none');
