@@ -419,7 +419,7 @@ function ruleTextVsMetrics(a, push) {
     // Contrast claims (C2 / C3), by the sentence's sources
     const cs = s.sources.filter((x) => x === "C2" || x === "C3");
     if (cs.length && /guideline|recommend/i.test(t) && !/\bweek of\b/i.test(t)) {
-      const neg = /lighter than|fainter than|darker than|than (?:a |the )?(?:common )?(?:accessibility )?guideline|recommends|recommended|does not meet|doesn't meet|do not meet|not meet|below/i.test(t);
+      const neg = /lighter than|fainter than|darker than|than (?:a |the )?(?:common )?(?:accessibility )?guideline|recommends|recommended|does not meet|doesn't meet|do not meet|not meet|fails? to meet|\btoo \w+ to meet|below/i.test(t);
       const pos = !neg && /\bmeets?\b|\bmeeting\b/i.test(t);
       const res = cs.map((id) => m[id]?.result).filter(Boolean);
       if (pos && res.includes("approx_fail")) say(s, `says the text meets the guideline, but ${cs.filter((id) => m[id]?.result === "approx_fail").join(", ")} is approx_fail`);
@@ -573,7 +573,7 @@ function ruleReorder(a, items, prevItems, push) {
   }
 }
 
-const COMPARISON =/\b(no longer|differs?|differ from|looks the same|is the same as|are the same as|unlike|compared with|now|changed from)\b|\bweek of \d{4}-\d{2}-\d{2}|^An? new .+ appears?\b/i;
+const COMPARISON =/\b(no longer|differs?|differ from|looks the same|is the same as|are the same as|unlike|compared with|now|changed from|no product change)\b|\bweek of \d{4}-\d{2}-\d{2}|^An? new .+ appears?\b/i;
 const DEFINITE = /\b(now|no longer|new|changed|unlike|brighter|darker|fainter|lighter|smaller|larger|bigger|narrower|wider|lower|higher|moved)\b/i;
 // §6 (1.7.1): a plan link in the top bar or sidebar is navigation, not promotional content.
 const PLAN_LINK = /^(?:[+✦]\s*)?(?:upgrade(?: plan| to \w+)?|get (?:plus|pro|premium|\w+ pro)|try (?:plus|pro|premium)|go pro|subscribe|see plans|view plans)$/i;
@@ -693,13 +693,21 @@ function ruleCrossWeek(a, prev, push, previousWeek) {
     else if (POPUP.test(`${str(c.previous)} ${str(c.current)}`)) push("cross-week", `pop-up or promotional element marked changed; it must be possibly_confounded (§9.1)`, where);
   }
 
-  // Summary comparison sentences
-  const reportable = changes.filter((c) => c?.status === "changed" || c?.status === "possibly_confounded");
-  const same = comparisons.filter((s) => /looks the same|is the same as|are the same as/i.test(s.text));
-  if (a.previous_week && !reportable.length && !same.length && !comparisons.length) {
-    push("cross-week", `no reportable changes, but the summary lacks "The main screen looks the same as the week of ${previousWeek}." (§10.2)`, "summary");
+  // Summary comparison sentences. Without a changed entry, every difference is confounded or account, session or
+  // capture-browser state (§9.1, 1.10.0): the summary may not say the page differs from last week.
+  const hasChanged = changes.some((c) => c?.status === "changed");
+  const NO_PRODUCT = "No product change was identified this week.";
+  const same = comparisons.filter((s) => /looks the same|is the same as|are the same as|no product change/i.test(s.text));
+  if (a.previous_week && !hasChanged && !same.length && !comparisons.length) {
+    push("cross-week", changes.length
+      ? `changes_vs_previous has only confounded entries, but the summary lacks "${NO_PRODUCT}" (§10.2)`
+      : `no reportable changes, but the summary lacks "The main screen looks the same as the week of ${previousWeek}." or "${NO_PRODUCT}" (§10.2)`, "summary");
   }
-  for (const s of same) if (reportable.some((c) => c.status === "changed")) say(s, `says the screen looks the same, but changes_vs_previous has changed entries`);
+  for (const s of same) if (hasChanged) say(s, `says there is no change, but changes_vs_previous has changed entries`);
+  for (const s of comparisons) {
+    if (same.includes(s) || hasChanged || !/\bdiffers?\b|\bdiffer from\b/i.test(s.text)) continue;
+    say(s, `says the page differs from last week, but changes_vs_previous ${changes.length ? "has only confounded entries" : "is empty"}; write "${NO_PRODUCT}" (§10.2)`);
+  }
   for (const s of comparisons) {
     const weeks = [...s.text.matchAll(/\bweek of (\d{4}-\d{2}-\d{2})/g)].map((m) => m[1]);
     for (const w of weeks) if (w !== previousWeek) say(s, `compares with the week of ${w}, but previous_week is ${previousWeek}`);
@@ -711,7 +719,9 @@ function ruleCrossWeek(a, prev, push, previousWeek) {
     if (!matched.length) say(s, `comparison sentence, but none of its sources (${ids.join(", ")}) has an entry in changes_vs_previous`);
     else if (!usable.length) say(s, `comparison sentence built only on confounded changes (§10.2: confounded changes aren't written)`);
     else if (usable.every((c) => c.status === "possibly_confounded") && DEFINITE.test(s.text) && !/\bdiffers?\b/i.test(s.text)) {
-      say(s, `written as a definite change, but its changes are only possibly_confounded; use neutral wording such as "differs from" (§10.2)`);
+      say(s, hasChanged
+        ? `written as a definite change, but its changes are only possibly_confounded; use neutral wording such as "differs from" (§10.2)`
+        : `written as a definite change, but changes_vs_previous has only confounded entries; write "${NO_PRODUCT}" (§10.2)`);
     }
   }
   const menuChanged = changes.some((c) => c?.id === "N1" && c.status === "changed");

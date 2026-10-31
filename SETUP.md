@@ -132,6 +132,26 @@ node capture.mjs --week=2026-08-10 # store under a specific week
 
 ---
 
+## Before you capture
+
+Every screenshot should show the product, not the state of the account or the
+capture browser. Before each run (`capture.mjs` prints this list, and a note
+before Muse and Qwen):
+
+- **Cookie banners:** dismiss every cookie or consent banner once in the
+  capture profile (`.capture-profile/`), so later runs don't show it. A banner
+  can also hide the account area.
+- **Start screen:** each portal is on its start screen, with no open
+  conversation, room, popup or loading state.
+- **Muse:** on its start screen with the chat list open, never inside a room or
+  sub-chat room (a room shows a conversation). muse.ai reopens the last room,
+  and no URL is known that always opens the start screen, so go back by hand
+  and capture Muse interactively, not with `--auto`.
+
+If a capture breaks this list, recapture it before `/redact-week`. A recapture
+replaces the R2 object at once, so `/redact-week` archives the new one; check
+that the image it replaced is in `~/AI-Surface-Archive/` too.
+
 ## Weekly order
 
 Every week, in this order (run the slash commands in Claude Code, with

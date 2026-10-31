@@ -18,3 +18,25 @@ export const PORTAL_PLANS = {
 export function planFor(slug) {
   return PORTAL_PLANS[slug] ?? DEFAULT_PLAN;
 }
+
+// Pre-capture checklist (SETUP.md "Before you capture"). capture.mjs prints it at the start of a run, and each portal's
+// note before that portal. A screenshot that breaks it shows account, session or capture-browser state rather than the
+// product, and its analysis can't say anything changed (guideline 1.10.0, section 9.1).
+export const PRE_CAPTURE_CHECKLIST = [
+  "Dismiss every cookie or consent banner once in the capture profile (.capture-profile), so later runs don't show it.",
+  "Each portal is on its start screen: no open conversation, room, popup or loading state.",
+  "Muse: start screen with the chat list open, not inside a room or sub-chat room.",
+];
+
+// Per-portal reminders, printed before the portal is captured.
+export const CAPTURE_NOTES = {
+  // muse.ai reopens the last room. No URL is known that always opens the start screen, so check it by hand
+  // (and don't use --auto for Muse until one is found; then set it in APP_URL in capture.mjs).
+  muse: "Go back to Muse's start screen and open the chat list. Never capture inside a room: it shows a conversation.",
+  qwen: "If the cookie banner is showing, dismiss it (and reload) before capturing.",
+};
+
+/** The reminder for a portal before it is captured, or null. */
+export function captureNote(slug) {
+  return CAPTURE_NOTES[slug] ?? null;
+}

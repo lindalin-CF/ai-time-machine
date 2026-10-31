@@ -10,6 +10,7 @@ Screenshots are irreplaceable: a portal's UI for a given week can never be captu
 - **Archive before replacing anything in R2.** Before any `wrangler r2 object put` that replaces an existing screenshot, download the current object and save it to `~/AI-Surface-Archive/<r2_key>.<UTC timestamp>.png` (for example `~/AI-Surface-Archive/shots/2026-08-24/grok.local.png.20260926T191500Z.png`, timestamp from `date -u +%Y%m%dT%H%M%SZ`). Confirm the archived file is non-empty and byte-identical to the live object before uploading.
 - **Never delete or overwrite anything in `~/AI-Surface-Archive/`.** Use a new timestamped name every time (`cp -n` / `mv -n`).
 - **Never overwrite a local original.** Write edited versions under new names (for example `redacted-v2.png`, `redacted-v3.png`), and never pass an original as the output of `redact.mjs` or any other script.
+- **The Worker archives in R2 too.** When `POST /api/upload` (or a cloud capture) replaces a screenshot, the old object is first copied to `archive/<r2_key>.<UTC timestamp>.png` in the same bucket and checked byte for byte (`putKeepingOld` in `src/capture.ts`). `/img/` never serves `archive/` keys. These copies are portal captures: never delete them. They don't replace the local archive: still copy a replaced capture to `~/AI-Surface-Archive/` when you know about the replacement.
 - **To take a screenshot off the site, change what the site displays** (for example D1 data or the Worker's rendering), never remove the file from R2 or disk.
 
 ## Avatars in screenshots (decided 2026-10-26)

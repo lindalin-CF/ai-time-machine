@@ -1,7 +1,7 @@
 ---
 name: portal-design-analysis
 description: 依 AI Surface Library 規範分析 AI portal 的桌面截圖，產出可追溯到指標、證據等級與位置的 Design analysis。使用者提供 portal 桌面截圖並要求 design analysis、跑規範、或比較不同週次截圖時使用。
-version: 1.9.0
+version: 1.10.0
 ---
 
 # AI Portal 桌面截圖 Design Analysis 規範
@@ -278,6 +278,12 @@ version: 1.9.0
 
 **問候語輪換**：D7 文字改變一律標 `possibly_confounded`，`note` 寫 "Greetings may rotate between visits; a single screenshot cannot rule this out."
 
+**帳號、工作階段與截圖瀏覽器狀態**：下列差異來自帳號、工作階段或截圖用瀏覽器的狀態，不是產品變動：針對這個帳號的公告或功能通知（例如 "You now have access to …"、"Try …" 卡片）、cookie 或同意橫幅、對話紀錄與釘選清單的內容或順序、模型選擇器顯示的模型名稱、空的對話室或子聊天室（停在某個對話室裡、不在起始畫面）、載入中的畫面。
+
+- 這類差異（以及因它而被推開或改變的指標，例如 H1、C1、D3）不列入 `changes_vs_previous`，只在 context 對應欄位的 `note` 說明。無法確定差異是產品變動還是這類狀態時，才列入並標 `possibly_confounded`。
+- 本週與前一週的所有差異都屬於這類狀態時（`changes_vs_previous` 是空的，或只有 `possibly_confounded`／`confounded`），摘要不得說畫面與前一週不同，比較句寫 "No product change was identified this week."（見第 10.2 節）。
+- 截圖停在對話室裡、被 cookie 橫幅遮住帳號區，或顯示的不是起始畫面時，`status_reason` 與 `notes` 註明，並建議重新擷取（SETUP.md「擷取前檢查」）。
+
 **N1 的干擾判定**（比上表更嚴格，以此為準）：
 
 - `ui_language` 或 `plan_tier_visible` 與前一週不同時，N1 的所有變動標 `confounded`。
@@ -348,7 +354,7 @@ N1 每筆變動一筆紀錄：
 
 ```json
 {
-  "guideline_version": "1.9.0",
+  "guideline_version": "1.10.0",
   "portal": "example",
   "week": "2026-09-21",
   "previous_week": "2026-09-14",
@@ -421,7 +427,8 @@ N1 每筆變動一筆紀錄：
 - 不寫畫面是深色或淺色（dark／light screen、mode、theme）：`color_scheme` 只反映截圖電腦的系統設定，不是產品特性（第 6 節）。
 - 之後依序涵蓋：整體版面、畫面上最顯眼的東西、文字與顏色、使用者從哪裡開始（含問候語、建議提示與「可能出錯」聲明）；有比較結果時最後寫變動（選單變化在前，見下）。
 - 只能使用 JSON 中已存在的數值與觀察，不得新增資訊。數字可以保留，但要換成一般人懂的說法（見下表）。
-- 比較句只能根據 `changes_vs_previous`：`changed` 可以寫；`possibly_confounded` 只能用中性字眼寫（"differs from"），不得寫成改版；`confounded` 不寫。完全沒有變動時寫 "The main screen looks the same as the week of {previous week}."
+- 比較句只能根據 `changes_vs_previous`：`changed` 可以寫；`possibly_confounded` 只有在同一週也有 `changed` 的變動時才能寫，而且只能用中性字眼（"differs from"），不得寫成改版；`confounded` 不寫。
+- `changes_vs_previous` 是空的、或只有 `possibly_confounded`／`confounded` 時，摘要不得說畫面與前一週不同，比較句也不能用 differs from 這類中性說法帶過：兩週畫面沒有差異時寫 "The main screen looks the same as the week of {previous week}."；有差異但全部來自帳號、工作階段或截圖瀏覽器狀態（第 9.1 節）時寫 "No product change was identified this week."
 - **選單變化先寫**：N1 有 `changed` 的變動時，比較句先寫選單變化，再寫其他數值變化。一樣一句只講一件事、20 字以內，`sources` 為 `["N1"]`。例：
   - `renamed`："The sidebar item Scheduled is now labeled Tasks."
   - `added`："A new Tasks item appears in the sidebar."
@@ -473,12 +480,13 @@ N1 每筆變動一筆紀錄：
 4. H1 三個名次的依據數值都並列寫出，或標 `low`。
 5. `summary_sentences` 每句都有 `sources`，且句中數值與 JSON 一致；頁面摘要中沒有指標 ID、E1／E2、欄位值、hex、座標或 10.2 對照表左欄的術語，每句不超過 20 字。
 6. 摘要與 note 中沒有第 8 節的禁止類型；無標籤圖示與按鈕（包括送出、麥克風）只描述形狀；每句只講一件事。
-7. 有前一週資料時，每筆變動都達第 9.3 節門檻，干擾判定、帳號方案變動與問候語輪換規則已套用。
+7. 有前一週資料時，每筆變動都達第 9.3 節門檻，干擾判定、帳號方案變動、問候語輪換與帳號／工作階段／截圖瀏覽器狀態規則已套用；`changes_vs_previous` 沒有 `changed` 時，摘要沒有說畫面與前一週不同。
 8. 第 1.1 節表列的 portal 已套用對應的收錄方式。
 9. N1 只列產品內建、可以點擊的項目，沒有帳號專屬清單、無法確定的項目、基本輸入控制（送出、麥克風／語音、附件／加號）或不能點擊的區段標題；輸入區的工具、模式、模型、設定等功能按鈕有列入；模型選擇器只有一項 `label: "model picker"`、`role: "model_picker"`，顯示的模型名稱只在 `current`，模型名稱不同沒有記成 N1 變動；沒有文字的項目有 `icon_label`；翻譯過的 `label` 沒有 "(translated from …)"，語言記在 `translated_from`；側欄收合時 `sidebar` 為 `not_visible`，頂列和輸入區的項目照常記錄；跨週比較先用文字、再用圖示配對，只有順序改變沒有記成變動；`renamed` 只用在同一位置、同一圖示、只有文字不同的項目，`icon_changed` 只用在同一位置、周圍順序不變的無文字項目，其餘未配對的記移除加新增；有選單變化時比較句先寫選單。
 
 ## 版本紀錄
 
+- **1.10.0**：第 9.1 節新增「帳號、工作階段與截圖瀏覽器狀態」：針對帳號的公告、cookie 或同意橫幅、對話紀錄、模型名稱、空的對話室與載入中畫面不是產品變動，不列入 `changes_vs_previous`。第 10.2 節：`changes_vs_previous` 是空的或只有干擾項目時，摘要不得說畫面與前一週不同，改寫 "No product change was identified this week."（畫面完全相同時仍寫 "looks the same"）；`possibly_confounded` 只有在同週也有 `changed` 時才寫。lint 新增對應檢查。起因：2026-10-26 ChatGPT（針對帳號的 Finances 公告）、Qwen（cookie 橫幅）與 Muse（停在空的子聊天室）的摘要寫了 "differs from"，但沒有產品變動。
 - **1.9.0**：`color_scheme` 只反映截圖電腦當時的系統外觀設定，不是產品特性（第 6 節）：仍記錄並用於第 9.1 節的可比較前提，但不得出現在摘要或任何比較中；第 8 節新增「把深淺色外觀說成產品特性」（dark／light screen、mode、theme）。網站也不再在 /facts、Compare、比較頁、語音導覽與 llms 檔案中顯示深淺色。已發布的摘要不修改。
 - **1.8.0**：第 9.1 節新增「帳號方案變動」：本週與前一週擷取時的帳號方案（`input.json` 的 `plan`、`previous_plan`，Free / Pro / Enterprise）不同時，所有變動（包括 N1）標 `possibly_confounded`，`note` 寫 `"account plan changed (Free → Pro)"`。方案隨截圖存入（`scripts/local-capture/config.mjs`），與私有的 `plan_tier_visible` 分開。網站顯示時依儲存的方案套用，涵蓋 Grok 2026-10-19 與 Microsoft Copilot 2026-08-24。
 - **1.7.1**：第 6 節明訂頂列或側欄裡每週出現在同一位置的方案連結（"Upgrade" 等）是導覽項目、不是宣傳內容；只有短期的橫幅、卡片與彈窗才算。起因：ChatGPT 2026-10-12 把頂列 Upgrade 連結的移除誤標為 `possibly_confounded`。

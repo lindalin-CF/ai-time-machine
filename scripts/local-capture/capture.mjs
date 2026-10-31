@@ -33,7 +33,7 @@ import readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { WORKER_URL, UPLOAD_TOKEN, planFor } from "./config.mjs";
+import { WORKER_URL, UPLOAD_TOKEN, planFor, PRE_CAPTURE_CHECKLIST, captureNote } from "./config.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROFILE_DIR = join(__dirname, ".capture-profile");
@@ -138,6 +138,7 @@ async function main() {
 
   console.log(`→ Week: ${week}  |  ${list.length} portal(s)  |  ${auto ? `--auto (wait ${waitMs / 1000}s/page)` : "interactive"}${mobileOnly ? "  |  --mobile-only" : ""}`);
   console.log(`→ Profile: ${PROFILE_DIR}`);
+  console.log(`→ Before you capture (SETUP.md):\n${PRE_CAPTURE_CHECKLIST.map((l) => `    - ${l}`).join("\n")}`);
 
   const launchOpts = {
     headless: false,
@@ -168,6 +169,8 @@ async function main() {
   for (const p of list) {
     const url = APP_URL[p.slug] || p.url;
     console.log(`\n=== ${p.name} (${p.slug})\n    ${url}`);
+    const note = captureNote(p.slug);
+    if (note) console.log(`    ⚠ ${note}${rl ? "" : "  (--auto can't check this: review the screenshot)"}`);
     try { await page.goto(url, { waitUntil: "networkidle2", timeout: 60000 }); } catch { /* keep going; user can fix */ }
 
     let done = false;

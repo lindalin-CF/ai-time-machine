@@ -98,9 +98,7 @@ describe('no color scheme in comparison findings', () => {
 });
 
 describe('guideline (SKILL.md)', () => {
-  it('is version 1.9.0 and says the color scheme is the capture machine\'s setting, never in summaries or comparisons', () => {
-    expect(SKILL).toMatch(/^---[\s\S]*?\nversion: 1\.9\.0\n/);
-    expect(SKILL).toContain('"guideline_version": "1.9.0"');
+  it('has the 1.9.0 rule: the color scheme is the capture machine\'s setting, never in summaries or comparisons', () => {
     expect(SKILL).toContain('**只反映截圖那台電腦當時的系統外觀設定，不是產品的特性**');
     expect(SKILL).toContain('不得出現在摘要、`note` 的比較文字或任何跨 portal／跨週比較中');
     expect(SKILL).toContain('| 把深淺色外觀說成產品特性 | dark screen、light screen、dark mode、light mode、dark theme、light theme |');

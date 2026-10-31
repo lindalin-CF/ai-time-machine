@@ -35,7 +35,8 @@ export function makeEnv() {
       async delete(key: string) { kv.delete(key); },
     },
     SHOTS: {
-      async put(key: string, value: Uint8Array) { r2.set(key, value); },
+      async put(key: string, value: Uint8Array | ArrayBuffer) { r2.set(key, value instanceof Uint8Array ? value : new Uint8Array(value)); },
+      async head(key: string) { return r2.has(key) ? { key, size: r2.get(key)!.length } : null; },
       // Enough of R2 get() for image-size reads: an optional byte range, and arrayBuffer().
       async get(key: string, opts?: { range?: { offset?: number; length?: number } }) {
         const v = r2.get(key);

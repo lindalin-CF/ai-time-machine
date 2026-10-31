@@ -1,7 +1,7 @@
 import { zipSync } from "fflate";
 import type { Env, CaptureRow } from "./types";
 import { listPortals, listWeeks, latestWeek, capturesForWeek, getPortal, updateCaptureAnalysis, notHeld, weekReleased, isHeldImage, releaseWeek, hasHeldColumn, CACHE_VERSION } from "./db";
-import { hasCookieSecret, storeCapture, invalidate } from "./capture";
+import { hasCookieSecret, storeCapture, invalidate, ARCHIVE_PREFIX } from "./capture";
 import { validateAnalysis } from "./analysis";
 import { captureMetrics } from "./capture-metrics";
 import { PLANS, isPlan } from "./plan";
@@ -568,6 +568,8 @@ export async function handleImage(request: Request, env: Env): Promise<Response>
   const url = new URL(request.url);
   const key = decodeURIComponent(url.pathname.replace(/^\/img\//, ""));
   if (!key) return new Response("missing key", { status: 400 });
+  // Archived copies of replaced screenshots (putKeepingOld) are private: never served, not even with the token.
+  if (key.startsWith(ARCHIVE_PREFIX)) return new Response("not found", { status: 404 });
   // A held capture's screenshot (waiting for redaction) is only served with the upload token, and never cached.
   const held = key.startsWith("shots/") && (await isHeldImage(env, key));
   if (held && !hasUploadToken(request, env)) return new Response("not found", { status: 404 });

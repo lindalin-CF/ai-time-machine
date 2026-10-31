@@ -346,7 +346,13 @@ describe('lint: cross-week', () => {
     const a = base();
     a.changes_vs_previous = [{ id: 'D7', previous: 'Hi [name]', current: 'Hello [name]', status: 'possibly_confounded', note: '' }];
     setSentence(a, 7, 'The greeting now says hello.', ['D7']);
-    expect(rules(lint(a), 'cross-week')[0].message).toMatch(/only possibly_confounded/);
+    // With no changed entry at all, the fix is "No product change was identified this week." (1.10.0).
+    expect(rules(lint(a), 'cross-week')[0].message).toMatch(/written as a definite change, but changes_vs_previous has only confounded entries; write "No product change/);
+    // Next to a changed entry, neutral wording is still the fix.
+    a.changes_vs_previous.push({ id: 'N1', change: 'added', previous: null, current: 'Tasks', region: 'sidebar', status: 'changed', note: '' });
+    a.summary_sentences.splice(7, 0, { text: 'A new Tasks item appears in the sidebar.', sources: ['N1'] });
+    a.summary = a.summary_sentences.map((x: { text: string }) => x.text).join(' ');
+    expect(rules(lint(a), 'cross-week').map((f) => f.message).join('\n')).toMatch(/only possibly_confounded; use neutral wording/);
   });
 
   it('flags a change that §9.1 says is confounded', () => {
@@ -394,11 +400,81 @@ describe('lint: cross-week', () => {
     });
   });
 
+  describe('no product change (guideline 1.10.0)', () => {
+    const NO_PRODUCT = 'No product change was identified this week.';
+    const confounded = (status = 'possibly_confounded') => [{ id: 'D7', previous: 'Hi', current: 'Hello', status, note: 'Greetings may rotate between visits; a single screenshot cannot rule this out.' }];
+    const cross = (a: Json) => rules(lint(a), 'cross-week').map((x) => x.message);
+
+    it('flags a "differs from" sentence when changes_vs_previous is empty', () => {
+      const a = base();
+      setSentence(a, 7, 'The greeting differs from the week of 2026-10-12.', ['changes_vs_previous']);
+      expect(cross(a).join('\n')).toMatch(/says the page differs from last week, but changes_vs_previous is empty; write "No product change was identified this week\."/);
+    });
+    it('flags it when changes_vs_previous has only confounded entries', () => {
+      for (const status of ['possibly_confounded', 'confounded']) {
+        const a = base();
+        a.changes_vs_previous = confounded(status);
+        setSentence(a, 7, 'The greeting text differs from the week of 2026-10-12.', ['D7']);
+        expect(cross(a).join('\n'), status).toMatch(/says the page differs from last week, but changes_vs_previous has only confounded entries/);
+      }
+    });
+    it('accepts "No product change was identified this week." with empty or confounded changes', () => {
+      for (const changes of [[], confounded()]) {
+        const a = base();
+        a.changes_vs_previous = changes;
+        setSentence(a, 7, NO_PRODUCT, ['changes_vs_previous']);
+        expect(cross(a)).toEqual([]);
+      }
+    });
+    it('asks for it when only confounded changes exist and no comparison sentence is written', () => {
+      const a = base();
+      a.changes_vs_previous = confounded();
+      a.summary_sentences.splice(7, 1);
+      a.summary = a.summary_sentences.map((x: { text: string }) => x.text).join(' ');
+      expect(cross(a).join('\n')).toMatch(/has only confounded entries, but the summary lacks "No product change was identified this week\."/);
+    });
+    it('still allows "differs from" for a possibly_confounded change when another change is real, and flags "no product change" then', () => {
+      const a = base();
+      a.changes_vs_previous = [{ id: 'N1', change: 'added', previous: null, current: 'Tasks', region: 'sidebar', status: 'changed', note: '' }, ...confounded()];
+      setSentence(a, 7, 'A new Tasks item appears in the sidebar.', ['N1']);
+      a.summary_sentences.push({ text: 'The greeting text differs from the week of 2026-10-12.', sources: ['D7'] });
+      a.summary = a.summary_sentences.map((x: { text: string }) => x.text).join(' ');
+      expect(cross(a).filter((m) => /differs from last week/.test(m))).toEqual([]);
+      setSentence(a, 8, NO_PRODUCT, ['changes_vs_previous']);
+      expect(cross(a).join('\n')).toMatch(/says there is no change, but changes_vs_previous has changed entries/);
+    });
+    it('is in the guideline (1.10.0): section 9.1, section 10.2, the self-check and the changelog', () => {
+      const skill = readFileSync(SKILL_PATH, 'utf8');
+      expect(skill).toMatch(/^---[\s\S]*?\nversion: 1\.10\.0\n/);
+      expect(skill).toContain('"guideline_version": "1.10.0"');
+      expect(skill).toContain('**帳號、工作階段與截圖瀏覽器狀態**');
+      expect(skill).toContain('有差異但全部來自帳號、工作階段或截圖瀏覽器狀態（第 9.1 節）時寫 "No product change was identified this week."');
+      expect(skill).toMatch(/- \*\*1\.10\.0\*\*：第 9\.1 節新增「帳號、工作階段與截圖瀏覽器狀態」/);
+      // The new wording doesn't put everyday comparison words on the banned list.
+      const all = [...banned.anywhere, ...banned.summaryOnly].map((b: { text: string }) => b.text.toLowerCase());
+      expect(all).not.toContain('differs from');
+      expect(all).not.toContain('no longer');
+    });
+  });
+
   it('flags "looks the same" when there are changes', () => {
     const a = base();
     a.changes_vs_previous = [{ id: 'N1', change: 'added', previous: null, current: 'Tasks', region: 'sidebar', status: 'changed', note: '' }];
     const f = rules(lint(a), 'cross-week').map((x) => x.message).join('\n');
-    expect(f).toMatch(/looks the same, but changes_vs_previous has changed entries/);
+    expect(f).toMatch(/says there is no change, but changes_vs_previous has changed entries/);
+  });
+});
+
+describe('lint: "too faint to meet" is a fail, not a pass', () => {
+  it('reads "too <word> to meet" and "fails to meet" as below the guideline', () => {
+    for (const text of ['The hint text inside the message box is too faint to meet a common accessibility guideline.', 'The hint text fails to meet a common accessibility guideline.']) {
+      const a = base();
+      metric(a, 'C3').result = 'approx_fail';
+      setSentence(a, 4, text, ['C3']);
+      expect(rules(lint(a), 'text-vs-metrics'), text).toEqual([]);
+      metric(a, 'C3').result = 'approx_pass';
+      expect(rules(lint(a), 'text-vs-metrics')[0].message, text).toMatch(/says the text is below the guideline, but C3 is approx_pass/);
+    }
   });
 });
 

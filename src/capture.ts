@@ -67,7 +67,7 @@ export async function storeCapture(
       ? `shots/${week}/${portal.slug}.mobile.local.png`
       : `shots/${week}/${portal.slug}.mobile.png`;
     await upsertWeek(env, week, weekLabelLocal(week));
-    await env.SHOTS.put(mobileKey, png, { httpMetadata: { contentType: "image/png" } });
+    await putKeepingOld(env, mobileKey, png);
     await upsertMobileCapture(env, week, portal, mobileKey, plan, source === "local");
     await refreshWeekCount(env, week);
     await invalidate(env, week);
@@ -81,7 +81,7 @@ export async function storeCapture(
     : `shots/${week}/${portal.slug}.png`;
 
   await upsertWeek(env, week, weekLabelLocal(week));
-  await env.SHOTS.put(r2Key, png, { httpMetadata: { contentType: "image/png" } });
+  await putKeepingOld(env, r2Key, png);
 
   // A new desktop screenshot invalidates any earlier analysis. The guideline analysis is
   // produced locally and attached later via POST /api/analysis.
@@ -102,6 +102,43 @@ export async function storeCapture(
   await upsertCapture(env, row);
   await refreshWeekCount(env, week);
   await invalidate(env, week);
+}
+
+/** Prefix of the private copies of replaced screenshots. GET /img/<key> never serves them (handleImage). */
+export const ARCHIVE_PREFIX = "archive/";
+
+const utcStamp = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+
+async function sha1(bytes: ArrayBuffer | Uint8Array): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-1", bytes);
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/**
+ * Store a screenshot at `key` without losing what is there (CLAUDE.md "Screenshot safety"). An existing object with
+ * different bytes is first copied to archive/<key>.<UTC timestamp>.png (-2, -3 … if taken), and the copy is read back
+ * and checked byte for byte; only then is `key` replaced. A failed check throws before anything is replaced.
+ * Returns the archive key, or null when nothing was replaced.
+ */
+export async function putKeepingOld(env: Env, key: string, bytes: Uint8Array, now = new Date()): Promise<string | null> {
+  let archiveKey: string | null = null;
+  const old = await env.SHOTS.get(key);
+  if (old) {
+    const oldBytes = await old.arrayBuffer();
+    const oldSha = await sha1(oldBytes);
+    if (oldSha === (await sha1(bytes))) return null; // the same screenshot again: nothing to replace
+    const base = `${ARCHIVE_PREFIX}${key}.${utcStamp(now)}.png`;
+    archiveKey = base;
+    for (let n = 2; await env.SHOTS.head(archiveKey); n++) archiveKey = base.replace(/\.png$/, `-${n}.png`);
+    await env.SHOTS.put(archiveKey, oldBytes, { httpMetadata: { contentType: old.httpMetadata?.contentType ?? "image/png" } });
+    const copy = await env.SHOTS.get(archiveKey);
+    const copyBytes = copy ? await copy.arrayBuffer() : null;
+    if (!copyBytes || !copyBytes.byteLength || copyBytes.byteLength !== oldBytes.byteLength || (await sha1(copyBytes)) !== oldSha) {
+      throw new Error(`archiving ${key} to ${archiveKey} failed verification; ${key} was not replaced`);
+    }
+  }
+  await env.SHOTS.put(key, bytes, { httpMetadata: { contentType: "image/png" } });
+  return archiveKey;
 }
 
 function weekLabelLocal(iso: string): string {
