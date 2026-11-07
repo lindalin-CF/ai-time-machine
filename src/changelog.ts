@@ -15,6 +15,18 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "cleaner-product-page-titles",
+    date: "2026-11-07",
+    title: "Cleaner Product Page Titles",
+    subtitle: "Product pages drop the line under the title, so the week links and screenshots sit closer to it",
+    bullets: [
+      { lead: "One line less", text: "The company, other names and capture week no longer repeat under each product page's title. The week stays in every screenshot caption." },
+      { lead: "Still findable", text: "The company and other names, such as LeChat for Le Chat, are still in each page's search description and structured data." },
+      { lead: "Bigger title", text: "The product name is slightly larger, with a comfortable gap above the Previous week row." },
+    ],
+    closing: "Open Le Chat's product page.",
+  },
+  {
     slug: "timeline-on-weekly-pages",
     date: "2026-11-06",
     title: "UI Change Timeline on Weekly Pages",

@@ -318,36 +318,45 @@ describe('portal hub search wording', () => {
   it('hub and weekly titles and the hub description say "UI"', async () => {
     const hub = await html('/portals/chatgpt');
     expect(title(hub)).toBe('ChatGPT UI screenshots &amp; interface changes, week by week | AI Interface Library');
-    expect(description(hub)).toBe('Weekly ChatGPT UI screenshots, desktop and mobile, with interface design analysis and how the ChatGPT UI changed. Latest: week of October 5, 2026.');
+    expect(description(hub)).toBe('Weekly ChatGPT UI screenshots by OpenAI, desktop and mobile, with interface design analysis and how the ChatGPT UI changed.'); // the latest week no longer fits
     expect(title(await html('/portals/chatgpt/2026-10-05'))).toBe('ChatGPT UI — week of October 5, 2026 | AI Interface Library');
   });
 
   it('titles stay at 70 characters or fewer before the brand, and hub descriptions at 155 or fewer, for every portal', () => {
     const seed = readFileSync(new URL('../../seed.sql', import.meta.url), 'utf8');
-    const portals = [...seed.matchAll(/INSERT INTO portals \([^)]*\) VALUES \('([^']+)','([^']+)'/g)].map((m) => ({ slug: m[1], name: m[2] }));
+    const portals = [...seed.matchAll(/INSERT INTO portals \([^)]*\) VALUES \('([^']+)','([^']+)','([^']+)'/g)].map((m) => ({ slug: m[1], name: m[2], company: m[3] }));
     expect(portals.length).toBeGreaterThan(10);
-    for (const { slug, name } of portals) {
+    for (const { slug, name, company } of portals) {
       expect(hubTitle(name).length).toBeLessThanOrEqual(70);
       expect(`${name} UI — week of September 28, 2026`.length).toBeLessThanOrEqual(70);
-      const d = hubDescription(name, PORTAL_ALIASES[slug] ?? [], true, '2026-09-28');
+      const d = hubDescription(name, company, PORTAL_ALIASES[slug] ?? [], true, '2026-09-28');
       expect(d.length).toBeLessThanOrEqual(155);
-      for (const word of ['UI', 'interface', 'screenshots', 'desktop and mobile', `how the ${name} UI changed`]) expect(d).toContain(word);
+      for (const word of ['UI', 'interface', 'screenshots', 'desktop and mobile', `how the ${name} UI changed`, name.includes(company) ? name : `by ${company}`]) expect(d).toContain(word);
     }
     // A name long enough to pass 70 drops "& interface changes".
     expect(hubTitle('A Very Long Portal Name For Testing')).toBe('A Very Long Portal Name For Testing UI screenshots, week by week');
   });
 
-  it('aliases: at most 2 each, the first in the hub description and the subtitle, all in the product alternateName', async () => {
+  it('aliases: at most 2 each, the first in the meta description, all in the product alternateName; no line under the h1', async () => {
     for (const list of Object.values(PORTAL_ALIASES)) expect(list.length).toBeLessThanOrEqual(2);
     addLeChat();
     const hub = await html('/portals/mistral');
-    expect(hub).toContain('<h1>Le Chat</h1>\n      <p class="meta">Le Chat by Mistral AI · also called LeChat &middot; captured week of October 5, 2026</p>');
+    expect(hub).toMatch(/<h1>Le Chat<\/h1>\n(?!\s*<p class="meta">)/);
+    expect(hub).not.toContain('class="meta"');
+    expect(description(hub)).toContain('by Mistral AI');
     expect(description(hub)).toContain('Also called LeChat.');
+    expect(hub).toContain('<figcaption>Desktop &middot; week of October 5, 2026</figcaption>');
     expect(title(hub)).not.toContain('LeChat');
-    const about = jsonLd(hub)[0]['@graph'].find((n: any) => n['@type'] === 'Article').about;
+    const graph = jsonLd(hub)[0]['@graph'];
+    const about = graph.find((n: any) => n['@type'] === 'Article').about;
+    expect(graph.find((n: any) => n['@type'] === 'WebPage').about).toEqual(about);
     expect(about).toEqual({ '@type': 'SoftwareApplication', name: 'Le Chat', alternateName: ['LeChat', 'Mistral Le Chat'], publisher: { '@type': 'Organization', name: 'Mistral AI' } });
-    // No alias: the meta line and the product are unchanged.
-    expect(await html('/portals/chatgpt')).toContain('<p class="meta">OpenAI &middot; captured week of October 5, 2026</p>');
+    // Weekly page: the summary ends with the company and alias.
+    expect(description(await html('/portals/mistral/2026-10-05'))).toMatch(/Le Chat by Mistral AI, also called LeChat\.$/);
+    // No alias: no line under the h1 either, and the company is still in the description.
+    const chatgpt = await html('/portals/chatgpt');
+    expect(chatgpt).not.toContain('class="meta"');
+    expect(description(chatgpt)).toContain('by OpenAI');
   });
 
   it('the hub timeline lists ChatGPT\'s Scheduled → Tasks change under the screenshots and links to that week', async () => {

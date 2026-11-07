@@ -156,7 +156,7 @@ describe('portal and weekly pages', () => {
   it('titles and describes the portal page', async () => {
     const h = await html('/portals/chatgpt');
     expect(h).toContain('<title>ChatGPT UI screenshots &amp; interface changes, week by week | AI Interface Library</title>');
-    expect(h).toContain('<meta name="description" content="Weekly ChatGPT UI screenshots, desktop and mobile, with interface design analysis. Latest: week of September 21, 2026." />');
+    expect(h).toContain('<meta name="description" content="Weekly ChatGPT UI screenshots by OpenAI, desktop and mobile, with interface design analysis. Latest: week of September 21, 2026." />');
   });
 
   it('titles and describes a weekly page', async () => {

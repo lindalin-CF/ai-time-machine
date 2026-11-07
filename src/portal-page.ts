@@ -58,8 +58,8 @@ const FOOTER_LEGAL = `      <div class="legal">&copy; 2026 AI Interface Library.
       </dialog>`;
 
 /**
- * Other names people search for a portal by (at most 2, most used first). The first shows in the hub
- * description and under the h1; all go into the product's JSON-LD alternateName.
+ * Other names people search for a portal by (at most 2, most used first). The first shows in the meta
+ * description; all go into the product's JSON-LD alternateName.
  */
 export const PORTAL_ALIASES: Record<string, string[]> = {
   mistral: ["LeChat", "Mistral Le Chat"],
@@ -77,9 +77,12 @@ export function hubTitle(name: string): string {
   return full.length <= 70 ? full : `${name} UI screenshots, week by week`;
 }
 
-/** Hub description: what the page shows, the first alias, and the latest week when it still fits. */
-export function hubDescription(name: string, aliases: string[], changed: boolean, latestWeek: string | null): string {
-  let d = `Weekly ${name} UI screenshots, desktop and mobile, with interface design analysis${changed ? ` and how the ${name} UI changed` : ""}.`;
+/** " by OpenAI", or nothing when the name already says the company ("Microsoft Copilot"). */
+const byCompany = (name: string, company: string) => (name.includes(company) ? "" : ` by ${company}`);
+
+/** Hub description: what the page shows, the company, the first alias, and the latest week when it still fits. */
+export function hubDescription(name: string, company: string, aliases: string[], changed: boolean, latestWeek: string | null): string {
+  let d = `Weekly ${name} UI screenshots${byCompany(name, company)}, desktop and mobile, with interface design analysis${changed ? ` and how the ${name} UI changed` : ""}.`;
   if (aliases[0]) d += ` Also called ${aliases[0]}.`;
   const latest = latestWeek ? ` Latest: week of ${weekInWords(latestWeek)}.` : "";
   return latest && (d + latest).length <= DESCRIPTION_SHOWN ? d + latest : d;
@@ -233,6 +236,9 @@ ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts
     @media (max-width:640px) and (prefers-reduced-motion:no-preference){html.js .topnav-toggle:active{transform:scale(.97)}}
     h1{font-size:2rem;margin:24px 0 4px}
     .meta{color:#6b6257;margin:0 0 24px}
+    /* Portal pages have no .meta line: a larger title, and the row below it (week links, or the screenshots) a comfortable gap under it. */
+    .portal-page>h1{font-size:34px}
+    .portal-page>h1+*{margin-top:20px}
     .shots{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
     .shots figure{margin:0}
     .shots img{max-width:100%;height:auto;border:1px solid #d8cfc2;border-radius:8px;background:#fff}
@@ -377,13 +383,15 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
   // Meta description: guideline analyses only. The section text also shows the system-test note.
   const analysis = cap && isPublishedAnalysis(cap) ? cap.analysis.trim() : "";
   // Weekly pages with a published analysis describe it in its own words (meta, og and twitter).
-  const summary = weekParam !== null && cap ? summaryDescription(cap) : null;
   const aliases = PORTAL_ALIASES[slug] ?? [];
+  // The company and first alias end every weekly description ("Le Chat by Mistral AI, also called LeChat.").
+  const byline = `${name}${byCompany(name, portal.company)}${aliases[0] ? `, also called ${aliases[0]}` : ""}.`;
+  const summary = weekParam !== null && cap ? summaryDescription(cap, byline) : null;
   // The "How the <Name> UI changed" timeline (hub and weekly pages): recorded menu changes of this portal only.
   const timeline = timelineWeeks((await changes(env)).filter((e) => e.slug === slug), (await planChanges(env)).filter((e) => e.slug === slug));
   const description = weekParam === null
-    ? hubDescription(name, aliases, timeline.some((w) => !w.planChange), cap?.week ?? null)
-    : summary ?? shortText(`${name} UI screenshots by ${portal.company} from the week of ${weekInWords(weekParam)}, on desktop and mobile, with a short design analysis of the interface. ${analysis}`, 300);
+    ? hubDescription(name, portal.company, aliases, timeline.some((w) => !w.planChange), cap?.week ?? null)
+    : summary ?? shortText(`${name} UI screenshots by ${portal.company} from the week of ${weekInWords(weekParam)}, on desktop and mobile, with a short design analysis of the interface.${aliases[0] ? ` Also called ${aliases[0]}.` : ""} ${analysis}`, 300);
 
   let shots = "";
   const shotImages: { device: "Desktop" | "Mobile"; url: string; alt: string; width: number; height: number }[] = []; // also described in JSON-LD and Markdown
@@ -437,11 +445,9 @@ ${partners.map((x) => `          <li><a href="${esc(comparePath(slug, x.slug))}"
       </nav>`
     : "";
 
-  // "Le Chat by Mistral AI · also called LeChat" for portals with an alias, otherwise just the company.
-  const byline = aliases[0] ? `${name} by ${portal.company} \u00b7 also called ${aliases[0]}` : portal.company;
-  const body = `    <main>
+  // No line under the h1: the company and aliases are in the meta description and JSON-LD, the week in the captions.
+  const body = `    <main class="portal-page">
       <h1>${esc(name)}</h1>
-      <p class="meta">${esc(byline)}${cap ? ` &middot; captured week of ${esc(weekInWords(cap.week))}` : ""}</p>
 ${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screenshots">\n${shots}      </section>
 ${timelineHtml}      <section class="analysis"><h2>Design analysis</h2><p>${esc(displayedAnalysis(cap))}</p><p class="method"><a href="/how-we-analyze">How this analysis is made</a></p></section>` : `      <p>No captures yet for ${esc(name)}.</p>\n${timelineHtml.replace(/\n$/, "")}`}${compareWith}
     </main>`;
@@ -470,6 +476,7 @@ ${timelineHtml}      <section class="analysis"><h2>Design analysis</h2><p>${esc(
     { name, item: hubUrl },
     ...(weekParam !== null ? [{ name: `Week of ${weekInWords(weekParam)}`, item: canonical }] : []),
   ];
+  const product = { "@type": "SoftwareApplication", name, ...(aliases.length ? { alternateName: aliases } : {}), publisher: { "@type": "Organization", name: portal.company } };
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
@@ -491,7 +498,7 @@ ${timelineHtml}      <section class="analysis"><h2>Design analysis</h2><p>${esc(
         datePublished: cap.analysis_published_at,
         dateModified: cap.analysis_published_at,
         ...(image ? { image: image.url } : {}),
-        about: { "@type": "SoftwareApplication", name, ...(aliases.length ? { alternateName: aliases } : {}), publisher: { "@type": "Organization", name: portal.company } },
+        about: product,
       }] : []),
       // The page itself, dated by the week it shows.
       ...(cap ? [{
@@ -500,6 +507,7 @@ ${timelineHtml}      <section class="analysis"><h2>Design analysis</h2><p>${esc(
         url: canonical,
         name: weekParam !== null ? `${name} UI \u2014 week of ${weekInWords(weekParam)}` : hubTitle(name),
         dateModified: cap.week,
+        about: product, // the product's company and other names (no longer shown under the h1)
       }] : []),
     ],
   };

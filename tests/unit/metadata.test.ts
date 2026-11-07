@@ -165,10 +165,11 @@ describe('weekly page descriptions', () => {
     t.db.prepare(`UPDATE captures SET analysis_json = ?, analysis = ? WHERE id = ?`).run(JSON.stringify({ summary_sentences: sentences.map((text) => ({ text })) }), sentences.join(' '), id);
   const OPENING = SUMMARY_SENTENCES[0];
   const CURRENT = /^ChatGPT UI screenshots by OpenAI from the week of September 21, 2026/;
+  const BYLINE = 'ChatGPT by OpenAI.'; // the company (and first alias) end every weekly summary description
 
-  it('skips the fixed opening and uses the sentences after it, as many as fit under 160 characters', async () => {
+  it('skips the fixed opening and uses the sentences after it, as many as fit under 160 characters with the byline', async () => {
     expect(OPENING).toMatch(FIXED_SUMMARY_OPENING);
-    const d = `${SUMMARY_SENTENCES[1]} ${SUMMARY_SENTENCES[2]}`;
+    const d = `${SUMMARY_SENTENCES[1]} ${SUMMARY_SENTENCES[2]} ${BYLINE}`;
     expect(d.length).toBeLessThan(160);
     expect(descriptions(await portal('/portals/chatgpt/2026-09-21'))).toEqual([d, d, d]);
   });
@@ -177,8 +178,8 @@ describe('weekly page descriptions', () => {
     const s = ['The screen is dark.', 'A sidebar runs down the left side of the screen with the conversation list and settings.', 'The message box sits in the middle of the screen, under a large greeting.'];
     setSentences('chatgpt-2026-09-21', [OPENING, ...s]);
     const [d] = descriptions(await portal('/portals/chatgpt/2026-09-21'));
-    expect(d).toBe(`${s[0]} ${s[1]}`);
-    expect(`${d} ${s[2]}`.length).toBeGreaterThanOrEqual(160);
+    expect(d).toBe(`${s[0]} ${s[1]} ${BYLINE}`);
+    expect(`${s[0]} ${s[1]} ${s[2]} ${BYLINE}`.length).toBeGreaterThanOrEqual(160);
     expect(d!.endsWith('.')).toBe(true);
   });
 
@@ -195,12 +196,12 @@ describe('weekly page descriptions', () => {
 
   it('does not skip a first sentence that is not the fixed opening', async () => {
     setSentences('chatgpt-2026-09-21', ['A dark screen with a sidebar.', 'The message box sits in the middle.']);
-    expect(meta(await portal('/portals/chatgpt/2026-09-21'), 'description')).toBe('A dark screen with a sidebar. The message box sits in the middle.');
+    expect(meta(await portal('/portals/chatgpt/2026-09-21'), 'description')).toBe(`A dark screen with a sidebar. The message box sits in the middle. ${BYLINE}`);
   });
 
   it('falls back to splitting the summary text when summary_sentences is missing', async () => {
     t.db.exec(`UPDATE captures SET analysis_json = NULL WHERE id = 'chatgpt-2026-09-21'`);
-    expect(meta(await portal('/portals/chatgpt/2026-09-21'), 'description')).toBe(`${SUMMARY_SENTENCES[1]} ${SUMMARY_SENTENCES[2]}`);
+    expect(meta(await portal('/portals/chatgpt/2026-09-21'), 'description')).toBe(`${SUMMARY_SENTENCES[1]} ${SUMMARY_SENTENCES[2]} ${BYLINE}`);
   });
 
   it('keeps the current description without a published analysis, and on portal hubs', async () => {
@@ -208,7 +209,7 @@ describe('weekly page descriptions', () => {
     t.db.exec(`UPDATE captures SET analysis_by = 'pending' WHERE id = 'chatgpt-2026-09-21'`);
     expect(meta(await portal('/portals/chatgpt/2026-09-21'), 'description')).toMatch(CURRENT);
     t.db.exec(`UPDATE captures SET analysis_by = 'guideline-v1.3' WHERE id = 'chatgpt-2026-09-21'`);
-    expect(meta(await portal('/portals/chatgpt'), 'description')).toMatch(/^Weekly ChatGPT UI screenshots, desktop and mobile/);
+    expect(meta(await portal('/portals/chatgpt'), 'description')).toMatch(/^Weekly ChatGPT UI screenshots by OpenAI, desktop and mobile/);
   });
 });
 
@@ -300,16 +301,19 @@ describe('JSON-LD', () => {
       expect(graph).toHaveLength(1 + screenshots.length + articles.length + webPages.length);
       // WebPage: the page itself, dated by the week it shows (every page here has a capture).
       expect(webPages).toHaveLength(1);
-      const shownWeek = html.match(/captured week of ([^<]+)<\/p>/)![1];
+      const shownWeek = html.match(/<figcaption>Desktop &middot; week of ([^<]+)<\/figcaption>/)![1];
       expect(webPages[0]['@id']).toBe(crumbs.at(-1).item);
       expect(weekInWords(webPages[0].dateModified)).toBe(shownWeek);
-      expect(Object.keys(webPages[0]).sort()).toEqual(['@id', '@type', 'dateModified', 'name', 'url']);
+      expect(Object.keys(webPages[0]).sort()).toEqual(['@id', '@type', 'about', 'dateModified', 'name', 'url']);
+      expect(webPages[0].about).toEqual({ '@type': 'SoftwareApplication', name: crumbs[1].name, publisher: { '@type': 'Organization', name: expect.any(String) } });
       expect(html).not.toContain('class="key-facts"'); // removed from portal pages (Key facts is now its own page, /facts)
       for (const a of articles) {
         expect(Object.keys(a).sort()).toEqual(['@type', 'about', 'dateModified', 'datePublished', 'headline', 'image']);
         expect(a.about).toEqual({ '@type': 'SoftwareApplication', name: crumbs[1].name, publisher: { '@type': 'Organization', name: expect.any(String) } });
-        expect(text).toContain(a.about.publisher.name.toLowerCase());
+        expect(a.about).toEqual(webPages[0].about);
       }
+      // The company is no longer shown under the h1: it is in the meta description instead.
+      expect(meta(html, 'description')).toContain(webPages[0].about.publisher.name);
     });
 
   it('escapes "<" so data can never close the script element', async () => {

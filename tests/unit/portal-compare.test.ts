@@ -40,7 +40,7 @@ describe('portal page Compare button', () => {
     const html = await render(t.env, '/portals/chatgpt');
     expect(cta(html)).toBe(`<a class="btn-secondary compare-cta" href="${href(WEEKS[0], WEEKS[1])}" aria-label="Compare ChatGPT week by week">Compare <span class="arrow" aria-hidden="true">&rarr;</span></a>`);
     expect(html).toMatch(/<div class="weeknav-row">\s*<nav class="weeknav" aria-label="ChatGPT weekly captures">[\s\S]*?<\/nav>\s*<a class="btn-secondary compare-cta"[^>]*>[\s\S]*?<\/a>\s*<\/div>/);
-    expect(html).toMatch(/<p class="meta">OpenAI &middot; captured week of [^<]+<\/p>\n/); // the meta line is back to itself
+    expect(html).toMatch(/<h1>ChatGPT<\/h1>\n      <div class="weeknav-row">/); // no meta line: the row sits right under the title
   });
 
   it('on the latest week\'s page: latest and previous week too', async () => {

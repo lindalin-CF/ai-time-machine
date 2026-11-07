@@ -55,15 +55,16 @@ function summarySentences(row: AnalysisFields & { analysis_json?: string | null 
  * Search description from a published guideline analysis: the summary sentences after the fixed
  * opening, as many as fit, always shorter than SUMMARY_DESCRIPTION_MAX and ending at a sentence end.
  * Null when there is no published analysis or the first of those sentences alone is too long.
+ * A suffix (the portal page's "<Name> by <Company>." line) goes at the end and counts toward the limit.
  */
-export function summaryDescription(row: AnalysisFields & { analysis_json?: string | null }): string | null {
+export function summaryDescription(row: AnalysisFields & { analysis_json?: string | null }, suffix = ""): string | null {
   let out = "";
   for (const s of summarySentences(row)) {
     const next = out ? `${out} ${s}` : s;
-    if (next.length >= SUMMARY_DESCRIPTION_MAX) break;
+    if ((suffix ? `${next} ${suffix}` : next).length >= SUMMARY_DESCRIPTION_MAX) break;
     out = next;
   }
-  return out || null;
+  return out ? (suffix ? `${out} ${suffix}` : out) : null;
 }
 
 /** RSS description: the whole summary without the fixed opening (the item title names the portal and week). */
