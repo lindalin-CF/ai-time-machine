@@ -15,6 +15,18 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "timeline-on-weekly-pages",
+    date: "2026-11-06",
+    title: "UI Change Timeline on Weekly Pages",
+    subtitle: "Every weekly page now shows how the product's UI changed, with the week you're viewing highlighted",
+    bullets: [
+      { lead: "Same timeline", text: "The \"How the <Name> UI changed\" list from each product's page now also appears on its weekly pages, in the same place, between the screenshots and the design analysis." },
+      { lead: "This week highlighted", text: "When the week you're viewing has recorded changes, its line is highlighted. Products with no recorded changes say so." },
+      { lead: "Markdown too", text: "The Markdown version of each weekly page has the same list, with \"(this week)\" after the week being viewed." },
+    ],
+    closing: "Open Manus's week of Nov 2.",
+  },
+  {
     slug: "layout-in-compare",
     date: "2026-10-30",
     time: "23:44",

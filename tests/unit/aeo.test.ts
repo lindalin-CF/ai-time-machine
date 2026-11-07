@@ -189,6 +189,8 @@ describe('Markdown portal pages', () => {
       '## Menu changes', '',
       'Compared with the week of September 28, 2026:', '',
       '- The Scheduled item in the side menu is now labeled Tasks.', '',
+      '## How the ChatGPT UI changed', '',
+      `- [October 5, 2026](${ORIGIN}/portals/chatgpt/2026-10-05) (this week) — Scheduled renamed to Tasks`, '',
       '## Screenshots', '',
       `- Desktop: ${ORIGIN}/img/shots/2026-10-05/chatgpt.local.png?v=${Date.parse('2026-10-05T09:00:00Z')}`,
       `- Mobile: ${ORIGIN}/img/shots/2026-10-05/chatgpt.mobile.local.png?v=${Date.parse('2026-10-05T09:00:00Z')}`, '',
@@ -361,7 +363,30 @@ describe('portal hub search wording', () => {
     expect(hub.indexOf('class="timeline"')).toBeLessThan(hub.indexOf('class="analysis"'));
     expect(hub).not.toContain('Test week'); // system-test week left out
     for (const leak of LEAKS) expect(hub).not.toContain(leak);
-    expect(await html('/portals/chatgpt/2026-10-05')).not.toContain('class="timeline"'); // hub only
+    expect(hub).not.toContain('class="current"'); // the hub highlights no week
+  });
+
+  it('a weekly page shows the same timeline in the same place and highlights the week being viewed', async () => {
+    const week = await html('/portals/chatgpt/2026-10-05');
+    expect(week).toContain([
+      '      <section class="timeline"><h2>How the ChatGPT UI changed</h2>',
+      '        <ul>',
+      '          <li class="current"><a href="/portals/chatgpt/2026-10-05" aria-current="page">October 5, 2026</a> — Scheduled renamed to Tasks</li>',
+      '        </ul>',
+      '      </section>',
+    ].join('\n'));
+    expect(week.indexOf('class="shots"')).toBeLessThan(week.indexOf('class="timeline"'));
+    expect(week.indexOf('class="timeline"')).toBeLessThan(week.indexOf('class="analysis"'));
+    // Another week: the same lines, none highlighted.
+    const older = await html('/portals/chatgpt/2026-09-28');
+    expect(older).toContain('          <li><a href="/portals/chatgpt/2026-10-05">October 5, 2026</a> — Scheduled renamed to Tasks</li>');
+    expect(older).not.toContain('class="current"');
+    expect(older).not.toContain('aria-current="page"');
+    for (const leak of LEAKS) expect(week).not.toContain(leak);
+  });
+
+  it('a weekly page of a portal without recorded changes says so', async () => {
+    expect(await html('/portals/claude/2026-10-05')).toContain('<h2>How the Claude UI changed</h2>\n        <p>No menu changes have been recorded for Claude yet.</p>');
   });
 
   it('a portal without recorded changes says so, and its description leaves out "changed"', async () => {
@@ -370,11 +395,16 @@ describe('portal hub search wording', () => {
     expect(description(hub)).not.toContain('changed');
   });
 
-  it('the hub Markdown has the same timeline; weekly Markdown does not', async () => {
+  it('the hub and weekly Markdown have the same timeline; weekly Markdown marks its week', async () => {
     const md = await (await get(handlePortalPage, '/portals/chatgpt.md')).text();
     expect(md).toContain(['## How the ChatGPT UI changed', '', `- [October 5, 2026](${ORIGIN}/portals/chatgpt/2026-10-05) — Scheduled renamed to Tasks`, '', '## Screenshots'].join('\n'));
     expect(await (await get(handlePortalPage, '/portals/claude.md')).text()).toContain('## How the Claude UI changed\n\nNo menu changes have been recorded for Claude yet.');
-    expect(await (await get(handlePortalPage, '/portals/chatgpt/2026-10-05.md')).text()).not.toContain('UI changed');
+    expect(md).not.toContain('(this week)');
+    expect(await (await get(handlePortalPage, '/portals/chatgpt/2026-10-05.md')).text()).toContain(`- [October 5, 2026](${ORIGIN}/portals/chatgpt/2026-10-05) (this week) — Scheduled renamed to Tasks`);
+    const older = await (await get(handlePortalPage, '/portals/chatgpt/2026-09-28.md')).text();
+    expect(older).toContain(`- [October 5, 2026](${ORIGIN}/portals/chatgpt/2026-10-05) — Scheduled renamed to Tasks`);
+    expect(older).not.toContain('(this week)');
+    expect(await (await get(handlePortalPage, '/portals/claude/2026-10-05.md')).text()).toContain('## How the Claude UI changed\n\nNo menu changes have been recorded for Claude yet.');
   });
 
   it('words every kind of change as a short phrase', () => {

@@ -243,6 +243,7 @@ ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts
     .timeline{margin:32px 0}
     .timeline ul{padding-left:1.25em;margin:0}
     .timeline li{margin:0 0 6px}
+    .timeline li.current{font-weight:600;background:var(--highlight,rgba(255,214,0,.18));border-radius:4px;padding:2px 6px;margin-left:-6px}
     .plan-note{color:#6b6257}
     .method{font-size:.85rem;color:#6b6257}
     .compare-with{margin:32px 0}
@@ -378,10 +379,8 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
   // Weekly pages with a published analysis describe it in its own words (meta, og and twitter).
   const summary = weekParam !== null && cap ? summaryDescription(cap) : null;
   const aliases = PORTAL_ALIASES[slug] ?? [];
-  // The hub's "How the <Name> UI changed" timeline: recorded menu changes of this portal only.
-  const timeline = weekParam === null
-    ? timelineWeeks((await changes(env)).filter((e) => e.slug === slug), (await planChanges(env)).filter((e) => e.slug === slug))
-    : [];
+  // The "How the <Name> UI changed" timeline (hub and weekly pages): recorded menu changes of this portal only.
+  const timeline = timelineWeeks((await changes(env)).filter((e) => e.slug === slug), (await planChanges(env)).filter((e) => e.slug === slug));
   const description = weekParam === null
     ? hubDescription(name, aliases, timeline.some((w) => !w.planChange), cap?.week ?? null)
     : summary ?? shortText(`${name} UI screenshots by ${portal.company} from the week of ${weekInWords(weekParam)}, on desktop and mobile, with a short design analysis of the interface. ${analysis}`, 300);
@@ -418,9 +417,11 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
     ? `      <div class="weeknav-row${nav ? "" : " solo"}">\n${nav ? `        ${nav}\n` : ""}        ${compareLink}\n      </div>\n`
     : nav ? `      ${nav}\n` : "";
 
-  const timelineHtml = weekParam !== null ? "" : `      <section class="timeline"><h2>How the ${esc(name)} UI changed</h2>
+  // On a weekly page, the line for the week being viewed is highlighted.
+  const tlClass = (w: TimelineWeek) => [w.planChange ? "plan-note" : "", w.week === weekParam ? "current" : ""].filter(Boolean).join(" ");
+  const timelineHtml = `      <section class="timeline"><h2>How the ${esc(name)} UI changed</h2>
 ${timeline.length
-    ? `        <ul>\n${timeline.map((w) => `          <li${w.planChange ? ' class="plan-note"' : ""}><a href="/portals/${esc(slug)}/${esc(w.week)}">${esc(weekInWords(w.week))}</a> \u2014 ${esc(timelineText(w))}</li>`).join("\n")}\n        </ul>`
+    ? `        <ul>\n${timeline.map((w) => `          <li${tlClass(w) ? ` class="${tlClass(w)}"` : ""}><a href="/portals/${esc(slug)}/${esc(w.week)}"${w.week === weekParam ? ' aria-current="page"' : ""}>${esc(weekInWords(w.week))}</a> \u2014 ${esc(timelineText(w))}</li>`).join("\n")}\n        </ul>`
     : `        <p>No menu changes have been recorded for ${esc(name)} yet.</p>`}
       </section>\n`;
 
@@ -447,7 +448,7 @@ ${timelineHtml}      <section class="analysis"><h2>Design analysis</h2><p>${esc(
 
   if (markdown) {
     const md = portalMarkdown({
-      name, company: portal.company, canonical, cap, timeline: weekParam === null ? timeline : null, slug,
+      name, company: portal.company, canonical, cap, timeline, currentWeek: weekParam, slug,
       compareWith: partners.map((x) => ({ name: x.name, url: `${ORIGIN}${comparePath(slug, x.slug)}` })),
       compare: compareHash ? `${ORIGIN}/${compareHash}` : null,
       shots: shotImages.map((img) => ({ device: img.device, url: img.url.startsWith("/") ? `${ORIGIN}${img.url}` : img.url })),
@@ -906,11 +907,11 @@ ${latestDigest ? `      <p>Latest week: <a href="/weeks/${esc(latestDigest)}">AI
 }
 
 /** Markdown version of a portal page: the same facts as the HTML page, plus its menu items and menu changes. */
-function portalMarkdown(o: { name: string; slug: string; company: string; canonical: string; cap: CaptureRow | null; timeline: TimelineWeek[] | null; shots: { device: string; url: string }[]; compare: string | null; compareWith: { name: string; url: string }[] }): string {
+function portalMarkdown(o: { name: string; slug: string; company: string; canonical: string; cap: CaptureRow | null; timeline: TimelineWeek[] | null; currentWeek?: string | null; shots: { device: string; url: string }[]; compare: string | null; compareWith: { name: string; url: string }[] }): string {
   const lines = [`# ${o.name}`, "", `- Company: ${o.company}`];
-  // Hub only: the same "How the <Name> UI changed" list as the HTML page.
+  // The same "How the <Name> UI changed" list as the HTML page; a weekly page marks its own week.
   const timeline = o.timeline === null ? [] : [`## How the ${o.name} UI changed`, "", ...(o.timeline.length
-    ? o.timeline.map((w) => `- [${weekInWords(w.week)}](${ORIGIN}/portals/${o.slug}/${w.week}) \u2014 ${timelineText(w)}`)
+    ? o.timeline.map((w) => `- [${weekInWords(w.week)}](${ORIGIN}/portals/${o.slug}/${w.week})${w.week === o.currentWeek ? " (this week)" : ""} \u2014 ${timelineText(w)}`)
     : [`No menu changes have been recorded for ${o.name} yet.`]), ""];
   const compareWith = o.compareWith.length ? ["## Compare with other products", "", ...o.compareWith.map((c) => `- [Compare with ${c.name}](${c.url})`), ""] : [];
   if (!o.cap) return [...lines, `- Page: ${o.canonical}`, "", `No captures yet for ${o.name}.`, "", ...timeline, ...compareWith].join("\n");
