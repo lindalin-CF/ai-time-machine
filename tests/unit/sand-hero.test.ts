@@ -150,6 +150,51 @@ describe('sand hero (browser)', () => {
     await page.context().close();
   });
 
+  // The black panel has no dark inset around it: its left and right edges are the filter bar's, the "Week of …" heading
+  // row's and the card grid's. The ring (redrawn by the ResizeObserver at the new size) stays inside it and off the type.
+  it.each([[390, 844], [768, 1000], [1024, 900], [1280, 900], [1440, 900], [1440, 760]])('at %ix%ipx the panel lines up with the filter bar and the grid, and the ring stays clear of the text', async (width, height) => {
+    const page = await openSite(browser, '', { sand: true, width, height, reducedMotion: 'reduce' });
+    await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-sand') === 'still');
+    await page.waitForSelector('#grid > *');
+    const r = await page.evaluate(() => {
+      const x = (s: string) => { const b = document.querySelector(s)!.getBoundingClientRect(); return [b.left, b.right]; };
+      const frame = getComputedStyle(document.querySelector('.hero-frame')!), panel = getComputedStyle(document.querySelector('.hero-panel')!);
+      const c = document.querySelector('.hero-sand') as HTMLCanvasElement, pr = c.getBoundingClientRect(), k = c.width / pr.width;
+      const d = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data;
+      const isLit = (px: number, py: number) => d[(py * c.width + px) * 4] > 40;
+      const litIn = (s: string) => {
+        const b = document.querySelector(s)!.getBoundingClientRect(); let n = 0;
+        for (let py = Math.max(0, Math.floor((b.top - pr.top) * k)); py < Math.min(c.height, (b.bottom - pr.top) * k); py++)
+          for (let px = Math.max(0, Math.floor((b.left - pr.left) * k)); px < Math.min(c.width, (b.right - pr.left) * k); px++) if (isLit(px, py)) n++;
+        return n;
+      };
+      let edge = 0, lit = 0;
+      for (let py = 0; py < c.height; py++) for (let px = 0; px < c.width; px++) if (isLit(px, py)) {
+        lit++; if (px < 3 || py < 3 || px >= c.width - 3 || py >= c.height - 3) edge++;
+      }
+      return {
+        panel: x('.hero-panel'), controls: x('.controls'), head: x('main .section-head'), grid: x('#grid'),
+        canvasFillsPanel: Math.abs(pr.width - document.querySelector('.hero-panel')!.getBoundingClientRect().width) < 0.5,
+        padding: frame.padding, radius: [panel.borderTopLeftRadius, panel.borderBottomRightRadius], frameRadius: frame.borderTopLeftRadius,
+        shadow: frame.boxShadow !== 'none', lit, edge,
+        text: { title: litIn('.hero-title'), sub: litIn('.hero-sub'), week: litIn('.hero-week'), stats: litIn('.stats') },
+      };
+    });
+    expect(r.panel).toEqual(r.controls);
+    expect(r.head).toEqual(r.controls);
+    expect(r.grid).toEqual(r.controls);
+    expect(r.canvasFillsPanel).toBe(true);
+    expect(r.padding).toBe('0px');
+    expect(r.radius).toEqual([r.frameRadius, r.frameRadius]);
+    expect(parseFloat(r.frameRadius)).toBeGreaterThan(0);
+    expect(r.shadow).toBe(true);
+    expect(r.lit).toBeGreaterThan(1000); // the ring is drawn
+    expect(r.edge).toBe(0); // and none of it reaches the panel's edges
+    expect(r.text).toMatchObject({ title: 0, sub: 0, week: 0 });
+    expect(r.text.stats).toBeLessThan(20); // at most a few stray grains of dust near the stats' box, not the ring
+    await page.context().close();
+  });
+
   it.each([[390], [768], [1024], [1280], [1440]])('at %ipx loads without shifting anything in the hero', async (width) => {
     const page = await openSite(browser, '', {
       sand: true, width, statsDelay: 300, stats: { screenshots: 157, portals: 15, weeks: 11 }, reducedMotion: 'no-preference',

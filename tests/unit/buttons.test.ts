@@ -144,7 +144,7 @@ describe('shared button classes (browser)', () => {
     const btn = page.locator('#compareBtn');
     await page.locator('#grid .card').first().waitFor();
     expect(await classes(btn)).toContain('btn-primary');
-    expect(await look(page, btn, page.locator('.search-input'))).toEqual({ w: 107.8, h: 36, display: 'flex', align: 'center', gap: '6px',
+    expect(await look(page, btn, page.locator('.search-input'))).toEqual({ w: 124 /* --fb-end-w, shared with the search */, h: 36, display: 'flex', align: 'center', gap: '6px',
       pad: '0px 16px 0px 16px', border: '1px solid rgb(196, 76, 28)', radius: '999px', bg: 'rgb(196, 76, 28)', color: 'rgb(255, 255, 255)',
       font: '"Space Grotesk" 700 13px 13px', underline: 'none', shadow: 'none', whiteSpace: 'nowrap', cursor: 'pointer',
       hoverBg: 'color(srgb 0.66102 0.256314 0.0944314)' /* --brand-hover, mixed from --brand */, ring: 'solid 2px rgb(196, 76, 28) 2px', pressed: 'matrix(0.97, 0, 0, 0.97, 0, 0)' });

@@ -454,17 +454,44 @@ describe('landing page controls (browser)', () => {
       await page.context().close();
     });
 
-    it('1440px: the search is 170px, widens to 240px on focus over 200ms, and goes back on blur', async () => {
+    it.each([1440, 1280, 1024])('%ipx: the search and Compare → share one resting size (--fb-end-w, 36px tall), with the label centred and the placeholder whole', async (width) => {
+      const page = await open({ width });
+      const r = await page.evaluate(() => {
+        const s = document.querySelector('.controls .searchbar') as HTMLElement, b = document.querySelector('#compareBtn') as HTMLElement;
+        const i = document.querySelector('#searchInput') as HTMLInputElement;
+        const sb = s.getBoundingClientRect(), bb = b.getBoundingClientRect();
+        const c = document.createElement('canvas').getContext('2d')!, cs = getComputedStyle(i);
+        c.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+        const range = document.createRange(); range.selectNodeContents(b); const lb = range.getBoundingClientRect();
+        return {
+          token: getComputedStyle(document.documentElement).getPropertyValue('--fb-end-w').trim(),
+          search: [sb.width, sb.height], compare: [bb.width, bb.height],
+          placeholderFits: c.measureText(i.placeholder).width <= i.clientWidth,
+          labelOffCentre: Math.abs((lb.left + lb.right) / 2 - (bb.left + bb.right) / 2),
+          labelFits: b.scrollWidth <= b.clientWidth,
+        };
+      });
+      const w = parseFloat(r.token);
+      expect(r.search).toEqual([w, 36]);
+      expect(r.compare).toEqual([w, 36]);
+      expect(r.placeholderFits).toBe(true);
+      expect(r.labelFits).toBe(true);
+      expect(r.labelOffCentre).toBeLessThan(1);
+      await page.context().close();
+    });
+
+    it('1440px: the search rests at --fb-end-w, widens to 240px on focus over 200ms, and goes back on blur', async () => {
       const page = await open({ width: 1440 });
       const w = () => page.locator('.controls .searchbar').evaluate((el) => el.getBoundingClientRect().width);
-      expect(await w()).toBe(170);
+      const rest = parseFloat(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--fb-end-w')));
+      expect(await w()).toBe(rest);
       const t = await page.locator('.controls .searchbar').evaluate((el) => { const cs = getComputedStyle(el); return cs.transitionProperty.split(', ').map((p, i) => `${p} ${cs.transitionDuration.split(', ')[i]} ${cs.transitionTimingFunction.split(', ')[i]}`); });
       expect(t).toContain('width 0.2s ease-out');
       await focusSearch(page);
       expect(await w()).toBe(240);
       await page.locator('#searchInput').blur();
       await page.waitForTimeout(300);
-      expect(await w()).toBe(170);
+      expect(await w()).toBe(rest);
       await page.context().close();
     });
 
