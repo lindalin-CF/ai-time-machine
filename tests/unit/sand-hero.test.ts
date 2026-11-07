@@ -41,8 +41,11 @@ describe('sand hero (browser)', () => {
   });
 
   it('pauses while the hero is scrolled off screen, and resumes when it comes back', async () => {
-    const page = await openSite(browser, '', { sand: true, height: 700, reducedMotion: 'no-preference' });
+    // The stats answer late, so the page finishes booting after the sand is running: the first route() then scrolls to
+    // the top, which would bring the hero back after the scroll below. Wait for it (data-booted) before scrolling.
+    const page = await openSite(browser, '', { sand: true, height: 700, reducedMotion: 'no-preference', statsDelay: 300 });
     await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-sand') === 'running');
+    await page.waitForFunction(() => document.documentElement.hasAttribute('data-booted'));
     // Room below the hero, so the scroll takes it fully off screen even before the Library below has loaded
     // (with a 700px window the page is only ~35px taller than needed once it has).
     await page.evaluate(() => {

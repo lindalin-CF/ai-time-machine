@@ -17,6 +17,14 @@ describe('analytics controls (browser)', () => {
   const shown = (page: Page, sel: string) => page.locator(sel).evaluate((el) => !!(el as HTMLElement).getClientRects().length);
 
   describe('layout', () => {
+    /** Clicks a toggle and waits until its controls stop moving: a press long enough for a frame to show it scales the
+     * button to .97 (styles.css, press feedback) and it eases back over 160ms, so a measure right after the click can
+     * catch it narrower than its partner. The 120ms press forces that case on every run. */
+    const press = async (page: Page, sel: string) => {
+      await page.locator(sel).click({ delay: 120 });
+      await page.waitForFunction(() => !document.getAnimations().some((a) => a instanceof CSSTransition && a.playState === 'running'
+        && ((a.effect as KeyframeEffect | null)?.target as Element | null)?.closest('#analyticsView')));
+    };
     const rows = (page: Page) => page.evaluate(() => {
       const box = (sel: string) => document.querySelector(sel)!.getBoundingClientRect();
       const [c, w, d, s, p] = ['#analyticsView .an-mode', '#analyticsView .an-wp-btn', '#analyticsView .an-device', '#analyticsView .an-selection', '#analyticsView .an-bar--portals'].map(box);
@@ -73,7 +81,7 @@ describe('analytics controls (browser)', () => {
     it.each([[1440], [1280], [1100], [881], [641]])('at %ipx: Device is exactly as wide as Compare above it, Week to its right, in both modes', async (width) => {
       const page = await openAnalytics(browser, { width });
       for (const mode of ['portals', 'weeks']) {
-        await page.locator(`[data-mode="${mode}"]`).click();
+        await press(page, `[data-mode="${mode}"]`);
         const r = await rows(page);
         expectAligned(r);
         expectToggles(r);
@@ -94,7 +102,7 @@ describe('analytics controls (browser)', () => {
     it.each([[390], [320]])('at %ipx: Compare, Device and Week each full width, one under another, then the count, then the chips; nothing overflows', async (width) => {
       const page = await openAnalytics(browser, { width });
       for (const mode of ['portals', 'weeks']) {
-        await page.locator(`[data-mode="${mode}"]`).click();
+        await press(page, `[data-mode="${mode}"]`);
         const r = await rows(page);
         expectToggles(r);
         expectSameLook(r);
