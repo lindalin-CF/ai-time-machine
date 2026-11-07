@@ -1,4 +1,4 @@
-// Renders the 1200x630 link-preview image (public/og-image-v2.png) from the homepage's dark sand hero.
+// Renders the 1200x630 link-preview image (public/og-image-v3.png) from the homepage's dark sand hero.
 //
 //   node og-image.mjs <output.png> [homepage URL] [screenshots,portals,weeks]
 //
@@ -48,6 +48,9 @@ try {
     }
     // The crop reaches above and below the hero: hide the top bar and what follows the hero, without moving anything.
     for (const el of document.querySelectorAll(".topbar, #galleryView > :not(.hero)")) el.style.visibility = "hidden";
+    // The hero's warm wash and grid (.hero::before, ::after) start 46px above it; the crop reaches higher than that,
+    // so stretch them to the top of the page, or the image gets a flat band along its top edge.
+    document.head.append(Object.assign(document.createElement("style"), { textContent: ".hero::before,.hero::after{top:-200px!important}" }));
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))); // one extra frame after the edits
     const r = document.querySelector(".hero-frame").getBoundingClientRect();
     return { x: r.left + window.scrollX, y: r.top + window.scrollY, width: r.width, height: r.height };

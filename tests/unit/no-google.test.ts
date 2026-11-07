@@ -50,11 +50,11 @@ describe('self-hosted fonts and icons', () => {
   it('declares every font file it serves, with its OFL license alongside', () => {
     const css = readFileSync(new URL('fonts/fonts.css', PUBLIC), 'utf8');
     const urls = [...css.matchAll(/url\((\/fonts\/[^)]+\.woff2)\)/g)].map((m) => m[1]);
-    expect(css.match(/@font-face/g)).toHaveLength(52);
+    expect(css.match(/@font-face/g)).toHaveLength(49);
     for (const u of new Set(urls)) expect(existsSync(new URL(`.${u}`, PUBLIC)), u).toBe(true);
     const onDisk = readdirSync(new URL('fonts/', PUBLIC)).filter((f) => f.endsWith('.woff2')).map((f) => `/fonts/${f}`);
     expect([...new Set(urls)].sort()).toEqual(onDisk.sort());
-    for (const family of ['inter', 'space-grotesk', 'jetbrains-mono']) {
+    for (const family of ['inter', 'afacad', 'jetbrains-mono']) {
       const ofl = readFileSync(new URL(`fonts/${family}-OFL.txt`, PUBLIC), 'utf8');
       expect(ofl).toContain('SIL Open Font License, Version 1.1');
     }
@@ -119,10 +119,10 @@ describe('in a headless browser', () => {
       await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true);
     }
     const faces = await v.page.evaluate(async () => {
-      const loaded = [...await document.fonts.load('600 16px "Space Grotesk"'), ...await document.fonts.load('400 16px Inter'), ...await document.fonts.load('400 16px "JetBrains Mono"')];
+      const loaded = [...await document.fonts.load('600 16px Afacad'), ...await document.fonts.load('400 16px Inter'), ...await document.fonts.load('400 16px "JetBrains Mono"')];
       return loaded.map((f) => `${f.family} ${f.status}`);
     });
-    expect(faces).toEqual(expect.arrayContaining(['Space Grotesk loaded', 'Inter loaded', 'JetBrains Mono loaded']));
+    expect(faces).toEqual(expect.arrayContaining(['Afacad loaded', 'Inter loaded', 'JetBrains Mono loaded']));
     expect(v.local.some((p) => /^\/fonts\/.+\.woff2$/.test(p))).toBe(true);
 
     // The Analytics view's table icons are self-hosted too.

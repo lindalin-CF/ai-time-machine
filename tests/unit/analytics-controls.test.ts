@@ -86,11 +86,11 @@ describe('analytics controls (browser)', () => {
         expectAligned(r);
         expectToggles(r);
         expectSameLook(r);
-        // Same height and font size as before (36px tall; 12.5px text above 760px, 12px below).
+        // 36px tall as before; Afacad text at 13.5px above 760px, 13px below.
         expect(r.mode.h).toBeCloseTo(36, 1);
         expect(r.week.h).toBeCloseTo(36, 1);
         expect(r.device.h).toBeCloseTo(36, 1);
-        expect(r.mode.font).toBe(width > 760 ? '12.5px' : '12px');
+        expect(r.mode.font).toBe(width > 760 ? '13.5px' : '13px');
         // The count and Clear end row 2 at the far right, centred with the Device toggle; the chips follow.
         expect(Math.abs(r.sel.mid - (r.device.top + r.device.h / 2))).toBeLessThan(1);
         expect(r.sel.right).toBeCloseTo(r.content.right, 0);
@@ -106,7 +106,7 @@ describe('analytics controls (browser)', () => {
         const r = await rows(page);
         expectToggles(r);
         expectSameLook(r);
-        expect(r.mode.font).toBe('12px');
+        expect(r.mode.font).toBe('13px');
         for (const b of [r.mode, r.device, r.week]) {
           expect(b.left).toBeCloseTo(r.content.left, 0);
           expect(b.right).toBeCloseTo(r.content.right, 0);

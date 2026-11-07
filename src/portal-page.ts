@@ -111,8 +111,8 @@ export const FEED_URL = `${ORIGIN}/feed.xml`;
 /** Channel description: the same as the homepage's meta description. */
 export const FEED_DESCRIPTION = "Weekly screenshots of AI chatbot interfaces — ChatGPT, Claude, Gemini, Perplexity, Copilot and more — on desktop and mobile, with design analysis and UI changes week by week.";
 
-/** The site-wide link preview (public/og-image-v2.png, scripts/local-capture/og-image.mjs), used where a page has no screenshot of its own. */
-export const SITE_PREVIEW: PreviewImage = { url: `${ORIGIN}/og-image-v2.png`, width: 1200, height: 630, alt: "AI Interface Library" };
+/** The site-wide link preview (public/og-image-v3.png, scripts/local-capture/og-image.mjs), used where a page has no screenshot of its own. */
+export const SITE_PREVIEW: PreviewImage = { url: `${ORIGIN}/og-image-v3.png`, width: 1200, height: 630, alt: "AI Interface Library" };
 
 /** Link preview and search metadata for an indexable page (one with a canonical URL). */
 function socialMeta(title: string, description: string, canonical: string, image: PreviewImage): string {
@@ -193,13 +193,13 @@ ${opts.canonical ? socialMeta(opts.title, opts.description, opts.canonical, opts
 ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts.markdown)}" />\n` : ""}
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <!-- Body text font (all weights in one file): fetch it before CSS discovers it, as the homepage does. -->
-  <link rel="preload" href="/fonts/space-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/fonts/afacad-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/fonts/fonts.css" />
   <!-- The site's shared buttons (.btn-primary, .btn-secondary), as on the homepage. -->
   <link rel="stylesheet" href="/buttons.css" />
   <style>
-    /* The homepage's fonts (public/styles.css --font-sans, --font-mono): Space Grotesk for text, headings and controls. */
-    body{margin:0;font:16px/1.6 'Space Grotesk','Inter',system-ui,-apple-system,sans-serif;background:#f4efe8;color:#231f1a}
+    /* The homepage's fonts (public/styles.css --font-sans, --font-mono): Afacad for text (400), headings (700) and controls (600). */
+    body{margin:0;font:16px/1.6 'Afacad',system-ui,-apple-system,sans-serif;background:#f4efe8;color:#231f1a}
     :where(a,button,summary,[tabindex]):focus-visible{outline:2px solid var(--brand);outline-offset:2px}
     .wrap{max-width:1000px;margin:0 auto;padding:24px 16px}
     a{color:inherit}
@@ -209,11 +209,11 @@ ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts
     .wordmark-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .topnav{display:flex;gap:20px;flex:0 0 auto;white-space:nowrap}
     /* A 32px-tall hit area; the negative margin keeps the bar's height as it was. */
-    .topnav-link{display:inline-flex;align-items:center;min-height:32px;margin-block:-6px;font-size:13px;font-weight:500;color:#6b6257;text-decoration:none;transition:color .15s ease-out}
+    .topnav-link{display:inline-flex;align-items:center;min-height:32px;margin-block:-6px;font-size:14px;font-weight:600;color:#6b6257;text-decoration:none;transition:color .15s ease-out}
     .topnav-link.active{color:var(--brand-text)}
     @media (hover:hover){.topnav-link:not(.active):hover{color:#231f1a}}
-    @media (max-width:760px){.wordmark{font-size:12px}.topnav{gap:14px}.topnav-link{font-size:12px}}
-    @media (max-width:420px){.topbar{gap:8px}.wordmark{font-size:12px;gap:7px}.topnav{gap:8px}.topnav-link{font-size:11px}} /* the homepage's values at this width */
+    @media (max-width:760px){.wordmark{font-size:13px}.topnav{gap:14px}.topnav-link{font-size:13px}}
+    @media (max-width:420px){.topbar{gap:8px}.wordmark{font-size:13px;gap:7px}.topnav{gap:8px}.topnav-link{font-size:12px}} /* the homepage's values at this width */
     /* Phones: the menu button and panel, as on the homepage (public/styles.css), with this page's colours as fallbacks. */
     .topnav-toggle{display:none}
     @media (max-width:640px){
@@ -227,7 +227,7 @@ ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts
       /* Full width: the bar sits inside .wrap's 16px side padding. */
       html.js .topnav{position:absolute;top:calc(100% + 8px);left:-16px;right:-16px;flex-direction:column;gap:0;white-space:normal;background:var(--cf-bg-100,#f5f1e9);border-bottom:1px solid var(--cf-border,#d8cfc2);box-shadow:0 16px 32px -20px rgba(35,31,26,.35);opacity:0;transform:translateY(-6px);visibility:hidden;transition:opacity .15s ease-out,transform .15s ease-out,visibility 0s linear .15s}
       html.menu-open .topnav{opacity:1;transform:none;visibility:visible;transition:opacity .15s ease-out,transform .15s ease-out,visibility 0s}
-      html.js .topnav-link{display:flex;align-items:center;height:48px;margin:0;padding:0 16px;font-size:13px}
+      html.js .topnav-link{display:flex;align-items:center;height:48px;margin:0;padding:0 16px;font-size:14px}
     }
     @media (max-width:640px) and (prefers-reduced-motion:reduce){html.js .topnav{transition:none}}
     @media (max-width:640px) and (prefers-reduced-motion:no-preference){html.js .topnav-toggle:active{transform:scale(.97)}}
@@ -622,7 +622,7 @@ const CHANGELOG_HEAD = `  <style>
     .cl-body h2{font-size:32px;line-height:1.15;letter-spacing:-.02em;font-weight:700;margin:0;overflow-wrap:anywhere}
     .cl-anchor{margin-left:12px;font-size:18px;font-weight:600;letter-spacing:0;color:var(--brand-text);text-decoration:none;vertical-align:middle}
     .cl-anchor:hover,.cl-anchor:focus-visible{text-decoration:underline}
-    .cl-copied{margin-left:8px;font-size:.8rem;font-weight:500;letter-spacing:0;color:#6b6257;vertical-align:middle}
+    .cl-copied{margin-left:8px;font-size:.875rem;font-weight:400;letter-spacing:0;color:#6b6257;vertical-align:middle}
     .cl-body .cl-sub{margin:10px 0 24px;font-style:italic;color:#6b6257}
     .cl-body ul{list-style:disc;margin:0 0 24px;padding-left:1.2em}
     .cl-body li{margin:0 0 8px}

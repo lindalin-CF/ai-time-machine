@@ -191,7 +191,7 @@ describe('phone menu (browser)', () => {
       const s = getComputedStyle(el);
       return { position: s.position, direction: s.flexDirection, gap: s.columnGap, font: getComputedStyle(el.querySelector('a')!).fontSize };
     });
-    expect(nav).toEqual({ position: 'static', direction: 'row', gap: '20px', font: '13px' });
+    expect(nav).toEqual({ position: 'static', direction: 'row', gap: '20px', font: '14px' });
     const tops = await links(page).evaluateAll((els) => els.map((a) => Math.round(a.getBoundingClientRect().top)));
     expect(new Set(tops).size).toBe(1); // one row
     const bar = (await page.locator('.topbar').boundingBox())!;

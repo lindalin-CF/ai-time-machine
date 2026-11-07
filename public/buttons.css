@@ -31,16 +31,16 @@
   --ink-fill:#0b0b0c;
   --ink-fill-fg:#f5f1e9;
   --ink-fill-hover:color-mix(in srgb,var(--ink-fill) 88%,#fff);
-  --btn-font:'Space Grotesk','Inter',system-ui,-apple-system,sans-serif;
+  --btn-font:'Afacad',system-ui,-apple-system,sans-serif;
   --btn-gap:6px;
   --btn-focus-ring:var(--brand);
   /* secondary */
   --btn-secondary-height:auto;
   --btn-secondary-pad-y:6px;
   --btn-secondary-pad-x:11px;
-  --btn-secondary-font-size:12.5px;
+  --btn-secondary-font-size:13.5px;
   --btn-secondary-font-weight:600;
-  --btn-secondary-line-height:1.2;
+  --btn-secondary-line-height:15px; /* fixed, so the button stays 29px tall in any font */
   --btn-secondary-radius:8px;
   --btn-secondary-bg:#f5f1e9;
   --btn-secondary-bg-hover:#ded4c6;
@@ -51,8 +51,8 @@
   --btn-primary-min-height:36px;
   --btn-primary-pad-y:0;
   --btn-primary-pad-x:16px;
-  --btn-primary-font-size:13px;
-  --btn-primary-font-weight:700;
+  --btn-primary-font-size:14px;
+  --btn-primary-font-weight:600;
   --btn-primary-line-height:1;
   --btn-primary-radius:999px;
   --btn-primary-bg:var(--brand);

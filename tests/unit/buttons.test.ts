@@ -112,7 +112,7 @@ describe('shared button classes (browser)', () => {
     await page.goto('https://site.test/portals/chatgpt');
     const link = page.locator('.compare-cta');
     expect(await classes(link)).toContain('btn-secondary');
-    expect(await look(page, link)).toEqual({ ...SECONDARY, display: 'flex', w: 95.2, h: 29, pad: '6px 11px 6px 11px', font: '"Space Grotesk" 600 12.5px 15px', shadow: SHADOW, cursor: 'pointer' });
+    expect(await look(page, link)).toEqual({ ...SECONDARY, display: 'flex', w: 92.3, h: 29, pad: '6px 11px 6px 11px', font: 'Afacad 600 13.5px 15px', shadow: SHADOW, cursor: 'pointer' });
   });
 
   it('pair page Open in Compare is a secondary button with an unchanged look', async () => {
@@ -120,7 +120,7 @@ describe('shared button classes (browser)', () => {
     await page.goto('https://site.test/compare/chatgpt-vs-claude');
     const link = page.locator('.cmp-open');
     expect(await classes(link)).toContain('btn-secondary');
-    expect(await look(page, link)).toEqual({ ...SECONDARY, w: 143.8, h: 29, pad: '6px 11px 6px 11px', font: '"Space Grotesk" 600 12.5px 15px', shadow: SHADOW, cursor: 'pointer' });
+    expect(await look(page, link)).toEqual({ ...SECONDARY, w: 137.5, h: 29, pad: '6px 11px 6px 11px', font: 'Afacad 600 13.5px 15px', shadow: SHADOW, cursor: 'pointer' });
   });
 
   it('gallery card Details is a secondary button with an unchanged look', async () => {
@@ -128,7 +128,7 @@ describe('shared button classes (browser)', () => {
     const link = page.locator('#grid .card .details-link').first();
     await link.waitFor();
     expect(await classes(link)).toContain('btn-secondary');
-    expect(await look(page, link)).toEqual({ ...SECONDARY, display: 'flex', w: 83, h: 32, pad: '0px 11px 0px 11px', font: '"Space Grotesk" 600 12.5px 12.5px', shadow: SHADOW, cursor: 'pointer' });
+    expect(await look(page, link)).toEqual({ ...SECONDARY, display: 'flex', w: 79.4, h: 32, pad: '0px 11px 0px 11px', font: 'Afacad 600 13.5px 13.5px', shadow: SHADOW, cursor: 'pointer' });
   });
 
   it('Compare table PAGE links are secondary buttons with an unchanged look', async () => {
@@ -136,7 +136,7 @@ describe('shared button classes (browser)', () => {
     const link = page.locator('#anTableWrap .an-page-link').first();
     await link.waitFor();
     expect(await classes(link)).toContain('btn-secondary');
-    expect(await look(page, link)).toEqual({ ...SECONDARY, w: 179.7, h: 29, pad: '6px 11px 6px 11px', font: '"Space Grotesk" 600 12.5px 15px', shadow: 'none', cursor: 'pointer' });
+    expect(await look(page, link)).toEqual({ ...SECONDARY, w: 169.8, h: 29, pad: '6px 11px 6px 11px', font: 'Afacad 600 13.5px 15px', shadow: 'none', cursor: 'pointer' });
   });
 
   it('the landing filter bar Compare is the primary button with an unchanged look', async () => {
@@ -146,7 +146,7 @@ describe('shared button classes (browser)', () => {
     expect(await classes(btn)).toContain('btn-primary');
     expect(await look(page, btn, page.locator('.search-input'))).toEqual({ w: 124 /* --fb-end-w, shared with the search */, h: 36, display: 'flex', align: 'center', gap: '6px',
       pad: '0px 16px 0px 16px', border: '1px solid rgb(196, 76, 28)', radius: '999px', bg: 'rgb(196, 76, 28)', color: 'rgb(255, 255, 255)',
-      font: '"Space Grotesk" 700 13px 13px', underline: 'none', shadow: 'none', whiteSpace: 'nowrap', cursor: 'pointer',
+      font: 'Afacad 600 14px 14px', underline: 'none', shadow: 'none', whiteSpace: 'nowrap', cursor: 'pointer',
       hoverBg: 'color(srgb 0.66102 0.256314 0.0944314)' /* --brand-hover, mixed from --brand */, ring: 'solid 2px rgb(196, 76, 28) 2px', pressed: 'matrix(0.97, 0, 0, 0.97, 0, 0)' });
   });
 
@@ -164,7 +164,7 @@ describe('shared button classes (browser)', () => {
     });
     expect(geo).toEqual({ centreDiff: 0, rightGap: 0 });
     // The same look as the portal page's Compare (a flex item, so it computes to flex).
-    expect(await look(page, link)).toMatchObject({ ...SECONDARY, display: 'flex', h: 29, pad: '6px 11px 6px 11px', font: '"Space Grotesk" 600 12.5px 15px', shadow: SHADOW });
+    expect(await look(page, link)).toMatchObject({ ...SECONDARY, display: 'flex', h: 29, pad: '6px 11px 6px 11px', font: 'Afacad 600 13.5px 15px', shadow: SHADOW });
   });
 
   it.each([390, 1280])('at %ipx the week heading is just the week label, with "This week\'s changes" right-aligned on its row', async (width) => {

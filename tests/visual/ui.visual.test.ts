@@ -4,9 +4,10 @@ import 'vitest-visual-diff';
 
 let cachedStyles: string | null = null;
 async function mount(html: string) {
-  // The homepage's two stylesheets, in its order: buttons.css holds the --brand tokens styles.css reads.
-  cachedStyles ??= (await Promise.all(['/buttons.css', '/styles.css'].map((f) => fetch(f).then((r) => r.text())))).join('\n');
+  // The homepage's stylesheets, in its order: the self-hosted fonts, then buttons.css (the --brand tokens styles.css reads).
+  cachedStyles ??= (await Promise.all(['/fonts/fonts.css', '/buttons.css', '/styles.css'].map((f) => fetch(f).then((r) => r.text())))).join('\n');
   document.head.innerHTML = `<style>${cachedStyles}</style>`;
+  await document.fonts.load('600 13.5px Afacad');
   document.body.innerHTML = `
     <main style="padding:24px;background:var(--cf-bg-page);min-height:100vh">
       ${html}

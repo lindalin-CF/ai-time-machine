@@ -101,16 +101,16 @@
   const style = document.createElement("style");
   style.textContent = `
 /* The site's look on every page (server pages have no --cf-* tokens, so the fallbacks are the homepage's values):
-   cream bar, Space Grotesk, 8px-radius buttons in the site orange. Accept and Decline look the same, so neither is
+   cream bar, Afacad, 8px-radius buttons in the site orange. Accept and Decline look the same, so neither is
    pushed (equal choice, as consent rules ask). */
 .consent-bar{position:fixed;left:0;right:0;bottom:0;z-index:100;box-sizing:border-box;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 20px;
   padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--cf-border,#d9cebd);
-  background:var(--cf-bg-100,#f5f1e9);color:var(--cf-text,#423217);font:15px/1.5 var(--font-sans,'Space Grotesk','Inter',system-ui,-apple-system,sans-serif);
+  background:var(--cf-bg-100,#f5f1e9);color:var(--cf-text,#423217);font:15px/1.5 var(--font-sans,'Afacad',system-ui,-apple-system,sans-serif);
   box-shadow:0 -8px 24px -16px rgba(66,50,23,.35)}
 .consent-bar[hidden]{display:none}
 .consent-bar p{margin:0;flex:1 1 320px;max-width:720px}
 .consent-bar a{color:inherit;text-decoration:underline}
-.consent-status{display:block;margin-top:2px;font-size:13px;opacity:.8}
+.consent-status{display:block;margin-top:2px;font-size:14px;opacity:.8}
 .consent-actions{display:flex;gap:10px;flex:0 1 auto}
 /* --brand and --brand-hover (public/buttons.css): white 15px text on --brand is 4.8:1. */
 .consent-btn{flex:1 1 0;min-width:112px;min-height:44px;padding:10px 18px;border:1px solid var(--brand);border-radius:8px;

@@ -164,7 +164,7 @@ describe('portal page Compare button (browser)', () => {
     });
     const base = {
       radius: '8px', border: '1px solid rgb(217, 206, 189)', bg: 'rgb(245, 241, 233)', color: 'rgb(159, 62, 23)',
-      font: '600 12.5px "Space Grotesk"', padding: '6px 11px', shadow: 'rgba(66, 50, 23, 0.12) 0px 1px 3px 0px', underline: 'none', outline: 'none',
+      font: '600 13.5px Afacad', padding: '6px 11px', shadow: 'rgba(66, 50, 23, 0.12) 0px 1px 3px 0px', underline: 'none', outline: 'none',
     };
     expect(await look()).toEqual(base);
     await page.locator('.compare-cta').hover();

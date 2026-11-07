@@ -924,17 +924,23 @@ function initHeroAnnotations() {
   // Also mark words that start a line: a keyword there anchors its tag to its
   // left edge, so a right-aligned tag (layout) can't run off the panel. And mark
   // keywords whose left-anchored tag would run past the copy's right edge (a
-  // keyword near the end of a line), so their tag anchors to the right instead.
+  // keyword near the end of a line), so their tag anchors to the right instead,
+  // and the reverse: a right-anchored tag (layout) on a keyword near the start of
+  // a line would run past the copy's left edge, so it anchors to the left.
   const markFirstLine = () => {
     if (!words.length) return;
     const top = words[0].offsetTop;
     const left = words[0].offsetLeft;
-    const right = sub.getBoundingClientRect().right;
+    const box = sub.getBoundingClientRect();
+    const right = box.right;
     words.forEach((w) => {
       w.classList.toggle("l1", Math.abs(w.offsetTop - top) < 2);
       w.classList.toggle("ls", Math.abs(w.offsetLeft - left) < 2);
       const tag = w.querySelector(".tag");
-      if (tag) w.classList.toggle("le", w.getBoundingClientRect().left - 2 + tag.offsetWidth > right);
+      if (!tag) return;
+      const r = w.getBoundingClientRect();
+      w.classList.toggle("le", r.left - 2 + tag.offsetWidth > right);
+      w.classList.toggle("lo", !!w.querySelector(".kw-layout") && r.right + 6 - tag.offsetWidth < box.left);
     });
   };
   markFirstLine();

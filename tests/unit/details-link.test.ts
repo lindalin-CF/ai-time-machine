@@ -58,7 +58,7 @@ describe('gallery card Details link (browser)', () => {
       .find((r) => r.selectorText === '.btn-secondary')!.style.display)).toBe('inline-flex');
     expect(await style()).toEqual({ h: 32, display: 'flex', align: 'center', gap: '6px', pad: '11px 11px',
       border: '1px solid rgb(217, 206, 189)', radius: '8px', bg: 'rgb(245, 241, 233)', color: 'rgb(159, 62, 23)',
-      font: '"Space Grotesk" 600 12.5px', underline: 'none', shadow: 'rgba(66, 50, 23, 0.12) 0px 1px 3px 0px' });
+      font: 'Afacad 600 13.5px', underline: 'none', shadow: 'rgba(66, 50, 23, 0.12) 0px 1px 3px 0px' });
 
     await link.hover();
     await page.waitForTimeout(250);

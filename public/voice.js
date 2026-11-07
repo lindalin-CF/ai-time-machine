@@ -65,7 +65,7 @@ style.textContent = `
 .voice-fab svg{display:block;width:24px;height:24px}
 .voice-fab .vf-tip{position:absolute;right:calc(100% + 10px);top:50%;transform:translateY(-50%);
   padding:6px 10px;border-radius:8px;white-space:nowrap;pointer-events:none;
-  font-family:var(--font-sans);font-weight:600;font-size:13px;line-height:1.2;
+  font-family:var(--font-sans);font-weight:600;font-size:14px;line-height:1.2;
   background:var(--ink-fill,#0b0b0c);color:var(--ink-fill-fg,#f5f1e9);
   opacity:0;visibility:hidden;transition:opacity .15s ease-out,visibility .15s}
 .voice-fab:hover .vf-tip,.voice-fab:focus-visible .vf-tip{opacity:1;visibility:visible}
@@ -91,20 +91,20 @@ style.textContent = `
 .vp-x:hover{background:var(--cf-bg-300,#f0e7db)}
 
 .vp-body{padding:13px 15px;max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:9px}
-.vp-hint{font-size:12.5px;line-height:1.5;color:var(--cf-text-soft,#8a5a3c)}
+.vp-hint{font-size:13.5px;line-height:1.5;color:var(--cf-text-soft,#8a5a3c)}
 .vp-hint b{color:var(--cf-text,#521000)}
-.vp-msg{padding:9px 11px;border-radius:10px;font-size:13px;line-height:1.45;max-width:88%;white-space:pre-wrap;word-wrap:break-word}
+.vp-msg{padding:9px 11px;border-radius:10px;font-size:14px;line-height:1.45;max-width:88%;white-space:pre-wrap;word-wrap:break-word}
 .vp-msg.user{align-self:flex-end;background:var(--brand);color:#fff;border-bottom-right-radius:3px}
 .vp-msg.assistant{align-self:flex-start;background:var(--cf-bg-300,#f0e7db);color:var(--cf-text,#521000);border-bottom-left-radius:3px}
-.vp-interim{align-self:flex-end;font-style:italic;opacity:.6;font-size:12.5px}
-.vp-err{margin:0 15px 12px;padding:9px 11px;border-radius:10px;background:#fdeae4;color:#a3320f;font-size:12.5px;border:1px solid #f3c4b3;display:none}
+.vp-interim{align-self:flex-end;font-style:italic;opacity:.6;font-size:13.5px}
+.vp-err{margin:0 15px 12px;padding:9px 11px;border-radius:10px;background:#fdeae4;color:#a3320f;font-size:13.5px;border:1px solid #f3c4b3;display:none}
 .vp-err.show{display:block}
 
 .vp-foot{display:flex;gap:9px;padding:12px 15px;border-top:1px solid var(--cf-border,#ebd5c1);background:var(--cf-bg-200,#faf5ee)}
 .vp-btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;
   padding:10px 12px;border-radius:10px;border:1px solid var(--cf-border-strong,#e0c3a8);
   background:var(--cf-bg-100,#fffdfa);color:var(--cf-text,#521000);font-family:var(--font-sans);
-  font-weight:600;font-size:13px;cursor:pointer;transition:background-color .15s ease-out,border-color .15s ease-out}
+  font-weight:600;font-size:14px;cursor:pointer;transition:background-color .15s ease-out,border-color .15s ease-out}
 .vp-btn:hover{background:var(--cf-bg-300,#f0e7db)}
 .vp-btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
 .vp-btn.primary:hover{background:var(--brand-hover)}
@@ -115,7 +115,7 @@ style.textContent = `
 .vp-textrow{display:flex;gap:8px;padding:0 15px 12px}
 .vp-textrow input{flex:1;min-width:0;padding:10px 12px;border-radius:10px;
   border:1px solid var(--cf-border-strong,#e0c3a8);background:var(--cf-bg-100,#fffdfa);
-  color:var(--cf-text,#521000);font-family:var(--font-sans);font-size:13px}
+  color:var(--cf-text,#521000);font-family:var(--font-sans);font-size:14px}
 .vp-textrow input:focus{outline:none;border-color:var(--brand);
   box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 15%,transparent)}
 .vp-textrow #vpSend{flex:0 0 auto;padding:10px 16px}
@@ -125,12 +125,12 @@ style.textContent = `
 .vp-suggest{padding:0 15px 10px}
 .vp-chips{display:flex;flex-wrap:wrap;gap:6px}
 .vp-chip{flex:0 0 auto;padding:6px 10px;border-radius:999px;border:1px solid var(--cf-border-strong,#e0c3a8);
-  background:var(--cf-bg-100,#fffdfa);color:var(--cf-text,#521000);font-family:var(--font-sans);font-size:12.5px;
+  background:var(--cf-bg-100,#fffdfa);color:var(--cf-text,#521000);font-family:var(--font-sans);font-size:13.5px;
   line-height:1.3;cursor:pointer;text-align:left}
 .vp-chip:hover{background:var(--cf-bg-300,#f0e7db)}
 .vp-chip:focus-visible,.vp-suggest-toggle:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 .vp-suggest-toggle{display:none;margin:0 0 6px;padding:2px 0;border:0;background:none;cursor:pointer;
-  font-family:var(--font-sans);font-size:12.5px;font-weight:600;color:var(--cf-text-soft,#8a5a3c);text-decoration:underline}
+  font-family:var(--font-sans);font-size:13.5px;font-weight:600;color:var(--cf-text-soft,#8a5a3c);text-decoration:underline}
 .vp-suggest.collapsible .vp-suggest-toggle{display:inline-block}
 .vp-suggest.collapsible:not(.expanded) .vp-chips{display:none}
 /* Phones: a 48px button 16px from the edges, and room below the page so it never covers the last content.

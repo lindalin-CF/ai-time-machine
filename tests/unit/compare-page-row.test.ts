@@ -98,7 +98,7 @@ describe('Compare Table: PAGE row (browser)', () => {
       };
     });
     const base = { radius: '8px', border: '1px solid rgb(217, 206, 189)', bg: 'rgb(245, 241, 233)', color: 'rgb(159, 62, 23)',
-      font: '600 12.5px "Space Grotesk"', padding: '6px 11px', underline: 'none', outline: 'none' };
+      font: '600 13.5px Afacad', padding: '6px 11px', underline: 'none', outline: 'none' };
     expect(await look()).toEqual(base);
     await link.hover();
     await link.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished))); // 150ms fade

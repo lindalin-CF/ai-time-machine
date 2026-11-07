@@ -128,9 +128,9 @@ describe('design rules (browser)', () => {
         h1: parseFloat(getComputedStyle(document.querySelector('h1')!).fontSize),
         h2: document.querySelector('.cl-body h2') ? parseFloat(getComputedStyle(document.querySelector('.cl-body h2')!).fontSize) : null,
         gap: document.querySelector('.cl-entry') ? getComputedStyle(document.querySelector('.cl-entry')!).paddingBottom : null,
-        loaded: document.fonts.check('16px "Space Grotesk"'),
+        loaded: document.fonts.check('16px Afacad'),
       }));
-      expect(r.body).toBe('"Space Grotesk"');
+      expect(r.body).toBe('Afacad');
       expect(r.loaded).toBe(true);
       if (path === '/changelog') expect(r).toMatchObject({ h1: 48, h2: 32, gap: '64px' });
     }
