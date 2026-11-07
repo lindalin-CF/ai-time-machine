@@ -607,20 +607,20 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
 
   .hero{margin-top:6px;margin-bottom:24px;padding:16px 0 14px}
   .hero-frame{border-radius:24px}
-  /* Phone layout: stats on top, the ring in the upper half, the copy and the latest week below it. The type layer is in
+  /* Phone layout: stats on top, the ring in a band under them, then the copy and the latest week. The type layer is in
      the flow here, so content sets the height (min-height is only a floor) and long copy grows the panel instead of
-     being clipped. */
+     being clipped. The panel stays near 55-60% of a phone screen so the filter bar starts in the first screen. */
   .hero-panel{
     aspect-ratio:auto;
-    min-height:620px;
+    min-height:440px;
     display:grid;
-    --ring-x:.52;--ring-y:.34;--ring-size:none;--ring-a:.33;--ring-b:.135; /* phones keep their own, flatter ring */
+    --ring-x:.52;--ring-y:.35;--ring-size:none;--ring-a:.30;--ring-b:.11; /* phones keep their own, flatter ring */
   }
   .hero-layer{
     position:relative;
     inset:auto;
     grid-template-columns:minmax(0,1fr);
-    grid-template-rows:auto 1fr auto auto;
+    grid-template-rows:auto minmax(180px,1fr) auto auto; /* row 2 is the ring's band */
     padding:20px 18px;
     gap:14px;
   }
@@ -640,17 +640,17 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
   .hero-copy{
     grid-row:3;
     align-self:end;
-    gap:18px;
+    gap:14px;
   }
   .hero-week{grid-row:4}
   .hero-title{
-    font-size:clamp(38px,13vw,62px);
+    font-size:clamp(34px,11vw,52px);
     max-width:100%;
     letter-spacing:-.04em;
   }
   .hero-sub{
     max-width:none;
-    font-size:15px;
+    font-size:14px;
     line-height:1.22;
   }
 
@@ -709,7 +709,7 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
   .topbar{flex-direction:column;align-items:flex-start}
   .topnav{width:100%;justify-content:flex-start}
   .stats{column-gap:10px}
-  .hero-title{font-size:clamp(36px,12.5vw,54px)}
+  .hero-title{font-size:clamp(34px,10.5vw,46px)}
   .collection-grid{grid-template-columns:1fr}
 }
 

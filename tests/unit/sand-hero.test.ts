@@ -155,7 +155,7 @@ describe('sand hero (browser)', () => {
 
   // The black panel has no dark inset around it: its left and right edges are the filter bar's, the "Week of …" heading
   // row's and the card grid's. The ring (redrawn by the ResizeObserver at the new size) stays inside it and off the type.
-  it.each([[390, 844], [768, 1000], [1024, 900], [1280, 900], [1440, 900], [1440, 760]])('at %ix%ipx the panel lines up with the filter bar and the grid, and the ring stays clear of the text', async (width, height) => {
+  it.each([[360, 740], [390, 844], [430, 932], [768, 1000], [1024, 900], [1280, 900], [1440, 900], [1440, 760]])('at %ix%ipx the panel lines up with the filter bar and the grid, and the ring stays clear of the text', async (width, height) => {
     const page = await openSite(browser, '', { sand: true, width, height, reducedMotion: 'reduce' });
     await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-sand') === 'still');
     await page.waitForSelector('#grid > *');
@@ -235,7 +235,7 @@ describe('sand hero (browser)', () => {
     await page.context().close();
   });
 
-  it('keeps the phone ring as it was (fractions of the panel, not the desktop shape)', async () => {
+  it('keeps the phone ring its own (fractions of the panel, not the desktop shape)', async () => {
     const page = await openSite(browser, '', { sand: true, width: 390, height: 844, reducedMotion: 'reduce' });
     await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-sand') === 'still');
     const r = await page.evaluate(() => {
@@ -243,7 +243,7 @@ describe('sand hero (browser)', () => {
       const [cx, cy, a, b] = p.getAttribute('data-ring')!.split(' ').map(Number);
       return [cx / pb.width, cy / pb.height, a / pb.width, b / pb.height];
     });
-    [0.52, 0.34, 0.33, 0.135].forEach((v, i) => expect(r[i]).toBeCloseTo(v, 3));
+    [0.52, 0.35, 0.30, 0.11].forEach((v, i) => expect(r[i]).toBeCloseTo(v, 3));
     await page.context().close();
   });
 
