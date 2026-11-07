@@ -524,10 +524,12 @@ html[data-view="gallery"] .topnav-link[data-nav="gallery"],html[data-view="colle
 html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-text)}
 
 #collectionView{padding-top:6px}
-.collection-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin:6px 0 24px}
+/* Page headings: Compare sets the spec, Collection shares it. */
+.page-title{font-family:var(--font-sans);font-weight:700;font-size:clamp(30px,5vw,44px);letter-spacing:-.03em;line-height:1.02;margin:0 0 8px}
+.page-sub{margin:0;max-width:64ch;color:var(--cf-text-soft);font-size:14.5px;line-height:1.5}
+
+.collection-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin:6px 0 18px}
 .collection-headings .pill{margin-bottom:12px}
-.collection-title{font-family:var(--font-sans);font-weight:700;font-size:34px;line-height:1.05;letter-spacing:-.02em;margin:0 0 8px}
-.collection-meta{margin:0;color:var(--cf-text-soft);font-size:14px}
 .collection-meta b{color:var(--cf-text);font-weight:600}
 .dl-all{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--cf-border-strong);cursor:pointer;
   background:rgba(245,241,233,.74);color:var(--cf-text);font-family:var(--font-sans);font-weight:600;font-size:14px;
@@ -546,7 +548,6 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
 .col-name .brand-dot{width:9px;height:9px;border-radius:50%;flex:none}
 .col-date{color:var(--cf-text-soft);font-family:var(--font-mono);white-space:nowrap}
 @media (max-width:520px){
-  .collection-title{font-size:26px}
   .collection-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
 }
 
@@ -681,8 +682,6 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
     gap:14px;
     margin-bottom:18px;
   }
-  .collection-title{font-size:30px}
-  .collection-meta{font-size:14px;line-height:1.45}
   .collection-actions{
     width:100%;
     align-items:stretch;
@@ -943,8 +942,6 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
 /* ---------- analytics: comparison ---------- */
 #analyticsView{padding-top:6px}
 .analytics-head{margin:6px 0 18px}
-.analytics-title{font-family:var(--font-sans);font-weight:700;font-size:clamp(30px,5vw,44px);letter-spacing:-.03em;line-height:1.02;margin:0 0 8px}
-.analytics-sub{margin:0;max-width:64ch;color:var(--cf-text-soft);font-size:14.5px;line-height:1.5}
 .analytics-controls{display:flex;flex-direction:column;gap:12px;margin-bottom:20px;padding:16px;
   border:1px solid var(--cf-border);border-radius:14px;background:var(--cf-bg-200)}
 .an-row{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
