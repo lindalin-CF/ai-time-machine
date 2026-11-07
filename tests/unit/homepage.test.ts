@@ -43,7 +43,7 @@ describe('homepage (public/index.html)', () => {
     // The three annotated keywords, in order.
     expect([...hero.matchAll(/class="kw (kw-[a-z]+)">(\w+)/g)].map((m) => `${m[1]}:${m[2]}`)).toEqual(['kw-layout:layout', 'kw-hier:hierarchy', 'kw-colour:colour']);
     expect(hero).toContain('Layout · 4 × 3 grid');
-    expect(hero).toContain('H1 74 · Body 22');
+    expect(hero).toContain('H1 74 · Body 20');
     expect(hero).toContain('#C44C1C');
     expect(html).not.toMatch(/visual\s+design\s+system/i);
     expect(html).not.toContain('A living reference');
