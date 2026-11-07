@@ -111,9 +111,10 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   --ink:#f2f0ec;
   --ink-soft:rgba(242,240,236,.6);
   --brand-glow:#ec8a5f;
-  /* Where sand-hero.js draws the ring: its centre as fractions of the panel, its radii as fractions of the panel's
-     width (a) and height (b). Set per layout below so the ring stays clear of the type. */
-  --ring-x:.72;--ring-y:.585;--ring-a:.185;--ring-b:.28;
+  /* Where sand-hero.js draws the ring: its centre as fractions of the panel, and its size: the vertical radius as a
+     share of min(panel height, panel width / 2.2). Its shape (a/b in px, tilt) is fixed in sand-hero.js, so it is the
+     same at every size. Set per layout below so the ring stays clear of the type. Phones size it by --ring-a/--ring-b. */
+  --ring-x:.72;--ring-y:.585;--ring-size:.28;
   position:relative;width:100%;aspect-ratio:2.2/1;min-height:420px;overflow:hidden;border-radius:inherit; /* the frame's radius */
   background:var(--night);color:var(--ink);isolation:isolate;
 }
@@ -266,11 +267,11 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   .hero{margin-bottom:20px;padding:18px 0 22px}
   .hero-frame{border-radius:28px}
   .hero-layer{padding:22px 30px}
-  .hero-panel{--ring-y:.6;--ring-b:.225}
+  .hero-panel{--ring-y:.6}
 }
 /* Between phone and wide desktop the 2.2:1 box is too short for the large title: let it grow. */
 @media(max-width:1180px) and (min-width:761px){
-  .hero-panel{aspect-ratio:auto;min-height:max(540px,calc((100vw - 56px) / 2.2));--ring-x:.78;--ring-y:.58;--ring-a:.155;--ring-b:.25}
+  .hero-panel{aspect-ratio:auto;min-height:max(540px,calc((100vw - 56px) / 2.2));--ring-x:.79;--ring-y:.56;--ring-size:.26}
   /* the copy column is wider here, so the stats get the whole top row and the copy sits below them */
   .hero-layer{grid-template-columns:minmax(0,54%) 1fr}
   .stats{grid-column:1 / -1}
@@ -596,7 +597,7 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
     aspect-ratio:auto;
     min-height:620px;
     display:grid;
-    --ring-x:.52;--ring-y:.34;--ring-a:.33;--ring-b:.135;
+    --ring-x:.52;--ring-y:.34;--ring-size:none;--ring-a:.33;--ring-b:.135; /* phones keep their own, flatter ring */
   }
   .hero-layer{
     position:relative;

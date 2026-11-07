@@ -1,6 +1,10 @@
 // Homepage hero: a tilted ring of white sand flowing on a canvas, and the camera-focus hover for mouse pointers.
 // Ported from the approved prototype, docs/prototypes/sand-hero.html. Every motion repeats exactly every 10s, so the
-// loop never jumps. The ring is drawn where styles.css says (--ring-x/y/a/b on .hero-panel), so it stays clear of the type.
+// loop never jumps. The ring is drawn where styles.css says (--ring-x/y/size on .hero-panel), so it stays clear of the type.
+// On desktop and tablet the ring keeps one shape at every panel size, the one it has on a MacBook Air (1440x900, a
+// 1144x500 panel): its horizontal radius is RING_RATIO times its vertical one in px, tilted RING_TILT. --ring-size only
+// scales it. Phones (<=760px, --ring-size: none) keep their own ring, sized by --ring-a/--ring-b as fractions of the
+// panel's width and height.
 // The panel's data-sand says what the canvas is doing: "running", "paused" (off screen or tab hidden) or "still" (reduced motion).
 (() => {
   const panel = document.querySelector(".hero-panel");
@@ -19,7 +23,14 @@
   const MIN_GAP = 14.5, FRAME_BUDGET = 12, FLOOR_GRAINS = 3000, WARM_BUDGET = 30;
   let W = 0, H = 0, DPR = 1, N = 0, P = null, running = false, visible = true, raf = 0, elapsed = 0, lastTs = 0;
   let active = 0, cost = 0, nextAt = 0; // grains drawn per frame (a prefix of P: the grains are in random order), average frame ms
-  let ring = { x: 0.715, y: 0.53, a: 0.19, b: 0.29 };
+  // The MacBook Air ring (1440x900): a = 0.185 x 1144px = 211.6px, b = 0.28 x 500px = 140px.
+  const RING_RATIO = 1.5117, RING_TILT = -0.46, RING_PANEL = 2.2; // a/b in px; tilt (radians); panel shape --ring-size is measured against
+  let ring = { x: 0.72, y: 0.585, a: 0, b: 0 }; // centre as fractions of the panel; radii in px
+  /** The ring's radii in px for a W x H panel: --ring-size (desktop and tablet) or the phone's --ring-a/--ring-b. */
+  const ringRadii = (W, H, size, fa, fb) => {
+    if (size > 0) { const b = size * Math.min(H, W / RING_PANEL); return { a: b * RING_RATIO, b }; }
+    return { a: W * fa, b: H * fb };
+  };
   const buckets = Array.from({ length: LEVELS }, () => []);
 
   // seeded random so the ring looks the same on every load
@@ -34,7 +45,9 @@
     if (!W || !H) { N = active = 0; return; } // the homepage is hidden (another view is showing)
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     const cs = getComputedStyle(panel), num = (name, fallback) => parseFloat(cs.getPropertyValue(name)) || fallback;
-    ring = { x: num("--ring-x", 0.715), y: num("--ring-y", 0.53), a: num("--ring-a", 0.19), b: num("--ring-b", 0.29) };
+    ring = { x: num("--ring-x", 0.72), y: num("--ring-y", 0.585),
+      ...ringRadii(W, H, parseFloat(cs.getPropertyValue("--ring-size")), num("--ring-a", 0.33), num("--ring-b", 0.135)) };
+    panel.dataset.ring = [ring.x * W, ring.y * H, ring.a, ring.b, RING_TILT].map((v) => +v.toFixed(3)).join(" "); // for the tests
     seed = 7;
     N = active = Math.round(Math.min(MAX_GRAINS, Math.max(MIN_GRAINS, W * H / 26)));
     cost = 0;
@@ -62,9 +75,9 @@
     const u = (((ms % T) + T) % T) / T, w = TAU * u; // loop phase
     const cx = W * ring.x, cy = H * ring.y;
     const breathe = Math.sin(w), breathe2 = Math.sin(w + 1.1);
-    const a = W * ring.a * (1 + 0.012 * breathe);
-    const b = H * ring.b * (1 + 0.018 * breathe2);
-    const tilt = -0.46 + 0.012 * Math.sin(w + 0.4);
+    const a = ring.a * (1 + 0.012 * breathe);
+    const b = ring.b * (1 + 0.018 * breathe2);
+    const tilt = RING_TILT + 0.012 * Math.sin(w + 0.4);
     const ct = Math.cos(tilt), st = Math.sin(tilt);
 
     ctx.globalCompositeOperation = "source-over";

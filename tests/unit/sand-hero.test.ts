@@ -195,6 +195,55 @@ describe('sand hero (browser)', () => {
     await page.context().close();
   });
 
+  // Desktop and tablet keep the MacBook Air ring's shape (1440x900: a/b 1.512 in px, tilt -0.46) at every panel size;
+  // only its size and place change. sand-hero.js reports the ring it draws in data-ring: "cx cy a b tilt" (px, radians).
+  const STANDARD_RATIO = 211.64 / 140; // 0.185 x the 1144px panel / 0.28 x the 500px panel, before the change
+  it.each([[761, 900], [900, 900], [1024, 900], [1180, 900], [1280, 900], [1280, 800], [1440, 900], [1440, 760], [1920, 1080]])('at %ix%ipx the ring has the standard shape and stays inside the panel and off the text', async (width, height) => {
+    const page = await openSite(browser, '', { sand: true, width, height, reducedMotion: 'reduce' });
+    await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-sand') === 'still');
+    await page.waitForFunction(() => document.querySelectorAll('[data-stat][data-counted]').length === 3);
+    const r = await page.evaluate(() => {
+      const p = document.querySelector('.hero-panel')!, pb = p.getBoundingClientRect();
+      const [cx, cy, a, b, t] = p.getAttribute('data-ring')!.split(' ').map(Number);
+      // the tilted ellipse's bounding box
+      const hw = Math.hypot(a * Math.cos(t), b * Math.sin(t)), hh = Math.hypot(a * Math.sin(t), b * Math.cos(t));
+      const c = document.querySelector('.hero-sand') as HTMLCanvasElement, k = c.width / pb.width;
+      const d = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data;
+      const litIn = (s: string) => {
+        const e = document.querySelector(s)!.getBoundingClientRect(); let n = 0;
+        for (let py = Math.max(0, Math.floor((e.top - pb.top) * k)); py < Math.min(c.height, (e.bottom - pb.top) * k); py++)
+          for (let px = Math.max(0, Math.floor((e.left - pb.left) * k)); px < Math.min(c.width, (e.right - pb.left) * k); px++) if (d[(py * c.width + px) * 4] > 40) n++;
+        return n;
+      };
+      let edge = 0;
+      for (let py = 0; py < c.height; py++) for (let px = 0; px < c.width; px++)
+        if (d[(py * c.width + px) * 4] > 40 && (px < 3 || py < 3 || px >= c.width - 3 || py >= c.height - 3)) edge++;
+      return { ratio: a / b, tilt: t, box: [cx - hw, cy - hh, cx + hw, cy + hh], W: pb.width, H: pb.height, edge,
+        text: { title: litIn('.hero-title'), sub: litIn('.hero-sub'), week: litIn('.hero-week'), stats: litIn('.stats') } };
+    });
+    expect(Math.abs(r.ratio / STANDARD_RATIO - 1)).toBeLessThan(0.03);
+    expect(r.tilt).toBe(-0.46);
+    const [left, top, right, bottom] = r.box;
+    expect(left).toBeGreaterThan(0); expect(top).toBeGreaterThan(0);
+    expect(right).toBeLessThan(r.W); expect(bottom).toBeLessThan(r.H);
+    expect(r.edge).toBe(0); // not even the dust reaches the panel's edges
+    expect(r.text).toMatchObject({ title: 0, sub: 0, week: 0 });
+    expect(r.text.stats).toBeLessThan(20);
+    await page.context().close();
+  });
+
+  it('keeps the phone ring as it was (fractions of the panel, not the desktop shape)', async () => {
+    const page = await openSite(browser, '', { sand: true, width: 390, height: 844, reducedMotion: 'reduce' });
+    await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-sand') === 'still');
+    const r = await page.evaluate(() => {
+      const p = document.querySelector('.hero-panel')!, pb = p.getBoundingClientRect();
+      const [cx, cy, a, b] = p.getAttribute('data-ring')!.split(' ').map(Number);
+      return [cx / pb.width, cy / pb.height, a / pb.width, b / pb.height];
+    });
+    [0.52, 0.34, 0.33, 0.135].forEach((v, i) => expect(r[i]).toBeCloseTo(v, 3));
+    await page.context().close();
+  });
+
   it.each([[390], [768], [1024], [1280], [1440]])('at %ipx loads without shifting anything in the hero', async (width) => {
     const page = await openSite(browser, '', {
       sand: true, width, statsDelay: 300, stats: { screenshots: 157, portals: 15, weeks: 11 }, reducedMotion: 'no-preference',
