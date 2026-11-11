@@ -194,7 +194,10 @@ export function page(opts: { title: string; description: string; canonical?: str
   <meta name="robots" content="${opts.noindex ? "noindex" : "max-image-preview:large"}" />
 ${opts.canonical ? socialMeta(opts.title, opts.description, opts.canonical, opts.image ?? SITE_PREVIEW) : ""}${opts.jsonLd ? jsonLdScript(opts.jsonLd) : ""}  <link rel="alternate" type="application/rss+xml" title="AI Interface Library" href="${FEED_URL}" />
 ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts.markdown)}" />\n` : ""}
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon.svg?v=2" type="image/svg+xml" />
+  <link rel="icon" href="/favicon-32.png?v=2" sizes="32x32" type="image/png" />
+  <link rel="icon" href="/favicon-16.png?v=2" sizes="16x16" type="image/png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
   <!-- Body text font (all weights in one file): fetch it before CSS discovers it, as the homepage does. -->
   <link rel="preload" href="/fonts/afacad-latin.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="stylesheet" href="/fonts/fonts.css" />
