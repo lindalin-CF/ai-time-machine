@@ -363,6 +363,51 @@ describe('lint: cross-week', () => {
     expect(rules(lint(a), 'cross-week')[0].message).toMatch(/promotional_content differs/);
   });
 
+  describe('split mixed changes (§9.1, guideline 1.10.2)', () => {
+    const split = (version: string, note: string, current = 'heading; five task cards [280, 290, 770, 110]') => {
+      const a = base();
+      a.guideline_version = version;
+      a.context.promotional_content = { value: false, note: '' };
+      a.context.personalized_content = { value: false, note: '' };
+      const p = prev();
+      p.context.promotional_content = { value: true, note: 'card' };
+      p.context.personalized_content = { value: true, note: 'panel' };
+      a.changes_vs_previous = [
+        { id: 'L1', previous: 'wordmark; three large cards', current, status: 'changed', note },
+        { id: 'L1', previous: 'promotional card', current: 'not visible', status: 'possibly_confounded', note: '' },
+        { id: 'D7', previous: 'none', current: 'What can I do for you?', status: 'changed', note: 'Not from the personalized_content difference: the heading replaces the wordmark.' },
+      ];
+      setSentence(a, 7, 'Since the week of 2026-10-12, a heading and five task cards replace the logo and three large cards.', ['L1']);
+      return rules(lint(a, { previous: { analysis: p, source: 'test' } }), 'cross-week').map((f) => f.message);
+    };
+
+    it('accepts the changed part when its note names the differing field', () => {
+      expect(split('1.10.2', 'Not from the promotional_content difference: the large cards are product layout.')).toEqual([]);
+    });
+
+    it('flags a note that names no field, or not every differing field', () => {
+      expect(split('1.10.2', '').join('\n')).toMatch(/promotional_content differs from the previous week, so a L1 change must be possibly_confounded/);
+      expect(split('1.10.2', 'Not from the personalized_content difference: x').join('\n')).toMatch(/promotional_content differs .* doesn't name it/);
+    });
+
+    it('still flags the promotional element itself marked changed', () => {
+      expect(split('1.10.2', 'Not from the promotional_content difference: x', 'promotional banner [280, 290, 770, 110]').join('\n')).toMatch(/pop-up or promotional element marked changed/);
+    });
+
+    it('is in the guideline: section 9.1, 10.2, the self-check and the changelog', () => {
+      const skill = readFileSync(SKILL_PATH, 'utf8');
+      expect(skill).toMatch(/^---[\s\S]*?\nversion: 1\.10\.2\n/);
+      expect(skill).toContain('**拆分混合變動**：同一個指標的變動裡');
+      expect(skill).toContain('`"Not from the {欄位} difference: "`');
+      expect(skill).toContain('- **拆分混合變動**（第 9.1 節）時，比較句先寫 `changed` 的部分');
+      expect(skill).toMatch(/- \*\*1\.10\.2\*\*：第 9\.1 節新增「拆分混合變動」/);
+    });
+
+    it('does not apply before 1.10.2', () => {
+      expect(split('1.10.1', 'Not from the promotional_content difference: x').join('\n')).toMatch(/promotional_content differs from the previous week, so a L1 change must be possibly_confounded/);
+    });
+  });
+
   it('treats a context field missing from an older previous analysis as unknown, not a difference', () => {
     const a = base();
     a.context.promotional_content = { value: true, note: 'card' };
@@ -493,7 +538,7 @@ describe('lint: cross-week', () => {
     });
     it('is in the guideline: section 9.1, the 9.3 table and the changelog', () => {
       const skill = readFileSync(SKILL_PATH, 'utf8');
-      expect(skill).toMatch(/^---[\s\S]*?\nversion: 1\.10\.1\n/);
+      expect(skill).toMatch(/^---[\s\S]*?\nversion: 1\.10\.\d+\n/);
       expect(skill).toContain('**輪換內容**');
       expect(skill).toContain('| D5 文字、D7 | 區塊有無改變');
       expect(skill).toMatch(/- \*\*1\.10\.1\*\*：第 9\.1 節「問候語輪換」擴大為「輪換內容」/);

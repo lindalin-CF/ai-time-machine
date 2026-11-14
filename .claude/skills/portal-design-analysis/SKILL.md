@@ -1,7 +1,7 @@
 ---
 name: portal-design-analysis
 description: 依 AI Surface Library 規範分析 AI portal 的桌面截圖，產出可追溯到指標、證據等級與位置的 Design analysis。使用者提供 portal 桌面截圖並要求 design analysis、跑規範、或比較不同週次截圖時使用。
-version: 1.10.1
+version: 1.10.2
 ---
 
 # AI Portal 桌面截圖 Design Analysis 規範
@@ -274,6 +274,16 @@ version: 1.10.1
 
 **彈窗與提示類內容**：歡迎彈窗、onboarding 提示、新功能介紹浮層、評分或意見問卷一律歸入 `promotional_content`。這類元素在兩週之間出現或消失時，因此產生的變動（該元素本身，以及與它重疊或被它推開的所有指標，不限上表列出的指標）一律標 `possibly_confounded`，不標 `changed`；`note` 寫 "Pop-ups, onboarding tips, feature tours and surveys come and go between visits; a single screenshot cannot show a lasting change." 這條規則也適用於 N1。
 
+**拆分混合變動**：同一個指標的變動裡，一部分是真正的產品變動、另一部分來自上表的干擾（宣傳卡片、個人化內容等）或第 9.1 節的狀態時，**拆成兩筆**同一 `id` 的紀錄，不要把整個指標標成 `possibly_confounded`：
+
+- 真正的變動（不是干擾元素本身，也沒有被它覆蓋或推開）標 `changed`，`previous`／`current` 只寫這部分；`note` 以 `"Not from the {欄位} difference: "` 開頭（填入造成干擾的 context 欄位，多個用逗號分開），接著說明為什麼與它無關。例：`"Not from the promotional_content difference: the three large cards are replaced by five task cards; the promotional card is recorded separately."`
+- 干擾造成的部分照常標 `possibly_confounded`，`previous`／`current` 只寫這部分（例如宣傳卡片與個人化建議面板消失）。
+- 整個指標的變動都和干擾無關時（例如被取代的卡片不是宣傳卡片），只寫一筆 `changed`，`note` 同樣以 `"Not from the {欄位} difference: "` 開頭。無法分清哪些部分與干擾有關時，仍整筆標 `possibly_confounded`。
+- 這條規則不適用於 `conversation_open`、帳號方案變動與第 9.1 節前提不成立的情況：那些情況照常整筆標 `confounded` 或 `possibly_confounded`。
+- 摘要寫法見第 10.2 節：真正的變動照常寫比較句；干擾的部分只能另用一句中性說法，例如 "…are gone, which may vary by user."
+
+起因：2026-11-09 Manus 的首頁改版（品牌字標換成標題、三張大卡片換成五張任務卡片）因為同週宣傳卡片與個人化建議面板也消失，整個 L1 被標成 `possibly_confounded`，週報因此沒有列出這次改版。
+
 **帳號方案變動**：輸入第 7 項的 `plan` 與 `previous_plan` 都有值且不同時（例如 `Free` → `Pro`），兩週不是同一個方案看到的畫面。本週**所有**變動（包括 N1）一律標 `possibly_confounded`，不標 `changed`；`note` 寫 `"account plan changed (Free → Pro)"`（填入實際的兩個方案）。摘要的比較句只能用中性字眼（第 10.2 節），不得寫成產品改版。這條規則以儲存的方案為準，不看畫面上的 `plan_tier_visible`；網站顯示時也依同樣的儲存方案套用（`src/plan.ts`），所以較舊的週次不必重新分析。
 
 **輪換內容**：建議提示（D5 的文字）、精選機器人或功能磚（例如 Poe 的 "Official bots" 列）與問候語（D7）會在造訪之間輪換。這類內容**只有文字改變時不是變動**：不列入 `changes_vs_previous`（也不標 `possibly_confounded`），只在該指標的 `note` 說明，例如 "These suggestions rotate between visits; a text change alone is not a change."。只有整個區塊出現或消失（例如建議提示從 0 變成 3、問候語從無到有或從有到無）才是變動，依第 9.3 節判定並照常套用上方的干擾判定。數量改變（例如 3 個變 4 個）仍依第 9.3 節「D3、D5 數量」判定。摘要不得把輪換內容的文字改變寫成比較句。
@@ -355,7 +365,7 @@ N1 每筆變動一筆紀錄：
 
 ```json
 {
-  "guideline_version": "1.10.1",
+  "guideline_version": "1.10.2",
   "portal": "example",
   "week": "2026-09-21",
   "previous_week": "2026-09-14",
@@ -429,6 +439,7 @@ N1 每筆變動一筆紀錄：
 - 之後依序涵蓋：整體版面、畫面上最顯眼的東西、文字與顏色、使用者從哪裡開始（含問候語、建議提示與「可能出錯」聲明）；有比較結果時最後寫變動（選單變化在前，見下）。
 - 只能使用 JSON 中已存在的數值與觀察，不得新增資訊。數字可以保留，但要換成一般人懂的說法（見下表）。
 - 比較句只能根據 `changes_vs_previous`：`changed` 可以寫；`possibly_confounded` 只有在同一週也有 `changed` 的變動時才能寫，而且只能用中性字眼（"differs from"），不得寫成改版；`confounded` 不寫。
+- **拆分混合變動**（第 9.1 節）時，比較句先寫 `changed` 的部分；`possibly_confounded` 的部分可以再多用 1 句，只能用不確定的說法（例如 "…are gone, which may vary by user."），不得寫成改版，也不得用 now、no longer、new 這類確定字眼。總句數仍最多 10 句（N1 也有變動時，刪掉一句較不重要的觀察）。
 - `changes_vs_previous` 是空的、或只有 `possibly_confounded`／`confounded` 時，摘要不得說畫面與前一週不同，比較句也不能用 differs from 這類中性說法帶過：兩週畫面沒有差異時寫 "The main screen looks the same as the week of {previous week}."；有差異但全部來自帳號、工作階段或截圖瀏覽器狀態（第 9.1 節）時寫 "No product change was identified this week."
 - **選單變化先寫**：N1 有 `changed` 的變動時，比較句先寫選單變化，再寫其他數值變化。一樣一句只講一件事、20 字以內，`sources` 為 `["N1"]`。例：
   - `renamed`："The sidebar item Scheduled is now labeled Tasks."
@@ -481,12 +492,13 @@ N1 每筆變動一筆紀錄：
 4. H1 三個名次的依據數值都並列寫出，或標 `low`。
 5. `summary_sentences` 每句都有 `sources`，且句中數值與 JSON 一致；頁面摘要中沒有指標 ID、E1／E2、欄位值、hex、座標或 10.2 對照表左欄的術語，每句不超過 20 字。
 6. 摘要與 note 中沒有第 8 節的禁止類型；無標籤圖示與按鈕（包括送出、麥克風）只描述形狀；每句只講一件事。
-7. 有前一週資料時，每筆變動都達第 9.3 節門檻，干擾判定、帳號方案變動、輪換內容（只有文字改變的建議提示、精選磚與問候語沒有列入）與帳號／工作階段／截圖瀏覽器狀態規則已套用；`changes_vs_previous` 沒有 `changed` 時，摘要沒有說畫面與前一週不同。
+7. 有前一週資料時，每筆變動都達第 9.3 節門檻，干擾判定、帳號方案變動、輪換內容（只有文字改變的建議提示、精選磚與問候語沒有列入）與帳號／工作階段／截圖瀏覽器狀態規則已套用；同一指標混合真正變動與干擾時已拆成兩筆（`changed` 的 note 以 "Not from the … difference: " 開頭）；`changes_vs_previous` 沒有 `changed` 時，摘要沒有說畫面與前一週不同。
 8. 第 1.1 節表列的 portal 已套用對應的收錄方式。
 9. N1 只列產品內建、可以點擊的項目，沒有帳號專屬清單、無法確定的項目、基本輸入控制（送出、麥克風／語音、附件／加號）或不能點擊的區段標題；輸入區的工具、模式、模型、設定等功能按鈕有列入；模型選擇器只有一項 `label: "model picker"`、`role: "model_picker"`，顯示的模型名稱只在 `current`，模型名稱不同沒有記成 N1 變動；沒有文字的項目有 `icon_label`；翻譯過的 `label` 沒有 "(translated from …)"，語言記在 `translated_from`；側欄收合時 `sidebar` 為 `not_visible`，頂列和輸入區的項目照常記錄；跨週比較先用文字、再用圖示配對，只有順序改變沒有記成變動；`renamed` 只用在同一位置、同一圖示、只有文字不同的項目，`icon_changed` 只用在同一位置、周圍順序不變的無文字項目，其餘未配對的記移除加新增；有選單變化時比較句先寫選單。
 
 ## 版本紀錄
 
+- **1.10.2**：第 9.1 節新增「拆分混合變動」：同一指標的變動混合了真正的產品變動與干擾（宣傳、個人化內容或狀態）時，拆成同 `id` 的兩筆，真正的部分標 `changed`（`note` 以 "Not from the {欄位} difference: " 開頭），干擾的部分標 `possibly_confounded`，不再把整個指標標成 `possibly_confounded`。第 10.2 節：干擾部分可另用 1 句不確定說法。lint 與網站的版面變動判定同步支援（只適用 1.10.2 以後的分析）。起因：2026-11-09 Manus 的首頁改版被整個標成 `possibly_confounded`，週報沒有列出。
 - **1.10.1**：第 9.1 節「問候語輪換」擴大為「輪換內容」：建議提示、精選機器人或功能磚與問候語只有文字改變時不是變動，不列入 `changes_vs_previous`（之前 D7 文字改變標 `possibly_confounded`）；只有整個區塊出現或消失才是變動。第 9.3 節門檻表同步修改。lint 新增對應檢查（只檢查 1.10.1 以後的分析）。起因：2026-11-09 Le Chat 把重複出現過的建議提示（2026-09-28 至 10-12 已記錄）記成產品變動。
 - **1.10.0**：第 9.1 節新增「帳號、工作階段與截圖瀏覽器狀態」：針對帳號的公告、cookie 或同意橫幅、對話紀錄、模型名稱、空的對話室與載入中畫面不是產品變動，不列入 `changes_vs_previous`。第 10.2 節：`changes_vs_previous` 是空的或只有干擾項目時，摘要不得說畫面與前一週不同，改寫 "No product change was identified this week."（畫面完全相同時仍寫 "looks the same"）；`possibly_confounded` 只有在同週也有 `changed` 時才寫。lint 新增對應檢查。起因：2026-10-26 ChatGPT（針對帳號的 Finances 公告）、Qwen（cookie 橫幅）與 Muse（停在空的子聊天室）的摘要寫了 "differs from"，但沒有產品變動。
 - **1.9.0**：`color_scheme` 只反映截圖電腦當時的系統外觀設定，不是產品特性（第 6 節）：仍記錄並用於第 9.1 節的可比較前提，但不得出現在摘要或任何比較中；第 8 節新增「把深淺色外觀說成產品特性」（dark／light screen、mode、theme）。網站也不再在 /facts、Compare、比較頁、語音導覽與 llms 檔案中顯示深淺色。已發布的摘要不修改。

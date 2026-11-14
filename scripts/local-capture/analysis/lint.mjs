@@ -579,6 +579,12 @@ const DEFINITE = /\b(now|no longer|new|changed|unlike|brighter|darker|fainter|li
 const PLAN_LINK = /^(?:[+✦]\s*)?(?:upgrade(?: plan| to \w+)?|get (?:plus|pro|premium|\w+ pro)|try (?:plus|pro|premium)|go pro|subscribe|see plans|view plans)$/i;
 const POPUP = /pop-?up|popover|onboarding|feature tour|\btour\b|survey|welcome (?:card|dialog|modal|pop)|cookie|promo|promotional|upgrade card|banner/i;
 
+/** The context fields named by a split change's note, "Not from the promotional_content, personalized_content difference: …" (§9.1, 1.10.2); null without that opening. */
+function splitFields(note) {
+  const m = /^Not from the ([a-z_]+(?:\s*,\s*[a-z_]+)*) difference:\s*\S/.exec(String(note ?? ""));
+  return m ? m[1].split(",").map((f) => f.trim()) : null;
+}
+
 // §9.1: context field → metrics whose changes are possibly_confounded when it differs.
 const CONFOUND_TABLE = {
   plan_tier_visible: ["L1", "L4", "N1", "D3", "D4", "D5", "D6"],
@@ -712,8 +718,15 @@ function ruleCrossWeek(a, prev, push, previousWeek) {
     const d7Text = (v) => norm(str(v).replace(/\([^)]*\)/g, "").split(";")[0]);
     if (c.id === "D7" && !versionAtLeast(a.guideline_version, "1.10.1") && d7Text(c.previous) !== d7Text(c.current)) push("cross-week", `D7 greeting text changes are always possibly_confounded (§9.1 greeting rotation)`, where);
     const fields = differing.filter((k) => CONFOUND_TABLE[k].includes(c.id));
-    if (fields.length) push("cross-week", `${fields.join(", ")} differs from the previous week, so a ${c.id} change must be possibly_confounded (§9.1)`, where);
-    else if (POPUP.test(`${str(c.previous)} ${str(c.current)}`)) push("cross-week", `pop-up or promotional element marked changed; it must be possibly_confounded (§9.1)`, where);
+    // §9.1 split mixed changes (1.10.2): the part not caused by the differing field may be changed when its note says
+    // so for every such field ("Not from the promotional_content difference: …"). The pop-up check below still applies.
+    const split = versionAtLeast(a.guideline_version, "1.10.2") ? splitFields(c.note) : null;
+    const unexplained = split ? fields.filter((k) => !split.includes(k)) : fields;
+    if (unexplained.length) {
+      push("cross-week", split
+        ? `${unexplained.join(", ")} differs from the previous week and the note's "Not from the … difference:" doesn't name it, so this ${c.id} change must be possibly_confounded or split (§9.1)`
+        : `${fields.join(", ")} differs from the previous week, so a ${c.id} change must be possibly_confounded (§9.1)`, where);
+    } else if (POPUP.test(`${str(c.previous)} ${str(c.current)}`)) push("cross-week", `pop-up or promotional element marked changed; it must be possibly_confounded (§9.1)`, where);
   }
 
   // Summary comparison sentences. Without a changed entry, every difference is confounded or account, session or

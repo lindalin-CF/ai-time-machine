@@ -263,10 +263,23 @@ const LAYOUT_IDS = ["L1", "L2", "L3", "L4"];
 /** A summary sentence that states a change: "than in the week of 2026-09-28", "now", "no longer", "since". */
 const STATES_CHANGE = /\b(?:week of \d{4}-\d{2}-\d{2}|now|no longer|since)\b/i;
 
+/** Hedged wording: a sentence about a possibly confounded part (guideline §10.2), never a recorded change. */
+const HEDGED = /\b(?:may|might|possibly|perhaps|differs?|differ from)\b/i;
+
+/** Whether guideline version `v` ("1.10.2") is at least `min`. */
+export function versionAtLeast(v: unknown, min: string): boolean {
+  const parts = (x: string) => x.split(".").map((n) => parseInt(n, 10) || 0);
+  const a = parts(typeof v === "string" ? v : ""), b = parts(min);
+  for (let i = 0; i < 3; i++) if ((a[i] ?? 0) !== (b[i] ?? 0)) return (a[i] ?? 0) > (b[i] ?? 0);
+  return true;
+}
+
 /**
  * Summary sentences that state the layout changes recorded against the previous week: every source of the sentence
  * is a layout metric with a "changed" entry and no confounded or possibly confounded entry, and the sentence states
- * a change (not the fixed opening, not a caveat).
+ * a change (not the fixed opening, not a caveat). From guideline 1.10.2 a metric may have both: its real change
+ * (changed) split from a confounded part (§9.1 "split mixed changes"). Its sentences then count unless hedged, since
+ * the confounded part may only be written with uncertain wording (§10.2).
  */
 function layoutChanges(a: Record<string, unknown>, week: string): CaptureMetrics["layoutChanges"] {
   const previousWeek = a.previous_week;
@@ -277,11 +290,13 @@ function layoutChanges(a: Record<string, unknown>, week: string): CaptureMetrics
     if (!isObject(c) || typeof c.id !== "string" || !LAYOUT_IDS.includes(c.id)) continue;
     (c.status === "changed" ? changed : confounded).add(c.id);
   }
-  const clean = (id: unknown) => typeof id === "string" && changed.has(id) && !confounded.has(id);
+  const split = versionAtLeast(a.guideline_version, "1.10.2");
+  const clean = (id: unknown) => typeof id === "string" && changed.has(id) && (split || !confounded.has(id));
   const sentences = a.summary_sentences.flatMap((x) => {
     if (!isObject(x) || typeof x.text !== "string" || !Array.isArray(x.sources) || !x.sources.length) return [];
     const text = x.text.trim();
-    return x.sources.every(clean) && STATES_CHANGE.test(text) && !FIXED_SUMMARY_OPENING.test(text) ? [text] : [];
+    const hedged = x.sources.some((id) => confounded.has(id as string)) && HEDGED.test(text);
+    return x.sources.every(clean) && !hedged && STATES_CHANGE.test(text) && !FIXED_SUMMARY_OPENING.test(text) ? [text] : [];
   });
   return { previousWeek, sentences, confounded: confounded.size > 0 };
 }

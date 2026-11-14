@@ -13,10 +13,10 @@ const OPENING = (slug: string, week: string): Sentence =>
 
 /** A published row: the message box at y `input` (L3), the greeting at y `greeting` (D7, null: none recorded). */
 function row(slug: string, week: string, input: number | null, greeting: number | null, o: {
-  previousWeek?: string | null; changes?: Change[]; sentences?: Sentence[]; plan?: string; previousPlan?: string; viewport?: string;
+  previousWeek?: string | null; changes?: Change[]; sentences?: Sentence[]; plan?: string; previousPlan?: string; viewport?: string; version?: string;
 } = {}) {
   const analysis = {
-    status: 'ok', variant: 'desktop', portal: slug, week, previous_week: o.previousWeek ?? null, guideline_version: '1.10.0',
+    status: 'ok', variant: 'desktop', portal: slug, week, previous_week: o.previousWeek ?? null, guideline_version: o.version ?? '1.10.0',
     viewport: o.viewport ?? '1280x800', context: { color_scheme: 'dark' },
     metrics: [
       { id: 'L3', value: { vertical_third: 'middle' }, location: input === null ? null : [380, input, 770, 60] },
@@ -26,7 +26,7 @@ function row(slug: string, week: string, input: number | null, greeting: number 
     summary_sentences: [OPENING(slug, week), ...(o.sentences ?? [])],
   };
   return {
-    slug, week, analysis_by: 'guideline-v1.10.0', analysis_json: JSON.stringify(analysis),
+    slug, week, analysis_by: `guideline-v${o.version ?? '1.10.0'}`, analysis_json: JSON.stringify(analysis),
     plan: o.plan ?? null, previous_plan: o.previousPlan ?? null,
   };
 }
@@ -152,5 +152,29 @@ describe('confounded changes never appear', () => {
   it('a week captured on another account plan drops its recorded sentences', () => {
     const r = row('copilot', '2026-10-26', 400, 320, { previousWeek: '2026-10-19', changes: [L1_CHANGED], sentences: [{ text: MOVED, sources: ['L1'] }], plan: 'Pro', previousPlan: 'Free' });
     expect(captureMetrics(r)!.layoutChanges!.sentences).toEqual([]);
+  });
+});
+
+describe('split mixed changes (guideline 1.10.2)', () => {
+  // Manus 2026-11-09: the real redesign is L1 changed; the promo card and suggestions panel are a separate
+  // possibly_confounded L1 entry, written only with uncertain wording.
+  const REDESIGN = 'Since the week of 2026-11-02, a heading and five task cards replace the logo and three large cards.';
+  const GONE = 'The promotional video card and suggestions panel from the week of 2026-11-02 are gone, which may vary by user.';
+  const split = (version: string) => row('manus', '2026-11-09', 650, 210, {
+    version, previousWeek: '2026-11-02',
+    changes: [
+      { id: 'L1', previous: 'wordmark; three large cards', current: 'heading; five task cards', status: 'changed', note: 'Not from the promotional_content difference: x' },
+      { id: 'L1', previous: 'promotional video card', current: 'not visible', status: 'possibly_confounded', note: '' },
+      { id: 'L4', previous: {}, current: {}, status: 'possibly_confounded', note: '' },
+    ],
+    sentences: [{ text: REDESIGN, sources: ['L1'] }, { text: GONE, sources: ['L1'] }, { text: 'The clickable items differ from the week of 2026-11-02.', sources: ['L4'] }],
+  });
+
+  it('lists the changed part, never the hedged confounded part', () => {
+    expect(captureMetrics(split('1.10.2'))!.layoutChanges).toEqual({ previousWeek: '2026-11-02', sentences: [REDESIGN], confounded: true });
+  });
+
+  it('keeps leaving out a metric with any confounded entry before 1.10.2', () => {
+    expect(captureMetrics(split('1.10.1'))!.layoutChanges!.sentences).toEqual([]);
   });
 });
