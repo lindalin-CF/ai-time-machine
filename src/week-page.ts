@@ -1,5 +1,5 @@
 // /weeks/<week>: a crawlable digest of one week's captures (src/weeks.ts): how many portals were captured, each
-// changed portal's recorded menu changes with a small desktop screenshot and a link to Compare (this week vs the
+// changed portal's recorded menu and layout changes (src/weeks.ts) with a small desktop screenshot and a link to Compare (this week vs the
 // week its analysis compared with), and the portals without changes.
 // /weeks lists every week, newest first. Both are built from existing data only.
 import type { Env } from "./types";
@@ -45,6 +45,15 @@ function notFound(request: Request): Response {
   return new Response(html, { status: 404, headers: { ...HTML_HEADERS, "cache-control": PRIVATE_HTML_CACHE } });
 }
 
+/** Menu changes, then layout changes, each as a list under a small heading (DigestPortal in src/weeks.ts). */
+function changeGroups(p: WeekDigest["changed"][number]): { title: string; items: string[] }[] {
+  return [
+    { title: "Menu changes", items: p.changes.map((c) => c.phrase) },
+    // Digests cached before layout changes were added have no `layout`.
+    { title: "Layout changes", items: p.layout ?? [] },
+  ].filter((g) => g.items.length);
+}
+
 /** A thumbnail beside each changed portal's changes (stacked on phones), and the week links. */
 const WEEK_PAGE_HEAD = `  <style>
     .wk-summary{font-size:1.1rem;margin:0 0 16px;max-width:720px}
@@ -57,6 +66,7 @@ const WEEK_PAGE_HEAD = `  <style>
     .wk-portal .wk-visual img{background:#f4efe8}
     .wk-portal p{margin:0 0 6px}
     .wk-portal ul{padding-left:1.25em;margin:0 0 8px}
+    .wk-portal h3{font-size:.95rem;font-weight:600;margin:10px 0 4px;color:#6b6257}
     .wk-portal li{margin:0 0 4px}
     .wk-links{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:.95rem}
     .wk-unchanged{margin:32px 0 0;padding-top:24px;border-top:1px solid #d8cfc2}
@@ -124,15 +134,16 @@ export async function handleWeeks(request: Request, env: Env): Promise<Response>
 ${s.shot ? `        <figure><a href="${esc(s.weekly)}"><img src="${esc(s.shot.url)}" alt="${esc(s.shot.alt)}" width="${s.shot.width}" height="${s.shot.height}" loading="lazy" /></a></figure>\n` : ""}        <div>
           <h2>${esc(s.portal.name)}</h2>
           <p>Compared with the week of ${esc(weekInWords(s.portal.previousWeek))}:</p>
+${changeGroups(s.portal).map((g) => `          <h3>${esc(g.title)}</h3>
           <ul>
-${s.portal.changes.map((c) => `            <li>${esc(c.phrase)}</li>`).join("\n")}
+${g.items.map((x) => `            <li>${esc(x)}</li>`).join("\n")}
           </ul>
-${s.visual ? `          ${visualFigure(s.visual, s.portal.name, "wk-visual")}\n` : ""}          <p class="wk-links"><a href="${esc(s.weekly)}">${esc(s.portal.name)}, week of ${esc(weekShort(week))}</a><a href="${esc(s.compare)}" aria-label="See ${esc(s.portal.name)} this week vs last week">See this week vs last week</a></p>
+`).join("")}${s.visual ? `          ${visualFigure(s.visual, s.portal.name, "wk-visual")}\n` : ""}          <p class="wk-links"><a href="${esc(s.weekly)}">${esc(s.portal.name)}, week of ${esc(weekShort(week))}</a><a href="${esc(s.compare)}" aria-label="See ${esc(s.portal.name)} this week vs last week">See this week vs last week</a></p>
         </div>
       </section>`).join("\n");
   const planHtml = (d.planChanged ?? []).map((p) => `      <p class="wk-plan"><a href="/portals/${esc(p.slug)}/${esc(week)}">${esc(p.name)}</a>: ${esc(PLAN_CHANGE_NOTE)}</p>\n`).join("");
   const unchangedHtml = unchanged.length
-    ? `      <p class="wk-unchanged">No recorded menu changes: ${unchanged.map((p) => `<a href="/portals/${esc(p.slug)}/${esc(week)}">${esc(p.name)}</a>`).join(", ")}.</p>\n`
+    ? `      <p class="wk-unchanged">No recorded changes: ${unchanged.map((p) => `<a href="/portals/${esc(p.slug)}/${esc(week)}">${esc(p.name)}</a>`).join(", ")}.</p>\n`
     : "";
 
   const body = `    <main class="wk">
@@ -200,7 +211,7 @@ async function handleWeeksIndex(request: Request, env: Env): Promise<Response> {
     : `      <p>No weeks have been captured yet.</p>`;
   const body = `    <main class="howto">
       <h1>AI interface changes by week</h1>
-      <p class="meta">One digest per weekly capture: which AI products changed their built-in menu items, newest first.</p>
+      <p class="meta">One digest per weekly capture: which AI products changed their built-in menu items or layout, newest first.</p>
 ${list}
       <p class="method"><a href="/changes">Every menu change</a> &middot; <a href="/how-we-analyze">How the analysis is made</a></p>
     </main>`;
@@ -226,7 +237,7 @@ ${list}
   const html = page({
     consent: consentMode(request),
     title: "AI interface changes by week" + BRAND,
-    description: "A weekly digest of AI product interfaces such as ChatGPT, Claude and Gemini: how many were captured each week and which changed their menu items, newest first.",
+    description: "A weekly digest of AI product interfaces such as ChatGPT, Claude and Gemini: how many were captured each week and which changed their menu items or layout, newest first.",
     canonical: WEEKS_URL,
     head: WEEK_PAGE_HEAD,
     jsonLd,
@@ -257,7 +268,8 @@ function weekMarkdown(o: {
       "",
       `Compared with the week of ${weekInWords(s.portal.previousWeek)}:`,
       "",
-      ...s.portal.changes.map((c) => `- ${c.phrase}`),
+      ...changeGroups(s.portal).flatMap((g) => [`### ${g.title}`, "", ...g.items.map((x) => `- ${x}`), ""]),
+      "### Links",
       "",
       `- Weekly page: ${ORIGIN}${s.weekly}`,
       `- See this week vs last week: ${ORIGIN}${s.compare}`,
@@ -266,6 +278,6 @@ function weekMarkdown(o: {
       "",
     ]),
     ...(o.d.planChanged ?? []).flatMap((p) => [`${p.name}: ${PLAN_CHANGE_NOTE}`, ""]),
-    ...(o.unchanged.length ? [`No recorded menu changes: ${o.unchanged.map((p) => p.name).join(", ")}.`, ""] : []),
+    ...(o.unchanged.length ? [`No recorded changes: ${o.unchanged.map((p) => p.name).join(", ")}.`, ""] : []),
   ].join("\n");
 }

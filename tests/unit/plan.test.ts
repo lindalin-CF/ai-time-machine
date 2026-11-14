@@ -168,11 +168,11 @@ describe('surfaces', () => {
     const page = await text(handleWeeks(new Request(`${ORIGIN}/weeks/2026-10-19`), t.env));
     expect(page).toContain(`<p class="wk-plan"><a href="/portals/grok/2026-10-19">Grok</a>: ${PLAN_CHANGE_NOTE.replace(/'/g, '&#39;')}</p>`);
     expect(page).not.toContain('SuperGrok');
-    expect(page).toContain('1 of them had menu changes'); // ChatGPT only
-    expect(page).not.toMatch(/No recorded menu changes:[^<]*<a href="\/portals\/grok/);
+    expect(page).toContain('1 of them had changes'); // ChatGPT only
+    expect(page).not.toMatch(/No recorded changes:[^<]*<a href="\/portals\/grok/);
     const copilot = await text(handleWeeks(new Request(`${ORIGIN}/weeks/2026-08-24`), t.env));
     expect(copilot).toContain('<p class="wk-plan"><a href="/portals/copilot/2026-08-24">Microsoft Copilot</a>: ');
-    expect(copilot).toContain('No menu changes were recorded');
+    expect(copilot).toContain('No menu or layout changes were recorded');
     const md = await text(handleWeeks(new Request(`${ORIGIN}/weeks/2026-10-19.md`), t.env));
     expect(md).toContain(`Grok: ${PLAN_CHANGE_NOTE}`);
   });

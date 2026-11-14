@@ -66,7 +66,7 @@ const get = (path: string, init?: RequestInit) => handleWeeks(new Request(`https
 const html = async (path: string) => (await get(path)).text();
 const jsonLd = (s: string) => [...s.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]));
 const robots = (s: string) => s.match(/<meta name="robots" content="([^"]+)"/)?.[1];
-const SUMMARY = 'In the week of October 12, 2026, AI Interface Library captured 4 AI portals. 2 of them had menu changes compared with the week before. '
+const SUMMARY = 'In the week of October 12, 2026, AI Interface Library captured 4 AI portals. 2 of them had changes compared with the week before. '
   + 'Most notable changes: in ChatGPT, the More item in the side menu is now labeled Explore; in Gemini, a new Gems item appears in the side menu.';
 
 describe('routes', () => {
@@ -149,7 +149,7 @@ describe('/weeks/<week>', () => {
   });
 
   it('lists the portals without recorded changes on one line', async () => {
-    expect(await html(`/weeks/${NEW}`)).toContain(`<p class="wk-unchanged">No recorded menu changes: <a href="/portals/claude/${NEW}">Claude</a>, <a href="/portals/poe/${NEW}">Poe</a>.</p>`);
+    expect(await html(`/weeks/${NEW}`)).toContain(`<p class="wk-unchanged">No recorded changes: <a href="/portals/claude/${NEW}">Claude</a>, <a href="/portals/poe/${NEW}">Poe</a>.</p>`);
   });
 
   it('links the previous and next week, and all weeks', async () => {
@@ -164,9 +164,9 @@ describe('/weeks/<week>', () => {
 
   it('says when no changes were recorded, or the analyses are not published yet', async () => {
     const old = await html(`/weeks/${OLD}`);
-    expect(old).toContain('<p class="wk-summary">In the week of October 5, 2026, AI Interface Library captured 3 AI portals. No menu changes were recorded compared with the week before.</p>');
+    expect(old).toContain('<p class="wk-summary">In the week of October 5, 2026, AI Interface Library captured 3 AI portals. No menu or layout changes were recorded compared with the week before.</p>');
     expect(old).not.toContain('class="wk-portal"');
-    expect(await html(`/weeks/${PENDING}`)).toContain('captured 2 AI portals. Their design analyses are not published yet, so no menu changes are recorded.</p>');
+    expect(await html(`/weeks/${PENDING}`)).toContain('captured 2 AI portals. Their design analyses are not published yet, so no changes are recorded.</p>');
   });
 
   it('has Article and BreadcrumbList JSON-LD dated by the week', async () => {
@@ -200,12 +200,14 @@ describe('/weeks/<week>', () => {
       SUMMARY, '',
       '## ChatGPT', '',
       'Compared with the week of October 5, 2026:', '',
+      '### Menu changes', '',
       '- More renamed to Explore', '',
+      '### Links', '',
       `- Weekly page: ${ORIGIN}/portals/chatgpt/${NEW}`,
       `- See this week vs last week: ${ORIGIN}/#compare?view=canvas&mode=time&portal=chatgpt&weeks=${NEW},${OLD}&device=desktop`,
     ].join('\n'))).toBe(true);
     expect(text).toContain('## Gemini');
-    expect(text.trimEnd().endsWith('No recorded menu changes: Claude, Poe.')).toBe(true);
+    expect(text.trimEnd().endsWith('No recorded changes: Claude, Poe.')).toBe(true);
   });
 
   it('escapes portal names', async () => {
@@ -221,7 +223,7 @@ describe('summary', () => {
     week: NEW, captured: changed.map((p) => ({ slug: p.slug, name: p.name })), published: changed.length, changed, indexable: true, images: [],
   });
   const portal = (slug: string, ...weights: number[]) => ({
-    slug, name: slug.toUpperCase(), previousWeek: OLD, changes: weights.map((w) => ({ phrase: `p${w}`, sentence: `${slug} change ${w}.`, weight: w })),
+    slug, name: slug.toUpperCase(), previousWeek: OLD, changes: weights.map((w) => ({ phrase: `p${w}`, sentence: `${slug} change ${w}.`, weight: w })), layout: [] as string[],
   });
 
   it('picks each portal\'s most notable change, renames first, at most 3 portals, portal order on ties', () => {
@@ -232,11 +234,11 @@ describe('summary', () => {
   });
 
   it('says "change" for one portal', () => {
-    expect(weekSummary(digest([portal('a', 2)]))).toBe('In the week of October 12, 2026, AI Interface Library captured 1 AI portal. 1 of them had menu changes compared with the week before. Most notable change: in A, a change 2.');
+    expect(weekSummary(digest([portal('a', 2)]))).toBe('In the week of October 12, 2026, AI Interface Library captured 1 AI portal. 1 of them had changes compared with the week before. Most notable change: in A, a change 2.');
   });
 
   it('keeps the meta description to whole sentences of about 160 characters', () => {
-    expect(weekDescription(SUMMARY)).toBe('In the week of October 12, 2026, AI Interface Library captured 4 AI portals. 2 of them had menu changes compared with the week before.');
+    expect(weekDescription(SUMMARY)).toBe('In the week of October 12, 2026, AI Interface Library captured 4 AI portals. 2 of them had changes compared with the week before.');
     expect(weekDescription('A very long first sentence. B.'.replace('A', 'A'.repeat(200)))).toBe(`${'A'.repeat(200)} very long first sentence.`);
   });
 });
@@ -250,8 +252,8 @@ describe('/weeks index', () => {
     const items = [...page.matchAll(/<li><a href="([^"]+)">([^<]+)<\/a> — ([^<]+)<\/li>/g)].map((m) => m.slice(1));
     expect(items).toEqual([
       [`/weeks/${PENDING}`, 'Week of October 19, 2026', '2 portals captured, analyses not published yet'],
-      [`/weeks/${NEW}`, 'Week of October 12, 2026', '4 portals captured, 2 with menu changes'],
-      [`/weeks/${OLD}`, 'Week of October 5, 2026', '3 portals captured, no menu changes'],
+      [`/weeks/${NEW}`, 'Week of October 12, 2026', '4 portals captured, 2 with changes'],
+      [`/weeks/${OLD}`, 'Week of October 5, 2026', '3 portals captured, no changes'],
     ]);
     const [block] = jsonLd(page);
     expect(block['@graph'][0]).toMatchObject({ '@type': 'ItemList', numberOfItems: 3 });
@@ -277,8 +279,8 @@ describe('sitemap, llms.txt, feed, /changes and homepage', () => {
     const section = text.split('## Weekly digests\n\n')[1].split('\n\n')[0].split('\n');
     expect(section).toEqual([
       `- [All weeks](${ORIGIN}/weeks): one digest per weekly capture, newest first`,
-      `- [AI interface changes, week of October 12, 2026](${ORIGIN}/weeks/${NEW}): 4 portals captured, 2 with menu changes ([Markdown](${ORIGIN}/weeks/${NEW}.md))`,
-      `- [AI interface changes, week of October 5, 2026](${ORIGIN}/weeks/${OLD}): 3 portals captured, no menu changes ([Markdown](${ORIGIN}/weeks/${OLD}.md))`,
+      `- [AI interface changes, week of October 12, 2026](${ORIGIN}/weeks/${NEW}): 4 portals captured, 2 with changes ([Markdown](${ORIGIN}/weeks/${NEW}.md))`,
+      `- [AI interface changes, week of October 5, 2026](${ORIGIN}/weeks/${OLD}): 3 portals captured, no changes ([Markdown](${ORIGIN}/weeks/${OLD}.md))`,
     ]);
   });
 
@@ -304,5 +306,85 @@ describe('sitemap, llms.txt, feed, /changes and homepage', () => {
     expect(out).toContain('<span id="heroWeek">Week of <b>Oct 19</b>, 2026</span>');
     expect(renderHomepage(INDEX_HTML, stats, null)).toContain('<span id="heroWeek">–</span>');
     expect(APP_JS).toContain('digest.href = `/weeks/${encodeURIComponent(state.week)}`;');
+  });
+});
+
+describe('layout changes (L1-L4)', () => {
+  // The same sentences Compare shows for two consecutive weeks: captureMetrics().layoutChanges.
+  const LOWER = 'The message box now sits lower on the screen than in the week of 2026-10-05.';
+  const WIDER = 'The sidebar is wider than in the week of 2026-10-05.';
+  function setAnalysis(slug: string, a: Record<string, unknown>) {
+    t.db.prepare(`UPDATE captures SET analysis_json = ? WHERE id = ?`).run(JSON.stringify(a), `${slug}-${NEW}`);
+  }
+  const sentence = (text: string, ...sources: string[]) => ({ text, sources });
+  const layout = (id: string, status = 'changed') => ({ id, status, previous: 'a', current: 'b', note: '' });
+
+  beforeEach(() => {
+    // Claude: layout changes only. ChatGPT: its menu rename plus a wider sidebar.
+    setAnalysis('claude', { ...analysis('claude', NEW, [item('New chat')], [layout('L3')]), summary_sentences: [sentence(LOWER, 'L3')] });
+    setAnalysis('chatgpt', {
+      ...analysis('chatgpt', NEW, [item('Explore')], [change({ change: 'renamed', previous: 'More', current: 'Explore' }), layout('L2')]),
+      summary_sentences: [sentence(WIDER, 'L2')],
+    });
+  });
+
+  it('gives a layout-only portal its own section, and groups menu and layout changes', async () => {
+    const page = await html(`/weeks/${NEW}`);
+    const sections = Object.fromEntries([...page.matchAll(/<section class="wk-portal" id="([^"]+)">([\s\S]*?)<\/section>/g)].map((m) => [m[1], m[2]]));
+    expect(Object.keys(sections)).toEqual(['chatgpt', 'claude', 'gemini']);
+    const { chatgpt, claude } = sections;
+    expect(chatgpt).toMatch(/<h3>Menu changes<\/h3>\s*<ul>\s*<li>More renamed to Explore<\/li>\s*<\/ul>\s*<h3>Layout changes<\/h3>\s*<ul>\s*<li>The sidebar is wider than in the week of 2026-10-05\.<\/li>/);
+    expect(claude).not.toContain('<h3>Menu changes</h3>');
+    expect(claude).toContain(`<h3>Layout changes</h3>\n          <ul>\n            <li>${LOWER}</li>`);
+    expect(claude).toMatch(new RegExp(`<img src="/img/shots/${NEW}/claude.local.png\\?v=\\d+"`));
+    expect(claude).toContain(`<a href="/portals/claude/${NEW}">Claude, week of Oct 12, 2026</a>`);
+    expect(claude).toContain('See this week vs last week</a>');
+    expect(sections.gemini).not.toContain('<h3>Layout changes</h3>');
+    expect(page).toContain(`<p class="wk-unchanged">No recorded changes: <a href="/portals/poe/${NEW}">Poe</a>.</p>`);
+  });
+
+  it('counts them in the summary, the /weeks line, llms.txt, JSON-LD and Markdown', async () => {
+    const page = await html(`/weeks/${NEW}`);
+    expect(page).toContain('3 of them had changes compared with the week before. Most notable changes: in ChatGPT, the More item in the side menu is now labeled Explore; in Gemini, a new Gems item appears in the side menu; in Claude, the layout changed.');
+    const [block] = jsonLd(page);
+    expect(block['@graph'][0].about.map((x: any) => x.name)).toEqual(['ChatGPT', 'Claude', 'Gemini']);
+    expect(await html('/weeks')).toContain('4 portals captured, 3 with changes');
+    expect(await (await handleLlmsTxt(new Request('https://x/llms.txt'), t.env)).text()).toContain('4 portals captured, 3 with changes');
+    const md = await html(`/weeks/${NEW}.md`);
+    expect(md).toContain(['## Claude', '', 'Compared with the week of October 5, 2026:', '', '### Layout changes', '', `- ${LOWER}`, '', '### Links', ''].join('\n'));
+    expect(md).toContain(['### Menu changes', '', '- More renamed to Explore', '', '### Layout changes', '', `- ${WIDER}`].join('\n'));
+    expect(md.trimEnd().endsWith('No recorded changes: Poe.')).toBe(true);
+  });
+
+  it('leaves out confounded or possibly confounded layout changes, and sentences that state no change', async () => {
+    setAnalysis('claude', {
+      ...analysis('claude', NEW, [item('New chat')], [layout('L1', 'possibly_confounded'), layout('L3'), layout('L4', 'confounded')]),
+      summary_sentences: [
+        sentence('The layout around the message box is now different.', 'L1'),
+        sentence(LOWER, 'L3', 'L4'),
+        sentence('The message box sits near the bottom of the screen.', 'L3'),
+      ],
+    });
+    const page = await html(`/weeks/${NEW}`);
+    expect(page).not.toContain('id="claude"');
+    expect(page).toContain(`No recorded changes: <a href="/portals/claude/${NEW}">Claude</a>`);
+  });
+
+  it('leaves out layout changes in a week whose account plan changed', async () => {
+    t.db.exec(`UPDATE captures SET plan = 'Free' WHERE id = 'claude-${OLD}'`);
+    t.db.exec(`UPDATE captures SET plan = 'Pro' WHERE id = 'claude-${NEW}'`);
+    const page = await html(`/weeks/${NEW}`);
+    expect(page).not.toContain('id="claude"');
+    expect(page).toContain('<p class="wk-plan"><a href="/portals/claude/');
+  });
+
+  it('shows menu changes only when a digest was cached before layout changes existed', async () => {
+    const digest = { week: NEW, captured: [{ slug: 'chatgpt', name: 'ChatGPT' }], published: 1, indexable: true, images: [], planChanged: [],
+      changed: [{ slug: 'chatgpt', name: 'ChatGPT', previousWeek: OLD, changes: [{ phrase: 'More renamed to Explore', sentence: 'x.', weight: 3 }] }] };
+    const key = [...t.kv.keys()].find((k) => k.endsWith(':cache:week-digests')) ?? (await html('/weeks'), [...t.kv.keys()].find((k) => k.endsWith(':cache:week-digests'))!);
+    t.kv.set(key, JSON.stringify([digest]));
+    const page = await html(`/weeks/${NEW}`);
+    expect(page).toContain('<h3>Menu changes</h3>');
+    expect(page).not.toContain('<h3>Layout changes</h3>');
   });
 });

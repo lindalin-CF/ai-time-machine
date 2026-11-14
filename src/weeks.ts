@@ -1,16 +1,21 @@
 // Weekly digests (/weeks/<week>, src/week-page.ts): for each archived week, which portals were captured, which had
-// recorded menu changes (changeEntries() in src/nav-changes.ts, the same lines as the portal timeline), and whether the
-// page is indexable. Built only from D1 rows and the published analyses' menu data, so nothing new is generated.
+// recorded changes, and whether the page is indexable. Menu changes are changeEntries() in src/nav-changes.ts (the same
+// lines as the portal timeline); layout changes are the analysis's own L1-L4 summary sentences that Compare shows for
+// two consecutive weeks (captureMetrics().layoutChanges: marked changed, never confounded or possibly confounded). Built only from D1 rows and the published analyses' menu data, so nothing new is generated.
 import type { Env } from "./types";
 import { listPortals, listWeeks, publishedCaptures, sitemapCaptures } from "./db";
 import { cached } from "./api";
 import { isPublishedAnalysis, SYSTEM_TEST_WEEKS } from "./analysis";
 import { weekInWords } from "./format";
 import { changes, planChanges } from "./portal-page";
+import { captureMetrics } from "./capture-metrics";
 
 export type DigestChange = { phrase: string; sentence: string; weight: number };
-/** A portal with recorded menu changes in the week, against the week its analysis compared with. */
-export type DigestPortal = { slug: string; name: string; previousWeek: string; changes: DigestChange[] };
+/**
+ * A portal with recorded changes in the week, against the week its analysis compared with: menu changes (`changes`)
+ * and layout changes (`layout`, whole sentences), either of which may be empty.
+ */
+export type DigestPortal = { slug: string; name: string; previousWeek: string; changes: DigestChange[]; layout: string[] };
 
 export type WeekDigest = {
   week: string;
@@ -18,7 +23,7 @@ export type WeekDigest = {
   captured: { slug: string; name: string }[];
   /** How many of those captures have a published analysis. */
   published: number;
-  /** Portals with recorded menu changes, portal order. */
+  /** Portals with recorded menu or layout changes, portal order. */
   changed: DigestPortal[];
   /** Portals whose account plan changed this week (src/plan.ts), portal order: their differences are not product changes. */
   planChanged: { slug: string; name: string }[];
@@ -47,8 +52,16 @@ export async function weekDigests(env: Env): Promise<WeekDigest[]> {
       for (const e of entries) {
         if (e.week !== week || !names.has(e.slug)) continue;
         let p = changed.find((x) => x.slug === e.slug);
-        if (!p) changed.push((p = { slug: e.slug, name: e.name, previousWeek: e.previousWeek, changes: [] }));
+        if (!p) changed.push((p = { slug: e.slug, name: e.name, previousWeek: e.previousWeek, changes: [], layout: [] }));
         p.changes.push({ phrase: e.phrase, sentence: e.sentence, weight: e.weight ?? 0 });
+      }
+      for (const r of pub) {
+        if (!names.has(r.slug)) continue;
+        const lc = captureMetrics(r)?.layoutChanges; // empty when the plan changed
+        if (!lc?.sentences.length) continue;
+        let p = changed.find((x) => x.slug === r.slug);
+        if (!p) changed.push((p = { slug: r.slug, name: names.get(r.slug)!, previousWeek: lc.previousWeek, changes: [], layout: [] }));
+        if (p.previousWeek === lc.previousWeek) p.layout.push(...lc.sentences);
       }
       changed.sort(byOrder);
       const planChanged = plans.filter((e) => e.week === week && names.has(e.slug)).map((e) => ({ slug: e.slug, name: names.get(e.slug)! })).sort(byOrder);
@@ -74,10 +87,16 @@ export async function weekDigests(env: Env): Promise<WeekDigest[]> {
 /** "the sidebar item More is now labeled Explore." -> "the sidebar item More is now labeled Explore" */
 const clause = (sentence: string) => sentence.replace(/\.$/, "");
 
-/** The most notable change of each changed portal (renames first, then added or removed items, src/nav-changes.ts), at most `max` portals. */
+/** A portal with only layout changes, in the summary: its sentences don't fit "in <Name>, …", so it says this. */
+const LAYOUT_ONLY: DigestChange = { phrase: "Layout changed", sentence: "the layout changed.", weight: -1 };
+
+/**
+ * The most notable change of each changed portal (renames first, then added or removed items, src/nav-changes.ts,
+ * then portals with only layout changes), at most `max` portals.
+ */
 export function notableChanges(d: WeekDigest, max = 3): { name: string; sentence: string }[] {
   return d.changed
-    .map((p, i) => ({ i, name: p.name, top: p.changes.reduce((best, c) => (c.weight > best.weight ? c : best)) }))
+    .map((p, i) => ({ i, name: p.name, top: p.changes.length ? p.changes.reduce((best, c) => (c.weight > best.weight ? c : best)) : LAYOUT_ONLY }))
     .sort((a, b) => b.top.weight - a.top.weight || a.i - b.i)
     .slice(0, max)
     .map((x) => ({ name: x.name, sentence: x.top.sentence }));
@@ -89,22 +108,22 @@ export function weekSummary(d: WeekDigest): string {
   if (!d.captured.length) return `${when}, no AI portals were captured.`;
   const out = [`${when}, AI Interface Library captured ${plural(d.captured.length, "AI portal", "AI portals")}.`];
   if (!d.published) {
-    out.push("Their design analyses are not published yet, so no menu changes are recorded.");
+    out.push("Their design analyses are not published yet, so no changes are recorded.");
   } else if (!d.changed.length) {
-    out.push("No menu changes were recorded compared with the week before.");
+    out.push("No menu or layout changes were recorded compared with the week before.");
   } else {
-    out.push(`${d.changed.length} of them had menu changes compared with the week before.`);
+    out.push(`${d.changed.length} of them had changes compared with the week before.`);
     const top = notableChanges(d);
     out.push(`${top.length === 1 ? "Most notable change" : "Most notable changes"}: ${top.map((t) => `in ${t.name}, ${clause(t.sentence)}`).join("; ")}.`);
   }
   return out.join(" ");
 }
 
-/** One line for the /weeks index and llms.txt: "15 portals captured, 3 with menu changes". */
+/** One line for the /weeks index and llms.txt: "15 portals captured, 3 with changes". */
 export function weekLine(d: WeekDigest): string {
   const captured = `${plural(d.captured.length, "portal", "portals")} captured`;
   if (!d.published) return `${captured}, analyses not published yet`;
-  return `${captured}, ${d.changed.length ? `${d.changed.length} with menu changes` : "no menu changes"}`;
+  return `${captured}, ${d.changed.length ? `${d.changed.length} with changes` : "no changes"}`;
 }
 
 /** The newest indexable digest week, for the links from the homepage and /changes. */

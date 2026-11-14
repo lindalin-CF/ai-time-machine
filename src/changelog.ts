@@ -15,6 +15,19 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "layout-changes-in-weekly-digests",
+    date: "2026-11-13",
+    time: "21:15",
+    title: "Layout Changes in Weekly Digests",
+    subtitle: "Weekly digests now list layout changes, not only menu changes",
+    bullets: [
+      { lead: "Two groups", text: "Each product's changes are grouped as Menu changes and Layout changes. Layout changes use the same sentences Compare shows for two weeks in a row." },
+      { lead: "Only clear changes", text: "A layout change is listed only when the analysis records it as a real change. Differences that could come from a pop-up, a promotion or the account are left out." },
+      { lead: "Its own section", text: "A product whose only changes are in its layout now gets its own section, with a screenshot and links, and the counts say \"with changes\"." },
+    ],
+    closing: "Open the weekly digests.",
+  },
+  {
     slug: "before-and-after-images",
     date: "2026-11-13",
     time: "20:45",
