@@ -1,7 +1,7 @@
 ---
 name: portal-design-analysis
 description: 依 AI Surface Library 規範分析 AI portal 的桌面截圖，產出可追溯到指標、證據等級與位置的 Design analysis。使用者提供 portal 桌面截圖並要求 design analysis、跑規範、或比較不同週次截圖時使用。
-version: 1.10.0
+version: 1.10.1
 ---
 
 # AI Portal 桌面截圖 Design Analysis 規範
@@ -276,7 +276,7 @@ version: 1.10.0
 
 **帳號方案變動**：輸入第 7 項的 `plan` 與 `previous_plan` 都有值且不同時（例如 `Free` → `Pro`），兩週不是同一個方案看到的畫面。本週**所有**變動（包括 N1）一律標 `possibly_confounded`，不標 `changed`；`note` 寫 `"account plan changed (Free → Pro)"`（填入實際的兩個方案）。摘要的比較句只能用中性字眼（第 10.2 節），不得寫成產品改版。這條規則以儲存的方案為準，不看畫面上的 `plan_tier_visible`；網站顯示時也依同樣的儲存方案套用（`src/plan.ts`），所以較舊的週次不必重新分析。
 
-**問候語輪換**：D7 文字改變一律標 `possibly_confounded`，`note` 寫 "Greetings may rotate between visits; a single screenshot cannot rule this out."
+**輪換內容**：建議提示（D5 的文字）、精選機器人或功能磚（例如 Poe 的 "Official bots" 列）與問候語（D7）會在造訪之間輪換。這類內容**只有文字改變時不是變動**：不列入 `changes_vs_previous`（也不標 `possibly_confounded`），只在該指標的 `note` 說明，例如 "These suggestions rotate between visits; a text change alone is not a change."。只有整個區塊出現或消失（例如建議提示從 0 變成 3、問候語從無到有或從有到無）才是變動，依第 9.3 節判定並照常套用上方的干擾判定。數量改變（例如 3 個變 4 個）仍依第 9.3 節「D3、D5 數量」判定。摘要不得把輪換內容的文字改變寫成比較句。
 
 **帳號、工作階段與截圖瀏覽器狀態**：下列差異來自帳號、工作階段或截圖用瀏覽器的狀態，不是產品變動：針對這個帳號的公告或功能通知（例如 "You now have access to …"、"Try …" 卡片）、cookie 或同意橫幅、對話紀錄與釘選清單的內容或順序、模型選擇器顯示的模型名稱、空的對話室或子聊天室（停在某個對話室裡、不在起始畫面）、載入中的畫面。
 
@@ -318,7 +318,8 @@ version: 1.10.0
 | C2–C4 | 判定結果改變，或比值差 ≥ 0.5 |
 | C1 | 任一取樣色的 RGB 通道差 ≥ 16 |
 | D3、D5 數量 | 數量改變 |
-| D5 文字、D6、D7 | 有無、位置或文字改變 |
+| D6 | 有無、位置或文字改變 |
+| D5 文字、D7 | 區塊有無改變（只有文字改變不算，見第 9.1 節「輪換內容」） |
 
 每筆變動輸出：`{ "id", "previous", "current", "status": "changed" | "possibly_confounded" | "confounded", "note" }`。沒有達門檻的變動時，`changes_vs_previous` 為空陣列。
 
@@ -354,7 +355,7 @@ N1 每筆變動一筆紀錄：
 
 ```json
 {
-  "guideline_version": "1.10.0",
+  "guideline_version": "1.10.1",
   "portal": "example",
   "week": "2026-09-21",
   "previous_week": "2026-09-14",
@@ -480,12 +481,13 @@ N1 每筆變動一筆紀錄：
 4. H1 三個名次的依據數值都並列寫出，或標 `low`。
 5. `summary_sentences` 每句都有 `sources`，且句中數值與 JSON 一致；頁面摘要中沒有指標 ID、E1／E2、欄位值、hex、座標或 10.2 對照表左欄的術語，每句不超過 20 字。
 6. 摘要與 note 中沒有第 8 節的禁止類型；無標籤圖示與按鈕（包括送出、麥克風）只描述形狀；每句只講一件事。
-7. 有前一週資料時，每筆變動都達第 9.3 節門檻，干擾判定、帳號方案變動、問候語輪換與帳號／工作階段／截圖瀏覽器狀態規則已套用；`changes_vs_previous` 沒有 `changed` 時，摘要沒有說畫面與前一週不同。
+7. 有前一週資料時，每筆變動都達第 9.3 節門檻，干擾判定、帳號方案變動、輪換內容（只有文字改變的建議提示、精選磚與問候語沒有列入）與帳號／工作階段／截圖瀏覽器狀態規則已套用；`changes_vs_previous` 沒有 `changed` 時，摘要沒有說畫面與前一週不同。
 8. 第 1.1 節表列的 portal 已套用對應的收錄方式。
 9. N1 只列產品內建、可以點擊的項目，沒有帳號專屬清單、無法確定的項目、基本輸入控制（送出、麥克風／語音、附件／加號）或不能點擊的區段標題；輸入區的工具、模式、模型、設定等功能按鈕有列入；模型選擇器只有一項 `label: "model picker"`、`role: "model_picker"`，顯示的模型名稱只在 `current`，模型名稱不同沒有記成 N1 變動；沒有文字的項目有 `icon_label`；翻譯過的 `label` 沒有 "(translated from …)"，語言記在 `translated_from`；側欄收合時 `sidebar` 為 `not_visible`，頂列和輸入區的項目照常記錄；跨週比較先用文字、再用圖示配對，只有順序改變沒有記成變動；`renamed` 只用在同一位置、同一圖示、只有文字不同的項目，`icon_changed` 只用在同一位置、周圍順序不變的無文字項目，其餘未配對的記移除加新增；有選單變化時比較句先寫選單。
 
 ## 版本紀錄
 
+- **1.10.1**：第 9.1 節「問候語輪換」擴大為「輪換內容」：建議提示、精選機器人或功能磚與問候語只有文字改變時不是變動，不列入 `changes_vs_previous`（之前 D7 文字改變標 `possibly_confounded`）；只有整個區塊出現或消失才是變動。第 9.3 節門檻表同步修改。lint 新增對應檢查（只檢查 1.10.1 以後的分析）。起因：2026-11-09 Le Chat 把重複出現過的建議提示（2026-09-28 至 10-12 已記錄）記成產品變動。
 - **1.10.0**：第 9.1 節新增「帳號、工作階段與截圖瀏覽器狀態」：針對帳號的公告、cookie 或同意橫幅、對話紀錄、模型名稱、空的對話室與載入中畫面不是產品變動，不列入 `changes_vs_previous`。第 10.2 節：`changes_vs_previous` 是空的或只有干擾項目時，摘要不得說畫面與前一週不同，改寫 "No product change was identified this week."（畫面完全相同時仍寫 "looks the same"）；`possibly_confounded` 只有在同週也有 `changed` 時才寫。lint 新增對應檢查。起因：2026-10-26 ChatGPT（針對帳號的 Finances 公告）、Qwen（cookie 橫幅）與 Muse（停在空的子聊天室）的摘要寫了 "differs from"，但沒有產品變動。
 - **1.9.0**：`color_scheme` 只反映截圖電腦當時的系統外觀設定，不是產品特性（第 6 節）：仍記錄並用於第 9.1 節的可比較前提，但不得出現在摘要或任何比較中；第 8 節新增「把深淺色外觀說成產品特性」（dark／light screen、mode、theme）。網站也不再在 /facts、Compare、比較頁、語音導覽與 llms 檔案中顯示深淺色。已發布的摘要不修改。
 - **1.8.0**：第 9.1 節新增「帳號方案變動」：本週與前一週擷取時的帳號方案（`input.json` 的 `plan`、`previous_plan`，Free / Pro / Enterprise）不同時，所有變動（包括 N1）標 `possibly_confounded`，`note` 寫 `"account plan changed (Free → Pro)"`。方案隨截圖存入（`scripts/local-capture/config.mjs`），與私有的 `plan_tier_visible` 分開。網站顯示時依儲存的方案套用，涵蓋 Grok 2026-10-19 與 Microsoft Copilot 2026-08-24。

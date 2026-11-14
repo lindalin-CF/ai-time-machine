@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 // @ts-expect-error -- plain .mjs module, no type declarations
-import { bannedPhrases, lintAnalysis, menuNames, belowThreshold, withLintSection, markdownReport, SKILL_PATH } from '../../scripts/local-capture/analysis/lint.mjs';
+import { bannedPhrases, lintAnalysis, menuNames, belowThreshold, rotatingTextOnly, withLintSection, markdownReport, SKILL_PATH } from '../../scripts/local-capture/analysis/lint.mjs';
 
 type Finding = { rule: string; message: string; where: string; sentence?: string };
 type Json = any; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -445,8 +445,8 @@ describe('lint: cross-week', () => {
     });
     it('is in the guideline (1.10.0): section 9.1, section 10.2, the self-check and the changelog', () => {
       const skill = readFileSync(SKILL_PATH, 'utf8');
-      expect(skill).toMatch(/^---[\s\S]*?\nversion: 1\.10\.0\n/);
-      expect(skill).toContain('"guideline_version": "1.10.0"');
+      expect(skill).toMatch(/^---[\s\S]*?\nversion: 1\.10\.\d+\n/);
+      expect(skill).toMatch(/"guideline_version": "1\.10\.\d+"/);
       expect(skill).toContain('**帳號、工作階段與截圖瀏覽器狀態**');
       expect(skill).toContain('有差異但全部來自帳號、工作階段或截圖瀏覽器狀態（第 9.1 節）時寫 "No product change was identified this week."');
       expect(skill).toMatch(/- \*\*1\.10\.0\*\*：第 9\.1 節新增「帳號、工作階段與截圖瀏覽器狀態」/);
@@ -454,6 +454,49 @@ describe('lint: cross-week', () => {
       const all = [...banned.anywhere, ...banned.summaryOnly].map((b: { text: string }) => b.text.toLowerCase());
       expect(all).not.toContain('differs from');
       expect(all).not.toContain('no longer');
+    });
+  });
+
+  describe('rotating content (§9.1, guideline 1.10.1)', () => {
+    const NO_PRODUCT = 'No product change was identified this week.';
+    const withChange = (c: Json, version = '1.10.1') => {
+      const a = base();
+      a.guideline_version = version;
+      a.changes_vs_previous = [c];
+      setSentence(a, 7, NO_PRODUCT, ['changes_vs_previous']);
+      return a;
+    };
+    const rotating = (a: Json) => rules(lint(a), 'cross-week').filter((f) => /rotating content/.test(f.message));
+
+    it('detects text-only swaps, but not a block appearing, disappearing or changing count', () => {
+      expect(rotatingTextOnly({ id: 'D7', previous: 'Hi, how can I help?', current: 'What can I do for you?' })).toBe(true);
+      expect(rotatingTextOnly({ id: 'D7', previous: 'none', current: 'What can I do for you?' })).toBe(false);
+      expect(rotatingTextOnly({ id: 'D7', previous: 'Hi (translated from Chinese)', current: 'Hi (translated from Japanese)' })).toBe(false);
+      expect(rotatingTextOnly({ id: 'D5', previous: "'A', 'B', 'C'", current: "'A', 'D', 'E'" })).toBe(true);
+      expect(rotatingTextOnly({ id: 'D5', previous: "'A', 'B', 'C'", current: "'A', 'B', 'C', 'D'" })).toBe(false);
+      expect(rotatingTextOnly({ id: 'D5', previous: { suggested_prompts: 3 }, current: { suggested_prompts: 0 } })).toBe(false);
+      expect(rotatingTextOnly({ id: 'D6', previous: 'old notice', current: 'new notice' })).toBe(false);
+    });
+    it('flags a rotating text change in a 1.10.1 analysis, whatever its status', () => {
+      for (const status of ['changed', 'possibly_confounded', 'confounded']) {
+        const a = withChange({ id: 'D5', previous: "'What is new', 'Automate'", current: "'Set up', 'AI industry'", status, note: '' });
+        if (status === 'changed') setSentence(a, 7, 'Two suggested prompts have different text than the week of 2026-10-12.', ['D5']);
+        expect(rotating(a)[0]?.message, status).toMatch(/D5 only changed its text; rotating content .* leave it out of changes_vs_previous/);
+      }
+      expect(rotating(withChange({ id: 'D7', previous: 'Hi', current: 'Hello', status: 'possibly_confounded', note: '' }))).toHaveLength(1);
+    });
+    it('leaves older analyses alone (they followed the greeting-rotation rule)', () => {
+      expect(rotating(withChange({ id: 'D7', previous: 'Hi', current: 'Hello', status: 'possibly_confounded', note: '' }, '1.10.0'))).toEqual([]);
+    });
+    it('passes a block that appears', () => {
+      expect(rotating(withChange({ id: 'D7', previous: 'none', current: 'Hello', status: 'possibly_confounded', note: '' }))).toEqual([]);
+    });
+    it('is in the guideline: section 9.1, the 9.3 table and the changelog', () => {
+      const skill = readFileSync(SKILL_PATH, 'utf8');
+      expect(skill).toMatch(/^---[\s\S]*?\nversion: 1\.10\.1\n/);
+      expect(skill).toContain('**輪換內容**');
+      expect(skill).toContain('| D5 文字、D7 | 區塊有無改變');
+      expect(skill).toMatch(/- \*\*1\.10\.1\*\*：第 9\.1 節「問候語輪換」擴大為「輪換內容」/);
     });
   });
 

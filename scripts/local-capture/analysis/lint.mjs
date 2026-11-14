@@ -590,6 +590,24 @@ const CONFOUND_TABLE = {
 };
 const ctxValue = (v) => (v && typeof v === "object" && "value" in v ? v.value : v);
 
+/**
+ * True when a D5 or D7 change entry only swaps the text of rotating content (§9.1, 1.10.1): both weeks show the
+ * block, with the same number of items, and only the wording differs. A block appearing or disappearing, or a
+ * count change, returns false.
+ */
+export function rotatingTextOnly(c) {
+  if (!c || !["D5", "D7"].includes(c.id)) return false;
+  const absent = (v) => v == null || /^(?:none|null|no greeting|not visible|n\/a|0|-|—)?$/i.test(str(v).trim());
+  if (absent(c.previous) || absent(c.current)) return false;
+  if (typeof c.previous !== "string" || typeof c.current !== "string") return false; // {count} shapes: a count change
+  const text = (v) => norm(v.replace(/\([^)]*\)/g, ""));
+  if (text(c.previous) === text(c.current)) return false;
+  if (c.id === "D7") return true;
+  const items = (v) => v.match(/'[^']+'|"[^"]+"|‘[^’]+’|“[^”]+”/g)?.length ?? 0;
+  const n = items(c.previous);
+  return n > 0 && n === items(c.current);
+}
+
 /** Why a change entry doesn't meet the §9.3 threshold, or null when it does (or can't be judged). */
 export function belowThreshold(c) {
   const { id, previous: p, current: q } = c;
@@ -668,6 +686,11 @@ function ruleCrossWeek(a, prev, push, previousWeek) {
     }
     const below = belowThreshold(c);
     if (below) push("cross-week", `below the §9.3 threshold: ${below}`, where);
+    // §9.1 rotating content (1.10.1): suggestions, featured tiles and greetings only changing text is not a change.
+    if (versionAtLeast(a.guideline_version, "1.10.1") && rotatingTextOnly(c)) {
+      push("cross-week", `${c.id} only changed its text; rotating content (suggestions, featured tiles, greetings) is not a change unless the block appears or disappears, so leave it out of changes_vs_previous (§9.1 rotating content)`, where);
+      continue;
+    }
     if (c.status === "confounded") continue;
     if (premiseBroken.length) { push("cross-week", `§9.1 premise differs from the previous week (${premiseBroken.join(", ")}), so every change must be confounded`, where); continue; }
     if (convDiffers) { push("cross-week", `conversation_open differs from the previous week, so every change must be confounded (§9.1)`, where); continue; }
@@ -687,7 +710,7 @@ function ruleCrossWeek(a, prev, push, previousWeek) {
     }
     if (c.status !== "changed") continue;
     const d7Text = (v) => norm(str(v).replace(/\([^)]*\)/g, "").split(";")[0]);
-    if (c.id === "D7" && d7Text(c.previous) !== d7Text(c.current)) push("cross-week", `D7 greeting text changes are always possibly_confounded (§9.1 greeting rotation)`, where);
+    if (c.id === "D7" && !versionAtLeast(a.guideline_version, "1.10.1") && d7Text(c.previous) !== d7Text(c.current)) push("cross-week", `D7 greeting text changes are always possibly_confounded (§9.1 greeting rotation)`, where);
     const fields = differing.filter((k) => CONFOUND_TABLE[k].includes(c.id));
     if (fields.length) push("cross-week", `${fields.join(", ")} differs from the previous week, so a ${c.id} change must be possibly_confounded (§9.1)`, where);
     else if (POPUP.test(`${str(c.previous)} ${str(c.current)}`)) push("cross-week", `pop-up or promotional element marked changed; it must be possibly_confounded (§9.1)`, where);
