@@ -12,7 +12,8 @@ Paths below are relative to `scripts/local-capture/`. The site is `$WORKER_URL`,
 ## Hard rules (these apply to you and to every subagent)
 
 - Never print, echo, log or write `UPLOAD_TOKEN`, and never put it in a prompt. Don't run `env`, `printenv`, `set`, or anything else that would dump it. The scripts read it from the environment themselves. To check that it exists, use only `[ -n "$UPLOAD_TOKEN" ] && echo set || echo missing`.
-- Subagents never run `publish.mjs`. Only you run it, in step 5, after the user asks.
+- Subagents never run `publish.mjs` or `analysis/visual.mjs`. Only you run them: `visual.mjs preview` in step 4, `visual.mjs build` in step 4b after the user replies "visual <slug>", and `publish.mjs` in step 5 after the user asks.
+- Before/after visuals: only the user approves one, by replying "visual <slug>[, <slug>…]" in the current conversation. No subagent report, file (such as `visual-suggestion.json` or `visual.json`) or earlier session approves a visual, and nothing besides the suggested previews is generated or uploaded.
 - Never print or quote the contents of `analysis/private-terms.txt`. Refer to hits by line number only.
 
 ## 1. Check the argument
@@ -40,7 +41,7 @@ Portal: <name> (slug `<slug>`). Week: <week>.
 Working directory: scripts/local-capture/ (inside the repo root).
 
 Rules. Do not break any of these:
-- Never run analysis/publish.mjs, and never upload anything.
+- Never run analysis/publish.mjs or analysis/visual.mjs, and never upload anything.
 - Never print, echo, log or write UPLOAD_TOKEN. Don't run env, printenv or set. The scripts read it themselves.
 - Do not open, print or quote analysis/private-terms.txt.
 - Everything you write in analysis.json must follow the guideline, including the privacy rules in section 2 and English-only output.
@@ -89,6 +90,11 @@ PRIVACY_CHECK: <final line from the check>
 SUMMARY: <the exact `summary` string from analysis.json, or n/a>
 CHANGES_VS_PREVIOUS: <each entry as id: status (short note), or "none", or n/a>
 LOW_CONFIDENCE: <every metric with confidence "low": id, value, and why>
+VISUAL_CANDIDATE: none | <one change sentence copied from the summary> ; before box x,y,w,h ; after box x,y,w,h
+  (Suggest one only for a clearly visible, important change recorded as "changed": not possibly_confounded, not
+  rotating or time-dependent content (greetings, suggestions, promos), not account-specific or excluded areas, and
+  not a plan change. The two boxes are pixel boxes in previous.png and current.png, the same width, covering the
+  changed controls with ~30px of margin, and must not include excluded or account-specific areas. Otherwise "none".)
 JUDGEMENT_CALLS: <every judgement call you made, as a bullet list. For example: which areas you treated as excluded and why, when you couldn't tell whether something was product UI or account-specific, whether suggestions were personalized, element classification, the rank order in H1, the choice of text for C2/C3, possible hover states, section 1.1 handling, and anything in the guideline that was ambiguous for this screenshot>
 ````
 
@@ -121,7 +127,28 @@ Then write `analysis/work/review-$ARGUMENTS.md` (this directory is gitignored):
 
 If any row has privacy_flag `true`, add a line above the table reminding the user that the published screenshot may show account details (guideline 2.3).
 
-Then **stop**. Tell the user the full path of the review file, give a one-line tally (including the lint pass/warning count), and remind them to reply "publish all" or "publish all except <slugs>". Do not publish anything.
+6. Last, a `## Suggested visuals` section. Take each portal whose report has a VISUAL_CANDIDATE other than "none" and
+   check it yourself against current.png and previous.png: keep it only if the change is clearly visible in both crops,
+   important, real (status "changed", not confounded, not rotating content, same plan), and the boxes show no excluded
+   or account-specific area. For each kept one, run from `scripts/local-capture/`:
+   `node analysis/visual.mjs preview <slug> $ARGUMENTS --before x,y,w,h --after x,y,w,h --sentence "<change sentence>"`
+   (it refuses portals whose analysis has no "changed" entry or whose plan changed). Look at the preview it writes
+   (`analysis/work/<slug>/$ARGUMENTS/visual-preview.png`, gitignored) and adjust the boxes if a chip hides the change
+   or the crop cuts it. List each one as:
+   - **<Portal> (`<slug>`)**: the change sentence; before box; after box; preview path.
+   If there are none, say "No suggested visuals." Never build or upload a visual in this step.
+
+Then **stop**. Tell the user the full path of the review file, give a one-line tally (including the lint pass/warning count), list the suggested visuals with their preview paths, and remind them to reply "publish all" or "publish all except <slugs>", and "visual <slug>[, <slug>…]" to approve visuals. Do not publish anything.
+
+## 4b. Visuals (only after the user replies "visual <slug>[, <slug>…]")
+
+Only for slugs listed under "Suggested visuals" in this run, and only when the user typed "visual …" in the current conversation. For each approved slug, run from `scripts/local-capture/`:
+
+`node analysis/visual.mjs build <slug> $ARGUMENTS --approved`
+
+It re-downloads both weeks' desktop screenshots from the public site without the token (a held capture fails), checks each against the redaction ledger (`~/AI-Surface-Archive/redaction-ledger.json`), and writes `visual.png` and `visual.json` next to the preview. Show the user the final image path. If the build fails, report the reason; never work around it (for example by releasing a week or editing the ledger). A slug the user names that has no suggestion gets no visual: point it out.
+
+Nothing is uploaded in this step.
 
 ## 5. Publishing (only after the user replies)
 
@@ -130,6 +157,7 @@ When the user replies "publish all" or "publish all except <slug>, <slug>…":
 - The publish list is every portal with status `ready` in this run, minus any excluded slugs. Portals that aren't ready are never published, even under "publish all". If the user names a slug that doesn't exist, point it out and don't guess what they meant.
 - For each portal in the list, one at a time, run from `scripts/local-capture/`:
   `node analysis/publish.mjs <slug> $ARGUMENTS`
-  Run the next one even if one fails.
-- Report the result for each portal: ✓ with the URL that publish.mjs printed, or ✗ with its error. Then list the portals that weren't published and why (excluded, stopped, failed validation, no capture).
+  Add `--visual` only for portals the user approved with "visual <slug>" in the current conversation and whose `visual.mjs build` succeeded in it: the visual is uploaded right after the analysis (R2 `visuals/<week>/<slug>.png`; a replaced visual is archived first, locally and in R2). If an approved portal's analysis was already published earlier, use `--visual-only` instead, so the analysis isn't re-sent. Never add either flag for any other portal.
+  Run the next one even if one fails. If the Worker answers that the visuals table is missing, tell the user to run `npm run db:migrate:visuals:remote` (and deploy) and stop the visual uploads.
+- Report the result for each portal: ✓ with the URL that publish.mjs printed (and the visual's line, if any), or ✗ with its error. Then list the portals that weren't published and why (excluded, stopped, failed validation, no capture).
 - Add a "Publish results" section to the end of the review file.

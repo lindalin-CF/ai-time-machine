@@ -4,7 +4,13 @@
  *
  * USAGE:
  *   export UPLOAD_TOKEN=...
- *   node analysis/publish.mjs <slug> <week>
+ *   node analysis/publish.mjs <slug> <week>                 # the analysis only
+ *   node analysis/publish.mjs <slug> <week> --visual        # the analysis, then its approved before/after visual
+ *   node analysis/publish.mjs <slug> <week> --visual-only   # only the visual (the analysis is already published)
+ *
+ * A visual (analysis/visual.mjs, visual.png + visual.json) is uploaded ONLY with --visual or --visual-only, which the
+ * main agent passes only for slugs the user approved with "visual <slug>" AND then "publish …" in the current
+ * conversation. A visual.json lying in the work folder never approves anything on its own.
  *
  * Sends UPLOAD_TOKEN with every request (never printed). Afterwards it checks, with the token, whether the capture
  * is still held: its analysis stays off the site until /release-week releases the week.
@@ -17,18 +23,48 @@ import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 import { WORKER_URL, UPLOAD_TOKEN } from "../config.mjs";
 import { validateAnalysis } from "./validate.mjs";
+import { uploadVisual } from "./visual.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const TERMS_FILE = join(__dirname, "private-terms.txt");
 
 function fail(msg) { console.error(`✗ ${msg}`); process.exit(1); }
 
+const USAGE = "usage: node analysis/publish.mjs <slug> <week> [--visual | --visual-only]";
+
+/**
+ * Parse the arguments. `analysis` and `visual` say what to upload; the visual is never uploaded unless a visual flag
+ * is given explicitly. Returns { error } for anything else.
+ */
+export function parsePublishArgs(argv) {
+  const flags = argv.filter((a) => a.startsWith("--"));
+  const [slug, week, ...extra] = argv.filter((a) => !a.startsWith("--"));
+  if (!slug || !week || extra.length) return { error: USAGE };
+  const unknown = flags.filter((f) => f !== "--visual" && f !== "--visual-only");
+  if (unknown.length) return { error: `unknown option ${unknown[0]}\n${USAGE}` };
+  if (flags.includes("--visual") && flags.includes("--visual-only")) return { error: "use --visual or --visual-only, not both" };
+  const visualOnly = flags.includes("--visual-only");
+  return { slug, week, analysis: !visualOnly, visual: visualOnly || flags.includes("--visual") };
+}
+
+async function publishVisual(slug, week) {
+  try {
+    const r = await uploadVisual({ slug, week, token: UPLOAD_TOKEN, site: WORKER_URL });
+    console.log(`✓ visual ${slug} ${week} → ${WORKER_URL}/weeks/${week}#${slug}${r.archived ? ` (earlier visual archived to ${r.archived})` : ""}`);
+  } catch (e) {
+    fail(`visual not uploaded: ${e.message}`);
+  }
+}
+
 async function main() {
-  const [slug, week] = process.argv.slice(2);
-  if (!slug || !week) fail("usage: node analysis/publish.mjs <slug> <week>");
+  const args = parsePublishArgs(process.argv.slice(2));
+  if (args.error) fail(args.error);
+  const { slug, week } = args;
   if (!UPLOAD_TOKEN) fail("Set UPLOAD_TOKEN first:  export UPLOAD_TOKEN=<the value you gave `wrangler secret put UPLOAD_TOKEN`>");
+  if (!args.analysis) return await publishVisual(slug, week);
 
   const file = join(__dirname, "work", slug, week, "analysis.json");
   if (!existsSync(file)) fail(`missing ${file}`);
@@ -62,6 +98,11 @@ async function main() {
   // A held capture's analysis is stored but not shown until the week is released.
   const caps = await fetch(`${WORKER_URL}/api/captures?week=${encodeURIComponent(week)}`, { headers: auth }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
   if (caps?.captures?.find((c) => c.slug === slug)?.held) console.log(`⚠ ${slug} ${week} is still held: it appears on the site after /release-week ${week}`);
+
+  if (args.visual) await publishVisual(slug, week);
+  else if (existsSync(join(__dirname, "work", slug, week, "visual.json"))) console.log(`· visual.json exists but was not uploaded (only --visual uploads an approved visual)`);
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((e) => { console.error(e); process.exit(1); });
+}

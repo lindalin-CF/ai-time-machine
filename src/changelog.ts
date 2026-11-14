@@ -15,6 +15,19 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "before-and-after-images",
+    date: "2026-11-13",
+    time: "20:45",
+    title: "Before and After Images in Weekly Digests",
+    subtitle: "Selected changes now come with one image showing the same spot last week and this week",
+    bullets: [
+      { lead: "Same spot, two weeks", text: "The image shows the same part of the screen from the week before and the week of the change, one above the other, labeled Before and After with their dates." },
+      { lead: "Where to find it", text: "It sits above the product's change list in the weekly digest, and under the design analysis on the product's weekly page. Click it to open it full size." },
+      { lead: "Chosen by hand", text: "Images are added only for clear, visible changes, and are cut from the same privacy-checked screenshots the site already shows." },
+    ],
+    closing: "Open the week of Nov 9.",
+  },
+  {
     slug: "cleaner-product-page-titles",
     date: "2026-11-07",
     title: "Cleaner Product Page Titles",

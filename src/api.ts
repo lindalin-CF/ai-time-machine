@@ -6,6 +6,7 @@ import { validateAnalysis } from "./analysis";
 import { captureMetrics } from "./capture-metrics";
 import { PLANS, isPlan } from "./plan";
 import { imageSizeOf, sampleSize, type ImageSize } from "./image-size";
+import { storeVisual, isServableVisual, VISUAL_PREFIX, type VisualUpload } from "./visuals";
 
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8" };
 
@@ -507,6 +508,16 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     return json({ ok: true, slug: body.slug, week: body.week, status: a.status });
   }
 
+  // An approved before/after visual (scripts/local-capture/analysis/publish.mjs --visual, src/visuals.ts). Token-gated;
+  // refused while either week's capture is held, and before migration 0012.
+  if (path === "/api/visual" && request.method === "POST") {
+    const authError = requireUploadToken(request, env);
+    if (authError) return authError;
+    const body = await request.json<VisualUpload>().catch(() => ({} as VisualUpload));
+    const r = await storeVisual(env, body);
+    return json(r.body, r.status);
+  }
+
   // Stored guideline JSON for one capture, for local comparison with the previous week. Token-gated.
   if (path === "/api/analysis" && request.method === "GET") {
     const authError = requireUploadToken(request, env);
@@ -571,6 +582,8 @@ export async function handleImage(request: Request, env: Env): Promise<Response>
   // Archived copies of replaced screenshots (putKeepingOld) are private: never served, not even with the token.
   if (key.startsWith(ARCHIVE_PREFIX)) return new Response("not found", { status: 404 });
   // A held capture's screenshot (waiting for redaction) is only served with the upload token, and never cached.
+  // A before/after visual is served only while both of its captures are public (src/visuals.ts), even with the token.
+  if (key.startsWith(VISUAL_PREFIX) && !(await isServableVisual(env, key))) return new Response("not found", { status: 404 });
   const held = key.startsWith("shots/") && (await isHeldImage(env, key));
   if (held && !hasUploadToken(request, env)) return new Response("not found", { status: 404 });
   const obj = await env.SHOTS.get(key);

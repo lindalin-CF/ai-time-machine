@@ -8,9 +8,10 @@ import { desktopSize } from "./api";
 import { consentMode, PRIVATE_HTML_CACHE } from "./consent";
 import { shotAlt, weekInWords, weekShort } from "./format";
 import { SYSTEM_TEST_WEEKS } from "./analysis";
-import { BRAND, HTML_HEADERS, MARKDOWN_HEADERS, ORIGIN, SITE_PERSON, compareWeeksHash, esc, page, shotUrl, type PreviewImage } from "./portal-page";
+import { BRAND, HTML_HEADERS, MARKDOWN_HEADERS, ORIGIN, SITE_PERSON, compareWeeksHash, esc, page, shotUrl, visualFigure, type PreviewImage } from "./portal-page";
 import { weekDigests, weekLine, weekSummary, type WeekDigest } from "./weeks";
 import { PLAN_CHANGE_NOTE } from "./plan";
+import { visualsForWeek, visualUrl, type Visual } from "./visuals";
 
 export const WEEKS_URL = `${ORIGIN}/weeks`;
 
@@ -51,6 +52,8 @@ const WEEK_PAGE_HEAD = `  <style>
     .wk-portal figure{margin:0}
     .wk-portal img{display:block;width:100%;height:auto;border:1px solid #d8cfc2;border-radius:8px;background:#fff}
     .wk-portal h2{font-size:1.25rem;margin:0 0 4px}
+    .wk-portal .wk-visual{max-width:none;margin:8px 0 12px}
+    .wk-portal .wk-visual img{background:#f4efe8}
     .wk-portal p{margin:0 0 6px}
     .wk-portal ul{padding-left:1.25em;margin:0 0 8px}
     .wk-portal li{margin:0 0 4px}
@@ -85,6 +88,8 @@ export async function handleWeeks(request: Request, env: Env): Promise<Response>
   const newer = digests[i - 1]?.week ?? null;
   const older = digests[i + 1]?.week ?? null;
   const caps = await capturesForWeek(env, week);
+  // Approved before/after visuals (src/visuals.ts): only for changed portals, only while both weeks' captures are public.
+  const visuals = await visualsForWeek(env, week);
   const canonical = `${ORIGIN}/weeks/${week}`;
   const summary = weekSummary(d);
   // A portal whose account plan changed has its own muted line (PLAN_CHANGE_NOTE), not the "no changes" list.
@@ -98,6 +103,8 @@ export async function handleWeeks(request: Request, env: Env): Promise<Response>
       // Compare's Single portal canvas: this week vs the week the changes are measured against.
       compare: `/${compareWeeksHash(p.slug, [week, p.previousWeek])}`,
       shot: cap?.r2_key ? { url: shotUrl(cap.r2_key, p.slug, cap.captured_at), alt: shotAlt(p.name, "desktop", week), ...desktopSize(cap) } : null,
+      // Only a visual made against the week the changes are measured against.
+      visual: cap && visuals.get(p.slug)?.previous_week === p.previousWeek ? visuals.get(p.slug)! : null,
     };
   });
 
@@ -115,7 +122,7 @@ export async function handleWeeks(request: Request, env: Env): Promise<Response>
   const sectionsHtml = sections.map((s) => `      <section class="wk-portal" id="${esc(s.portal.slug)}">
 ${s.shot ? `        <figure><a href="${esc(s.weekly)}"><img src="${esc(s.shot.url)}" alt="${esc(s.shot.alt)}" width="${s.shot.width}" height="${s.shot.height}" loading="lazy" /></a></figure>\n` : ""}        <div>
           <h2>${esc(s.portal.name)}</h2>
-          <p>Compared with the week of ${esc(weekInWords(s.portal.previousWeek))}:</p>
+${s.visual ? `          ${visualFigure(s.visual, s.portal.name, "wk-visual")}\n` : ""}          <p>Compared with the week of ${esc(weekInWords(s.portal.previousWeek))}:</p>
           <ul>
 ${s.portal.changes.map((c) => `            <li>${esc(c.phrase)}</li>`).join("\n")}
           </ul>
@@ -177,6 +184,7 @@ ${sectionsHtml ? `${sectionsHtml}\n` : ""}${planHtml}${unchangedHtml}      <p cl
     jsonLd,
     markdown: `${canonical}.md`,
     head: WEEK_PAGE_HEAD,
+    lightbox: sections.some((s) => s.visual),
     body,
   });
   return new Response(request.method === "HEAD" ? null : html, { headers: { ...HTML_HEADERS, "cache-control": PRIVATE_HTML_CACHE } });
@@ -230,7 +238,7 @@ ${list}
 function weekMarkdown(o: {
   d: WeekDigest; canonical: string; summary: string; older: string | null; newer: string | null;
   unchanged: { slug: string; name: string }[];
-  sections: { portal: WeekDigest["changed"][number]; weekly: string; compare: string; shot: { url: string } | null }[];
+  sections: { portal: WeekDigest["changed"][number]; weekly: string; compare: string; shot: { url: string } | null; visual: Visual | null }[];
 }): string {
   const { d } = o;
   return [
@@ -253,6 +261,7 @@ function weekMarkdown(o: {
       `- Weekly page: ${ORIGIN}${s.weekly}`,
       `- See this week vs last week: ${ORIGIN}${s.compare}`,
       ...(s.shot ? [`- Desktop screenshot: ${ORIGIN}${s.shot.url}`] : []),
+      ...(s.visual ? [`- Before and after (${s.visual.alt}): ${ORIGIN}${visualUrl(s.visual)}`] : []),
       "",
     ]),
     ...(o.d.planChanged ?? []).flatMap((p) => [`${p.name}: ${PLAN_CHANGE_NOTE}`, ""]),

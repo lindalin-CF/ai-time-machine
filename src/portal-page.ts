@@ -1,4 +1,5 @@
 import type { Env, CaptureRow } from "./types";
+import { visualFor, visualUrl, type Visual } from "./visuals";
 import { getPortal, latestCaptureForPortal, captureForPortalWeek, captureWeeksForPortal, sitemapCaptures, feedCaptures, publishedCaptures, type SitemapCapture } from "./db";
 import { isPublishedAnalysis, displayedAnalysis, summaryDescription, feedSummary, SYSTEM_TEST_WEEKS } from "./analysis";
 import { cached } from "./api";
@@ -172,6 +173,16 @@ export function shotLink(o: { slug: string; name: string; week: string; device: 
   return `<a class="shot-link" href="${esc(o.url)}" aria-label="${esc(label)}" data-full="${esc(o.url)}" data-lb-group="${esc(o.group)}" data-title="${esc(o.name)}" data-caption="${esc(`${o.name} · ${device} · week of ${weekInWords(o.week)}`)}" data-file="${esc(file)}" data-ga-image="${esc(`${o.slug}-${o.week}-${o.device}`)}" data-ga-source="weekly_capture" data-ga-portal="${esc(o.slug)}" data-ga-week="${esc(o.week)}" data-ga-device="${o.device}">${img}</a>`;
 }
 
+/**
+ * An approved before/after visual (src/visuals.ts) as a figure that opens in the lightbox (group "visuals"). Its alt
+ * is the change sentence; the image itself carries the "Before" / "After" chips.
+ */
+export function visualFigure(v: Visual, name: string, className: string): string {
+  const url = visualUrl(v);
+  const label = `Open the ${name} before and after image, week of ${weekInWords(v.previous_week)} vs week of ${weekInWords(v.week)}, full size`;
+  return `<figure class="${esc(className)}"><a class="shot-link" href="${esc(url)}" aria-label="${esc(label)}" data-full="${esc(url)}" data-lb-group="visuals" data-title="${esc(name)}" data-caption="${esc(`${name} · before and after · week of ${weekInWords(v.week)}`)}" data-file="${esc(`${v.slug}-${v.week}-before-after`)}" data-ga-image="${esc(`${v.slug}-${v.week}-before-after`)}" data-ga-source="before_after" data-ga-portal="${esc(v.slug)}" data-ga-week="${esc(v.week)}" data-ga-device="desktop"><img src="${esc(url)}" alt="${esc(v.alt)}" width="${v.width}" height="${v.height}" loading="lazy" /></a></figure>`;
+}
+
 /** The lightbox's stylesheet and script, for page({ lightbox: true }). */
 const LIGHTBOX_HEAD = `  <link rel="stylesheet" href="/lightbox.css" />
 `;
@@ -249,6 +260,8 @@ ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts
     .desktop{flex:1 1 560px}.mobile{flex:0 1 240px}
     figcaption{font-size:.85rem;color:#6b6257;margin-top:6px}
     .analysis{white-space:pre-line;margin:32px 0}
+    .visual{margin:-8px 0 32px;max-width:760px}
+    .visual img{display:block;width:100%;height:auto;border:1px solid #d8cfc2;border-radius:8px;background:#f4efe8}
     .timeline{margin:32px 0}
     .timeline ul{padding-left:1.25em;margin:0}
     .timeline li{margin:0 0 6px}
@@ -413,6 +426,9 @@ export async function handlePortalPage(request: Request, env: Env): Promise<Resp
     }
   }
 
+  // An approved before/after visual, on the weekly page only, under a published analysis (src/visuals.ts).
+  const visual = weekParam !== null && cap && isPublishedAnalysis(cap) ? await visualFor(env, slug, cap.week) : null;
+
   const navLinks: string[] = [];
   if (prevWeek) navLinks.push(`<a href="/portals/${esc(slug)}/${esc(prevWeek)}" rel="prev">&larr; Previous week (${esc(prevWeek)})</a>`);
   if (nextWeek) navLinks.push(nextWeek === latestWeek
@@ -452,7 +468,7 @@ ${partners.map((x) => `          <li><a href="${esc(comparePath(slug, x.slug))}"
   const body = `    <main class="portal-page">
       <h1>${esc(name)}</h1>
 ${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screenshots">\n${shots}      </section>
-${timelineHtml}      <section class="analysis"><h2>Design analysis</h2><p>${esc(displayedAnalysis(cap))}</p><p class="method"><a href="/how-we-analyze">How this analysis is made</a></p></section>` : `      <p>No captures yet for ${esc(name)}.</p>\n${timelineHtml.replace(/\n$/, "")}`}${compareWith}
+${timelineHtml}      <section class="analysis"><h2>Design analysis</h2><p>${esc(displayedAnalysis(cap))}</p><p class="method"><a href="/how-we-analyze">How this analysis is made</a></p></section>${visual ? `\n      ${visualFigure(visual, name, "visual")}` : ""}` : `      <p>No captures yet for ${esc(name)}.</p>\n${timelineHtml.replace(/\n$/, "")}`}${compareWith}
     </main>`;
 
   if (markdown) {
@@ -461,6 +477,7 @@ ${timelineHtml}      <section class="analysis"><h2>Design analysis</h2><p>${esc(
       compareWith: partners.map((x) => ({ name: x.name, url: `${ORIGIN}${comparePath(slug, x.slug)}` })),
       compare: compareHash ? `${ORIGIN}/${compareHash}` : null,
       shots: shotImages.map((img) => ({ device: img.device, url: img.url.startsWith("/") ? `${ORIGIN}${img.url}` : img.url })),
+      visual: visual ? { url: `${ORIGIN}${visualUrl(visual)}`, alt: visual.alt } : null,
     });
     const headers: Record<string, string> = { ...MARKDOWN_HEADERS, "cache-control": "public, max-age=3600", link: `<${canonical}>; rel="canonical"` };
     if (cap && SYSTEM_TEST_WEEKS.includes(cap.week)) headers["x-robots-tag"] = "noindex";
@@ -525,7 +542,7 @@ ${timelineHtml}      <section class="analysis"><h2>Design analysis</h2><p>${esc(
     markdown: `${canonical}.md`,
     noindex: !!cap && SYSTEM_TEST_WEEKS.includes(cap.week),
     head: compareHash ? COMPARE_HEAD : undefined,
-    lightbox: shotImages.length > 0,
+    lightbox: shotImages.length > 0 || !!visual,
     body,
   });
   return new Response(request.method === "HEAD" ? null : html, {
@@ -918,7 +935,7 @@ ${latestDigest ? `      <p>Latest week: <a href="/weeks/${esc(latestDigest)}">AI
 }
 
 /** Markdown version of a portal page: the same facts as the HTML page, plus its menu items and menu changes. */
-function portalMarkdown(o: { name: string; slug: string; company: string; canonical: string; cap: CaptureRow | null; timeline: TimelineWeek[] | null; currentWeek?: string | null; shots: { device: string; url: string }[]; compare: string | null; compareWith: { name: string; url: string }[] }): string {
+function portalMarkdown(o: { name: string; slug: string; company: string; canonical: string; cap: CaptureRow | null; timeline: TimelineWeek[] | null; currentWeek?: string | null; shots: { device: string; url: string }[]; compare: string | null; compareWith: { name: string; url: string }[]; visual?: { url: string; alt: string } | null }): string {
   const lines = [`# ${o.name}`, "", `- Company: ${o.company}`];
   // The same "How the <Name> UI changed" list as the HTML page; a weekly page marks its own week.
   const timeline = o.timeline === null ? [] : [`## How the ${o.name} UI changed`, "", ...(o.timeline.length
@@ -928,6 +945,7 @@ function portalMarkdown(o: { name: string; slug: string; company: string; canoni
   if (!o.cap) return [...lines, `- Page: ${o.canonical}`, "", `No captures yet for ${o.name}.`, "", ...timeline, ...compareWith].join("\n");
   const cap = o.cap;
   lines.push(`- Week: week of ${weekInWords(cap.week)} (${cap.week})`, `- Page: ${o.canonical}`, ...(o.compare ? [`- Compare week by week: ${o.compare}`] : []), "", "## Design analysis", "", displayedAnalysis(cap), "");
+  if (o.visual) lines.push(`- Before and after (${o.visual.alt}): ${o.visual.url}`, "");
 
   const m = captureMetrics(cap);
   lines.push("## Menu items", "");

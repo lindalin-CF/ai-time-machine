@@ -91,3 +91,16 @@ CREATE TABLE question_log (
   question  TEXT NOT NULL                                      -- scrubbed, at most 1,000 characters
 );
 CREATE INDEX idx_question_log_day ON question_log(day);
+
+-- Approved before/after comparison images (migrations/0012_visuals.sql, src/visuals.ts).
+CREATE TABLE visuals (
+  id            TEXT PRIMARY KEY,    -- <slug>-<week>
+  slug          TEXT NOT NULL,
+  week          TEXT NOT NULL,       -- the "after" week
+  previous_week TEXT NOT NULL,       -- the "before" week
+  r2_key        TEXT NOT NULL,       -- visuals/<week>/<slug>.png
+  alt           TEXT NOT NULL,       -- the change sentence
+  width         INTEGER NOT NULL,
+  height        INTEGER NOT NULL,
+  created_at    TEXT NOT NULL
+);
