@@ -260,7 +260,8 @@ ${opts.markdown ? `  <link rel="alternate" type="text/markdown" href="${esc(opts
     .desktop{flex:1 1 560px}.mobile{flex:0 1 240px}
     figcaption{font-size:.85rem;color:#6b6257;margin-top:6px}
     .analysis{white-space:pre-line;margin:32px 0}
-    .visual{margin:-8px 0 32px;max-width:760px}
+    .visual{margin:0 0 16px;white-space:normal}
+    @media (min-width:761px){.visual{max-width:50%}}
     .visual img{display:block;width:100%;height:auto;border:1px solid #d8cfc2;border-radius:8px;background:#f4efe8}
     .timeline{margin:32px 0}
     .timeline ul{padding-left:1.25em;margin:0}
@@ -468,7 +469,7 @@ ${partners.map((x) => `          <li><a href="${esc(comparePath(slug, x.slug))}"
   const body = `    <main class="portal-page">
       <h1>${esc(name)}</h1>
 ${weekNav}${cap ? `      <section class="shots" aria-label="${esc(name)} screenshots">\n${shots}      </section>
-${timelineHtml}      <section class="analysis"><h2>Design analysis</h2><p>${esc(displayedAnalysis(cap))}</p><p class="method"><a href="/how-we-analyze">How this analysis is made</a></p></section>${visual ? `\n      ${visualFigure(visual, name, "visual")}` : ""}` : `      <p>No captures yet for ${esc(name)}.</p>\n${timelineHtml.replace(/\n$/, "")}`}${compareWith}
+${timelineHtml}      <section class="analysis"><h2>Design analysis</h2><p>${esc(displayedAnalysis(cap))}</p>${visual ? visualFigure(visual, name, "visual") : ""}<p class="method"><a href="/how-we-analyze">How this analysis is made</a></p></section>` : `      <p>No captures yet for ${esc(name)}.</p>\n${timelineHtml.replace(/\n$/, "")}`}${compareWith}
     </main>`;
 
   if (markdown) {

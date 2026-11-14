@@ -161,17 +161,19 @@ describe('GET /img/visuals/…', () => {
 });
 
 describe('/weeks/<week>', () => {
-  it('shows the visual above the change text, full width of the text column, opening the lightbox', async () => {
+  it('shows the visual after the change list and before the links, half the text column on wider screens, opening the lightbox', async () => {
     await upload();
     const html = await weekPage();
     const section = html.match(/<section class="wk-portal" id="claude">[\s\S]*?<\/section>/)![0];
     const figure = section.match(/<figure class="wk-visual">[\s\S]*?<\/figure>/)![0];
-    expect(section.indexOf('<h2>Claude</h2>')).toBeLessThan(section.indexOf(figure));
-    expect(section.indexOf(figure)).toBeLessThan(section.indexOf('Compared with the week of'));
+    const order = ['<h2>Claude</h2>', 'Compared with the week of', '<ul>', '</ul>', figure, '<p class="wk-links">'].map((x) => section.indexOf(x));
+    expect(order.every((i) => i >= 0)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
     expect(figure).toContain(`alt="${ALT}"`);
     expect(figure).toMatch(new RegExp(`data-full="/img/${KEY}\\?v=\\d+"`));
     expect(figure).toContain('data-lb-group="visuals"');
     expect(html).toContain('.wk-portal .wk-visual{max-width:none');
+    expect(html).toContain('@media (min-width:761px){.wk-portal .wk-visual{max-width:50%}}');
     expect(html).toContain('import { initLightbox } from "/lightbox.js"');
   });
 
@@ -215,14 +217,18 @@ describe('/weeks/<week>', () => {
 });
 
 describe('/portals/<slug>/<week>', () => {
-  it('shows the visual under the analysis on the weekly page only', async () => {
+  it('shows the visual after the analysis text and before the method link, on the weekly page only', async () => {
     await upload();
     const html = await portalPage();
-    const analysisEnd = html.indexOf('How this analysis is made</a></p></section>');
-    const fig = html.indexOf('<figure class="visual">');
-    expect(analysisEnd).toBeGreaterThan(0);
-    expect(fig).toBeGreaterThan(analysisEnd);
-    expect(html.slice(fig)).toContain(`alt="${ALT}"`);
+    const section = html.match(/<section class="analysis">[\s\S]*?<\/section>/)![0];
+    const text = section.indexOf('The message box stands out most.</p>');
+    const fig = section.indexOf('<figure class="visual">');
+    const method = section.indexOf('<p class="method"><a href="/how-we-analyze">How this analysis is made</a>');
+    expect(text).toBeGreaterThan(0);
+    expect(fig).toBeGreaterThan(text);
+    expect(method).toBeGreaterThan(fig);
+    expect(section.slice(fig)).toContain(`alt="${ALT}"`);
+    expect(html).toContain('@media (min-width:761px){.visual{max-width:50%}}');
     expect(await portalPage('/portals/claude')).not.toContain('<figure class="visual">');
     expect(await portalPage(`/portals/claude/${NEW}.md`)).toContain('- Before and after (');
   });

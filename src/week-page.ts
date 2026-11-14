@@ -52,7 +52,8 @@ const WEEK_PAGE_HEAD = `  <style>
     .wk-portal figure{margin:0}
     .wk-portal img{display:block;width:100%;height:auto;border:1px solid #d8cfc2;border-radius:8px;background:#fff}
     .wk-portal h2{font-size:1.25rem;margin:0 0 4px}
-    .wk-portal .wk-visual{max-width:none;margin:8px 0 12px}
+    .wk-portal .wk-visual{max-width:none;margin:4px 0 10px}
+    @media (min-width:761px){.wk-portal .wk-visual{max-width:50%}}
     .wk-portal .wk-visual img{background:#f4efe8}
     .wk-portal p{margin:0 0 6px}
     .wk-portal ul{padding-left:1.25em;margin:0 0 8px}
@@ -122,11 +123,11 @@ export async function handleWeeks(request: Request, env: Env): Promise<Response>
   const sectionsHtml = sections.map((s) => `      <section class="wk-portal" id="${esc(s.portal.slug)}">
 ${s.shot ? `        <figure><a href="${esc(s.weekly)}"><img src="${esc(s.shot.url)}" alt="${esc(s.shot.alt)}" width="${s.shot.width}" height="${s.shot.height}" loading="lazy" /></a></figure>\n` : ""}        <div>
           <h2>${esc(s.portal.name)}</h2>
-${s.visual ? `          ${visualFigure(s.visual, s.portal.name, "wk-visual")}\n` : ""}          <p>Compared with the week of ${esc(weekInWords(s.portal.previousWeek))}:</p>
+          <p>Compared with the week of ${esc(weekInWords(s.portal.previousWeek))}:</p>
           <ul>
 ${s.portal.changes.map((c) => `            <li>${esc(c.phrase)}</li>`).join("\n")}
           </ul>
-          <p class="wk-links"><a href="${esc(s.weekly)}">${esc(s.portal.name)}, week of ${esc(weekShort(week))}</a><a href="${esc(s.compare)}" aria-label="See ${esc(s.portal.name)} this week vs last week">See this week vs last week</a></p>
+${s.visual ? `          ${visualFigure(s.visual, s.portal.name, "wk-visual")}\n` : ""}          <p class="wk-links"><a href="${esc(s.weekly)}">${esc(s.portal.name)}, week of ${esc(weekShort(week))}</a><a href="${esc(s.compare)}" aria-label="See ${esc(s.portal.name)} this week vs last week">See this week vs last week</a></p>
         </div>
       </section>`).join("\n");
   const planHtml = (d.planChanged ?? []).map((p) => `      <p class="wk-plan"><a href="/portals/${esc(p.slug)}/${esc(week)}">${esc(p.name)}</a>: ${esc(PLAN_CHANGE_NOTE)}</p>\n`).join("");
