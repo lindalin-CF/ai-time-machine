@@ -1,14 +1,14 @@
-// Renders the 1200x630 link-preview image (public/og-image-v3.png) from the homepage's dark sand hero.
+// Renders the 1200x630 link-preview image (public/og-image-v4.png) from the homepage's dark timeline hero.
 //
 //   node og-image.mjs <output.png> [homepage URL] [screenshots,portals,weeks]
 //
-// The page is rendered with prefers-reduced-motion: reduce, so the sand canvas draws its fixed still frame, the title
-// and words are shown in place, and neither the keyword annotations nor the camera-focus reticle appear. The hero
+// The page is rendered with prefers-reduced-motion: reduce, so the timeline is its still strip (the latest week locked
+// at the right end, public/timeline-hero.js), the title and words are shown in place, and the keyword annotations don't
+// appear. The homepage must come from a Worker with data (the strip is rendered by it, src/homepage.ts). The hero
 // frame (1144px wide on any wide screen) is cropped with the cream page around it at the 1200:630 shape and scaled to
 // 1200 wide, so the frame fills the same 1013px of the image the old layout gave it (a 1056px placed image, 24px of page
-// each side) with no seam between the page and a flat canvas. The page is 1440px wide to have room for that margin. The stats and the latest week are the live site's (https://ai-portal-library.dev/api/stats and
-// /api/weeks); the stats fall back to the argument (default: the original image's numbers) when the site can't be
-// reached. Never write straight over an existing file.
+// each side) with no seam between the page and a flat canvas. The page is 1440px wide to have room for that margin. The stats are the live site's (https://ai-portal-library.dev/api/stats); they fall back to the argument
+// (default: the original image's numbers) when the site can't be reached. Never write straight over an existing file.
 import fs from "node:fs";
 import puppeteer from "puppeteer";
 
@@ -23,29 +23,22 @@ const live = async (path) => {
     return r.ok ? await r.json() : null;
   } catch { return null; }
 };
-const [liveStats, liveWeeks] = await Promise.all([live("/api/stats"), live("/api/weeks")]);
+const liveStats = await live("/api/stats");
 const [screenshots, portals, weeks] = liveStats ? [liveStats.screenshots, liveStats.portals, liveStats.weeks].map(String) : statsArg.split(",");
-const weekLabel = liveWeeks?.weeks?.[0]?.label ?? null;
-console.log(`stats ${screenshots}, ${portals}, ${weeks} (${liveStats ? "live" : "argument"}); week: ${weekLabel ?? "as the page renders it"}`);
+console.log(`stats ${screenshots}, ${portals}, ${weeks} (${liveStats ? "live" : "argument"})`);
 
-// Software rendering, so the canvas still frame and the film grain come out the same on every machine.
+// Software rendering, so the film grain and the glow come out the same on every machine.
 const browser = await puppeteer.launch({ args: ["--disable-gpu"] });
 try {
   const page = await browser.newPage();
   await page.emulateMediaFeatures([{ name: "prefers-reduced-motion", value: "reduce" }]);
   await page.setViewport({ width: 1440, height: 1200 }); // tall enough for the hero's 500px panel (its height follows the viewport below 900px)
   await page.goto(url, { waitUntil: "networkidle0" });
-  await page.waitForFunction(() => document.querySelector(".hero-panel")?.dataset.sand === "still");
-  const frame = await page.evaluate(async ({ screenshots, portals, weeks, weekLabel }) => {
+  await page.waitForFunction(() => document.querySelector(".hero-panel")?.dataset.timeline === "still", { timeout: 15_000 });
+  const frame = await page.evaluate(async ({ screenshots, portals, weeks }) => {
     await document.fonts.ready;
     const set = (k, v) => { document.querySelector(`[data-stat="${k}"]`).textContent = v; };
     set("screenshots", screenshots); set("portals", portals); set("weeks", weeks);
-    const m = weekLabel && /^Week of (.+), (\d{4})$/.exec(weekLabel);
-    if (m) {
-      const el = document.querySelector("#heroWeek");
-      el.textContent = "Week of ";
-      el.append(Object.assign(document.createElement("b"), { textContent: m[1] }), `, ${m[2]}`);
-    }
     // The crop reaches above and below the hero: hide the top bar and what follows the hero, without moving anything.
     for (const el of document.querySelectorAll(".topbar, #galleryView > :not(.hero)")) el.style.visibility = "hidden";
     // The hero's warm wash and grid (.hero::before, ::after) start 46px above it; the crop reaches higher than that,
@@ -54,7 +47,7 @@ try {
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))); // one extra frame after the edits
     const r = document.querySelector(".hero-frame").getBoundingClientRect();
     return { x: r.left + window.scrollX, y: r.top + window.scrollY, width: r.width, height: r.height };
-  }, { screenshots, portals, weeks, weekLabel });
+  }, { screenshots, portals, weeks });
 
   // Scaled by 1056/1192 (the old placed image over its crop), the frame keeps its size in the image; the crop is the
   // whole 1200x630 at that scale, centred on the frame.
