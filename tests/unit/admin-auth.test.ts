@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { handleApi } from '../../src/api';
 import { makeEnv } from './fake-env';
 
-// POST /api/capture/run and /api/capture/portal start Browser Rendering and write R2 and D1, so they need the upload
-// token like every other write (src/api.ts requireUploadToken). Without it nothing is queued or started.
+// POST /api/capture/run and /api/capture/portal start Browser Rendering and write R2 and D1, and POST /api/ai/agree
+// calls Workers AI and writes KV, so they need the upload token like every other write (src/api.ts requireUploadToken).
+// Without it nothing is queued, started, run or written.
 
 function setup() {
   const t = makeEnv(); // has Claude, UPLOAD_TOKEN 'test-token'
@@ -44,5 +45,41 @@ describe('capture endpoints need the upload token', () => {
     const run = await post(s.env, '/api/capture/run', 'test-token');
     expect(run.status).toBe(200);
     expect(s.started).toHaveLength(1);
+  });
+});
+
+describe('POST /api/ai/agree needs the upload token', () => {
+  function agreeEnv() {
+    const t = makeEnv();
+    const runs: unknown[] = [];
+    Object.assign(t.env, { AI: { async run(model: string, input: unknown) { runs.push([model, input]); return { response: 'ok' }; } } });
+    return { t, runs };
+  }
+  const agree = (env: Parameters<typeof handleApi>[1], token?: string) => handleApi(new Request('https://x/api/ai/agree', {
+    method: 'POST', headers: token ? { authorization: `Bearer ${token}` } : {},
+  }), env, ctx);
+
+  it('refuses without the token or with a wrong one, calling nothing and writing nothing', async () => {
+    const { t, runs } = agreeEnv();
+    expect((await agree(t.env)).status).toBe(401);
+    expect((await agree(t.env, 'wrong')).status).toBe(401);
+    expect(runs).toEqual([]);
+    expect(t.kv.has('ai:agreed')).toBe(false);
+  });
+
+  it('refuses when the Worker has no token configured', async () => {
+    const { t, runs } = agreeEnv();
+    delete (t.env as unknown as Record<string, unknown>).UPLOAD_TOKEN;
+    expect((await agree(t.env, 'anything')).status).toBe(500);
+    expect(runs).toEqual([]);
+  });
+
+  it('agrees with the token', async () => {
+    const { t, runs } = agreeEnv();
+    const res = await agree(t.env, 'test-token');
+    expect(res.status).toBe(200);
+    expect((await res.json() as { agreed: boolean }).agreed).toBe(true);
+    expect(runs).toHaveLength(1);
+    expect(t.kv.get('ai:agreed')).toBe('1');
   });
 });

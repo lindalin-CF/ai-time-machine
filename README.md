@@ -149,10 +149,11 @@ Meta 的視覺模型（Llama 3.2 Vision）第一次使用前，需要對你的�
 否則設計分析會全部退回預設文字。部署後先打一次：
 
 ```bash
-curl -X POST https://<your-worker>.workers.dev/api/ai/agree
+curl -X POST https://<your-worker>.workers.dev/api/ai/agree \
+  -H "Authorization: Bearer $UPLOAD_TOKEN"
 ```
 
-回傳 `{"agreed":true,...}` 即可。（程式也內建自動同意，但手動打一次最保險。）
+回傳 `{"agreed":true,...}` 即可。這個 API 需要 `UPLOAD_TOKEN`（與上傳、擷取 API 相同的 secret），沒帶或錯誤會回 401。
 
 ### 7.（可選）手動先跑一次擷取
 ```bash

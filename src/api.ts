@@ -433,8 +433,10 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     });
   }
 
-  // Admin: one-time Meta license acceptance for the vision model.
+  // Admin: one-time Meta license acceptance for the vision model. It calls Workers AI and writes KV: token-gated.
   if (path === "/api/ai/agree" && request.method === "POST") {
+    const authError = requireUploadToken(request, env);
+    if (authError) return authError;
     try {
       const r = await env.AI.run("@cf/meta/llama-3.2-11b-vision-instruct", { prompt: "agree" });
       await env.CACHE.put("ai:agreed", "1", { expirationTtl: 60 * 60 * 24 * 365 });

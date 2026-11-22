@@ -103,7 +103,9 @@ describe('timeline hero (browser)', () => {
     const page = await openSite(browser, '', { timeline: TIMELINE, reducedMotion: 'no-preference' });
     await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-timeline') === 'running');
     const latest = page.locator('.tl-track > .tl-frame.is-latest:not([aria-hidden])');
-    await latest.locator('.tl-screen').hover();
+    // The frame drifts, so hover() would wait for it to stop moving; move the mouse to where it is now instead.
+    const box = (await latest.locator('.tl-screen').boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await expect.poll(() => mode(page)).toBe('paused');
     await expect.poll(() => page.locator('.tl-tip').evaluate((t) => getComputedStyle(t).opacity)).toBe('1');
     expect(await page.locator('.tl-tip').textContent()).toBe('ChatGPT · Week of Nov 16, 2026');
