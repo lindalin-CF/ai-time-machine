@@ -4,6 +4,8 @@
 // enters from the right, eases its regions from the previous week's places to its own, so a moved message box or a
 // wider sidebar can be seen moving. The latest week rests at the right end, where the corner brackets lock onto it.
 // The loop is seamless: copies of the strip sit before and after it, and its position is a pure function of time.
+// Where one copy's latest week meets the next copy's oldest, the strip breaks: an empty slot with the joining line
+// fading out of the latest and into the oldest (styles.css --tl-seam), so time never seems to run backwards.
 // It stops while off screen, while the tab is hidden, and while a pointer or keyboard focus is on the strip; with
 // reduced motion it is the still strip the Worker rendered (the latest week at the right end). The panel's
 // data-timeline says which: "running", "paused" or "still".
@@ -40,12 +42,13 @@
     vw = view.clientWidth;
     const first = real[0], fw = first.offsetWidth;
     pitch = real.length > 1 ? real[1].offsetLeft - first.offsetLeft : fw + 24;
-    setW = pitch * real.length;
     if (!vw || !fw) { built = false; return; }
-    const k = Math.ceil(vw / setW) + 1;
+    const k = Math.ceil(vw / (pitch * real.length)) + 1;
     const copy = () => real.map((a) => { const c = a.cloneNode(true); c.setAttribute("aria-hidden", "true"); c.tabIndex = -1; c.inert = true; return c; });
     for (let i = 0; i < k; i++) { track.prepend(...copy()); track.append(...copy()); }
     items = [...track.children].map((el, j) => ({ el, i: j % real.length, rects: el.querySelectorAll("rect"), p: -1 }));
+    // One strip's length, the seam's break included: from one copy's oldest week to the next one's.
+    setW = items[real.length].el.offsetLeft - items[0].el.offsetLeft;
     const pad = parseFloat(getComputedStyle(root).getPropertyValue("--tl-pad")) || 0;
     // The track stays anchored at the right (styles.css), so moving it never changes its box: offsets are from where
     // it sits with the copies in it (base), and the transform puts the latest week back at the right end.

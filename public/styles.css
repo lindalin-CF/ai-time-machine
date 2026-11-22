@@ -38,8 +38,14 @@
   --radius:14px;
   --radius-sm:10px;
   --shadow-sm:0 1px 2px rgba(66,50,23,.06),0 8px 24px -18px rgba(66,50,23,.25);
-  --maxw:1200px;
+  /* The page's frame, as on the portfolio site (Framer): content at most 1400px wide including its side gaps,
+     centred, with one fixed side gap per breakpoint (80px from 1200px, 40px at 810-1199px, 20px below 810px). The
+     top bar, the hero banner, the filter bar, the grid and the footer all share it, so they don't scale with the window. */
+  --maxw:1400px;
+  --page-gap:80px;
 }
+@media(max-width:1199px){:root{--page-gap:40px}}
+@media(max-width:809px){:root{--page-gap:20px}}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{
@@ -55,7 +61,7 @@ img{display:block;max-width:100%;height:auto} /* height:auto keeps width/height 
   position:sticky;top:0;z-index:70;
   display:flex;align-items:center;justify-content:space-between;
   width:100%;max-width:none;margin:0;
-  padding:18px max(28px,calc((100vw - var(--maxw))/2 + 28px));
+  padding:18px max(var(--page-gap),calc((100% - var(--maxw))/2 + var(--page-gap)));
   background:rgba(231,223,212,.5);
   -webkit-backdrop-filter:blur(10px);
   backdrop-filter:blur(10px);
@@ -73,7 +79,7 @@ img{display:block;max-width:100%;height:auto} /* height:auto keeps width/height 
    (on touch screens :hover sticks to the last link tapped, which made a second link look current). */
 @media(hover:hover){.topnav-link:hover{color:var(--cf-text)}}
 
-main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
+main{max-width:var(--maxw);margin:0 auto;padding:0 var(--page-gap) 64px}
 
 /* ---------- hero / refined brutalism ---------- */
 .hero{
@@ -103,7 +109,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .hero-frame{
   /* No inset: the black panel fills the frame, so its left and right edges line up with the filter bar (.controls),
      the "Week of …" heading row and the card grid below. The frame keeps the outer radius and the shadow. */
-  position:relative;border-radius:34px;padding:0;
+  position:relative;border-radius:24px;padding:0; /* the portfolio's cover radius, at every width */
   box-shadow:0 44px 90px -50px rgba(21,14,5,.75),0 12px 30px -22px rgba(21,14,5,.9);
 }
 /* The dark timeline hero (docs/prototypes/timeline-hero.html): a 2.2:1 charcoal panel, the type in the left third and,
@@ -132,9 +138,9 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .hero-timeline{
   --tl-w:clamp(92px,8.2vw,124px);--tl-gap:clamp(22px,2.2vw,32px);--tl-pad:var(--hero-pad-r,34px);
   --tl-label:18px;--tl-h:calc(var(--tl-w) * .625);
-  grid-column:2;grid-row:1 / -1;align-self:center;position:relative;z-index:1;pointer-events:auto;
+  grid-column:2;grid-row:2;align-self:center;position:relative;z-index:1;pointer-events:auto;
   margin-right:calc(-1 * var(--hero-pad-r,34px)); /* bleeds to the panel's right edge */
-  padding-bottom:30px; /* the hover label's room */
+  padding-bottom:30px;margin-bottom:-30px; /* the hover label's room, kept out of the centring */
 }
 .tl-view{position:relative;overflow:hidden;height:calc(var(--tl-label) + 8px + var(--tl-h) + 20px); /* room for the brackets */
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 56px);mask-image:linear-gradient(90deg,transparent,#000 56px)}
@@ -149,6 +155,16 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 /* the thin line to the next week, through the screens' middle */
 .tl-frame:not(.is-latest) .tl-screen::after{content:"";position:absolute;left:100%;top:50%;width:var(--tl-gap);height:1px;background:rgba(242,240,236,.18)}
 .tl-frame:has(+ .is-latest) .tl-screen::after{background:linear-gradient(90deg,rgba(242,240,236,.18),rgba(196,76,28,.75))} /* the line into the latest week */
+/* The loop's seam (moving strip only, public/timeline-hero.js): after the latest week the strip breaks for one empty
+   slot before the oldest week comes round again. The line fades out of the latest and fades into the oldest, with
+   nothing between, so the strip reads as ending and starting over, not as going back in time. */
+.hero-timeline{--tl-seam:calc(var(--tl-w) + var(--tl-gap))}
+.tl-track.is-moving > .tl-frame.is-latest + .tl-frame{margin-left:var(--tl-seam)}
+.tl-track.is-moving > .tl-frame.is-latest:not(:last-child) .tl-screen::after,
+.tl-track.is-moving > .tl-frame.is-latest + .tl-frame .tl-screen::before{content:"";position:absolute;top:50%;height:1px;
+  width:calc((var(--tl-seam) + var(--tl-gap)) * .38);pointer-events:none}
+.tl-track.is-moving > .tl-frame.is-latest:not(:last-child) .tl-screen::after{left:100%;background:linear-gradient(90deg,rgba(196,76,28,.75),rgba(196,76,28,0))}
+.tl-track.is-moving > .tl-frame.is-latest + .tl-frame .tl-screen::before{right:100%;background:linear-gradient(90deg,rgba(242,240,236,0),rgba(242,240,236,.18))}
 .tl-screen rect{vector-effect:non-scaling-stroke;stroke-width:1px}
 .tl-screen .w-sb{fill:rgba(242,240,236,.1)}
 .tl-screen .w-tb{fill:rgba(242,240,236,.065)}
@@ -173,17 +189,18 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .tl-tip.is-on{opacity:1}
 @media (prefers-reduced-motion:reduce){.tl-lock,.tl-lock i,.tl-screen,.tl-tip{transition:none}}
 
-/* The type, over the panel: copy in the left column, stats top right, the timeline right of the copy. The copy and the
-   timeline span every row, so both are centred on the panel's middle; the stats have their own column, so the copy is
-   centred over their row too. */
+/* The type, over the panel: the stats in the top row on the right; below them the copy in the left column and the
+   timeline right of it, centred in the space between the stats and the panel's bottom edge. The gap under the stats
+   equals the bottom padding, so the centring is even; public/hero-align.js then lines the title's last baseline up
+   with the frames and centres what is visible of the two (title to sub, week labels to frames) in that space. */
 .hero-layer{position:absolute;inset:0;z-index:3;display:grid;grid-template-rows:auto 1fr;
   /* The copy starts nearer the middle (--hero-pad-l); the stats keep their padding on the right (--hero-pad-r). The copy
      column keeps the right edge it had with equal padding, 46% of the panel's width inside that padding, so it narrows
      from the left only and stays clear of the timeline: 46% of the content box less .54 of the extra left padding. */
   --hero-pad-l:clamp(40px,5vw,72px);--hero-pad-r:34px;--copy-share:46%;--copy-rest:.54;
   grid-template-columns:minmax(0,calc(var(--copy-share) - (var(--hero-pad-l) - var(--hero-pad-r)) * var(--copy-rest))) 1fr;
-  padding:30px var(--hero-pad-r) 30px var(--hero-pad-l);gap:16px;pointer-events:none}
-.hero-copy{grid-column:1;grid-row:1 / -1;align-self:center;display:grid;gap:18px}
+  --layer-pad:30px;padding:var(--layer-pad) var(--hero-pad-r) var(--layer-pad) var(--hero-pad-l);gap:var(--layer-pad) 16px;pointer-events:none}
+.hero-copy{grid-column:1;grid-row:2;align-self:center;display:grid;gap:18px}
 .hero-title{
   font-size:clamp(42px,6.4vw,74px);line-height:.9;font-weight:700;
   letter-spacing:0;margin:0;max-width:9ch;color:var(--ink);
@@ -294,21 +311,22 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 @keyframes stat-wait{from{visibility:hidden}to{visibility:visible}}
 
 /* Wide desktop screens that are short (e.g. Windows laptops at 125–150% scaling, ~600–730px tall): the panel's height
-   follows the viewport too, so the filter bar starts in the first screen. At 900px tall and up the cap is 500px, about
-   the 2.2:1 height anyway. The vh lines are the fallback for browsers without svh. */
+   follows the viewport too, so the filter bar starts in the first screen. The cap is 420px (at 900px tall and up): the
+   stats, then the copy and timeline with about 60px above and below them, not a bare lower half. The vh lines are the
+   fallback for browsers without svh. */
 @media(min-width:1181px){
-  .hero-panel{min-height:320px;max-height:clamp(320px,calc(200px + 33.333vh),500px);max-height:clamp(320px,calc(200px + 33.333svh),500px)}
+  .hero-panel{min-height:320px;max-height:clamp(320px,calc(170px + 28vh),420px);max-height:clamp(320px,calc(170px + 28svh),420px)}
   .hero-title{font-size:clamp(42px,min(6.4vw,8.8vh),74px);font-size:clamp(42px,min(6.4vw,8.8svh),74px)}
   .hero-sub{font-size:clamp(14px,calc(min(1.75vw,3.5vh) - 2px),20px);font-size:clamp(14px,calc(min(1.75vw,3.5svh) - 2px),20px)}
 }
 @media(min-width:1181px) and (max-height:820px){
   .hero{margin-bottom:20px;padding:18px 0 22px}
-  .hero-frame{border-radius:28px}
-  .hero-layer{--hero-pad-r:30px;padding-top:22px;padding-bottom:22px}
+  .hero-layer{--hero-pad-r:30px;--layer-pad:22px}
 }
-/* Between phone and wide desktop the 2.2:1 box is too short for the large title: let it grow. */
+/* Between phone and wide desktop the panel's height follows the title's size (7.2vw), leaving about 75px above and
+   below the copy and timeline. */
 @media(max-width:1180px) and (min-width:761px){
-  .hero-panel{aspect-ratio:auto;min-height:max(540px,calc((100vw - 56px) / 2.2))}
+  .hero-panel{aspect-ratio:auto;min-height:clamp(380px,calc(300px + 12vw),460px)}
   /* the copy column is wider here, so the stats get the whole top row; the copy and the timeline stay centred on the
      panel (the panel is tall enough that they clear the stats) */
   .hero-layer{--copy-share:54%;--copy-rest:.46}
@@ -471,7 +489,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 
 /* ---------- footer ---------- */
 .sitefoot{
-  max-width:var(--maxw);margin:0 auto;padding:30px 28px 56px;
+  max-width:var(--maxw);margin:0 auto;padding:30px var(--page-gap) 56px;
   border-top:1px solid var(--cf-border);display:flex;align-items:center;
   justify-content:space-between;gap:20px;flex-wrap:wrap;
 }
@@ -509,8 +527,8 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 @media(max-width:480px){.site-dialog form{padding:22px 18px 18px}}
 
 @media(max-width:640px){
-  main{padding:0 18px 48px}
-  .topbar{padding:16px 18px}
+  main{padding-bottom:48px}
+  .topbar{padding:16px var(--page-gap)}
 }
 
 /* Signed-in (local-agent) capture badge */
@@ -610,7 +628,7 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
   .topbar{
     align-items:flex-start;
     gap:12px;
-    padding:14px 16px;
+    padding:14px var(--page-gap);
   }
   .wordmark{
     font-size:13px;
@@ -624,10 +642,8 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
   }
   .topnav-link{font-size:13px}
 
-  main{padding:0 14px 48px}
 
   .hero{margin-top:6px;margin-bottom:24px;padding:16px 0 14px}
-  .hero-frame{border-radius:24px}
   /* Phone layout: stats on top, the timeline in a band under them (three frames wide), then the copy, the three
      centred as one group in the panel. The type layer is in the flow here, so content sets the height (min-height is
      only a floor) and long copy grows the panel instead of being clipped. The panel stays near 55-60% of a phone
@@ -725,7 +741,7 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
 /* Phones: the strip runs edge to edge of the panel, three frames between its 18px paddings. */
 @media(max-width:760px){
   .hero-timeline{grid-column:1;grid-row:2;align-self:center;margin:0 -18px;padding-bottom:0;
-    --tl-pad:18px;--tl-gap:12px;--tl-w:calc((100vw - 28px - 36px - 2 * var(--tl-gap)) / 3)} /* the panel is 100vw less main's 14px paddings */
+    --tl-pad:18px;--tl-gap:12px;--tl-w:calc((100vw - 2 * var(--page-gap) - 36px - 2 * var(--tl-gap)) / 3)} /* the panel is 100vw less the page's side gaps */
   .tl-view{-webkit-mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 14px),transparent);mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 14px),transparent)}
 }
 
@@ -790,14 +806,14 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
 
 /* ---------- mobile top nav stays on one row ---------- */
 @media(max-width:760px){
-  .topbar{align-items:center;gap:10px;flex-wrap:nowrap;padding:14px 16px}
+  .topbar{align-items:center;gap:10px;flex-wrap:nowrap;padding:14px var(--page-gap)}
   .wordmark{font-size:13px;letter-spacing:.10em;min-width:0;flex:1 1 auto;white-space:nowrap}
   .topnav{margin-left:auto;flex:0 0 auto;gap:14px;flex-wrap:nowrap;justify-content:flex-end;white-space:nowrap}
   .topnav-link{font-size:13px;white-space:nowrap}
   .week-menu{min-width:150px}
 }
 @media(max-width:420px){
-  .topbar{flex-direction:row;align-items:center;gap:8px;padding:12px 14px}
+  .topbar{flex-direction:row;align-items:center;gap:8px;padding:12px var(--page-gap)}
   .wordmark{font-size:13px;letter-spacing:.08em;max-width:48vw;overflow:hidden;text-overflow:ellipsis}
   .topnav{width:auto;justify-content:flex-end;gap:12px}
   .topnav-link{font-size:13px}
@@ -914,7 +930,7 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
 
 /* ---------- mobile fixes: compact week filter + one-line top menu ---------- */
 @media(max-width:760px){
-  .topbar{align-items:center;gap:10px;flex-wrap:nowrap;padding:14px 16px}
+  .topbar{align-items:center;gap:10px;flex-wrap:nowrap;padding:14px var(--page-gap)}
   .wordmark{flex:1 1 auto;font-size:13px;letter-spacing:.01em;white-space:nowrap;overflow:hidden}
   .wordmark-dot{flex:0 0 auto}
   .wordmark-text{max-width:100%}
@@ -922,7 +938,7 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
   .topnav-link{font-size:13px;white-space:nowrap}
 }
 @media(max-width:420px){
-  .topbar{flex-direction:row;align-items:center;gap:8px;padding:12px 14px}
+  .topbar{flex-direction:row;align-items:center;gap:8px;padding:12px var(--page-gap)}
   .wordmark{font-size:13px;max-width:54vw;letter-spacing:0}
   .topnav{width:auto;margin-left:auto;justify-content:flex-end;gap:11px}
   .topnav-link{font-size:13px}

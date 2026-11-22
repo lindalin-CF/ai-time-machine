@@ -130,8 +130,8 @@ describe('homepage hero (browser)', () => {
     }
   });
 
-  it('follows the viewport height on wide desktops: short screens show the filter bar, 900px+ keeps the 500px panel', async () => {
-    for (const [width, height, panel] of [[1280, 600, 400], [1536, 730, 443], [1440, 900, 500], [1920, 1080, 500]]) {
+  it('follows the viewport height on wide desktops: short screens show the filter bar, 900px+ keeps the 420px panel', async () => {
+    for (const [width, height, panel] of [[1280, 600, 338], [1536, 730, 374], [1440, 900, 420], [1920, 1080, 420]]) {
       const page = await openSite(browser, '', { width, height });
       const m = await page.evaluate(() => {
         const hero = document.querySelector('.hero')!;

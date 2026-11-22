@@ -237,7 +237,7 @@ describe('hero copy lined up with the timeline (browser)', () => {
 
   // Desktop and tablet: the baseline of "Library" sits on the frames' bottom edge, measured, at every width and on
   // short desktop screens; the sub keeps its 18px gap and the copy stays inside the panel and clear of the stats.
-  it.each([[768, 1000], [1024, 900], [1180, 900], [1280, 800], [1280, 640], [1440, 900], [1440, 760], [1920, 1080]])('at %ix%ipx the title\'s last baseline is on the frames\' bottom edge', async (width, height) => {
+  it.each([[768, 1000], [810, 1000], [1024, 900], [1180, 900], [1280, 800], [1280, 640], [1440, 900], [1440, 760], [1900, 950], [1920, 1080]])('at %ix%ipx the title\'s last baseline is on the frames\' bottom edge', async (width, height) => {
     const page = await openSite(browser, '', { timeline: TIMELINE, width, height, reducedMotion: 'reduce' });
     await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-timeline') === 'still');
     await page.evaluate(() => document.fonts.ready);
@@ -326,6 +326,105 @@ describe('timeline speed by screen size (browser)', () => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await expect.poll(() => mode(page)).toBe('still');
     expect(await page.locator('.tl-track').evaluate((t) => getComputedStyle(t).transform)).toBe('none');
+    await page.context().close();
+  });
+});
+
+describe('hero layout: page gaps, vertical balance and the loop seam (browser)', () => {
+  let browser: Browser;
+  beforeAll(async () => { browser = await chromium.launch(); });
+  afterAll(async () => { await browser?.close(); });
+
+  // As on the portfolio site: one side gap per breakpoint (80px from 1200px, 40px at 810-1199px, 20px below 810px) and
+  // at most 1400px including the gaps, centred. The top bar's wordmark, the hero, the filter bar and the grid share it.
+  it.each([[390, 844], [809, 1000], [810, 1000], [1024, 900], [1199, 900], [1200, 900], [1280, 800], [1440, 900], [1920, 1080]])('at %ix%ipx the page has one fixed side gap', async (width, height) => {
+    const page = await openSite(browser, '', { timeline: TIMELINE, width, height, reducedMotion: 'reduce' });
+    await page.waitForSelector('#grid > *');
+    const r = await page.evaluate(() => {
+      const box = (s: string) => { const b = document.querySelector(s)!.getBoundingClientRect(); return [Math.round(b.left), Math.round(b.right)]; };
+      return { vw: document.documentElement.clientWidth, panel: box('.hero-panel'), controls: box('.controls'), grid: box('#grid'), wordmark: box('.wordmark')[0] };
+    });
+    const gap = width >= 1200 ? 80 : width >= 810 ? 40 : 20;
+    const left = Math.max(gap, (r.vw - 1400) / 2 + gap);
+    expect(r.panel[0]).toBeCloseTo(left, 0);
+    expect(r.vw - r.panel[1]).toBeCloseTo(left, 0);
+    expect(r.controls).toEqual(r.panel);
+    expect(r.grid).toEqual(r.panel);
+    expect(r.wordmark).toBeCloseTo(left, 0);
+    await page.context().close();
+  });
+
+  // Desktop and tablet: the stats stay at the top; what is visible of the copy and the timeline is centred between
+  // them and the panel's bottom edge, with no tall empty band at the bottom.
+  it.each([[810, 1000], [1024, 900], [1180, 900], [1280, 800], [1280, 640], [1440, 900], [1440, 760], [1920, 1080]])('at %ix%ipx the copy and timeline are centred below the stats', async (width, height) => {
+    const page = await openSite(browser, '', { timeline: TIMELINE, width, height, reducedMotion: 'reduce' });
+    await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-timeline') === 'still');
+    await page.evaluate(() => document.fonts.ready);
+    const m = () => page.evaluate(() => {
+      const b = (s: string) => document.querySelector(s)!.getBoundingClientRect();
+      const p = b('.hero-panel'), s = b('.stats'), c = b('.hero-copy');
+      const f = b('.tl-track > .tl-frame:not([aria-hidden]) .tl-screen'), l = b('.tl-track > .tl-frame:not([aria-hidden]) .tl-label');
+      return { statsTop: s.top - p.top, above: Math.min(c.top, l.top) - s.bottom, below: p.bottom - Math.max(c.bottom, f.bottom) };
+    });
+    await expect.poll(async () => { const r = await m(); return Math.abs(r.above - r.below); }).toBeLessThanOrEqual(2);
+    const r = await m();
+    expect(r.statsTop).toBeLessThanOrEqual(31);
+    expect(r.below).toBeGreaterThanOrEqual(40);
+    expect(r.below).toBeLessThanOrEqual(90);
+    await page.context().close();
+  });
+
+  // The loop's seam: right of every latest week there is an empty slot before the oldest week starts again, and
+  // everywhere else frames sit one gap apart.
+  it.each([[1280, 800], [1024, 900], [390, 844]])('at %ix%ipx nothing sits right of the latest week without the break', async (width, height) => {
+    const page = await openSite(browser, '', { timeline: TIMELINE, width, height, reducedMotion: 'no-preference', ...(width <= 760 ? { hasTouch: true, isMobile: true } : {}) });
+    await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-timeline') === 'running');
+    const samples: { seams: number[]; others: number[]; w: number; gap: number; fadeOut: string; fadeIn: string }[] = [];
+    for (let i = 0; i < 4; i++) {
+      samples.push(await page.evaluate(() => {
+        const frames = [...document.querySelectorAll('.tl-track > .tl-frame')] as HTMLElement[];
+        const gap = parseFloat(getComputedStyle(document.querySelector('.tl-track')!).columnGap);
+        const seams: number[] = [], others: number[] = [];
+        frames.slice(0, -1).forEach((a, j) => {
+          const d = frames[j + 1].querySelector('.tl-screen')!.getBoundingClientRect().left - a.querySelector('.tl-screen')!.getBoundingClientRect().right;
+          (a.classList.contains('is-latest') ? seams : others).push(d);
+        });
+        const latest = document.querySelector('.tl-track > .tl-frame.is-latest:not(:last-child)')!;
+        return { seams, others, w: latest.querySelector('.tl-screen')!.getBoundingClientRect().width, gap,
+          fadeOut: getComputedStyle(latest.querySelector('.tl-screen')!, '::after').backgroundImage,
+          fadeIn: getComputedStyle((latest.nextElementSibling as HTMLElement).querySelector('.tl-screen')!, '::before').backgroundImage };
+      }));
+      await page.waitForTimeout(700);
+    }
+    for (const s of samples) {
+      expect(s.seams.length).toBeGreaterThanOrEqual(2);
+      for (const d of s.seams) expect(d).toBeCloseTo(s.w + 2 * s.gap, 0);
+      for (const d of s.others) expect(d).toBeCloseTo(s.gap, 0);
+      expect(s.fadeOut).toContain('rgba(196, 76, 28, 0)');
+      expect(s.fadeIn).toContain('rgba(242, 240, 236, 0)');
+    }
+    await page.context().close();
+  });
+
+  it('loops without a jump: one strip later every week is back where it was', async () => {
+    const page = await openSite(browser, '', { timeline: TIMELINE, reducedMotion: 'no-preference' });
+    await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-timeline') === 'running');
+    // Where each visible week is at a track offset x, and at x minus one strip's length (the seam included).
+    const r = await page.evaluate(() => {
+      const track = document.querySelector('.tl-track') as HTMLElement, view = document.querySelector('.tl-view')!.getBoundingClientRect();
+      const real = [...track.querySelectorAll(':scope > .tl-frame:not([aria-hidden])')] as HTMLElement[];
+      const all = [...track.children] as HTMLElement[];
+      const setW = all[real.length].offsetLeft - all[0].offsetLeft;
+      const seen = () => all.map((a) => [a.getAttribute('href')!, a.getBoundingClientRect().left] as const)
+        .filter(([, x]) => x > view.left - 10 && x < view.right).sort((p, q) => p[1] - q[1]);
+      const x = Math.round(new DOMMatrix(getComputedStyle(track).transform).m41);
+      track.style.transform = `translate3d(${x}px,0,0)`; const a = seen();
+      track.style.transform = `translate3d(${x + setW}px,0,0)`; const b = seen();
+      return { a, b, expected: (real.length - 1) * (real[1].offsetLeft - real[0].offsetLeft) + real[0].offsetWidth * 2 + 2 * parseFloat(getComputedStyle(track).columnGap), setW };
+    });
+    expect(r.a.map(([h]) => h)).toEqual(r.b.map(([h]) => h));
+    r.a.forEach(([, x], i) => expect(Math.abs(x - r.b[i][1])).toBeLessThanOrEqual(1));
+    expect(r.setW).toBeCloseTo(r.expected, 0);
     await page.context().close();
   });
 });
