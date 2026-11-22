@@ -354,26 +354,39 @@ describe('hero layout: page gaps, vertical balance and the loop seam (browser)',
     await page.context().close();
   });
 
-  // Desktop and tablet: the title's two lines are centred on the panel's middle (halfway between the top of
-  // "AI Interface", measured in its font, and the baseline of "Library"); the timeline moves with it; the stats stay
-  // at the top, clear of the week labels.
-  it.each([[810, 1000], [1024, 900], [1180, 900], [1280, 800], [1280, 640], [1440, 900], [1440, 760], [1536, 730], [1920, 1080]])('at %ix%ipx the title is centred on the panel and the frames end on its baseline', async (width, height) => {
+  // Desktop and tablet: the title and the sub are one group, centred on the panel's middle by their ink: from the cap
+  // top of "AI Interface" (its first baseline less the glyphs' ascent, in its font) to the bottom of the sub's last
+  // line (its last baseline plus the descent of the text on that line, the annotation tags left out). The timeline
+  // moves with it, so the frames end on the baseline of "Library"; the stats stay at the top, clear of the week labels.
+  it.each([[810, 1000], [1024, 900], [1180, 900], [1280, 800], [1280, 640], [1440, 900], [1440, 760], [1536, 730], [1770, 1000], [1920, 1080]])('at %ix%ipx the title and sub are centred on the panel by their ink and the frames end on "Library"', async (width, height) => {
     const page = await openSite(browser, '', { timeline: TIMELINE, width, height, reducedMotion: 'reduce' });
     await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-timeline') === 'still');
     await page.evaluate(() => document.fonts.ready);
     const m = () => page.evaluate(() => {
       const b = (s: string) => document.querySelector(s)!.getBoundingClientRect();
+      const cx = document.createElement('canvas').getContext('2d')!;
+      const fontOf = (el: Element) => { const cs = getComputedStyle(el); return `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`; };
       const p = b('.hero-panel'), s = b('.stats');
       const bases = [...document.querySelectorAll('.title-base')].map((e) => e.getBoundingClientRect().bottom);
-      const line = document.querySelector('.title-line')!, cs = getComputedStyle(line), cx = document.createElement('canvas').getContext('2d')!;
-      cx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      cx.font = fontOf(document.querySelector('.title-line')!);
       const top = bases[0] - cx.measureText('AI Interface').actualBoundingBoxAscent;
-      return { mid: (top + bases[1]) / 2 - (p.top + p.height / 2), frames: b('.tl-track > .tl-frame:not([aria-hidden]) .tl-screen').bottom - bases[1],
+      // The sub's last line: its text nodes (not the tags, not the screen-reader copy) whose boxes hold the last baseline.
+      const sub = document.querySelector('.hero-sub')!, subBase = b('.sub-base').bottom, parts: string[] = [];
+      const tw = document.createTreeWalker(sub, NodeFilter.SHOW_TEXT);
+      for (let n = tw.nextNode(); n; n = tw.nextNode()) {
+        if ((n.parentElement as Element).closest('.ann, .sr-only') || !n.textContent!.trim()) continue;
+        const r = document.createRange(); r.selectNodeContents(n); const rr = r.getBoundingClientRect();
+        if (rr.top < subBase && rr.bottom > subBase) parts.push(n.textContent!.trim());
+      }
+      cx.font = fontOf(sub);
+      const bottom = subBase + cx.measureText(parts.join(' ')).actualBoundingBoxDescent;
+      return { mid: (top + bottom) / 2 - (p.top + p.height / 2), line: parts.join(' '), frames: b('.tl-track > .tl-frame:not([aria-hidden]) .tl-screen').bottom - bases[1],
         statsTop: s.top - p.top, labels: b('.tl-track > .tl-frame:not([aria-hidden]) .tl-label').top - s.bottom,
         gap: b('.hero-sub').top - b('.hero-title').bottom, subInside: b('.hero-sub').bottom <= p.bottom - 20 };
     });
     await expect.poll(async () => Math.abs((await m()).mid)).toBeLessThanOrEqual(4);
     const r = await m();
+    expect(r.line).toMatch(/next\sdesign/); // a no-break space
     expect(Math.abs(r.frames)).toBeLessThanOrEqual(2);
     expect(r.statsTop).toBeLessThanOrEqual(31);
     expect(r.labels).toBeGreaterThan(0);
