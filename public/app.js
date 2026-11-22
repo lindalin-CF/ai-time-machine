@@ -89,7 +89,6 @@ async function boot() {
     state.weeks = weeks.weeks || [];
     renderFilters();
     renderWeekSelect();
-    renderHeroWeek();
     await loadWeek(null);
   } catch (err) {
     showStats();
@@ -142,16 +141,6 @@ function countUp(el, target, delay) {
     else el.textContent = String(target);
   };
   requestAnimationFrame(step);
-}
-
-// The hero's "Latest capture" line. The Worker renders it into the page (src/homepage.ts heroWeekHtml); this fills it in
-// only when it couldn't, from the newest week's label ("Week of Oct 19, 2026" -> "Week of <b>Oct 19</b>, 2026").
-function renderHeroWeek() {
-  const el = $("#heroWeek");
-  const label = state.weeks[0]?.label;
-  if (!el || !label || el.textContent.trim() !== "–") return;
-  const m = /^Week of (.+), (\d{4})$/.exec(label);
-  el.innerHTML = m ? `Week of <b>${esc(m[1])}</b>, ${esc(m[2])}` : esc(label);
 }
 
 // Portal chips in the sticky filter bar: "All portals" and the first FILTER_CHIPS portals in one scrolling row, then a

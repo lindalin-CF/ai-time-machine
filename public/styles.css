@@ -132,7 +132,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .hero-timeline{
   --tl-w:clamp(92px,8.2vw,124px);--tl-gap:clamp(22px,2.2vw,32px);--tl-pad:var(--hero-pad-r,34px);
   --tl-label:18px;--tl-h:calc(var(--tl-w) * .625);
-  grid-column:2;grid-row:1 / 4;align-self:center;position:relative;z-index:1;pointer-events:auto;
+  grid-column:2;grid-row:1 / -1;align-self:center;position:relative;z-index:1;pointer-events:auto;
   margin-right:calc(-1 * var(--hero-pad-r,34px)); /* bleeds to the panel's right edge */
   padding-bottom:30px; /* the hover label's room */
 }
@@ -173,16 +173,17 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 .tl-tip.is-on{opacity:1}
 @media (prefers-reduced-motion:reduce){.tl-lock,.tl-lock i,.tl-screen,.tl-tip{transition:none}}
 
-/* The type, over the canvas: copy in the left column, stats top right, the latest week bottom left. The stats have their
-   own column, so the copy is centred over their row too and the latest week always has room below it. */
-.hero-layer{position:absolute;inset:0;z-index:3;display:grid;grid-template-rows:auto 1fr auto;
+/* The type, over the panel: copy in the left column, stats top right, the timeline right of the copy. The copy and the
+   timeline span every row, so both are centred on the panel's middle; the stats have their own column, so the copy is
+   centred over their row too. */
+.hero-layer{position:absolute;inset:0;z-index:3;display:grid;grid-template-rows:auto 1fr;
   /* The copy starts nearer the middle (--hero-pad-l); the stats keep their padding on the right (--hero-pad-r). The copy
      column keeps the right edge it had with equal padding, 46% of the panel's width inside that padding, so it narrows
      from the left only and stays clear of the timeline: 46% of the content box less .54 of the extra left padding. */
   --hero-pad-l:clamp(40px,5vw,72px);--hero-pad-r:34px;--copy-share:46%;--copy-rest:.54;
   grid-template-columns:minmax(0,calc(var(--copy-share) - (var(--hero-pad-l) - var(--hero-pad-r)) * var(--copy-rest))) 1fr;
   padding:30px var(--hero-pad-r) 30px var(--hero-pad-l);gap:16px;pointer-events:none}
-.hero-copy{grid-column:1;grid-row:1 / 3;align-self:center;display:grid;gap:18px}
+.hero-copy{grid-column:1;grid-row:1 / -1;align-self:center;display:grid;gap:18px}
 .hero-title{
   font-size:clamp(42px,6.4vw,74px);line-height:.9;font-weight:700;
   letter-spacing:0;margin:0;max-width:9ch;color:var(--ink);
@@ -289,9 +290,6 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
    they keep their space; shown after 3s in case app.js never gets that far. */
 @media (prefers-reduced-motion:no-preference){html.js .stat dd:not([data-counted]){animation:stat-wait 0s 3s both}}
 @keyframes stat-wait{from{visibility:hidden}to{visibility:visible}}
-.hero-week{grid-column:1;grid-row:3;align-self:end;margin:0;font-size:14px;line-height:1.35;font-weight:400;color:var(--ink)}
-.hero-week-label{display:block;margin-bottom:5px;font-family:var(--font-mono);font-size:12px;line-height:1.2;letter-spacing:.10em;text-transform:uppercase;color:var(--ink-soft)}
-.hero-week b{font-weight:700}
 
 /* Wide desktop screens that are short (e.g. Windows laptops at 125–150% scaling, ~600–730px tall): the panel's height
    follows the viewport too, so the filter bar starts in the first screen. At 900px tall and up the cap is 500px, about
@@ -309,11 +307,10 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
 /* Between phone and wide desktop the 2.2:1 box is too short for the large title: let it grow. */
 @media(max-width:1180px) and (min-width:761px){
   .hero-panel{aspect-ratio:auto;min-height:max(540px,calc((100vw - 56px) / 2.2))}
-  /* the copy column is wider here, so the stats get the whole top row and the copy sits below them */
+  /* the copy column is wider here, so the stats get the whole top row; the copy and the timeline stay centred on the
+     panel (the panel is tall enough that they clear the stats) */
   .hero-layer{--copy-share:54%;--copy-rest:.46}
   .stats{grid-column:1 / -1}
-  .hero-copy{grid-row:2}
-  .hero-timeline{grid-row:2}
   .hero-title{font-size:clamp(56px,7.2vw,74px)}
 }
 
@@ -629,9 +626,10 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
 
   .hero{margin-top:6px;margin-bottom:24px;padding:16px 0 14px}
   .hero-frame{border-radius:24px}
-  /* Phone layout: stats on top, the timeline in a band under them (three frames wide), then the copy and the latest week. The type layer is in
-     the flow here, so content sets the height (min-height is only a floor) and long copy grows the panel instead of
-     being clipped. The panel stays near 55-60% of a phone screen so the filter bar starts in the first screen. */
+  /* Phone layout: stats on top, the timeline in a band under them (three frames wide), then the copy, the three
+     centred as one group in the panel. The type layer is in the flow here, so content sets the height (min-height is
+     only a floor) and long copy grows the panel instead of being clipped. The panel stays near 55-60% of a phone
+     screen so the filter bar starts in the first screen. */
   .hero-panel{
     aspect-ratio:auto;
     min-height:440px;
@@ -641,9 +639,10 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
     position:relative;
     inset:auto;
     grid-template-columns:minmax(0,1fr);
-    grid-template-rows:auto 1fr auto auto; /* row 2 is the timeline's band */
+    grid-template-rows:auto auto auto; /* row 2 is the timeline's band */
+    align-content:center;
     padding:20px 18px;
-    gap:14px;
+    gap:22px;
   }
   .stats{
     grid-column:1;
@@ -660,10 +659,8 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
   .stat dd{font-size:20px}
   .hero-copy{
     grid-row:3;
-    align-self:end;
     gap:14px;
   }
-  .hero-week{grid-row:4}
   .hero-title{
     font-size:clamp(34px,11vw,52px);
     max-width:100%;

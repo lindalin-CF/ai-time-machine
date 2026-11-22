@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { chromium, type Browser, type Page } from 'playwright';
-import { openSite } from './analytics-page';
+import { openSite, pauseClock } from './analytics-page';
 import { TIMELINE } from './timeline-fixture';
 
 // The homepage's timeline hero (public/timeline-hero.js, styles.css; markup src/wireframe.ts; prototype
@@ -20,8 +20,10 @@ describe('timeline hero (browser)', () => {
   afterAll(async () => { await browser?.close(); });
 
   it('starts with the latest week locked at the right end, then drifts left and loops with copies', async () => {
-    const page = await openSite(browser, '', { timeline: TIMELINE, reducedMotion: 'no-preference' });
+    // Fake timers: a busy machine can't eat the 1.5s hold before the first measurement.
+    const page = await openSite(browser, '', { timeline: TIMELINE, reducedMotion: 'no-preference', clock: true });
     await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-timeline') === 'running');
+    await pauseClock(page);
     const atRest = await page.evaluate(() => {
       const v = document.querySelector('.tl-view')!.getBoundingClientRect();
       const latest = document.querySelector('.tl-track > .tl-frame.is-latest:not([aria-hidden])')!;
@@ -31,7 +33,7 @@ describe('timeline hero (browser)', () => {
     expect(atRest.gap).toBeGreaterThan(20); // the panel's right padding
     expect(atRest.gap).toBeLessThan(40);
     const x0 = await trackX(page);
-    await page.waitForTimeout(2600);
+    await page.clock.runFor(4000);
     expect(await trackX(page)).toBeLessThan(x0 - 10);
     // Copies before and after are inert: keyboard and screen readers get the six real frames only.
     const r = await page.evaluate(() => ({
@@ -156,7 +158,7 @@ describe('timeline hero (browser)', () => {
       const screens = [...document.querySelectorAll('.tl-frame')].map((f) => f.getBoundingClientRect());
       const panel = document.querySelector('.hero-panel')!.getBoundingClientRect(), view = document.querySelector('.tl-view')!.getBoundingClientRect();
       const visible = screens.filter((s) => s.right > view.left + 56 && s.left < view.right);
-      const overlaps = ['.hero-title', '.hero-sub', '.hero-week', '.stats'].filter((s) => visible.some((f) => hits(f, document.querySelector(s)!.getBoundingClientRect())));
+      const overlaps = ['.hero-title', '.hero-sub', '.stats'].filter((s) => visible.some((f) => hits(f, document.querySelector(s)!.getBoundingClientRect())));
       return { panel: x('.hero-panel'), controls: x('.controls'), grid: x('#grid'), overlaps, inside: view.top >= panel.top && view.bottom <= panel.bottom, visible: visible.length };
     });
     expect(r.panel).toEqual(r.controls);
@@ -191,7 +193,7 @@ describe('timeline hero (browser)', () => {
         const [hi, lo] = [lum(fg), lum(bg)].sort((x, y) => y - x);
         return Math.round(((hi + 0.05) / (lo + 0.05)) * 10) / 10;
       };
-      return Object.fromEntries(['.stat dt', '.stat dd', '.hero-week-label', '.hero-week', '.hero-sub', '.hero-sub em', '.hero-title', '.tl-frame .tl-label', '.tl-frame.is-latest .tl-label']
+      return Object.fromEntries(['.stat dt', '.stat dd', '.hero-sub', '.hero-sub em', '.hero-title', '.tl-frame .tl-label', '.tl-frame.is-latest .tl-label']
         .map((s) => [s, ratio(s)]));
     });
     for (const [sel, r] of Object.entries(ratios)) expect(r, sel).toBeGreaterThanOrEqual(4.5);
@@ -208,6 +210,30 @@ describe('timeline hero (browser)', () => {
     await page.waitForTimeout(1500);
     expect(await page.evaluate(() => (window as unknown as { __heroShift: number }).__heroShift)).toBe(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.context().close();
+  });
+});
+
+describe('hero balance without the "Latest capture" line (browser)', () => {
+  let browser: Browser;
+  beforeAll(async () => { browser = await chromium.launch(); });
+  afterAll(async () => { await browser?.close(); });
+
+  // Desktop and tablet: the copy's middle is the panel's middle. Phones: stats, timeline and copy are one group with
+  // equal room above and below.
+  it.each([[390, 844], [768, 1000], [1024, 900], [1280, 800], [1440, 900], [1440, 760], [1920, 1080]])('at %ix%ipx keeps the left column vertically centred', async (width, height) => {
+    const page = await openSite(browser, '', { timeline: TIMELINE, width, height, reducedMotion: 'reduce' });
+    await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-timeline') === 'still');
+    const r = await page.evaluate(() => {
+      const b = (s: string) => document.querySelector(s)!.getBoundingClientRect();
+      const p = b('.hero-panel'), c = b('.hero-copy'), s = b('.stats');
+      return { week: document.querySelector('.hero-week, #heroWeek') === null, phone: innerWidth <= 760,
+        copyMid: c.top + c.height / 2 - (p.top + p.height / 2), above: s.top - p.top, below: p.bottom - c.bottom, clear: c.top >= s.bottom || c.right <= s.left };
+    });
+    expect(r.week).toBe(true);
+    expect(r.clear).toBe(true);
+    if (r.phone) expect(Math.abs(r.above - r.below)).toBeLessThan(4);
+    else expect(Math.abs(r.copyMid)).toBeLessThan(4);
     await page.context().close();
   });
 });
