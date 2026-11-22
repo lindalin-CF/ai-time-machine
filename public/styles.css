@@ -646,8 +646,9 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
 
   .hero{margin-top:6px;margin-bottom:24px;padding:16px 0 14px}
   /* Phone layout: stats on top, the timeline in a band under them (three frames wide), then the copy. The type layer
-     is in the flow here and the panel hugs it: no minimum height and no centring, the same 18px padding on all four
-     sides, so long copy grows the panel instead of being clipped and the filter bar starts in the first screen. */
+     is in the flow here and the panel hugs it: no minimum height and no centring, so long copy grows the panel
+     instead of being clipped. 18px padding above the stats and at the sides; more room around the copy: about 64px
+     from the frames to the title's cap tops and 48px under the sub's last line. */
   .hero-panel{
     aspect-ratio:auto;
     min-height:0;
@@ -659,7 +660,7 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
     grid-template-columns:minmax(0,1fr);
     grid-template-rows:auto auto auto; /* row 2 is the timeline's band */
     align-content:start;
-    padding:18px;
+    padding:18px 18px 47px;
     gap:22px;
   }
   .stats{
@@ -677,6 +678,7 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
   .stat dd{font-size:20px}
   .hero-copy{
     grid-row:3;
+    margin-top:24px;
     gap:14px;
   }
   .hero-title{
@@ -742,7 +744,8 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
 @media(max-width:760px){
   .hero-timeline{grid-column:1;grid-row:2;align-self:center;margin:0 -18px;padding-bottom:0;
     --tl-pad:18px;--tl-gap:12px;--tl-w:calc((100vw - 2 * var(--page-gap) - 36px - 2 * var(--tl-gap)) / 3)} /* the panel is 100vw less the page's side gaps */
-  .tl-view{-webkit-mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 14px),transparent);mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 14px),transparent)}
+  /* A soft fade at both ends, so frames entering and leaving don't look cut off. */
+  .tl-view{-webkit-mask-image:linear-gradient(90deg,transparent,#000 26px,#000 calc(100% - 26px),transparent);mask-image:linear-gradient(90deg,transparent,#000 26px,#000 calc(100% - 26px),transparent)}
 }
 
 @media(max-width:420px){

@@ -267,14 +267,13 @@ describe('hero copy lined up with the timeline (browser)', () => {
     await page.context().close();
   });
 
-  // Phones: stats, timeline and copy are one group with equal room above and below.
-  it.each([[360, 740], [390, 844]])('at %ix%ipx keeps the stacked phone layout centred', async (width, height) => {
+  // Phones: the stacked layout, not moved by public/hero-align.js (spacing: the "phone hero" test below).
+  it.each([[360, 740], [390, 844]])('at %ix%ipx keeps the stacked phone layout in place', async (width, height) => {
     const page = await openSite(browser, '', { timeline: TIMELINE, width, height, reducedMotion: 'reduce' });
     await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-timeline') === 'still');
     const r = await measure(page);
     expect(r.phone).toBe(true);
     expect(r.clear).toBe(true);
-    expect(Math.abs(r.above - r.below)).toBeLessThan(4);
     expect(await page.locator('.hero-copy').evaluate((c) => getComputedStyle(c).transform)).toBe('none');
     await page.context().close();
   });
@@ -395,25 +394,37 @@ describe('hero layout: page gaps, vertical balance and the loop seam (browser)',
     await page.context().close();
   });
 
-  // Phones: no centring, the panel hugs its content with the same padding on all four sides; stats, timeline, title
-  // and sub in that order; the filter bar starts in the first screen.
-  it.each([[360, 740], [390, 844], [430, 932]])('at %ix%ipx the phone hero hugs its content with even padding', async (width, height) => {
+  // Phones: no centring, the panel hugs its content. 18px padding above the stats and at the sides, 28px from the stats
+  // to the week labels, about 64px from the frames to the title's cap tops and 48px under the sub's last line of text;
+  // stats, timeline, title and sub in that order. The strip's ends fade out.
+  it.each([[360, 740], [390, 844], [430, 932]])('at %ix%ipx the phone hero hugs its content with room around the copy', async (width, height) => {
     const page = await openSite(browser, '', { timeline: TIMELINE, width, height, hasTouch: true, isMobile: true, reducedMotion: 'reduce' });
     await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-timeline') === 'still');
     await page.evaluate(() => document.fonts.ready);
     const r = await page.evaluate(() => {
       const b = (s: string) => document.querySelector(s)!.getBoundingClientRect();
-      const p = b('.hero-panel'), dt = b('.stat dt'), sub = b('.hero-sub');
-      const order = ['.stats', '.tl-view', '.hero-title', '.hero-sub'].map((s) => b(s));
-      return { top: dt.top - p.top, side: dt.left - p.left, right: p.right - b('.stats').right, bottom: p.bottom - sub.bottom,
-        ordered: order.every((o, i) => i === 0 || o.top >= order[i - 1].bottom), controls: b('.controls').top, fold: innerHeight };
+      const cx = document.createElement('canvas').getContext('2d')!;
+      const fontOf = (el: Element) => { const cs = getComputedStyle(el); return `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`; };
+      const p = b('.hero-panel'), dt = b('.stat dt'), s = b('.stats');
+      const bases = [...document.querySelectorAll('.title-base')].map((e) => e.getBoundingClientRect().bottom);
+      cx.font = fontOf(document.querySelector('.title-line')!);
+      const capTop = bases[0] - cx.measureText('AI Interface').actualBoundingBoxAscent;
+      cx.font = fontOf(document.querySelector('.hero-sub')!);
+      const subInk = b('.sub-base').bottom + cx.measureText('compare layout, hierarchy and colour for your next design.').actualBoundingBoxDescent;
+      const f = b('.tl-track > .tl-frame:not([aria-hidden]) .tl-screen'), l = b('.tl-track > .tl-frame:not([aria-hidden]) .tl-label');
+      const order = ['.stats', '.tl-view', '.hero-title', '.hero-sub'].map((x) => b(x));
+      return { top: dt.top - p.top, side: dt.left - p.left, right: p.right - s.right, labels: l.top - s.bottom,
+        framesToTitle: capTop - f.bottom, belowSub: p.bottom - subInk, mask: getComputedStyle(document.querySelector('.tl-view')!).maskImage,
+        ordered: order.every((o, i) => i === 0 || o.top >= order[i - 1].bottom) };
     });
     expect(r.side).toBeCloseTo(18, 0);
     expect(Math.abs(r.top - r.side)).toBeLessThanOrEqual(2);
-    expect(Math.abs(r.bottom - r.side)).toBeLessThanOrEqual(2);
     expect(Math.abs(r.right - r.side)).toBeLessThanOrEqual(2);
+    expect(r.labels).toBeCloseTo(28, 0);
+    expect(Math.abs(r.framesToTitle - 64)).toBeLessThanOrEqual(3);
+    expect(Math.abs(r.belowSub - 48)).toBeLessThanOrEqual(2);
+    expect(r.mask).toContain('26px');
     expect(r.ordered).toBe(true);
-    expect(r.controls).toBeLessThan(r.fold);
     await page.context().close();
   });
 
