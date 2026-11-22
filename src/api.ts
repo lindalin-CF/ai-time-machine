@@ -543,7 +543,10 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
     });
   }
 
+  // Captures start Browser Rendering and write R2 and D1: token-gated, like every other write.
   if (path === "/api/capture/portal" && request.method === "POST") {
+    const authError = requireUploadToken(request, env);
+    if (authError) return authError;
     const body = await request
       .json<{ week?: string; slug?: string; slugs?: string[] }>()
       .catch(() => ({} as { week?: string; slug?: string; slugs?: string[] }));
@@ -562,6 +565,8 @@ export async function handleApi(request: Request, env: Env, ctx: ExecutionContex
 
   // Admin: manually trigger a capture run for the current (or supplied) week.
   if (path === "/api/capture/run" && request.method === "POST") {
+    const authError = requireUploadToken(request, env);
+    if (authError) return authError;
     const body = await request
       .json<{ week?: string; label?: string }>()
       .catch(() => ({} as { week?: string; label?: string }));

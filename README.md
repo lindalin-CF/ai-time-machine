@@ -156,8 +156,11 @@ curl -X POST https://<your-worker>.workers.dev/api/ai/agree
 
 ### 7.（可選）手動先跑一次擷取
 ```bash
-curl -X POST https://<your-worker>.workers.dev/api/capture/run
+curl -X POST https://<your-worker>.workers.dev/api/capture/run \
+  -H "Authorization: Bearer $UPLOAD_TOKEN"
 ```
+
+擷取 API（`/api/capture/run`、`/api/capture/portal`）需要 `UPLOAD_TOKEN`（與上傳 API 相同的 secret），沒帶或錯誤會回 401。
 
 ---
 
@@ -168,11 +171,11 @@ curl -X POST https://<your-worker>.workers.dev/api/capture/run
 ```bash
 # 單一
 curl -X POST https://<your-worker>.workers.dev/api/capture/portal \
-  -H 'content-type: application/json' -d '{"slug":"gemini"}'
+  -H "Authorization: Bearer $UPLOAD_TOKEN" -H 'content-type: application/json' -d '{"slug":"gemini"}'
 
 # 多個
 curl -X POST https://<your-worker>.workers.dev/api/capture/portal \
-  -H 'content-type: application/json' -d '{"slugs":["gemini","you"]}'
+  -H "Authorization: Bearer $UPLOAD_TOKEN" -H 'content-type: application/json' -d '{"slugs":["gemini","you"]}'
 ```
 
 省略 `week` 時預設為本週。這條路徑會把工作丟進同一個 Queue，走一樣的
@@ -197,7 +200,7 @@ Browser Rendering → R2 → Workers AI → D1 流程（含自動重試）。
 5. 重跑該 portal：
    ```bash
    curl -X POST https://<worker>/api/capture/portal \
-     -H 'content-type: application/json' -d '{"slug":"claude"}'
+     -H "Authorization: Bearer $UPLOAD_TOKEN" -H 'content-type: application/json' -d '{"slug":"claude"}'
    ```
 6. 用 `GET /api/auth/status` 確認哪些 portal 已設定 cookie（只回布林，不外洩內容）。
 
@@ -280,7 +283,7 @@ npx wrangler d1 execute ai-portal-library --remote --command \
 | `GET /api/portals` | portal 清單 |
 | `GET /api/weeks` | 已封存的週次（新到舊） |
 | `GET /api/captures?week=YYYY-MM-DD` | 指定週（省略則為最新週）的所有截圖 |
-| `POST /api/capture/run` | 手動觸發一次擷取（body 可帶 `{ "week": "YYYY-MM-DD" }`） |
+| `POST /api/capture/run` | 手動觸發一次擷取（body 可帶 `{ "week": "YYYY-MM-DD" }`；需要 `Authorization: Bearer $UPLOAD_TOKEN`） |
 | `GET /img/<r2-key>` | 從 R2 串流截圖圖片 |
 
 ---
