@@ -98,3 +98,24 @@ test('Mobile top menu keeps Library and Collection on one row', async () => {
   const y = links.map((l) => Math.round(l.getBoundingClientRect().top));
   expect(new Set(y).size).toBe(1);
 });
+
+// The homepage hero (public/index.html) with a timeline strip as the Worker renders it (tests/unit/timeline-fixture.ts),
+// without its script: the still strip, the latest week locked at the right end. Animations are off so the title and
+// subtitle are in their final place. Baselines: tests/visual/__screenshots__ (one per width).
+import indexHtml from '../../public/index.html?raw';
+import { TIMELINE } from '../unit/timeline-fixture';
+
+test.each([[390, 844], [1024, 900], [1280, 800]])('Homepage hero at %ipx', async (width, height) => {
+  await page.viewport(width, height);
+  const hero = indexHtml.match(/<section class="hero"[\s\S]*?<\/section>/)![0]
+    .replace('<div class="hero-timeline" hidden></div>', TIMELINE)
+    .replace(/(<dd data-stat="screenshots">)–/, '$1217').replace(/(<dd data-stat="portals">)–/, '$115').replace(/(<dd data-stat="weeks">)–/, '$115');
+  // The final frame of the entrance animations, as styles.css shows it with reduced motion.
+  const still = '*,*::before,*::after{animation:none!important;transition:none!important}'
+    + '.title-line,.hero-sub .w{opacity:1!important;transform:none!important;clip-path:none!important;filter:none!important}.hero-sub .ann{display:none!important}';
+  await mount(`<style>${still}</style><div data-testid="hero">${hero}</div>`);
+  document.querySelector('main')!.setAttribute('style', 'padding:0;background:var(--cf-bg-page);min-height:100vh');
+  await document.fonts.load('400 12px "JetBrains Mono"');
+  await document.fonts.ready;
+  await expect.element(page.getByTestId('hero')).toMatchScreenshot(`homepage-hero-${width}`);
+});
