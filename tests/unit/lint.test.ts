@@ -396,11 +396,19 @@ describe('lint: cross-week', () => {
 
     it('is in the guideline: section 9.1, 10.2, the self-check and the changelog', () => {
       const skill = readFileSync(SKILL_PATH, 'utf8');
-      expect(skill).toMatch(/^---[\s\S]*?\nversion: 1\.10\.2\n/);
+      expect(skill).toMatch(/^---[\s\S]*?\nversion: 1\.10\.\d+\n/);
       expect(skill).toContain('**拆分混合變動**：同一個指標的變動裡');
       expect(skill).toContain('`"Not from the {欄位} difference: "`');
       expect(skill).toContain('- **拆分混合變動**（第 9.1 節）時，比較句先寫 `changed` 的部分');
       expect(skill).toMatch(/- \*\*1\.10\.2\*\*：第 9\.1 節新增「拆分混合變動」/);
+    });
+
+    it('guideline 1.10.3: the font-size threshold (C5, H3) is in section 9.3 and the changelog', () => {
+      const skill = readFileSync(SKILL_PATH, 'utf8');
+      expect(skill).toMatch(/^---[\s\S]*?\nversion: 1\.10\.3\n/);
+      expect(skill).toContain('"guideline_version": "1.10.3"');
+      expect(skill).toContain('| C5、H3（字級） | 同一文字角色（例如主標題、內文、placeholder）兩週的估算字級（第 7.7 節）差 ≥ 2px');
+      expect(skill).toMatch(/- \*\*1\.10\.3\*\*：第 9\.3 節門檻表新增「C5、H3（字級）」/);
     });
 
     it('does not apply before 1.10.2', () => {

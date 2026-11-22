@@ -1,7 +1,7 @@
 ---
 name: portal-design-analysis
 description: 依 AI Surface Library 規範分析 AI portal 的桌面截圖，產出可追溯到指標、證據等級與位置的 Design analysis。使用者提供 portal 桌面截圖並要求 design analysis、跑規範、或比較不同週次截圖時使用。
-version: 1.10.2
+version: 1.10.3
 ---
 
 # AI Portal 桌面截圖 Design Analysis 規範
@@ -330,6 +330,7 @@ version: 1.10.2
 | D3、D5 數量 | 數量改變 |
 | D6 | 有無、位置或文字改變 |
 | D5 文字、D7 | 區塊有無改變（只有文字改變不算，見第 9.1 節「輪換內容」） |
+| C5、H3（字級） | 同一文字角色（例如主標題、內文、placeholder）兩週的估算字級（第 7.7 節）差 ≥ 2px，與 H3 分層用同一門檻；未達 2px 不是變動。H3 層級數改變只有在至少一個文字角色達到此門檻時才算 |
 
 每筆變動輸出：`{ "id", "previous", "current", "status": "changed" | "possibly_confounded" | "confounded", "note" }`。沒有達門檻的變動時，`changes_vs_previous` 為空陣列。
 
@@ -365,7 +366,7 @@ N1 每筆變動一筆紀錄：
 
 ```json
 {
-  "guideline_version": "1.10.2",
+  "guideline_version": "1.10.3",
   "portal": "example",
   "week": "2026-09-21",
   "previous_week": "2026-09-14",
@@ -498,6 +499,7 @@ N1 每筆變動一筆紀錄：
 
 ## 版本紀錄
 
+- **1.10.3**：第 9.3 節門檻表新增「C5、H3（字級）」：同一文字角色兩週的估算字級差 ≥ 2px（與 H3 分層同一門檻）才算字級變動，未達 2px 不是變動；H3 層級數改變也要有文字角色達到此門檻。起因：2026-11-16 Pi 的字級變動在第 9.3 節沒有門檻可依。
 - **1.10.2**：第 9.1 節新增「拆分混合變動」：同一指標的變動混合了真正的產品變動與干擾（宣傳、個人化內容或狀態）時，拆成同 `id` 的兩筆，真正的部分標 `changed`（`note` 以 "Not from the {欄位} difference: " 開頭），干擾的部分標 `possibly_confounded`，不再把整個指標標成 `possibly_confounded`。第 10.2 節：干擾部分可另用 1 句不確定說法。lint 與網站的版面變動判定同步支援（只適用 1.10.2 以後的分析）。起因：2026-11-09 Manus 的首頁改版被整個標成 `possibly_confounded`，週報沒有列出。
 - **1.10.1**：第 9.1 節「問候語輪換」擴大為「輪換內容」：建議提示、精選機器人或功能磚與問候語只有文字改變時不是變動，不列入 `changes_vs_previous`（之前 D7 文字改變標 `possibly_confounded`）；只有整個區塊出現或消失才是變動。第 9.3 節門檻表同步修改。lint 新增對應檢查（只檢查 1.10.1 以後的分析）。起因：2026-11-09 Le Chat 把重複出現過的建議提示（2026-09-28 至 10-12 已記錄）記成產品變動。
 - **1.10.0**：第 9.1 節新增「帳號、工作階段與截圖瀏覽器狀態」：針對帳號的公告、cookie 或同意橫幅、對話紀錄、模型名稱、空的對話室與載入中畫面不是產品變動，不列入 `changes_vs_previous`。第 10.2 節：`changes_vs_previous` 是空的或只有干擾項目時，摘要不得說畫面與前一週不同，改寫 "No product change was identified this week."（畫面完全相同時仍寫 "looks the same"）；`possibly_confounded` 只有在同週也有 `changed` 時才寫。lint 新增對應檢查。起因：2026-10-26 ChatGPT（針對帳號的 Finances 公告）、Qwen（cookie 橫幅）與 Muse（停在空的子聊天室）的摘要寫了 "differs from"，但沒有產品變動。
