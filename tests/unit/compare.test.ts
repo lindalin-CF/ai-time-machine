@@ -136,7 +136,7 @@ describe('homepage hero (browser)', () => {
       const m = await page.evaluate(() => {
         const hero = document.querySelector('.hero')!;
         const rect = (s: string) => document.querySelector(s)!.getBoundingClientRect();
-        const frame = rect('.hero-frame'), panel = rect('.hero-panel'), title = rect('.hero-title'), sub = rect('.hero-sub'), stats = rect('.stats'), week = rect('.hero-week');
+        const frame = rect('.hero-frame'), panel = rect('.hero-panel'), title = rect('.hero-title'), sub = rect('.hero-sub'), stats = rect('.stats');
         // The stats have their own column on the right, so the copy may sit beside them as well as below.
         const clear = (r: DOMRect) => r.right < stats.left || r.top > stats.bottom;
         return {
@@ -144,7 +144,7 @@ describe('homepage hero (browser)', () => {
           // The height cap must not narrow the panel (aspect-ratio would, without width:100%).
           fullWidth: Math.round(frame.width - panel.width) === Math.round(2 * parseFloat(getComputedStyle(document.querySelector('.hero-frame')!).paddingLeft)),
           heroEnd: hero.getBoundingClientRect().bottom + parseFloat(getComputedStyle(hero).marginBottom),
-          inside: [title, sub, week].every((r) => r.top >= panel.top && r.bottom <= panel.bottom),
+          inside: [title, sub].every((r) => r.top >= panel.top && r.bottom <= panel.bottom),
           clearOfStats: clear(title) && clear(sub),
         };
       });

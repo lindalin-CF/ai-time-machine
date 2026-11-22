@@ -64,11 +64,7 @@
     <section class="hero" aria-label="AI Interface Library overview">
       <div class="hero-frame">
         <div class="hero-panel">
-          <!-- The sand ring, the camera-focus blur and reticle: public/sand-hero.js (prototype: docs/prototypes/sand-hero.html). -->
-          <canvas class="hero-sand" aria-hidden="true"></canvas>
-          <div class="hero-focus" aria-hidden="true"></div>
           <div class="hero-grain" aria-hidden="true"></div>
-          <div class="hero-reticle" aria-hidden="true"><div class="hero-reticle-box"><i></i><i></i><i></i><i></i><b></b></div><span class="hero-reticle-label">AF · f/1.8</span></div>
 
           <div class="hero-layer">
           <div class="hero-copy">
@@ -106,8 +102,9 @@
             <div class="stat"><dt><span class="stat-full">Weeks archived</span><span class="stat-short" aria-hidden="true">Weeks</span></dt><dd data-stat="weeks">–</dd></div>
           </dl>
 
-          <!-- The Worker fills in the latest week (src/homepage.ts); app.js does if it couldn't. -->
-          <p class="hero-week"><span class="hero-week-label">Latest capture</span><span id="heroWeek">–</span></p>
+          <!-- One product's weekly wireframes: the Worker renders them here (src/wireframe.ts timelineHtml), public/timeline-hero.js
+               moves them (prototype: docs/prototypes/timeline-hero.html). Left empty when the database can't be read. -->
+          <div class="hero-timeline" hidden></div>
           </div>
         </div>
       </div>
@@ -272,7 +269,7 @@
     </dialog>
   </footer>
 
-  <script src="/sand-hero.js" defer></script>
+  <script src="/timeline-hero.js" defer></script>
   <script src="/app.js" type="module"></script>
   <script src="/voice.js" type="module"></script>
   <script src="/footer-dialogs.js" defer></script>

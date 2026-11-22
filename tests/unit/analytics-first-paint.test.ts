@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { chromium, type Browser, type Page } from 'playwright';
 import { WEEKS, frames, openSite, probe } from './analytics-page';
+import { TIMELINE } from './timeline-fixture';
 
 // Links to #compare and #collection show that view from the first paint (html[data-view], set by the
 // inline script in index.html's <head>), never the homepage; Compare opens in Canvas at 136%.
@@ -23,7 +24,7 @@ describe('first paint of view links (browser)', () => {
     ['#compare', '#analyticsView', 'compare', '#anCanvasWrap .anc-card img'],
     ['#collection', '#collectionView', 'collection', '.topnav-link.active'],
   ])('%s never shows the homepage and marks its nav link from the start', async (hash, view, nav, ready) => {
-    const page = await openSite(browser, hash, { initScript: probe(view, nav), sand: true });
+    const page = await openSite(browser, hash, { initScript: probe(view, nav), timeline: TIMELINE });
     await page.locator(ready).first().waitFor();
     await page.waitForTimeout(300);
     const log = await frames(page);
@@ -36,18 +37,18 @@ describe('first paint of view links (browser)', () => {
     expect(await page.evaluate(() => document.documentElement.dataset.view)).toBe(nav);
     expect(await heroAnimations(page)).toEqual([]);
     expect(await page.locator('.hero-sub').evaluate((el) => el.classList.contains('annot'))).toBe(false);
-    // The hidden hero's sand canvas never starts drawing (public/sand-hero.js).
-    expect(await page.locator('.hero-panel').getAttribute('data-sand')).not.toBe('running');
+    // The hidden hero's timeline never starts moving (public/timeline-hero.js).
+    expect(await page.locator('.hero-panel').getAttribute('data-timeline')).not.toBe('running');
   });
 
   it('the homepage still shows the hero and plays its animation', async () => {
-    const page = await openSite(browser, '', { sand: true });
+    const page = await openSite(browser, '', { timeline: TIMELINE });
     expect(await page.evaluate(() => document.documentElement.dataset.view)).toBe('gallery');
     expect(await page.locator('.hero').isVisible()).toBe(true);
     expect(await page.locator('#analyticsView').isVisible()).toBe(false);
     expect(await heroAnimations(page)).toEqual(expect.arrayContaining(['title-rise', 'word-in', 'grain']));
     await page.locator('.hero-sub.annot').waitFor({ state: 'attached', timeout: 5000 });
-    expect(await page.locator('.hero-panel').getAttribute('data-sand')).toBe('running');
+    expect(await page.locator('.hero-panel').getAttribute('data-timeline')).toBe('running');
     expect(await page.locator('.topnav-link.active').getAttribute('data-nav')).toBe('gallery');
   });
 
