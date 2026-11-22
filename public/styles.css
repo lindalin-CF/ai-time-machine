@@ -214,7 +214,8 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 var(--page-gap) 64px}
 .title-mask{display:block;overflow:hidden;padding:.1em 0 .13em;margin:0 0 -.23em}
 .title-mask:first-child{margin-top:-.1em}
 .title-mask:last-child{margin-bottom:0}
-/* A zero-size mark on the last line's baseline: public/hero-align.js lines it up with the timeline's frames. */
+/* Zero-size marks on each title line's baseline: public/hero-align.js centres the title on the panel with them and
+   lines the last one up with the timeline's frames. */
 .title-base{display:inline-block;width:0;height:0;vertical-align:baseline}
 .title-line{display:block;transform:translateY(125%);animation:title-rise .8s cubic-bezier(.16,1,.3,1) forwards;will-change:transform}
 .title-mask:nth-child(1) .title-line{animation-delay:0s}
@@ -644,13 +645,12 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
 
 
   .hero{margin-top:6px;margin-bottom:24px;padding:16px 0 14px}
-  /* Phone layout: stats on top, the timeline in a band under them (three frames wide), then the copy, the three
-     centred as one group in the panel. The type layer is in the flow here, so content sets the height (min-height is
-     only a floor) and long copy grows the panel instead of being clipped. The panel stays near 55-60% of a phone
-     screen so the filter bar starts in the first screen. */
+  /* Phone layout: stats on top, the timeline in a band under them (three frames wide), then the copy. The type layer
+     is in the flow here and the panel hugs it: no minimum height and no centring, the same 18px padding on all four
+     sides, so long copy grows the panel instead of being clipped and the filter bar starts in the first screen. */
   .hero-panel{
     aspect-ratio:auto;
-    min-height:440px;
+    min-height:0;
     display:grid;
   }
   .hero-layer{
@@ -658,8 +658,8 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
     inset:auto;
     grid-template-columns:minmax(0,1fr);
     grid-template-rows:auto auto auto; /* row 2 is the timeline's band */
-    align-content:center;
-    padding:20px 18px;
+    align-content:start;
+    padding:18px;
     gap:22px;
   }
   .stats{

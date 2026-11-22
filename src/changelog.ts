@@ -25,7 +25,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       { lead: "Change you can see", text: "The row drifts slowly left, a little slower on tablets and phones. After the latest week the row fades out and leaves an empty space before it starts again from the oldest week. As each week comes in, anything that moved since the week before, such as the message box, glides to its new place. The latest week is outlined in orange, with corner brackets that lock onto it." },
       { lead: "The latest change", text: "The row follows the product with the most recent recorded change. Hover a week to see its name and date, and click it, or reach it with the keyboard, to open that week's digest." },
       { lead: "Reduced motion", text: "With reduced motion turned on, the row stands still with the latest week highlighted. It also pauses when it is out of view or under the pointer." },
-      { lead: "One week label", text: "The separate Latest capture line is gone: the orange label on the latest frame names the week. On wider screens the title's last line sits on the same line as the bottom of the frames, and the title and row are centred below the counts." },
+      { lead: "One week label", text: "The separate Latest capture line is gone: the orange label on the latest frame names the week. On wider screens the title's last line sits on the same line as the bottom of the frames, and the title sits in the middle of the banner. On phones the banner fits its content, with even padding on every side." },
       { lead: "Steady margins", text: "The page now keeps the same side margins at every window size: 80px on desktop, 40px on tablets and 20px on phones, up to 1400px wide. The banner, filter bar and cards share them." },
     ],
     closing: "Open the homepage.",

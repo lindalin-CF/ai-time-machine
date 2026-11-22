@@ -229,7 +229,7 @@ describe('hero copy lined up with the timeline (browser)', () => {
     const b = (s: string) => document.querySelector(s)!.getBoundingClientRect();
     const layer = document.querySelector('.hero-layer')!, pb = parseFloat(getComputedStyle(layer).paddingBottom);
     const p = b('.hero-panel'), c = b('.hero-copy'), s = b('.stats');
-    return { baseline: b('.title-base').bottom, frames: b('.tl-track > .tl-frame:not([aria-hidden]) .tl-screen').bottom,
+    return { baseline: b('.title-mask:last-child .title-base').bottom, frames: b('.tl-track > .tl-frame:not([aria-hidden]) .tl-screen').bottom,
       gap: b('.hero-sub').top - b('.hero-title').bottom, inside: c.bottom <= b('.hero-layer').bottom - pb + 0.5,
       clear: c.top >= s.bottom || c.right <= s.left, above: s.top - p.top, below: p.bottom - c.bottom, phone: innerWidth <= 760,
       week: document.querySelector('.hero-week, #heroWeek') === null };
@@ -354,23 +354,53 @@ describe('hero layout: page gaps, vertical balance and the loop seam (browser)',
     await page.context().close();
   });
 
-  // Desktop and tablet: the stats stay at the top; what is visible of the copy and the timeline is centred between
-  // them and the panel's bottom edge, with no tall empty band at the bottom.
-  it.each([[810, 1000], [1024, 900], [1180, 900], [1280, 800], [1280, 640], [1440, 900], [1440, 760], [1920, 1080]])('at %ix%ipx the copy and timeline are centred below the stats', async (width, height) => {
+  // Desktop and tablet: the title's two lines are centred on the panel's middle (halfway between the top of
+  // "AI Interface", measured in its font, and the baseline of "Library"); the timeline moves with it; the stats stay
+  // at the top, clear of the week labels.
+  it.each([[810, 1000], [1024, 900], [1180, 900], [1280, 800], [1280, 640], [1440, 900], [1440, 760], [1536, 730], [1920, 1080]])('at %ix%ipx the title is centred on the panel and the frames end on its baseline', async (width, height) => {
     const page = await openSite(browser, '', { timeline: TIMELINE, width, height, reducedMotion: 'reduce' });
     await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-timeline') === 'still');
     await page.evaluate(() => document.fonts.ready);
     const m = () => page.evaluate(() => {
       const b = (s: string) => document.querySelector(s)!.getBoundingClientRect();
-      const p = b('.hero-panel'), s = b('.stats'), c = b('.hero-copy');
-      const f = b('.tl-track > .tl-frame:not([aria-hidden]) .tl-screen'), l = b('.tl-track > .tl-frame:not([aria-hidden]) .tl-label');
-      return { statsTop: s.top - p.top, above: Math.min(c.top, l.top) - s.bottom, below: p.bottom - Math.max(c.bottom, f.bottom) };
+      const p = b('.hero-panel'), s = b('.stats');
+      const bases = [...document.querySelectorAll('.title-base')].map((e) => e.getBoundingClientRect().bottom);
+      const line = document.querySelector('.title-line')!, cs = getComputedStyle(line), cx = document.createElement('canvas').getContext('2d')!;
+      cx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      const top = bases[0] - cx.measureText('AI Interface').actualBoundingBoxAscent;
+      return { mid: (top + bases[1]) / 2 - (p.top + p.height / 2), frames: b('.tl-track > .tl-frame:not([aria-hidden]) .tl-screen').bottom - bases[1],
+        statsTop: s.top - p.top, labels: b('.tl-track > .tl-frame:not([aria-hidden]) .tl-label').top - s.bottom,
+        gap: b('.hero-sub').top - b('.hero-title').bottom, subInside: b('.hero-sub').bottom <= p.bottom - 20 };
     });
-    await expect.poll(async () => { const r = await m(); return Math.abs(r.above - r.below); }).toBeLessThanOrEqual(2);
+    await expect.poll(async () => Math.abs((await m()).mid)).toBeLessThanOrEqual(4);
     const r = await m();
+    expect(Math.abs(r.frames)).toBeLessThanOrEqual(2);
     expect(r.statsTop).toBeLessThanOrEqual(31);
-    expect(r.below).toBeGreaterThanOrEqual(40);
-    expect(r.below).toBeLessThanOrEqual(90);
+    expect(r.labels).toBeGreaterThan(0);
+    expect(r.gap).toBeCloseTo(18, 0);
+    expect(r.subInside).toBe(true);
+    await page.context().close();
+  });
+
+  // Phones: no centring, the panel hugs its content with the same padding on all four sides; stats, timeline, title
+  // and sub in that order; the filter bar starts in the first screen.
+  it.each([[360, 740], [390, 844], [430, 932]])('at %ix%ipx the phone hero hugs its content with even padding', async (width, height) => {
+    const page = await openSite(browser, '', { timeline: TIMELINE, width, height, hasTouch: true, isMobile: true, reducedMotion: 'reduce' });
+    await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-timeline') === 'still');
+    await page.evaluate(() => document.fonts.ready);
+    const r = await page.evaluate(() => {
+      const b = (s: string) => document.querySelector(s)!.getBoundingClientRect();
+      const p = b('.hero-panel'), dt = b('.stat dt'), sub = b('.hero-sub');
+      const order = ['.stats', '.tl-view', '.hero-title', '.hero-sub'].map((s) => b(s));
+      return { top: dt.top - p.top, side: dt.left - p.left, right: p.right - b('.stats').right, bottom: p.bottom - sub.bottom,
+        ordered: order.every((o, i) => i === 0 || o.top >= order[i - 1].bottom), controls: b('.controls').top, fold: innerHeight };
+    });
+    expect(r.side).toBeCloseTo(18, 0);
+    expect(Math.abs(r.top - r.side)).toBeLessThanOrEqual(2);
+    expect(Math.abs(r.bottom - r.side)).toBeLessThanOrEqual(2);
+    expect(Math.abs(r.right - r.side)).toBeLessThanOrEqual(2);
+    expect(r.ordered).toBe(true);
+    expect(r.controls).toBeLessThan(r.fold);
     await page.context().close();
   });
 
