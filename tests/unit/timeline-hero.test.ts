@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { chromium, type Browser, type Page } from 'playwright';
-import { openSite, pauseClock } from './analytics-page';
+import { openSite } from './analytics-page';
 import { TIMELINE } from './timeline-fixture';
 
 // The homepage's timeline hero (public/timeline-hero.js, styles.css; markup src/wireframe.ts; prototype
@@ -20,21 +20,24 @@ describe('timeline hero (browser)', () => {
   afterAll(async () => { await browser?.close(); });
 
   it('starts with the latest week locked at the right end, then drifts left and loops with copies', async () => {
-    // Fake timers: a busy machine can't eat the 1.5s hold before the first measurement.
-    const page = await openSite(browser, '', { timeline: TIMELINE, reducedMotion: 'no-preference', clock: true });
-    await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-timeline') === 'running');
-    await pauseClock(page);
-    const atRest = await page.evaluate(() => {
-      const v = document.querySelector('.tl-view')!.getBoundingClientRect();
-      const latest = document.querySelector('.tl-track > .tl-frame.is-latest:not([aria-hidden])')!;
-      return { gap: v.right - latest.querySelector('.tl-screen')!.getBoundingClientRect().right, locked: latest.classList.contains('is-locked') };
-    });
+    // The strip's state when the script first places it (a mutation observer runs before the next frame), so a busy
+    // machine that takes longer than the 1.5s hold to get here can't change what is measured.
+    const page = await openSite(browser, '', { timeline: TIMELINE, reducedMotion: 'no-preference', initScript: `
+      new MutationObserver((_, obs) => {
+        const t = document.querySelector('.tl-track');
+        if (!t || !t.style.transform) return;
+        obs.disconnect();
+        const v = document.querySelector('.tl-view').getBoundingClientRect();
+        const latest = document.querySelector('.tl-track > .tl-frame.is-latest:not([aria-hidden])');
+        window.__rest = { gap: v.right - latest.querySelector('.tl-screen').getBoundingClientRect().right, locked: latest.classList.contains('is-locked'), x: new DOMMatrix(t.style.transform).m41 };
+      }).observe(document, { subtree: true, attributes: true, attributeFilter: ['style'] });` });
+    await page.waitForFunction(() => (window as unknown as { __rest?: unknown }).__rest);
+    const atRest = await page.evaluate(() => (window as unknown as { __rest: { gap: number; locked: boolean; x: number } }).__rest);
     expect(atRest.locked).toBe(true);
     expect(atRest.gap).toBeGreaterThan(20); // the panel's right padding
     expect(atRest.gap).toBeLessThan(40);
-    const x0 = await trackX(page);
-    await page.clock.runFor(4000);
-    expect(await trackX(page)).toBeLessThan(x0 - 10);
+    // Then it drifts left.
+    await page.waitForFunction((x0) => new DOMMatrix(getComputedStyle(document.querySelector('.tl-track')!).transform).m41 < x0 - 10, atRest.x, { timeout: 10_000 });
     // Copies before and after are inert: keyboard and screen readers get the six real frames only.
     const r = await page.evaluate(() => ({
       all: document.querySelectorAll('.tl-frame').length,
