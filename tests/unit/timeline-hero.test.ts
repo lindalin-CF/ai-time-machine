@@ -219,26 +219,113 @@ describe('timeline hero (browser)', () => {
   });
 });
 
-describe('hero balance without the "Latest capture" line (browser)', () => {
+describe('hero copy lined up with the timeline (browser)', () => {
   let browser: Browser;
   beforeAll(async () => { browser = await chromium.launch(); });
   afterAll(async () => { await browser?.close(); });
 
-  // Desktop and tablet: the copy's middle is the panel's middle. Phones: stats, timeline and copy are one group with
-  // equal room above and below.
-  it.each([[390, 844], [768, 1000], [1024, 900], [1280, 800], [1440, 900], [1440, 760], [1920, 1080]])('at %ix%ipx keeps the left column vertically centred', async (width, height) => {
+  /** Where the title's last baseline and the frames' bottom edge are, the gap from title to sub, and the copy's room. */
+  const measure = (page: Page) => page.evaluate(() => {
+    const b = (s: string) => document.querySelector(s)!.getBoundingClientRect();
+    const layer = document.querySelector('.hero-layer')!, pb = parseFloat(getComputedStyle(layer).paddingBottom);
+    const p = b('.hero-panel'), c = b('.hero-copy'), s = b('.stats');
+    return { baseline: b('.title-base').bottom, frames: b('.tl-track > .tl-frame:not([aria-hidden]) .tl-screen').bottom,
+      gap: b('.hero-sub').top - b('.hero-title').bottom, inside: c.bottom <= b('.hero-layer').bottom - pb + 0.5,
+      clear: c.top >= s.bottom || c.right <= s.left, above: s.top - p.top, below: p.bottom - c.bottom, phone: innerWidth <= 760,
+      week: document.querySelector('.hero-week, #heroWeek') === null };
+  });
+
+  // Desktop and tablet: the baseline of "Library" sits on the frames' bottom edge, measured, at every width and on
+  // short desktop screens; the sub keeps its 18px gap and the copy stays inside the panel and clear of the stats.
+  it.each([[768, 1000], [1024, 900], [1180, 900], [1280, 800], [1280, 640], [1440, 900], [1440, 760], [1920, 1080]])('at %ix%ipx the title\'s last baseline is on the frames\' bottom edge', async (width, height) => {
     const page = await openSite(browser, '', { timeline: TIMELINE, width, height, reducedMotion: 'reduce' });
     await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-timeline') === 'still');
-    const r = await page.evaluate(() => {
-      const b = (s: string) => document.querySelector(s)!.getBoundingClientRect();
-      const p = b('.hero-panel'), c = b('.hero-copy'), s = b('.stats');
-      return { week: document.querySelector('.hero-week, #heroWeek') === null, phone: innerWidth <= 760,
-        copyMid: c.top + c.height / 2 - (p.top + p.height / 2), above: s.top - p.top, below: p.bottom - c.bottom, clear: c.top >= s.bottom || c.right <= s.left };
-    });
+    await page.evaluate(() => document.fonts.ready);
+    await expect.poll(async () => { const r = await measure(page); return Math.abs(r.baseline - r.frames); }).toBeLessThanOrEqual(2);
+    const r = await measure(page);
     expect(r.week).toBe(true);
+    expect(r.gap).toBeCloseTo(18, 0);
+    expect(r.inside).toBe(true);
     expect(r.clear).toBe(true);
-    if (r.phone) expect(Math.abs(r.above - r.below)).toBeLessThan(4);
-    else expect(Math.abs(r.copyMid)).toBeLessThan(4);
+    await page.context().close();
+  });
+
+  it('stays lined up while the title rises in, and after a resize', async () => {
+    const page = await openSite(browser, '', { timeline: TIMELINE, width: 1280, height: 800, reducedMotion: 'no-preference' });
+    await page.evaluate(() => document.fonts.ready);
+    // The title's lines rise into place over .8s; once they are there the baseline is on the frames' edge.
+    await page.waitForTimeout(1200);
+    let r = await measure(page);
+    expect(Math.abs(r.baseline - r.frames)).toBeLessThanOrEqual(2);
+    for (const [w, h] of [[1024, 900], [1920, 1080], [1440, 760]]) {
+      await page.setViewportSize({ width: w, height: h });
+      await expect.poll(async () => { r = await measure(page); return Math.abs(r.baseline - r.frames); }).toBeLessThanOrEqual(2);
+    }
+    // Down to a phone: the stacked layout, with no drop.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect.poll(() => page.locator('.hero-copy').evaluate((c) => (c as HTMLElement).style.transform)).toBe('');
+    await page.context().close();
+  });
+
+  // Phones: stats, timeline and copy are one group with equal room above and below.
+  it.each([[360, 740], [390, 844]])('at %ix%ipx keeps the stacked phone layout centred', async (width, height) => {
+    const page = await openSite(browser, '', { timeline: TIMELINE, width, height, reducedMotion: 'reduce' });
+    await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-timeline') === 'still');
+    const r = await measure(page);
+    expect(r.phone).toBe(true);
+    expect(r.clear).toBe(true);
+    expect(Math.abs(r.above - r.below)).toBeLessThan(4);
+    expect(await page.locator('.hero-copy').evaluate((c) => getComputedStyle(c).transform)).toBe('none');
+    await page.context().close();
+  });
+});
+
+describe('timeline speed by screen size (browser)', () => {
+  let browser: Browser;
+  beforeAll(async () => { browser = await chromium.launch(); });
+  afterAll(async () => { await browser?.close(); });
+
+  /** Milliseconds per frame of drift, from the strip's real movement over about 1.5s (the loop's wrap jumps ignored). */
+  const msPerFrame = (page: Page) => page.evaluate(() => new Promise<number>((done) => {
+    const track = document.querySelector('.tl-track')!, real = [...track.querySelectorAll(':scope > .tl-frame:not([aria-hidden])')] as HTMLElement[];
+    const pitch = real[1].offsetLeft - real[0].offsetLeft;
+    const xNow = () => new DOMMatrix(getComputedStyle(track).transform).m41;
+    let prev = xNow(), moved = 0; const t0 = performance.now();
+    const tick = () => {
+      const x = xNow(); if (x < prev) moved += prev - x; prev = x;
+      const dt = performance.now() - t0;
+      dt > 1500 ? done(dt / (moved / pitch)) : requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }));
+  const running = (page: Page) => page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-timeline') === 'running');
+
+  it.each([[1280, 800, 3000], [1024, 900, 4500], [768, 1000, 4500], [390, 844, 5000]])('at %ix%ipx a frame takes %ims', async (width, height, ms) => {
+    const page = await openSite(browser, '', { timeline: TIMELINE, width, height, reducedMotion: 'no-preference', ...(width <= 760 ? { hasTouch: true, isMobile: true } : {}) });
+    await running(page);
+    await page.waitForTimeout(1700); // past the 1.5s hold at rest
+    expect(await page.locator('.hero-panel').getAttribute('data-timeline-period')).toBe(String(ms));
+    const measured = await msPerFrame(page);
+    expect(measured).toBeGreaterThan(ms * 0.88);
+    expect(measured).toBeLessThan(ms * 1.12);
+    await page.context().close();
+  });
+
+  it('changes speed on resize, keeps its place in the loop, and reduced motion still stands still', async () => {
+    const page = await openSite(browser, '', { timeline: TIMELINE, width: 1280, height: 800, reducedMotion: 'no-preference' });
+    await running(page);
+    await page.waitForTimeout(1700);
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await expect.poll(() => page.locator('.hero-panel').getAttribute('data-timeline-period')).toBe('4500');
+    await page.waitForFunction(() => document.querySelector('.hero-panel')?.getAttribute('data-timeline') === 'running');
+    const m = await msPerFrame(page);
+    expect(m).toBeGreaterThan(4500 * 0.88);
+    expect(m).toBeLessThan(4500 * 1.12);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await expect.poll(() => page.locator('.hero-panel').getAttribute('data-timeline-period')).toBe('3000');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await expect.poll(() => mode(page)).toBe('still');
+    expect(await page.locator('.tl-track').evaluate((t) => getComputedStyle(t).transform)).toBe('none');
     await page.context().close();
   });
 });

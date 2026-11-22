@@ -1,5 +1,6 @@
 // Homepage hero: a strip of one product's weekly wireframes (rendered by the Worker, src/wireframe.ts timelineHtml;
-// prototype docs/prototypes/timeline-hero.html). The strip drifts left one frame every PERIOD ms. Each frame, while it
+// prototype docs/prototypes/timeline-hero.html). The strip drifts left one frame every period() ms: 3s on desktop,
+// slower on smaller screens (4.5s on tablets, 5s on phones). Each frame, while it
 // enters from the right, eases its regions from the previous week's places to its own, so a moved message box or a
 // wider sidebar can be seen moving. The latest week rests at the right end, where the corner brackets lock onto it.
 // The loop is seamless: copies of the strip sit before and after it, and its position is a pure function of time.
@@ -15,7 +16,11 @@
   if (!real.length) return;
   const tip = root.querySelector(".tl-tip");
   const reducedMq = matchMedia("(prefers-reduced-motion: reduce)");
-  const PERIOD = 3000; // ms per frame of drift
+  // ms per frame of drift: desktop (> 1180px) 3s, tablet (761-1180px) 4.5s, phones (<= 760px) 5s. A frame's layout
+  // morph runs over a fixed share of its way in, so it slows down by the same factor.
+  const phoneMq = matchMedia("(max-width:760px)"), tabletMq = matchMedia("(max-width:1180px)");
+  const period = () => (phoneMq.matches ? 5000 : tabletMq.matches ? 4500 : 3000);
+  let PERIOD = period();
   const HOLD = 1500; // ms the latest week stays locked at rest before the first drift
   const ease = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
   const clamp01 = (v) => Math.max(0, Math.min(1, v));
@@ -98,6 +103,10 @@
 
   function init() {
     stop();
+    // A new speed keeps the strip where it is in the loop: the same number of frames travelled.
+    const p = period();
+    if (p !== PERIOD) { if (t > 0) t *= p / PERIOD; PERIOD = p; }
+    panel.dataset.timelinePeriod = String(PERIOD);
     if (reduce) {
       for (const el of [...track.children]) if (!real.includes(el)) el.remove();
       track.classList.remove("is-moving"); track.style.transform = "";
@@ -154,4 +163,8 @@
   new IntersectionObserver((es) => { visible = es[0].isIntersecting; visible ? start() : stop(); }).observe(root);
   document.addEventListener("visibilitychange", () => (document.hidden ? stop() : start()));
   reducedMq.addEventListener("change", () => { reduce = reducedMq.matches; init(); });
+  // Crossing a breakpoint changes the speed even if the strip's width happened not to change.
+  const respeed = () => { if (period() !== PERIOD) init(); };
+  phoneMq.addEventListener("change", respeed);
+  tabletMq.addEventListener("change", respeed);
 })();
