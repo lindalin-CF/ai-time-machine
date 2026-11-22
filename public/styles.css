@@ -106,57 +106,79 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   position:relative;border-radius:34px;padding:0;
   box-shadow:0 44px 90px -50px rgba(21,14,5,.75),0 12px 30px -22px rgba(21,14,5,.9);
 }
-/* The dark sand hero (docs/prototypes/sand-hero.html): a 2.2:1 charcoal panel with a ring of flowing sand right of centre
-   (public/sand-hero.js), the type in the left third. Contrast on --night: --ink 18:1, --ink-soft 6.7:1, --brand-glow 7.6:1. */
+/* The dark timeline hero (docs/prototypes/timeline-hero.html): a 2.2:1 charcoal panel, the type in the left third and,
+   right of it, a strip of one product's weekly wireframes (public/timeline-hero.js, markup from src/wireframe.ts).
+   Contrast on --night: --ink 18:1, --ink-soft 6.7:1, --brand-glow 7.6:1. */
 .hero-panel{
   --night:#0b0b0c;
   --ink:#f2f0ec;
   --ink-soft:rgba(242,240,236,.6);
   --brand-glow:#ec8a5f;
-  /* Where sand-hero.js draws the ring: its centre as fractions of the panel, and its size: the vertical radius as a
-     share of min(panel height, panel width / 2.2). Its shape (a/b in px, tilt) is fixed in sand-hero.js, so it is the
-     same at every size. Set per layout below so the ring stays clear of the type. Phones size it by --ring-a/--ring-b. */
-  --ring-x:.72;--ring-y:.585;--ring-size:.28;
   position:relative;width:100%;aspect-ratio:2.2/1;min-height:420px;overflow:hidden;border-radius:inherit; /* the frame's radius */
   background:var(--night);color:var(--ink);isolation:isolate;
 }
-.hero-sand{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0}
 .hero-grain{position:absolute;inset:-50%;z-index:2;pointer-events:none;opacity:.11;mix-blend-mode:screen;
-  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
   animation:grain 1s steps(6) infinite}
-.hero-panel[data-sand="paused"] .hero-grain{animation-play-state:paused}
+.hero-panel[data-timeline="paused"] .hero-grain{animation-play-state:paused}
 @keyframes grain{0%{transform:translate(0,0)}20%{transform:translate(-3%,2%)}40%{transform:translate(2%,-3%)}60%{transform:translate(-2%,-1%)}80%{transform:translate(3%,3%)}100%{transform:translate(0,0)}}
+@media (prefers-reduced-motion:reduce){.hero-grain{animation:none}}
 
-/* Camera focus (mouse only, sand-hero.js): everything outside a soft window around the cursor is slightly defocused,
-   and corner brackets follow with a little lag, then lock in orange when the cursor rests. */
-.hero-focus{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;transition:opacity .5s cubic-bezier(.23,1,.32,1);
-  -webkit-backdrop-filter:blur(2.4px);backdrop-filter:blur(2.4px);
-  -webkit-mask-image:radial-gradient(ellipse 190px 150px at var(--fx,50%) var(--fy,50%),transparent 40%,#000 100%);
-  mask-image:radial-gradient(ellipse 190px 150px at var(--fx,50%) var(--fy,50%),transparent 40%,#000 100%)}
-.hero-reticle{position:absolute;left:0;top:0;z-index:4;width:150px;height:108px;pointer-events:none;opacity:0;
-  transform:translate3d(var(--rx,0px),var(--ry,0px),0);margin:-54px 0 0 -75px;transition:opacity .25s cubic-bezier(.23,1,.32,1)}
-.hero-reticle-box{position:absolute;inset:0;transform:scale(1.14);transition:transform .32s cubic-bezier(.23,1,.32,1)}
-.hero-reticle-box i{position:absolute;width:14px;height:14px;border:0 solid rgba(242,240,236,.7);transition:border-color .2s}
-.hero-reticle-box i:nth-child(1){left:0;top:0;border-left-width:1px;border-top-width:1px}
-.hero-reticle-box i:nth-child(2){right:0;top:0;border-right-width:1px;border-top-width:1px}
-.hero-reticle-box i:nth-child(3){left:0;bottom:0;border-left-width:1px;border-bottom-width:1px}
-.hero-reticle-box i:nth-child(4){right:0;bottom:0;border-right-width:1px;border-bottom-width:1px}
-.hero-reticle-box b{position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%;border:1px solid rgba(242,240,236,.55)}
-.hero-reticle-label{position:absolute;left:0;top:calc(100% + 8px);font:400 10px/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:rgba(242,240,236,.55);white-space:nowrap;font-variant-numeric:tabular-nums}
-.hero-panel.is-focusing{cursor:none}
-.hero-panel.is-focusing .hero-focus,.hero-panel.is-focusing .hero-reticle{opacity:1}
-.hero-panel.is-locked .hero-reticle-box{transform:scale(1)}
-.hero-panel.is-locked .hero-reticle-box i{border-color:var(--brand-glow)}
-.hero-panel.is-locked .hero-reticle-label{color:var(--brand-glow)}
-@media (hover:none),(pointer:coarse){.hero-focus,.hero-reticle{display:none}}
-@media (prefers-reduced-motion:reduce){.hero-grain{animation:none}.hero-reticle-box{transition:none}}
+/* The timeline strip. Each frame is a week: its label above ("W15 · Nov 16"), then a 16:10 screen with the regions of
+   that week's published analysis (sidebar, top bar, heading, message box, cards). Frames are joined by a thin line,
+   except after the latest (the loop's seam). Without the script (and with reduced motion) the strip ends at the right
+   with the latest week; the script adds copies and moves the track (.is-moving) with a transform only; the track's own box never changes,
+   so nothing shifts. */
+.hero-timeline{
+  --tl-w:clamp(92px,8.2vw,124px);--tl-gap:clamp(22px,2.2vw,32px);--tl-pad:var(--hero-pad-r,34px);
+  --tl-label:18px;--tl-h:calc(var(--tl-w) * .625);
+  grid-column:2;grid-row:1 / 4;align-self:center;position:relative;z-index:1;pointer-events:auto;
+  margin-right:calc(-1 * var(--hero-pad-r,34px)); /* bleeds to the panel's right edge */
+  padding-bottom:30px; /* the hover label's room */
+}
+.tl-view{position:relative;overflow:hidden;height:calc(var(--tl-label) + 8px + var(--tl-h) + 20px); /* room for the brackets */
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 56px);mask-image:linear-gradient(90deg,transparent,#000 56px)}
+/* one fixed box, the view's width less the right padding; frames line up at its right end and overflow to the left */
+.tl-track{position:absolute;top:6px;left:0;right:var(--tl-pad);display:flex;justify-content:flex-end;gap:var(--tl-gap);will-change:transform}
+.tl-frame{flex:0 0 var(--tl-w);display:flex;flex-direction:column;gap:8px;color:inherit;text-decoration:none;outline:none}
+.tl-label{height:var(--tl-label);font:400 13px/var(--tl-label) var(--font-sans);letter-spacing:.01em;color:var(--ink-soft);white-space:nowrap;font-variant-numeric:tabular-nums}
+.tl-frame.is-latest .tl-label{color:var(--brand-glow)}
+.tl-screen{position:relative;display:block;width:var(--tl-w);height:var(--tl-h);border-radius:6px;background:#131315;
+  box-shadow:inset 0 0 0 1px rgba(242,240,236,.14);transition:box-shadow .2s}
+.tl-screen svg{position:absolute;inset:0;width:100%;height:100%;display:block;border-radius:inherit}
+/* the thin line to the next week, through the screens' middle */
+.tl-frame:not(.is-latest) .tl-screen::after{content:"";position:absolute;left:100%;top:50%;width:var(--tl-gap);height:1px;background:rgba(242,240,236,.18)}
+.tl-frame:has(+ .is-latest) .tl-screen::after{background:linear-gradient(90deg,rgba(242,240,236,.18),rgba(196,76,28,.75))} /* the line into the latest week */
+.tl-screen rect{vector-effect:non-scaling-stroke;stroke-width:1px}
+.tl-screen .w-sb{fill:rgba(242,240,236,.1)}
+.tl-screen .w-tb{fill:rgba(242,240,236,.065)}
+.tl-screen .w-hd{fill:rgba(242,240,236,.34)}
+.tl-screen .w-in{fill:rgba(242,240,236,.06);stroke:rgba(242,240,236,.6)}
+.tl-screen .w-cd{fill:rgba(242,240,236,.025);stroke:rgba(242,240,236,.24)}
+.tl-frame:hover .tl-screen{box-shadow:inset 0 0 0 1px rgba(242,240,236,.42)}
+.tl-frame:focus-visible .tl-screen{outline:2px solid var(--brand-glow);outline-offset:2px}
+/* The latest week: a thin brand border and a soft glow, and the camera-focus brackets, which lock when it settles. */
+.tl-frame.is-latest .tl-screen{box-shadow:inset 0 0 0 1px var(--brand),0 0 22px -6px rgba(196,76,28,.55)}
+.tl-lock{position:absolute;inset:-7px;pointer-events:none;transform:scale(1.12);opacity:.7;transition:transform .32s cubic-bezier(.23,1,.32,1),opacity .2s}
+.tl-lock i{position:absolute;width:10px;height:10px;border:0 solid rgba(242,240,236,.7);transition:border-color .2s}
+.tl-lock i:nth-child(1){left:0;top:0;border-left-width:1px;border-top-width:1px}
+.tl-lock i:nth-child(2){right:0;top:0;border-right-width:1px;border-top-width:1px}
+.tl-lock i:nth-child(3){left:0;bottom:0;border-left-width:1px;border-bottom-width:1px}
+.tl-lock i:nth-child(4){right:0;bottom:0;border-right-width:1px;border-bottom-width:1px}
+.tl-frame.is-locked .tl-lock,.tl-track:not(.is-moving) .is-latest .tl-lock{transform:scale(1);opacity:1}
+.tl-frame.is-locked .tl-lock i,.tl-track:not(.is-moving) .is-latest .tl-lock i{border-color:var(--brand-glow)}
+/* "ChatGPT · Week of Nov 16, 2026", under the frame a pointer or keyboard focus is on (placed by the script) */
+.tl-tip{position:absolute;left:0;top:0;padding:4px 8px;border-radius:6px;background:rgba(242,240,236,.94);color:#0b0b0c;
+  font:500 12px/1.2 var(--font-mono);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s}
+.tl-tip.is-on{opacity:1}
+@media (prefers-reduced-motion:reduce){.tl-lock,.tl-lock i,.tl-screen,.tl-tip{transition:none}}
 
 /* The type, over the canvas: copy in the left column, stats top right, the latest week bottom left. The stats have their
    own column, so the copy is centred over their row too and the latest week always has room below it. */
 .hero-layer{position:absolute;inset:0;z-index:3;display:grid;grid-template-rows:auto 1fr auto;
   /* The copy starts nearer the middle (--hero-pad-l); the stats keep their padding on the right (--hero-pad-r). The copy
      column keeps the right edge it had with equal padding, 46% of the panel's width inside that padding, so it narrows
-     from the left only and stays clear of the ring: 46% of the content box less .54 of the extra left padding. */
+     from the left only and stays clear of the timeline: 46% of the content box less .54 of the extra left padding. */
   --hero-pad-l:clamp(40px,5vw,72px);--hero-pad-r:34px;--copy-share:46%;--copy-rest:.54;
   grid-template-columns:minmax(0,calc(var(--copy-share) - (var(--hero-pad-l) - var(--hero-pad-r)) * var(--copy-rest))) 1fr;
   padding:30px var(--hero-pad-r) 30px var(--hero-pad-l);gap:16px;pointer-events:none}
@@ -283,15 +305,15 @@ main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
   .hero{margin-bottom:20px;padding:18px 0 22px}
   .hero-frame{border-radius:28px}
   .hero-layer{--hero-pad-r:30px;padding-top:22px;padding-bottom:22px}
-  .hero-panel{--ring-y:.6}
 }
 /* Between phone and wide desktop the 2.2:1 box is too short for the large title: let it grow. */
 @media(max-width:1180px) and (min-width:761px){
-  .hero-panel{aspect-ratio:auto;min-height:max(540px,calc((100vw - 56px) / 2.2));--ring-x:.79;--ring-y:.56;--ring-size:.26}
+  .hero-panel{aspect-ratio:auto;min-height:max(540px,calc((100vw - 56px) / 2.2))}
   /* the copy column is wider here, so the stats get the whole top row and the copy sits below them */
   .hero-layer{--copy-share:54%;--copy-rest:.46}
   .stats{grid-column:1 / -1}
   .hero-copy{grid-row:2}
+  .hero-timeline{grid-row:2}
   .hero-title{font-size:clamp(56px,7.2vw,74px)}
 }
 
@@ -607,20 +629,19 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
 
   .hero{margin-top:6px;margin-bottom:24px;padding:16px 0 14px}
   .hero-frame{border-radius:24px}
-  /* Phone layout: stats on top, the ring in a band under them, then the copy and the latest week. The type layer is in
+  /* Phone layout: stats on top, the timeline in a band under them (three frames wide), then the copy and the latest week. The type layer is in
      the flow here, so content sets the height (min-height is only a floor) and long copy grows the panel instead of
      being clipped. The panel stays near 55-60% of a phone screen so the filter bar starts in the first screen. */
   .hero-panel{
     aspect-ratio:auto;
     min-height:440px;
     display:grid;
-    --ring-x:.52;--ring-y:.35;--ring-size:none;--ring-a:.30;--ring-b:.11; /* phones keep their own, flatter ring */
   }
   .hero-layer{
     position:relative;
     inset:auto;
     grid-template-columns:minmax(0,1fr);
-    grid-template-rows:auto minmax(180px,1fr) auto auto; /* row 2 is the ring's band */
+    grid-template-rows:auto 1fr auto auto; /* row 2 is the timeline's band */
     padding:20px 18px;
     gap:14px;
   }
@@ -702,8 +723,12 @@ html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-tex
 
   .voice-panel{width:calc(100vw - 32px)} /* position and size on phones: public/voice.js */
 }
-/* Wider phones: a panel this wide would stretch the ring into the stats and the title, so keep it narrower. */
-@media(min-width:481px) and (max-width:760px){.hero-panel{--ring-y:.36;--ring-a:.24;--ring-b:.14}}
+/* Phones: the strip runs edge to edge of the panel, three frames between its 18px paddings. */
+@media(max-width:760px){
+  .hero-timeline{grid-column:1;grid-row:2;align-self:center;margin:0 -18px;padding-bottom:0;
+    --tl-pad:18px;--tl-gap:12px;--tl-w:calc((100vw - 28px - 36px - 2 * var(--tl-gap)) / 3)} /* the panel is 100vw less main's 14px paddings */
+  .tl-view{-webkit-mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 14px),transparent);mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 14px),transparent)}
+}
 
 @media(max-width:420px){
   .topbar{flex-direction:column;align-items:flex-start}

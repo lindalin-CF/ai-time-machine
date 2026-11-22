@@ -15,6 +15,20 @@ export const CHANGELOG_UTC_OFFSET = "-05:00";
 /** Decisions and releases, newest first. Each time is the first commit of that change (`git log --date=iso`). */
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    slug: "timeline-hero",
+    date: "2026-11-21",
+    time: "22:20",
+    title: "A Timeline on the Homepage Hero",
+    subtitle: "The homepage hero shows one product's layout, week by week",
+    bullets: [
+      { lead: "Week by week", text: "Beside the title, a row of small wireframes shows one product's first screen for each week: its sidebar, top bar, heading, message box and cards, drawn from the published design analyses. No screenshots and no text from the product." },
+      { lead: "Change you can see", text: "The row drifts slowly left. As each week comes in, anything that moved since the week before, such as the message box, glides to its new place. The latest week is outlined in orange, with corner brackets that lock onto it." },
+      { lead: "The latest change", text: "The row follows the product with the most recent recorded change. Hover a week to see its name and date, and click it, or reach it with the keyboard, to open that week's digest." },
+      { lead: "Reduced motion", text: "With reduced motion turned on, the row stands still with the latest week highlighted. It also pauses when it is out of view or under the pointer." },
+    ],
+    closing: "Open the homepage.",
+  },
+  {
     slug: "layout-changes-in-weekly-digests",
     date: "2026-11-13",
     time: "21:15",

@@ -1,0 +1,1552 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Timeline Hero Prototype</title>
+<!-- Generated: the homepage hero (public/index.html) with the strip src/wireframe.ts renders for ChatGPT's published
+     analyses, public/styles.css and public/timeline-hero.js inlined. Frame links point at the live site's weekly digests. -->
+<base href="https://ai-portal-library.dev/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Afacad:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* ---------- buttons ----------
+   The site's two button styles, loaded by the homepage (public/index.html) and every server-rendered page
+   (src/portal-page.ts page()). Use them on <a> or <button>.
+
+   When to use which: one primary per view, secondary for supporting actions.
+   .btn-primary   Filled orange: the view's main action (the Library filter bar's Compare →). Never two in one view.
+   .btn-secondary Cream with orange-ink text, a 1px border and a soft shadow: supporting actions and links onward
+                  (Compare → on portal pages, Open in Compare, Details →, This week's changes →, Compare's PAGE links).
+
+   Size, shape and colour come from the --btn-* tokens below. An instance that needs another size sets the tokens on
+   itself (for example .details-link: 32px tall), so the class rules stay the same everywhere.
+   Colours are the --cf-* palette in public/styles.css, written out because server-rendered pages don't load it.
+
+   Brand orange: this is the one stylesheet every page loads, so the site's two orange tokens live here too.
+   --brand       The primary button's orange. Fills, borders, focus rings, the hero motion and the voice button, and
+                 orange text only when large (18.66px bold or 24px and up). #fff on it is 4.78:1.
+   --brand-text  The same hue, darkened to reach 4.5:1 on every background it sits on: 5.87:1 on --cf-bg-100,
+                 5.43:1 on --cf-bg-200, 4.52:1 on --cf-bg-300, 5.01:1 on the page (#e7dfd4), 5.78:1 on server pages
+                 (#f4efe8). For all smaller orange text: the current nav item, links, accents.
+   --brand-hover Hover and pressed fills, mixed from --brand. Tints, glows and shadows are color-mix() of --brand too.
+
+   Ink fill: the site's one dark fill, the hero's near-black, also here so every page has it.
+   --ink-fill       #0b0b0c. Selected chips and toggle options (--selected-bg in public/styles.css), the contact
+                    dialog's "Open email app", toasts and tooltips. Text is still --cf-text; only fills use this.
+   --ink-fill-fg    Text and icons on it: #f5f1e9, about 18:1.
+   --ink-fill-hover Hover and pressed: 12% toward white, so it stays visibly dark (#f5f1e9 on it is about 15:1). */
+:root{
+  --brand:#c44c1c;
+  --brand-text:#9f3e17;
+  --brand-hover:color-mix(in srgb,var(--brand) 86%,#000);
+  --ink-fill:#0b0b0c;
+  --ink-fill-fg:#f5f1e9;
+  --ink-fill-hover:color-mix(in srgb,var(--ink-fill) 88%,#fff);
+  --btn-font:'Afacad',system-ui,-apple-system,sans-serif;
+  --btn-gap:6px;
+  --btn-focus-ring:var(--brand);
+  /* secondary */
+  --btn-secondary-height:auto;
+  --btn-secondary-pad-y:6px;
+  --btn-secondary-pad-x:11px;
+  --btn-secondary-font-size:13.5px;
+  --btn-secondary-font-weight:600;
+  --btn-secondary-line-height:15px; /* fixed, so the button stays 29px tall in any font */
+  --btn-secondary-radius:8px;
+  --btn-secondary-bg:#f5f1e9;
+  --btn-secondary-bg-hover:#ded4c6;
+  --btn-secondary-fg:var(--brand-text);
+  --btn-secondary-border:#d9cebd;
+  --btn-secondary-shadow:0 1px 3px rgba(66,50,23,.12);
+  /* primary: #fff on --brand is 4.78:1, on --brand-hover 6.1:1 */
+  --btn-primary-min-height:36px;
+  --btn-primary-pad-y:0;
+  --btn-primary-pad-x:16px;
+  --btn-primary-font-size:14px;
+  --btn-primary-font-weight:600;
+  --btn-primary-line-height:1;
+  --btn-primary-radius:999px;
+  --btn-primary-bg:var(--brand);
+  --btn-primary-bg-hover:var(--brand-hover);
+  --btn-primary-fg:#fff;
+}
+
+.btn-secondary{
+  display:inline-flex;align-items:center;gap:var(--btn-gap);box-sizing:border-box;height:var(--btn-secondary-height);
+  padding:var(--btn-secondary-pad-y) var(--btn-secondary-pad-x);
+  border:1px solid var(--btn-secondary-border);border-radius:var(--btn-secondary-radius);
+  background:var(--btn-secondary-bg);color:var(--btn-secondary-fg);box-shadow:var(--btn-secondary-shadow);
+  font:var(--btn-secondary-font-weight) var(--btn-secondary-font-size)/var(--btn-secondary-line-height) var(--btn-font);
+  text-decoration:none;white-space:nowrap;cursor:pointer;
+  transition:background-color .15s ease-out,transform 160ms ease-out;
+}
+.btn-secondary:hover{background:var(--btn-secondary-bg-hover)}
+
+.btn-primary{
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--btn-gap);box-sizing:border-box;
+  min-height:var(--btn-primary-min-height);padding:var(--btn-primary-pad-y) var(--btn-primary-pad-x);
+  border:1px solid var(--btn-primary-bg);border-radius:var(--btn-primary-radius);
+  background:var(--btn-primary-bg);color:var(--btn-primary-fg);
+  font:var(--btn-primary-font-weight) var(--btn-primary-font-size)/var(--btn-primary-line-height) var(--btn-font);
+  text-decoration:none;white-space:nowrap;cursor:pointer;
+  transition:background-color .15s ease-out,border-color .15s ease-out,transform .1s ease-out;
+}
+@media (hover:hover){.btn-primary:hover{background:var(--btn-primary-bg-hover);border-color:var(--btn-primary-bg-hover)}}
+.btn-primary:active{transform:scale(.97)}
+@media (prefers-reduced-motion:reduce){.btn-primary{transition:background-color .15s ease-out,border-color .15s ease-out}}
+
+/* Pressed: a little smaller (transform only, on the compositor); the secondary doesn't scale with reduced motion. */
+@media (prefers-reduced-motion:no-preference){.btn-secondary:active{transform:scale(.97)}}
+.btn-primary:focus-visible,.btn-secondary:focus-visible{outline:2px solid var(--btn-focus-ring);outline-offset:2px}
+.btn-primary[hidden],.btn-secondary[hidden]{display:none}
+
+/* AI Surface Library — KUMO warm-editorial theme
+   Tokens mirror Cloudflare OS design system (--color-cf-*). */
+:root{
+  /* Palette sampled from the Optikka reference: greige sand, coffee brown, soft coral. */
+  /* The site orange is --brand, with --brand-text for small orange text (public/buttons.css, loaded on every page). */
+  --cf-text:#423217;
+  --cf-text-soft:#6f5e47;
+  --cf-bg-page:#e7dfd4;
+  --cf-bg-100:#f5f1e9;
+  --cf-bg-200:#efe8dd;
+  --cf-bg-300:#ded4c6;
+  --cf-border:#d9cebd;
+  --cf-border-strong:#c8bba4;
+  --accent-blue:#0055dc;
+  /* "Selected": the active product chip and the active option of every segmented toggle (.vt-btn.active).
+     The ink fill (public/buttons.css): #f5f1e9 on #0b0b0c is about 18:1. The top nav's current page stays orange
+     ("where you are", not a selection). */
+  --selected-bg:var(--ink-fill);
+  --selected-fg:var(--ink-fill-fg);
+  /* Segmented toggles (.viewtoggle, .vt-btn) and the Compare week dropdown (.an-wp-btn) read these, so the Compare
+     mode toggle, the Desktop/Mobile toggle and the dropdown keep one height, padding, font and radius. */
+  --toggle-track-pad:3px;
+  --toggle-track-radius:10px;
+  --toggle-pad-y:6px;
+  --toggle-pad-x:11px;
+  --toggle-font-size:13.5px;
+  --toggle-font-weight:600;
+  /* A fixed line, so a toggle stays 36px tall whatever the font's own line box (Afacad's is 1.33em). */
+  --toggle-line-height:16px;
+  --toggle-radius:7px;
+  /* The filter bar's two right-end controls, the search pill and Compare →, share one resting size: wide enough for
+     "Compare →" (about 108px) and the whole "Search…" placeholder with the icon (about 107px), with room for a wider
+     fallback font. Afacad is narrower than Space Grotesk was, so the same width keeps that room at 14px. The search still widens to 240px while focused; at 900px and below both fill the row instead. */
+  --fb-end-w:124px;
+  --fb-end-h:36px;
+  --font-sans:'Afacad',system-ui,-apple-system,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',monospace;
+  --radius:14px;
+  --radius-sm:10px;
+  --shadow-sm:0 1px 2px rgba(66,50,23,.06),0 8px 24px -18px rgba(66,50,23,.25);
+  --maxw:1200px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--cf-bg-page);color:var(--cf-text);
+  font-family:var(--font-sans);font-size:16px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%;height:auto} /* height:auto keeps width/height attributes from stretching a scaled image */
+
+/* ---------- top bar ---------- */
+.topbar{
+  position:sticky;top:0;z-index:70;
+  display:flex;align-items:center;justify-content:space-between;
+  width:100%;max-width:none;margin:0;
+  padding:18px max(28px,calc((100vw - var(--maxw))/2 + 28px));
+  background:rgba(231,223,212,.5);
+  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(66,50,23,.08);
+  box-shadow:0 8px 22px -24px rgba(66,50,23,.45);
+}
+.wordmark{display:inline-flex;align-items:center;gap:9px;font-weight:700;letter-spacing:.02em;font-size:14px;min-width:0}
+.wordmark-text{display:inline-block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wordmark-dot{width:9px;height:9px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 4px color-mix(in srgb,var(--brand) 14%,transparent)}
+.topnav{display:flex;align-items:center;gap:20px}
+.topnav-link{font-size:14px;color:var(--cf-text-soft);font-weight:600;transition:color .15s ease-out;
+  /* A 32px-tall hit area; the negative margin keeps the bar's height as it was. */
+  display:inline-flex;align-items:center;min-height:32px;margin-block:-6px}
+/* Orange marks only the current page: hover darkens the text instead, and only where a pointer really hovers
+   (on touch screens :hover sticks to the last link tapped, which made a second link look current). */
+@media(hover:hover){.topnav-link:hover{color:var(--cf-text)}}
+
+main{max-width:var(--maxw);margin:0 auto;padding:0 28px 64px}
+
+/* ---------- hero / refined brutalism ---------- */
+.hero{
+  position:relative;margin-top:8px;margin-bottom:28px;padding:38px 0 44px;
+  isolation:isolate;
+}
+.hero::before,.hero::after{
+  content:"";position:absolute;z-index:-2;pointer-events:none;
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 58%,rgba(0,0,0,.55) 78%,transparent 100%);
+  mask-image:linear-gradient(180deg,#000 0%,#000 58%,rgba(0,0,0,.55) 78%,transparent 100%);
+}
+.hero::before{
+  inset:-46px calc(50% - 50vw) -92px;
+  background:
+    radial-gradient(circle at 18% 18%,rgba(66,50,23,.18),transparent 34%),
+    radial-gradient(circle at 82% 28%,color-mix(in srgb,var(--brand) 12%,transparent),transparent 26%),
+    linear-gradient(115deg,rgba(66,50,23,.15),transparent 32%,rgba(66,50,23,.10) 78%,rgba(66,50,23,.22));
+  opacity:.42;
+}
+.hero::after{
+  inset:-46px calc(50% - 50vw) -92px;
+  background-image:
+    repeating-linear-gradient(0deg,rgba(66,50,23,.08) 0 1px,transparent 1px 7px),
+    repeating-linear-gradient(90deg,rgba(66,50,23,.06) 0 1px,transparent 1px 9px);
+  mix-blend-mode:multiply;opacity:.10;
+}
+.hero-frame{
+  /* No inset: the black panel fills the frame, so its left and right edges line up with the filter bar (.controls),
+     the "Week of …" heading row and the card grid below. The frame keeps the outer radius and the shadow. */
+  position:relative;border-radius:34px;padding:0;
+  box-shadow:0 44px 90px -50px rgba(21,14,5,.75),0 12px 30px -22px rgba(21,14,5,.9);
+}
+/* The dark timeline hero (docs/prototypes/timeline-hero.html): a 2.2:1 charcoal panel, the type in the left third and,
+   right of it, a strip of one product's weekly wireframes (public/timeline-hero.js, markup from src/wireframe.ts).
+   Contrast on --night: --ink 18:1, --ink-soft 6.7:1, --brand-glow 7.6:1. */
+.hero-panel{
+  --night:#0b0b0c;
+  --ink:#f2f0ec;
+  --ink-soft:rgba(242,240,236,.6);
+  --brand-glow:#ec8a5f;
+  position:relative;width:100%;aspect-ratio:2.2/1;min-height:420px;overflow:hidden;border-radius:inherit; /* the frame's radius */
+  background:var(--night);color:var(--ink);isolation:isolate;
+}
+.hero-grain{position:absolute;inset:-50%;z-index:2;pointer-events:none;opacity:.11;mix-blend-mode:screen;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  animation:grain 1s steps(6) infinite}
+.hero-panel[data-timeline="paused"] .hero-grain{animation-play-state:paused}
+@keyframes grain{0%{transform:translate(0,0)}20%{transform:translate(-3%,2%)}40%{transform:translate(2%,-3%)}60%{transform:translate(-2%,-1%)}80%{transform:translate(3%,3%)}100%{transform:translate(0,0)}}
+@media (prefers-reduced-motion:reduce){.hero-grain{animation:none}}
+
+/* The timeline strip. Each frame is a week: its label above ("W15 · Nov 16"), then a 16:10 screen with the regions of
+   that week's published analysis (sidebar, top bar, heading, message box, cards). Frames are joined by a thin line,
+   except after the latest (the loop's seam). Without the script (and with reduced motion) the strip ends at the right
+   with the latest week; the script adds copies and moves the track (.is-moving) with a transform only; the track's own box never changes,
+   so nothing shifts. */
+.hero-timeline{
+  --tl-w:clamp(92px,8.2vw,124px);--tl-gap:clamp(22px,2.2vw,32px);--tl-pad:var(--hero-pad-r,34px);
+  --tl-label:18px;--tl-h:calc(var(--tl-w) * .625);
+  grid-column:2;grid-row:1 / 4;align-self:center;position:relative;z-index:1;pointer-events:auto;
+  margin-right:calc(-1 * var(--hero-pad-r,34px)); /* bleeds to the panel's right edge */
+  padding-bottom:30px; /* the hover label's room */
+}
+.tl-view{position:relative;overflow:hidden;height:calc(var(--tl-label) + 8px + var(--tl-h) + 20px); /* room for the brackets */
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 56px);mask-image:linear-gradient(90deg,transparent,#000 56px)}
+/* one fixed box, the view's width less the right padding; frames line up at its right end and overflow to the left */
+.tl-track{position:absolute;top:6px;left:0;right:var(--tl-pad);display:flex;justify-content:flex-end;gap:var(--tl-gap);will-change:transform}
+.tl-frame{flex:0 0 var(--tl-w);display:flex;flex-direction:column;gap:8px;color:inherit;text-decoration:none;outline:none}
+.tl-label{height:var(--tl-label);font:400 13px/var(--tl-label) var(--font-sans);letter-spacing:.01em;color:var(--ink-soft);white-space:nowrap;font-variant-numeric:tabular-nums}
+.tl-frame.is-latest .tl-label{color:var(--brand-glow)}
+.tl-screen{position:relative;display:block;width:var(--tl-w);height:var(--tl-h);border-radius:6px;background:#131315;
+  box-shadow:inset 0 0 0 1px rgba(242,240,236,.14);transition:box-shadow .2s}
+.tl-screen svg{position:absolute;inset:0;width:100%;height:100%;display:block;border-radius:inherit}
+/* the thin line to the next week, through the screens' middle */
+.tl-frame:not(.is-latest) .tl-screen::after{content:"";position:absolute;left:100%;top:50%;width:var(--tl-gap);height:1px;background:rgba(242,240,236,.18)}
+.tl-frame:has(+ .is-latest) .tl-screen::after{background:linear-gradient(90deg,rgba(242,240,236,.18),rgba(196,76,28,.75))} /* the line into the latest week */
+.tl-screen rect{vector-effect:non-scaling-stroke;stroke-width:1px}
+.tl-screen .w-sb{fill:rgba(242,240,236,.1)}
+.tl-screen .w-tb{fill:rgba(242,240,236,.065)}
+.tl-screen .w-hd{fill:rgba(242,240,236,.34)}
+.tl-screen .w-in{fill:rgba(242,240,236,.06);stroke:rgba(242,240,236,.6)}
+.tl-screen .w-cd{fill:rgba(242,240,236,.025);stroke:rgba(242,240,236,.24)}
+.tl-frame:hover .tl-screen{box-shadow:inset 0 0 0 1px rgba(242,240,236,.42)}
+.tl-frame:focus-visible .tl-screen{outline:2px solid var(--brand-glow);outline-offset:2px}
+/* The latest week: a thin brand border and a soft glow, and the camera-focus brackets, which lock when it settles. */
+.tl-frame.is-latest .tl-screen{box-shadow:inset 0 0 0 1px var(--brand),0 0 22px -6px rgba(196,76,28,.55)}
+.tl-lock{position:absolute;inset:-7px;pointer-events:none;transform:scale(1.12);opacity:.7;transition:transform .32s cubic-bezier(.23,1,.32,1),opacity .2s}
+.tl-lock i{position:absolute;width:10px;height:10px;border:0 solid rgba(242,240,236,.7);transition:border-color .2s}
+.tl-lock i:nth-child(1){left:0;top:0;border-left-width:1px;border-top-width:1px}
+.tl-lock i:nth-child(2){right:0;top:0;border-right-width:1px;border-top-width:1px}
+.tl-lock i:nth-child(3){left:0;bottom:0;border-left-width:1px;border-bottom-width:1px}
+.tl-lock i:nth-child(4){right:0;bottom:0;border-right-width:1px;border-bottom-width:1px}
+.tl-frame.is-locked .tl-lock,.tl-track:not(.is-moving) .is-latest .tl-lock{transform:scale(1);opacity:1}
+.tl-frame.is-locked .tl-lock i,.tl-track:not(.is-moving) .is-latest .tl-lock i{border-color:var(--brand-glow)}
+/* "ChatGPT · Week of Nov 16, 2026", under the frame a pointer or keyboard focus is on (placed by the script) */
+.tl-tip{position:absolute;left:0;top:0;padding:4px 8px;border-radius:6px;background:rgba(242,240,236,.94);color:#0b0b0c;
+  font:500 12px/1.2 var(--font-mono);white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s}
+.tl-tip.is-on{opacity:1}
+@media (prefers-reduced-motion:reduce){.tl-lock,.tl-lock i,.tl-screen,.tl-tip{transition:none}}
+
+/* The type, over the canvas: copy in the left column, stats top right, the latest week bottom left. The stats have their
+   own column, so the copy is centred over their row too and the latest week always has room below it. */
+.hero-layer{position:absolute;inset:0;z-index:3;display:grid;grid-template-rows:auto 1fr auto;
+  /* The copy starts nearer the middle (--hero-pad-l); the stats keep their padding on the right (--hero-pad-r). The copy
+     column keeps the right edge it had with equal padding, 46% of the panel's width inside that padding, so it narrows
+     from the left only and stays clear of the timeline: 46% of the content box less .54 of the extra left padding. */
+  --hero-pad-l:clamp(40px,5vw,72px);--hero-pad-r:34px;--copy-share:46%;--copy-rest:.54;
+  grid-template-columns:minmax(0,calc(var(--copy-share) - (var(--hero-pad-l) - var(--hero-pad-r)) * var(--copy-rest))) 1fr;
+  padding:30px var(--hero-pad-r) 30px var(--hero-pad-l);gap:16px;pointer-events:none}
+.hero-copy{grid-column:1;grid-row:1 / 3;align-self:center;display:grid;gap:18px}
+.hero-title{
+  font-size:clamp(42px,6.4vw,74px);line-height:.9;font-weight:700;
+  letter-spacing:0;margin:0;max-width:9ch;color:var(--ink);
+}
+/* True 90% leading: each mask is one .9em line box, so baselines sit .9em apart. In Afacad the line box holds the
+   cap tops (.14em below its top) but not the descender of "y" (.09em below its bottom), so each mask's clip area reaches
+   .1em above and .13em below its line through padding, and negative margins keep that out of the layout. The whole
+   overlap sits on margin-bottom (-.23em): split across two adjacent margins it would collapse to the larger one.
+   The last mask keeps its bottom room in the layout, so the "y" never hangs into the gap above the sub.
+   The line starts 125% (1.125em) down: below the mask's clip edge (1.03em) even for the cap tops (.14em). */
+.title-mask{display:block;overflow:hidden;padding:.1em 0 .13em;margin:0 0 -.23em}
+.title-mask:first-child{margin-top:-.1em}
+.title-mask:last-child{margin-bottom:0}
+.title-line{display:block;transform:translateY(125%);animation:title-rise .8s cubic-bezier(.16,1,.3,1) forwards;will-change:transform}
+.title-mask:nth-child(1) .title-line{animation-delay:0s}
+.title-mask:nth-child(2) .title-line{animation-delay:.08s}
+.title-mask:nth-child(3) .title-line{animation-delay:.16s}
+@keyframes title-rise{to{transform:translateY(0)}}
+@media (prefers-reduced-motion:reduce){.title-line{animation:none;transform:none}}
+.hero-sub{margin:0;max-width:42ch;color:var(--ink-soft);font-size:clamp(14px,calc(1.75vw - 2px),20px);line-height:1.18;letter-spacing:-.035em;pointer-events:auto}
+.hero-sub::first-line{color:var(--ink)}
+.hero-sub em{font-style:normal;font-weight:400;color:var(--brand-glow)}
+
+/* hero motion: sub copy rises word by word, keywords get design annotations */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+/* Words breathe in as one soft wave, left to right: each fades up from a slight drop, starting
+   at its character offset (--c) in the sentence. Durations overlap their neighbours many times
+   over, so no word pops on its own. Keep this to opacity and transform: Chrome runs those on the
+   compositor, so the wave keeps moving while analytics and app.js busy the main thread around 1s.
+   Adding filter:blur() moves it back to the main thread, and it froze there on reload. */
+.hero-sub .w{display:inline-block;
+  animation:word-in .9s cubic-bezier(.22,1,.36,1) backwards;animation-delay:calc(.15s + var(--c)*5ms)}
+@keyframes word-in{
+  from{opacity:0;transform:translateY(.16em)}
+  to{opacity:1;transform:none}
+}
+.hero-sub .w.l1{color:var(--ink)} /* first line, marked by app.js; ::first-line can't style inline-blocks */
+.hero-sub .kw{position:relative;display:inline-block}
+.hero-sub .ann{position:absolute;pointer-events:none;opacity:0}
+.hero-sub .tag{
+  /* Centred on the line above: the 19px tag's middle at half a line (.59em of the sub at line-height 1.18) above this
+     line. Written as 50% of the keyword's box, which is one line tall, because em here would be the tag's own 10px. */
+  bottom:calc(150% - 9.5px);left:-2px;display:flex;align-items:center;gap:5px;white-space:nowrap;
+  font-family:var(--font-mono);font-size:10px;font-weight:500;line-height:1;text-transform:uppercase;letter-spacing:.06em;
+  background:var(--ink);color:var(--night);padding:5px 7px 4px;border-radius:5px;
+}
+.hero-sub .tag.orange{background:var(--brand);color:#fff}
+.hero-sub .kw-layout .tag{left:auto;right:-6px}
+.hero-sub .w.le .tag{left:auto;right:-6px} /* tag would run past the copy's right edge (marked by app.js): anchor it right */
+.hero-sub .w.ls .tag{left:-2px;right:auto} /* keyword starts a line (marked by app.js): keep its tag inside the panel */
+.hero-sub .w.lo .tag{left:-2px;right:auto} /* right-anchored tag would run past the copy's left edge (marked by app.js) */
+.hero-sub .box{inset:-3px -6px -2px;border:1.5px solid var(--brand)}
+.hero-sub .box i{position:absolute;width:6px;height:6px;box-sizing:border-box;background:var(--night);border:1.5px solid var(--brand)}
+.hero-sub .box i:nth-child(1){top:-3.75px;left:-3.75px}
+.hero-sub .box i:nth-child(2){top:-3.75px;right:-3.75px}
+.hero-sub .box i:nth-child(3){bottom:-3.75px;left:-3.75px}
+.hero-sub .box i:nth-child(4){bottom:-3.75px;right:-3.75px}
+.hero-sub .rule{left:0;right:0;bottom:-3px;height:1.5px;background:var(--ink);transform-origin:left}
+.hero-sub .rule.o{background:var(--brand)}
+.hero-sub .bars{display:inline-flex;align-items:flex-end;gap:2px;height:9px}
+.hero-sub .bars b{width:3px;background:currentColor}
+.hero-sub .bars b:nth-child(1){height:9px}
+.hero-sub .bars b:nth-child(2){height:6px}
+.hero-sub .bars b:nth-child(3){height:3px}
+.hero-sub .sw{width:9px;height:9px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 1.5px #fff} /* the tag's hex, ringed so it shows on the orange tag */
+/* annotations play only while .annot is on (added/replayed by app.js) */
+.hero-sub.annot .tag{animation:ann-tag 1.7s cubic-bezier(.16,1,.3,1) both}
+.hero-sub.annot .box{animation:ann-box 1.7s cubic-bezier(.16,1,.3,1) both}
+.hero-sub.annot .rule{animation:ann-rule 1.7s cubic-bezier(.16,1,.3,1) both}
+.hero-sub.annot .sw{animation:ann-sw 1.7s ease-out both}
+.hero-sub.annot .kw-layout .ann{animation-delay:0s}
+/* Each tag hands off to the next the moment it fades out: by 1.5s the outgoing tag is at 1%
+   opacity and the incoming one reaches 30% within 10ms. No gap, and no visible overlap where
+   hierarchy and colour share a spot on mobile. */
+.hero-sub.annot .kw-hier .ann{animation-delay:1.5s}
+.hero-sub.annot .kw-colour .ann,.hero-sub.annot .kw-colour .sw{animation-delay:3s}
+@keyframes ann-tag{
+  0%{opacity:0;transform:translateY(5px)}
+  10%,82%{opacity:1;transform:none}
+  92%,100%{opacity:0;transform:translateY(-3px)}
+}
+/* negative insets keep the corner handles, which overhang the frame, from being clipped */
+@keyframes ann-box{
+  0%{opacity:1;clip-path:inset(-4px 100% -4px -4px)}
+  16%,82%{opacity:1;clip-path:inset(-4px -4px -4px -4px)}
+  100%{opacity:0;clip-path:inset(-4px -4px -4px -4px)}
+}
+@keyframes ann-rule{
+  0%{opacity:1;transform:scaleX(0)}
+  16%,82%{opacity:1;transform:scaleX(1)}
+  100%{opacity:0;transform:scaleX(1)}
+}
+@keyframes ann-sw{0%,12%{background:#fff}40%,100%{background:var(--brand)}}
+@media (prefers-reduced-motion:reduce){
+  .hero-sub .w,.title-line{animation:none;opacity:1;transform:none;clip-path:none;filter:none}
+  .hero-sub .ann{display:none}
+}
+.stats{grid-column:2;grid-row:1;justify-self:end;display:flex;gap:30px;margin:0;padding:0}
+.stat dt{font-family:var(--font-mono);font-size:12px;text-transform:uppercase;letter-spacing:.10em;color:var(--ink-soft)}
+.stat-short{display:none}
+.stat dd{margin:2px 0 0;font-family:var(--font-mono);font-size:22px;font-weight:500;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink)}
+.stat-count{display:inline-block}
+/* With JavaScript the numbers wait for /api/stats, then count up from 0 (app.js renderStats). Hidden, not removed, so
+   they keep their space; shown after 3s in case app.js never gets that far. */
+@media (prefers-reduced-motion:no-preference){html.js .stat dd:not([data-counted]){animation:stat-wait 0s 3s both}}
+@keyframes stat-wait{from{visibility:hidden}to{visibility:visible}}
+.hero-week{grid-column:1;grid-row:3;align-self:end;margin:0;font-size:14px;line-height:1.35;font-weight:400;color:var(--ink)}
+.hero-week-label{display:block;margin-bottom:5px;font-family:var(--font-mono);font-size:12px;line-height:1.2;letter-spacing:.10em;text-transform:uppercase;color:var(--ink-soft)}
+.hero-week b{font-weight:700}
+
+/* Wide desktop screens that are short (e.g. Windows laptops at 125–150% scaling, ~600–730px tall): the panel's height
+   follows the viewport too, so the filter bar starts in the first screen. At 900px tall and up the cap is 500px, about
+   the 2.2:1 height anyway. The vh lines are the fallback for browsers without svh. */
+@media(min-width:1181px){
+  .hero-panel{min-height:320px;max-height:clamp(320px,calc(200px + 33.333vh),500px);max-height:clamp(320px,calc(200px + 33.333svh),500px)}
+  .hero-title{font-size:clamp(42px,min(6.4vw,8.8vh),74px);font-size:clamp(42px,min(6.4vw,8.8svh),74px)}
+  .hero-sub{font-size:clamp(14px,calc(min(1.75vw,3.5vh) - 2px),20px);font-size:clamp(14px,calc(min(1.75vw,3.5svh) - 2px),20px)}
+}
+@media(min-width:1181px) and (max-height:820px){
+  .hero{margin-bottom:20px;padding:18px 0 22px}
+  .hero-frame{border-radius:28px}
+  .hero-layer{--hero-pad-r:30px;padding-top:22px;padding-bottom:22px}
+}
+/* Between phone and wide desktop the 2.2:1 box is too short for the large title: let it grow. */
+@media(max-width:1180px) and (min-width:761px){
+  .hero-panel{aspect-ratio:auto;min-height:max(540px,calc((100vw - 56px) / 2.2))}
+  /* the copy column is wider here, so the stats get the whole top row and the copy sits below them */
+  .hero-layer{--copy-share:54%;--copy-rest:.46}
+  .stats{grid-column:1 / -1}
+  .hero-copy{grid-row:2}
+  .hero-timeline{grid-row:2}
+  .hero-title{font-size:clamp(56px,7.2vw,74px)}
+}
+
+/* ---------- controls ---------- */
+/* One slim filter bar, pinned under the sticky top bar (--topbar-h is the top bar's measured height, set by app.js).
+   Above the cards (z-index 1 inside), below the top bar and its phone menu (z-index 70).
+   On phones (≤ 640px) it scrolls away with the page instead (below), so it never eats a third of the screen;
+   its open menus (z-index 30 and 90) still sit above the cards and below the top bar. */
+.controls{
+  position:sticky;top:var(--topbar-h,0px);z-index:60;
+  display:flex;align-items:center;gap:10px 12px;flex-wrap:nowrap;margin-bottom:26px;
+  background:var(--cf-bg-100);border:1px solid var(--cf-border);border-radius:14px;padding:12px 16px;
+}
+.fb-portals{display:flex;align-items:center;gap:6px;flex:1 1 auto;min-width:0}
+.filters{display:flex;flex-wrap:nowrap;gap:6px;flex:0 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  /* room for the 2px focus ring, which overflow would clip */
+  padding:3px;margin:-3px}
+.filters::-webkit-scrollbar{display:none}
+.filters .chip,.chip-more{flex:none;padding:7px 11px}
+/* When chips are scrolled out of view, fade the edge they are hidden behind (app.js sets the classes). */
+.filters.fade-end{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
+.filters.fade-start{-webkit-mask-image:linear-gradient(90deg,transparent,#000 28px);mask-image:linear-gradient(90deg,transparent,#000 28px)}
+.filters.fade-start.fade-end{-webkit-mask-image:linear-gradient(90deg,transparent,#000 28px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,transparent,#000 28px,#000 calc(100% - 28px),transparent)}
+.more-menu{position:relative;flex:none}
+.chip-more{border-style:dashed;border-color:var(--cf-border-strong);background:transparent}
+.more-menu.open .chip-more{border-color:var(--brand);color:var(--cf-text)}
+/* Right-aligned to the chip, so it opens under the row and never past the page's right edge. */
+.more-menu .more-menu-list{left:auto;right:0;width:220px;max-width:calc(100vw - 32px)}
+.more-menu.open .more-menu-list{opacity:1;transform:none;pointer-events:auto}
+.more-option .swatch{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:middle}
+.chip{
+  font-family:var(--font-sans);font-size:14px;line-height:15px;font-weight:600;color:var(--cf-text-soft);cursor:pointer;
+  background:var(--cf-bg-100);border:1px solid var(--cf-border);
+  padding:7px 14px;border-radius:999px;transition:background-color .15s ease-out,color .15s ease-out,border-color .15s ease-out;white-space:nowrap;
+}
+@media(hover:hover){.chip:hover{border-color:var(--cf-border-strong);color:var(--cf-text)}}
+.chip[aria-selected="true"],.chip[aria-pressed="true"]{
+  background:var(--selected-bg);color:var(--selected-fg);border-color:var(--selected-bg);
+}
+/* A selected chip can be clicked again to drop it: hover and pressed lift the fill 12% toward white (--ink-fill-hover). */
+@media(hover:hover){.chip[aria-pressed="true"]:hover{background:var(--ink-fill-hover);border-color:var(--ink-fill-hover);color:var(--selected-fg)}}
+.chip[aria-pressed="true"]:active{background:var(--ink-fill-hover);border-color:var(--ink-fill-hover)}
+.chip .swatch{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:middle}
+.weekpick{display:flex;align-items:center;gap:10px}
+.weekpick label{font-family:var(--font-mono);font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:var(--cf-text-soft)}
+#weekSelect,#collectionWeekSelect{
+  font-family:var(--font-sans);font-size:14px;color:var(--cf-text);
+  background:var(--cf-bg-100);border:1px solid var(--cf-border);
+  padding:9px 34px 9px 14px;border-radius:var(--radius-sm);cursor:pointer;
+  appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%236f5e47' stroke-width='1.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;
+}
+
+/* ---------- search ---------- */
+/* Compact search near the right end of the filter bar; widens while focused. */
+.searchbar{
+  display:flex;align-items:center;gap:8px;flex:none;width:var(--fb-end-w);height:var(--fb-end-h);
+  background:var(--cf-bg-100);border:1px solid var(--cf-border);
+  border-radius:999px;padding:0 14px;transition:border-color .15s ease-out,width .2s ease-out;
+}
+.searchbar:focus-within{width:240px;border-color:var(--brand);outline:2px solid var(--brand);outline-offset:2px}
+.search-input:focus-visible{outline:none} /* the ring is drawn on .searchbar */
+@media (prefers-reduced-motion:reduce){.searchbar{transition:border-color .15s ease-out}}
+.searchbar svg{flex:none;color:var(--cf-text-soft)}
+.search-input{
+  flex:1 1 auto;min-width:0;border:0;outline:0;background:transparent;
+  font-family:var(--font-sans);font-size:14px;line-height:17px;font-weight:400;color:var(--cf-text);
+}
+.search-input::placeholder{color:var(--cf-text-soft)}
+.search-input::-webkit-search-cancel-button{cursor:pointer}
+
+/* ---------- Compare → (the filter bar's primary button, .btn-primary in public/buttons.css) ---------- */
+/* At the right end of the filter bar, the same size as the search pill next to it (--fb-end-w, --fb-end-h); the label
+   is centred (.btn-primary's justify-content). */
+.fb-compare{flex:none;width:var(--fb-end-w);height:var(--fb-end-h)}
+
+/* ---------- manual-observation search results ---------- */
+.manual-results{margin-top:42px}
+.manual-results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.manual-results .manual-cell{display:flex;flex-direction:column;min-height:0}
+/* .manual-img has flex:0 0 100% for the modal; in this column-flex card that made
+   the thumbnail fill the whole cell and push the caption out of view (overflow:hidden). */
+.manual-results .manual-img{flex:0 0 auto}
+.manual-results .manual-cell figcaption{flex:0 0 auto}
+
+/* ---------- section head ---------- */
+.section-head{display:flex;align-items:center;gap:12px 18px;margin-bottom:22px}
+.section-head h2{font-size:17px;font-weight:700;letter-spacing:-.01em;margin:0;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+/* The week's digest (/weeks/<week>), a .btn-secondary at the right end of the week heading's row at every width
+   (centred on it by .section-head's align-items). */
+#weekDigest{flex:none;margin-left:auto}
+
+/* ---------- gallery ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:22px}
+.portal-index{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px 22px}
+.portal-index a{font-weight:600;color:var(--cf-text)}
+.portal-index span{color:var(--cf-text-soft);font-size:14px}
+.js .portal-index{display:none}
+.card{
+  background:var(--cf-bg-100);border:1px solid var(--cf-border);border-radius:var(--radius);
+  overflow:hidden;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;
+  transition:transform .18s ease-out,box-shadow .18s ease-out,border-color .18s ease-out;
+}
+/* Hover lifts only where a fine pointer really hovers; on touch screens :hover sticks after a tap. */
+@media(hover:hover) and (pointer:fine){
+  .card:hover{transform:translateY(-3px);border-color:var(--cf-border-strong);
+    box-shadow:0 2px 4px rgba(66,50,23,.06),0 22px 40px -22px rgba(66,50,23,.4)}
+}
+.shot{position:relative;aspect-ratio:16/10;background:var(--cf-bg-300);border-bottom:1px solid var(--cf-border)}
+.shot img{width:100%;height:100%;object-fit:cover;object-position:top center}
+.badge{
+  position:absolute;top:12px;left:12px;font-family:var(--font-mono);font-size:12px;
+  text-transform:uppercase;letter-spacing:.12em;font-weight:500;color:#fff;
+  background:rgba(66,50,23,.72);backdrop-filter:blur(4px);padding:4px 8px;border-radius:6px;
+}
+.badge.err{background:rgba(190,40,20,.82)}
+.card-body{padding:18px 18px 16px;display:flex;flex-direction:column;gap:14px;flex:1}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.portal-id{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-dot{width:22px;height:22px;border-radius:7px;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.brand-logo{width:26px;height:26px;border-radius:7px;flex:none;display:grid;place-items:center;overflow:hidden;
+  background:var(--cf-bg-100);box-shadow:inset 0 0 0 1px rgba(66,50,23,.12)}
+.brand-logo img{width:18px;height:18px;object-fit:contain;display:block}
+.brand-logo.is-fallback{background:var(--portal-brand,var(--brand));box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.brand-logo.is-fallback img{display:none}
+.portal-name{font-weight:700;font-size:16px;line-height:1.2}
+.portal-co{font-size:13px;color:var(--cf-text-soft);margin-top:2px}
+.visit{font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;color:var(--cf-text-soft);
+  border:1px solid var(--cf-border);padding:5px 9px;border-radius:7px;transition:background-color .15s ease-out,color .15s ease-out,border-color .15s ease-out;white-space:nowrap}
+.visit:hover{color:var(--brand-text);border-color:color-mix(in srgb,var(--brand) 40%,transparent)}
+.analysis-label{font-family:var(--font-mono);font-size:12px;text-transform:uppercase;letter-spacing:.16em;color:var(--cf-text-soft);display:flex;align-items:center;gap:8px}
+.analysis-label::before{content:"";width:16px;height:1px;background:var(--cf-border-strong)}
+.analysis{font-size:14px;line-height:1.55;color:var(--cf-text);margin:0}
+.analysis.clamped{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+.analysis-toggle{align-self:flex-start;margin-top:-6px;border:none;background:none;cursor:pointer;padding:2px;
+  display:inline-flex;align-items:center;justify-content:center;color:var(--cf-text-soft);
+  border-radius:6px;transition:color .15s ease-out,background-color .15s ease-out}
+.analysis-toggle svg{transition:transform .2s ease-out}
+.analysis-toggle.open svg{transform:rotate(180deg)}
+.analysis-toggle:hover{color:var(--cf-text);background:var(--cf-bg-300)}
+.analysis-toggle[hidden]{display:none}
+.analysis-method{display:block;width:fit-content;margin-top:6px;font-size:13px;color:var(--cf-text-soft);text-decoration:underline}
+.analysis-method:hover{color:var(--cf-text)}
+.analysis-method[hidden]{display:none}
+.card-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:6px}
+.palette{display:flex;gap:0;min-width:0}
+.palette i{width:20px;height:20px;display:block;flex:0 1 auto}
+.palette i:first-child{border-radius:6px 0 0 6px}
+.palette i:last-child{border-radius:0 6px 6px 0}
+.by{font-family:var(--font-mono);font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--cf-text-soft)}
+.by b{color:var(--brand-text);font-weight:600}
+
+.empty{text-align:center;color:var(--cf-text-soft);padding:60px 0;font-size:15px}
+.card.skeleton{height:360px;background:linear-gradient(100deg,var(--cf-bg-200),var(--cf-bg-300),var(--cf-bg-200));background-size:200% 100%;animation:sk 1.3s infinite}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ---------- footer ---------- */
+.sitefoot{
+  max-width:var(--maxw);margin:0 auto;padding:30px 28px 56px;
+  border-top:1px solid var(--cf-border);display:flex;align-items:center;
+  justify-content:space-between;gap:20px;flex-wrap:wrap;
+}
+.foot-left{display:flex;flex-direction:column;gap:3px}
+.foot-left strong{font-size:14px}
+.foot-left span{font-size:13.5px;color:var(--cf-text-soft)}
+.linkbtn{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer}
+.linkbtn:hover{color:var(--cf-text)}
+.foot-legal a{text-decoration:underline}
+.foot-legal a:hover{color:var(--cf-text)}
+.site-dialog{width:min(480px,calc(100vw - 32px));max-width:none;padding:0;border:1px solid var(--cf-border);border-radius:var(--radius);
+  background:var(--cf-bg-100);color:var(--cf-text);font-family:var(--font-sans);box-shadow:0 24px 64px -24px rgba(66,50,23,.45)}
+.site-dialog::backdrop{background:rgba(66,50,23,.4)}
+.site-dialog form{position:relative;padding:26px 24px 22px}
+.site-dialog h2{margin:0 40px 12px 0;font-size:20px;font-weight:700;letter-spacing:-.01em}
+.site-dialog p{margin:0 0 12px;font-size:14.5px;line-height:1.6;color:var(--cf-text-soft)}
+.site-dialog p a{color:var(--cf-text);text-decoration:underline}
+.site-dialog-x{position:absolute;top:12px;right:12px;width:32px;height:32px;border:0;border-radius:var(--radius-sm);
+  background:none;color:var(--cf-text-soft);font-size:22px;line-height:1;cursor:pointer}
+.site-dialog-x:hover{background:var(--cf-bg-200);color:var(--cf-text)}
+.site-dialog-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px;margin-top:18px}
+.site-dialog-close{font:600 13px/1 var(--font-sans);padding:10px 18px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--cf-border-strong);background:var(--cf-bg-200);color:var(--cf-text)}
+.site-dialog-close:hover{border-color:var(--cf-text-soft)}
+.contact-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.site-dialog p.contact-row{color:var(--cf-text)}
+.contact-address{font-family:var(--font-mono);font-size:13.5px;padding:7px 11px;border:1px solid var(--cf-border);border-radius:var(--radius-sm);
+  background:var(--cf-bg-200);user-select:all;overflow-wrap:anywhere}
+.contact-copy{font:600 12.5px/1 var(--font-sans);min-width:6em;padding:9px 14px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--cf-border-strong);background:var(--cf-bg-100);color:var(--cf-text)}
+.contact-copy:hover{border-color:var(--cf-text-soft)}
+.contact-mail{display:inline-flex;align-items:center;font:600 13px/1 var(--font-sans);padding:10px 18px;border-radius:999px;
+  background:var(--ink-fill);color:var(--ink-fill-fg);text-decoration:none;transition:background-color .15s ease-out}
+.contact-mail:hover,.contact-mail:active{background:var(--ink-fill-hover)}
+@media(max-width:480px){.site-dialog form{padding:22px 18px 18px}}
+
+@media(max-width:640px){
+  main{padding:0 18px 48px}
+  .topbar{padding:16px 18px}
+}
+
+/* Signed-in (local-agent) capture badge */
+.badge.signedin{background:var(--brand);color:#fff;}
+
+
+
+/* ---------- screenshot lightbox (click a thumbnail to enlarge + download) ---------- */
+/* Whole-card link: the portal name <a> stretches over its card (real anchor, Cmd+click works). */
+.card,.col-item{position:relative}
+.card-link{color:inherit;text-decoration:none}
+.card-link::after{content:"";position:absolute;inset:0;z-index:0}
+.card-link:focus-visible{outline:none}
+.card-link:focus-visible::after{outline:2px solid var(--brand);outline-offset:-2px;border-radius:inherit}
+.card .visit,.card .analysis-toggle,.card .analysis-method,.card .manual-open,.card .details-link{position:relative;z-index:1}
+
+/* The lightbox itself: public/lightbox.css. */
+
+
+
+/* ---------- top nav active + Collection one-pager ---------- */
+.topnav-link[data-nav]{cursor:pointer}
+.topnav-link.active{color:var(--brand-text)}
+/* First paint: html[data-view] is set by the inline script in index.html's <head> from the hash, then kept in sync by
+   route() in app.js. It shows the matching view (and marks its nav link) before app.js has loaded any data. A view
+   hidden this way never runs the hero's CSS animations. */
+html[data-view="compare"] #galleryView,html[data-view="collection"] #galleryView{display:none}
+html[data-view="compare"] #analyticsView,html[data-view="collection"] #collectionView{display:block}
+/* #notes and #insights links: the <head> script is sending the browser to /changelog. */
+html[data-view="leaving"] body{visibility:hidden}
+html[data-view="gallery"] .topnav-link[data-nav="gallery"],html[data-view="collection"] .topnav-link[data-nav="collection"],
+html[data-view="compare"] .topnav-link[data-nav="compare"]{color:var(--brand-text)}
+
+#collectionView{padding-top:6px}
+/* Page headings: Compare sets the spec, Collection shares it. */
+.page-title{font-family:var(--font-sans);font-weight:700;font-size:clamp(30px,5vw,44px);letter-spacing:-.03em;line-height:1.02;margin:0 0 8px}
+.page-sub{margin:0;max-width:64ch;color:var(--cf-text-soft);font-size:14.5px;line-height:1.5}
+
+.collection-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin:6px 0 18px}
+.collection-headings .pill{margin-bottom:12px}
+.collection-meta b{color:var(--cf-text);font-weight:600}
+.dl-all{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--cf-border-strong);cursor:pointer;
+  background:rgba(245,241,233,.74);color:var(--cf-text);font-family:var(--font-sans);font-weight:600;font-size:14px;
+  padding:12px 18px;border-radius:11px;box-shadow:0 6px 18px -12px rgba(66,50,23,.24);
+  transition:background-color .15s ease-out,border-color .15s ease-out,color .15s ease-out,transform .15s ease-out}
+.dl-all:hover{background:color-mix(in srgb,var(--brand) 10%,transparent);border-color:var(--brand);color:var(--brand-text)}
+@media(hover:hover) and (pointer:fine){.dl-all:hover{transform:translateY(-1px)}}
+.dl-all:disabled{opacity:.55;cursor:default;transform:none;box-shadow:none}
+
+.collection-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px}
+.col-item{margin:0;display:flex;flex-direction:column;gap:9px}
+.col-item .shot{aspect-ratio:16/10;border:1px solid var(--cf-border);border-radius:12px;overflow:hidden;
+  background:var(--cf-bg-300);box-shadow:0 10px 24px -18px rgba(66,50,23,.5)}
+.col-cap{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13.5px}
+.col-name{display:inline-flex;align-items:center;gap:7px;font-weight:600;color:var(--cf-text);min-width:0}
+.col-name .brand-dot{width:9px;height:9px;border-radius:50%;flex:none}
+.col-date{color:var(--cf-text-soft);font-family:var(--font-mono);white-space:nowrap}
+@media (max-width:520px){
+  .collection-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+}
+
+
+
+/* ---------- device toggle (Desktop / Mobile) + mobile screenshots ---------- */
+.controls-right{display:flex;align-items:center;gap:8px;flex:none;flex-wrap:nowrap}
+.collection-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+
+.viewtoggle{display:inline-flex;background:var(--cf-bg-300);border:1px solid var(--cf-border);border-radius:var(--toggle-track-radius);
+  padding:var(--toggle-track-pad);gap:2px}
+.vt-btn{display:inline-flex;align-items:center;gap:6px;border:none;cursor:pointer;
+  background:transparent;color:var(--cf-text-soft);font-family:var(--font-sans);font-weight:var(--toggle-font-weight);
+  font-size:var(--toggle-font-size);line-height:var(--toggle-line-height);padding:var(--toggle-pad-y) var(--toggle-pad-x);border-radius:var(--toggle-radius);
+  transition:background-color .15s ease-out,color .15s ease-out}
+.vt-btn svg{opacity:.85}
+.vt-btn:hover{color:var(--cf-text)}
+.vt-btn.active{background:var(--selected-bg);color:var(--selected-fg);box-shadow:0 1px 3px rgba(66,50,23,.12)}
+.vt-btn.active svg{opacity:1}
+/* Desktop | Mobile (public/device-toggle.js): the Library bar, the Collection and Compare. Its size and width come from
+   each place's layout rules. A disabled option (Mobile in Compare's Canvas) stays readable: the soft text colour, with a
+   dotted underline that points to its tooltip (the title says why). */
+.device-toggle .vt-btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.device-toggle .vt-btn:disabled,.device-toggle .vt-btn:disabled:hover{color:var(--cf-text-soft);background:transparent;box-shadow:none;cursor:not-allowed;
+  text-decoration:underline dotted;text-underline-offset:3px}
+
+/* mobile screenshots render in a portrait (phone) frame */
+.shot.mobile{aspect-ratio:3/4}
+.col-item .shot.mobile{aspect-ratio:3/4}
+
+/* placeholder when a portal has no mobile capture yet */
+.shot-missing{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:16px;
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.05em;text-transform:uppercase;line-height:1.5;
+  color:var(--cf-text-soft);
+  background:repeating-linear-gradient(45deg,var(--cf-bg-300),var(--cf-bg-300) 10px,var(--cf-bg-200) 10px,var(--cf-bg-200) 20px)}
+
+/* ---------- mobile RWD polish ---------- */
+@media(max-width:760px){
+  .topbar{
+    align-items:flex-start;
+    gap:12px;
+    padding:14px 16px;
+  }
+  .wordmark{
+    font-size:13px;
+    letter-spacing:.11em;
+    white-space:nowrap;
+  }
+  .topnav{
+    gap:14px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+  .topnav-link{font-size:13px}
+
+  main{padding:0 14px 48px}
+
+  .hero{margin-top:6px;margin-bottom:24px;padding:16px 0 14px}
+  .hero-frame{border-radius:24px}
+  /* Phone layout: stats on top, the timeline in a band under them (three frames wide), then the copy and the latest week. The type layer is in
+     the flow here, so content sets the height (min-height is only a floor) and long copy grows the panel instead of
+     being clipped. The panel stays near 55-60% of a phone screen so the filter bar starts in the first screen. */
+  .hero-panel{
+    aspect-ratio:auto;
+    min-height:440px;
+    display:grid;
+  }
+  .hero-layer{
+    position:relative;
+    inset:auto;
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:auto 1fr auto auto; /* row 2 is the timeline's band */
+    padding:20px 18px;
+    gap:14px;
+  }
+  .stats{
+    grid-column:1;
+    grid-row:1;
+    justify-self:stretch;
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    grid-template-rows:auto auto;
+    grid-auto-flow:column; /* labels share row 1, numbers share row 2, so the numbers line up even if a label wraps */
+    gap:0 14px;
+  }
+  .stat{display:contents}
+  .stat dt{font-size:12px;letter-spacing:.04em;white-space:nowrap}
+  .stat dd{font-size:20px}
+  .hero-copy{
+    grid-row:3;
+    align-self:end;
+    gap:14px;
+  }
+  .hero-week{grid-row:4}
+  .hero-title{
+    font-size:clamp(34px,11vw,52px);
+    max-width:100%;
+    letter-spacing:0;
+  }
+  .hero-sub{
+    max-width:none;
+    font-size:14px;
+    line-height:1.22;
+  }
+
+  .chip{
+    flex:0 0 auto;
+    font-size:13px;
+    line-height:14px;
+    padding:7px 12px;
+  }
+  .viewtoggle{flex:0 0 auto}
+  :root{--toggle-font-size:13px;--toggle-pad-x:9px}
+  .weekpick{flex:1 1 160px;justify-content:flex-end}
+  #weekSelect,#collectionWeekSelect{max-width:100%;font-size:14px;padding:8px 32px 8px 12px}
+
+  .section-head{gap:12px;margin-bottom:14px}
+  .week-title{font-size:22px}
+  .grid{grid-template-columns:1fr;gap:18px}
+  .card{border-radius:14px}
+  .shot{aspect-ratio:4/3}
+  .shot.mobile{aspect-ratio:9/16;max-height:560px}
+  .card-body{padding:15px;gap:12px}
+  .card-head{gap:10px}
+  .portal-name{font-size:17px}
+  .analysis{font-size:14px}
+  .palette i{width:24px;height:24px}
+
+  .collection-head{
+    align-items:flex-start;
+    gap:14px;
+    margin-bottom:18px;
+  }
+  .collection-actions{
+    width:100%;
+    align-items:stretch;
+    gap:10px;
+  }
+  .collection-actions .weekpick{
+    flex:1 1 100%;
+    justify-content:space-between;
+  }
+  .collection-actions .viewtoggle{width:100%;justify-content:center}
+  .collection-actions .vt-btn{flex:1;justify-content:center}
+  .dl-all{width:100%;justify-content:center;padding:11px 14px}
+  .collection-grid{grid-template-columns:1fr 1fr;gap:12px}
+  .col-item .shot{border-radius:10px}
+  .col-item .shot.mobile{aspect-ratio:9/16}
+  .col-cap{font-size:13px}
+  .col-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .voice-panel{width:calc(100vw - 32px)} /* position and size on phones: public/voice.js */
+}
+/* Phones: the strip runs edge to edge of the panel, three frames between its 18px paddings. */
+@media(max-width:760px){
+  .hero-timeline{grid-column:1;grid-row:2;align-self:center;margin:0 -18px;padding-bottom:0;
+    --tl-pad:18px;--tl-gap:12px;--tl-w:calc((100vw - 28px - 36px - 2 * var(--tl-gap)) / 3)} /* the panel is 100vw less main's 14px paddings */
+  .tl-view{-webkit-mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 14px),transparent);mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 14px),transparent)}
+}
+
+@media(max-width:420px){
+  .topbar{flex-direction:column;align-items:flex-start}
+  .topnav{width:100%;justify-content:flex-start}
+  .stats{column-gap:10px}
+  .hero-title{font-size:clamp(34px,10.5vw,46px)}
+  .collection-grid{grid-template-columns:1fr}
+}
+
+/* Below 480px the full stat labels (12px) can't fit on one line: show short labels, keep the full text for screen readers. */
+@media(max-width:480px){
+  .stat-full{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+  .stat-short{display:inline}
+}
+
+/* ---------- custom week dropdown (orange selection, no native blue) ---------- */
+.weekpick{position:relative}
+.week-native{
+  position:absolute!important;
+  inline-size:1px;block-size:1px;
+  opacity:0;pointer-events:none;
+}
+.week-menu{position:relative;min-width:160px}
+.week-menu-btn{
+  width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  font-family:var(--font-sans);font-size:14px;color:var(--cf-text);
+  background:var(--cf-bg-100);border:1px solid var(--cf-border);
+  padding:9px 34px 9px 14px;border-radius:var(--radius-sm);cursor:pointer;
+  text-align:left;position:relative;
+}
+.week-menu-btn::after{
+  content:"";position:absolute;right:12px;top:50%;width:12px;height:12px;transform:translateY(-50%);
+  background:no-repeat center/12px 12px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%236f5e47' stroke-width='1.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+.week-menu-btn:hover{border-color:var(--cf-border-strong)}
+.week-menu-btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.week-menu.open .week-menu-btn{
+  outline:none;border-color:var(--brand);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 18%,transparent);
+}
+.week-menu-list{
+  position:absolute;right:0;top:calc(100% + 7px);z-index:90;
+  min-width:100%;max-height:260px;overflow:auto;padding:6px;
+  background:rgba(245,241,233,.96);border:1px solid color-mix(in srgb,var(--brand) 42%,transparent);
+  border-radius:12px;box-shadow:0 18px 45px -24px rgba(66,50,23,.55);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  opacity:0;transform:translateY(-4px);pointer-events:none;
+  transition:opacity .15s ease-out,transform .15s ease-out;
+}
+.week-menu.open .week-menu-list{opacity:1;transform:none;pointer-events:auto}
+.week-option{
+  width:100%;border:none;background:transparent;color:var(--cf-text);
+  border-radius:8px;padding:9px 11px;text-align:left;cursor:pointer;
+  font-family:var(--font-sans);font-size:14px;white-space:nowrap;
+}
+.week-option:hover,.week-option:focus-visible{background:color-mix(in srgb,var(--brand) 12%,transparent);color:var(--brand-text)}
+.week-option:focus-visible{outline:2px solid var(--brand);outline-offset:-2px}
+.week-option[aria-selected="true"]{background:var(--brand);color:#fff}
+.week-option[aria-selected="true"]:hover{background:var(--brand-hover);color:#fff}
+
+/* ---------- mobile top nav stays on one row ---------- */
+@media(max-width:760px){
+  .topbar{align-items:center;gap:10px;flex-wrap:nowrap;padding:14px 16px}
+  .wordmark{font-size:13px;letter-spacing:.10em;min-width:0;flex:1 1 auto;white-space:nowrap}
+  .topnav{margin-left:auto;flex:0 0 auto;gap:14px;flex-wrap:nowrap;justify-content:flex-end;white-space:nowrap}
+  .topnav-link{font-size:13px;white-space:nowrap}
+  .week-menu{min-width:150px}
+}
+@media(max-width:420px){
+  .topbar{flex-direction:row;align-items:center;gap:8px;padding:12px 14px}
+  .wordmark{font-size:13px;letter-spacing:.08em;max-width:48vw;overflow:hidden;text-overflow:ellipsis}
+  .topnav{width:auto;justify-content:flex-end;gap:12px}
+  .topnav-link{font-size:13px}
+  .week-menu{min-width:142px}
+}
+
+/* ---------- manual snapshots modal (… button on each card) ---------- */
+.manual-open{
+  margin-left:auto;flex:none;display:inline-grid;place-items:center;width:32px;height:32px;padding:0;
+  border:1px solid var(--cf-border);border-radius:8px;background:transparent;color:var(--cf-text-soft);
+  cursor:pointer;transition:background-color .15s ease-out,color .15s ease-out;
+}
+.manual-open:hover{background:var(--cf-bg-300);color:var(--cf-text)}
+.manual-open:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+/* Card footer: "…" (manual snapshots) then Details (the card's portal page), at the right end. */
+.card-actions{margin-left:auto;flex:none;display:flex;align-items:center;gap:8px}
+.card-actions .manual-open{margin-left:0}
+/* Details: a .btn-secondary (public/buttons.css), 32px tall like the "…" button beside it. */
+.details-link{--btn-secondary-height:32px;--btn-secondary-pad-y:0;--btn-secondary-line-height:1}
+.manual-modal{position:fixed;inset:0;z-index:95;display:grid;place-items:center;padding:24px}
+.manual-modal[hidden]{display:none}
+.manual-backdrop{position:absolute;inset:0;background:rgba(30,18,8,.68);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.manual-panel{
+  position:relative;z-index:1;width:min(980px,94vw);max-height:90vh;overflow:auto;
+  background:var(--cf-bg-100);border:1px solid var(--cf-border-strong);
+  border-radius:18px;box-shadow:0 30px 80px -30px rgba(21,14,5,.68);
+}
+.manual-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:20px 22px 14px;border-bottom:1px solid var(--cf-border)}
+.manual-kicker{display:block;font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--cf-text-soft);margin-bottom:4px}
+.manual-head h2{margin:0;font-size:26px;line-height:1.05;letter-spacing:-.04em}
+.manual-close{border:none;background:transparent;color:var(--cf-text-soft);cursor:pointer;font-size:28px;line-height:1;padding:0 2px}
+.manual-close:hover{color:var(--cf-text)}
+.manual-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:18px 22px 22px}
+.manual-loading{grid-column:1/-1;padding:36px;text-align:center;color:var(--cf-text-soft);font-family:var(--font-mono);font-size:12px}
+.manual-cell{margin:0;min-height:210px;border:1px solid var(--cf-border);border-radius:13px;background:var(--cf-bg-200);overflow:hidden}
+.manual-cell.empty{display:grid;place-items:center;color:var(--cf-text-soft);font-family:var(--font-mono);font-size:12px;text-transform:uppercase;letter-spacing:.08em;background:repeating-linear-gradient(45deg,var(--cf-bg-200),var(--cf-bg-200) 10px,var(--cf-bg-300) 10px,var(--cf-bg-300) 20px)}
+.manual-img{position:relative;flex:0 0 100%;width:100%;aspect-ratio:16/10;background:var(--cf-bg-300);cursor:zoom-in;overflow:hidden}
+.manual-img img{width:100%;height:100%;object-fit:cover;object-position:top center}
+.manual-chip{position:absolute;left:9px;top:9px;z-index:3;background:rgba(20,10,0,.62);color:#fff;border-radius:999px;padding:4px 8px;font:600 12px/1 var(--font-mono);text-transform:uppercase;letter-spacing:.05em}
+/* manual carousel */
+.manual-carousel{position:relative;overflow:hidden;aspect-ratio:16/10;background:var(--cf-bg-300)}
+.manual-track{display:flex;height:100%;transition:transform .25s ease-out;will-change:transform}
+.manual-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:3;width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;
+  display:grid;place-items:center;background:rgba(20,10,0,.5);color:#fff;font-size:18px;line-height:1;
+  -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);transition:background-color .15s ease-out,opacity .15s ease-out;opacity:.85}
+.manual-nav:hover{background:rgba(20,10,0,.78);opacity:1}
+.manual-nav.prev{left:8px}
+.manual-nav.next{right:8px}
+.manual-dots{position:absolute;left:0;right:0;bottom:8px;z-index:3;display:flex;justify-content:center;gap:6px}
+.manual-dot{width:7px;height:7px;border-radius:50%;border:none;cursor:pointer;padding:0;background:rgba(245,241,233,.55);transition:background-color .15s ease-out,transform .15s ease-out}
+.manual-dot.active{background:#fff;transform:scale(1.25)}
+.manual-cell figcaption{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:10px 11px;font-size:13.5px;color:var(--cf-text-soft);line-height:1.35}
+.manual-cap-text{display:flex;flex-direction:column;gap:4px;min-width:0}
+.manual-actions{flex:0 0 auto;display:flex;flex-direction:column;gap:6px}
+.manual-edit-btn,.manual-share-btn{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;cursor:pointer;background:var(--cf-bg-100);border:1px solid var(--cf-border);color:var(--cf-text-soft);transition:color .15s ease-out,border-color .15s ease-out,background-color .15s ease-out}
+.manual-edit-btn:hover,.manual-share-btn:hover{color:var(--brand-text);border-color:var(--brand);background:color-mix(in srgb,var(--brand) 8%,transparent)}
+.manual-toast{position:absolute;left:50%;bottom:16px;transform:translate(-50%,8px);z-index:5;
+  background:var(--ink-fill);color:var(--ink-fill-fg);font:600 12px/1 var(--font-sans);
+  padding:9px 14px;border-radius:999px;opacity:0;pointer-events:none;transition:opacity .18s ease-out,transform .18s ease-out;
+  box-shadow:0 10px 24px -12px rgba(21,14,5,.6)}
+.manual-toast.show{opacity:1;transform:translate(-50%,0)}
+.manual-edit{display:flex;flex-direction:column;gap:8px;padding:10px 11px}
+.manual-edit-thumbs{display:flex;flex-wrap:wrap;gap:6px}
+.manual-edit-thumb{position:relative;width:52px;height:40px;border-radius:7px;overflow:hidden;border:1px solid var(--cf-border)}
+.manual-edit-thumb img{width:100%;height:100%;object-fit:cover;object-position:top center}
+.manual-thumb-del{position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;border:none;cursor:pointer;
+  display:grid;place-items:center;background:rgba(20,10,0,.72);color:#fff;font-size:13px;line-height:1;padding:0}
+.manual-thumb-del:hover{background:var(--brand-hover)}
+.manual-file.compact{padding:9px;gap:2px}
+.manual-file.compact .manual-plus{width:24px;height:24px;font-size:18px}
+.manual-file.compact span{font-size:13px}
+.manual-edit textarea,.manual-edit input{width:100%;font-family:var(--font-sans);font-size:13.5px;color:var(--cf-text);background:var(--cf-bg-100);border:1px solid var(--cf-border);border-radius:8px;padding:7px 9px}
+.manual-edit textarea{resize:vertical;min-height:58px}
+.manual-edit textarea:focus,.manual-edit input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 16%,transparent)}
+.manual-edit-actions{display:flex;gap:8px;justify-content:flex-end}
+.manual-edit-actions button{border-radius:8px;padding:7px 13px;font:600 13px/1 var(--font-sans);cursor:pointer;border:1px solid var(--cf-border-strong)}
+.manual-edit-cancel{background:var(--cf-bg-100);color:var(--cf-text)}
+.manual-edit-cancel:hover{border-color:var(--brand)}
+.manual-edit-save{background:var(--brand);color:#fff;border-color:var(--brand)}
+.manual-edit-save:hover{background:var(--brand-hover)}
+.manual-cell figcaption b{color:var(--cf-text);font-weight:600}
+.manual-cell.upload{padding:13px;display:flex;flex-direction:column;gap:10px;background:var(--cf-bg-100)}
+.manual-cell.upload label{display:flex;flex-direction:column;gap:5px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--cf-text-soft);font-family:var(--font-mono)}
+.manual-cell.upload input,.manual-cell.upload select,.manual-cell.upload textarea{
+  width:100%;font-family:var(--font-sans);font-size:14px;color:var(--cf-text);
+  background:var(--cf-bg-100);border:1px solid var(--cf-border);border-radius:9px;padding:8px 10px;text-transform:none;letter-spacing:0;
+}
+.manual-cell.upload input:focus,.manual-cell.upload select:focus,.manual-cell.upload textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 16%,transparent)}
+.manual-file{position:relative;border:1px dashed var(--cf-border-strong);border-radius:11px;padding:16px 12px;text-align:center;cursor:pointer;background:var(--cf-bg-200);display:grid;place-items:center;gap:6px}
+.manual-file input{display:none}
+.manual-file span{font-family:var(--font-sans);font-size:14px;font-weight:600;color:var(--cf-text);text-transform:none;letter-spacing:0}
+.manual-file small{font-family:var(--font-mono);font-size:12px;color:var(--cf-text-soft);text-transform:uppercase;letter-spacing:.06em}
+/* upload progress overlay inside the thumbnail/upload area */
+.manual-progress{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  padding:12px;border-radius:11px;background:rgba(245,241,233,.92);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.manual-progress[hidden]{display:none}
+.manual-progress-track{width:82%;height:8px;border-radius:999px;background:var(--cf-bg-300);overflow:hidden;border:1px solid var(--cf-border)}
+.manual-progress-bar{width:0;height:100%;border-radius:999px;background:var(--brand);transition:width .2s ease-out}
+.manual-progress-pct{font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--brand-text);letter-spacing:.04em}
+.manual-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.manual-submit{border:none;border-radius:10px;background:var(--brand);color:#fff;cursor:pointer;font:700 13px/1 var(--font-sans);padding:11px 12px}
+.manual-submit:hover{background:var(--brand-hover)}
+.manual-msg{display:none;margin:0;color:var(--brand-text);font-size:13px;line-height:1.35}
+.manual-msg.show{display:block}
+@media(max-width:760px){
+  .manual-modal{padding:14px}
+  .manual-head{padding:16px 16px 12px}
+  .manual-head h2{font-size:22px}
+  .manual-grid{grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px 16px}
+  .manual-row{grid-template-columns:1fr}
+}
+@media(max-width:520px){.manual-grid{grid-template-columns:1fr}.manual-cell{min-height:190px}}
+
+
+/* ---------- mobile fixes: compact week filter + one-line top menu ---------- */
+@media(max-width:760px){
+  .topbar{align-items:center;gap:10px;flex-wrap:nowrap;padding:14px 16px}
+  .wordmark{flex:1 1 auto;font-size:13px;letter-spacing:.01em;white-space:nowrap;overflow:hidden}
+  .wordmark-dot{flex:0 0 auto}
+  .wordmark-text{max-width:100%}
+  .topnav{margin-left:auto;flex:0 0 auto;display:flex;gap:14px;flex-wrap:nowrap;justify-content:flex-end;white-space:nowrap}
+  .topnav-link{font-size:13px;white-space:nowrap}
+}
+@media(max-width:420px){
+  .topbar{flex-direction:row;align-items:center;gap:8px;padding:12px 14px}
+  .wordmark{font-size:13px;max-width:54vw;letter-spacing:0}
+  .topnav{width:auto;margin-left:auto;justify-content:flex-end;gap:11px}
+  .topnav-link{font-size:13px}
+}
+
+
+/* ---------- filter bar: two rows below 900px, full width at 640px ---------- */
+.controls .weekpick{flex:none;gap:0}
+.controls .viewtoggle .vt-btn{padding-inline:9px}
+@media(max-width:900px){
+  .controls{flex-wrap:wrap}
+  .fb-portals{flex:1 1 100%}
+  .controls-right{flex:1 1 100%}
+  .controls .searchbar,.controls .searchbar:focus-within{flex:1 1 auto;width:auto;min-width:0}
+  /* The phone and tablet bar keeps its earlier sizing: the search sized by its padding, Compare → by its label and
+     stretched to the search's height. */
+  .controls .searchbar{height:auto;padding:7px 14px}
+  .fb-compare{width:auto;height:auto;align-self:stretch}
+}
+@media(max-width:640px){
+  .controls{position:static;gap:10px;padding:10px 12px;margin-bottom:20px}
+  .controls-right{flex-wrap:wrap;gap:8px}
+  .controls-right .viewtoggle{flex:1 1 auto}
+  .controls-right .viewtoggle .vt-btn{flex:1;justify-content:center}
+  .controls .weekpick{flex:1 1 auto}
+  .controls .an-week,.controls .an-wp{width:100%}
+  .controls .searchbar,.controls .searchbar:focus-within{flex:1 1 100%}
+  .fb-compare{flex:1 1 100%;min-height:36px}
+}
+
+/* manual snapshot add slot */
+.manual-add{display:grid;place-items:center;gap:10px;min-height:210px;border:1px dashed var(--cf-border-strong);
+  background:var(--cf-bg-100);color:var(--cf-text);cursor:pointer;text-align:center;
+  font-family:var(--font-sans);font-weight:600;font-size:14px}
+.manual-add:hover{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 8%,transparent);color:var(--brand-text)}
+.manual-add-plus{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
+  background:var(--cf-bg-200);border:1px solid var(--cf-border-strong);color:var(--brand-text);
+  font-size:32px;line-height:1;font-weight:400}
+.manual-add:hover .manual-add-plus{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 12%,transparent)}
+
+/* ---------- analytics: comparison ---------- */
+#analyticsView{padding-top:6px}
+.analytics-head{margin:6px 0 18px}
+.analytics-controls{display:flex;flex-direction:column;gap:12px;margin-bottom:20px;padding:16px;
+  border:1px solid var(--cf-border);border-radius:14px;background:var(--cf-bg-200)}
+.an-row{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.an-label{flex:0 0 74px;padding-top:6px;font-family:var(--font-mono);font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--cf-text-soft)}
+/* Portals: every portal in one row that scrolls sideways (swipe, wheel, or Tab), snapping to chips. The edges with
+   more to scroll fade over 24px (app.js sets fade-start / fade-end). */
+#analyticsView .an-bar--portals{display:flex;align-items:center;min-width:0}
+.an-chiprow{display:flex;gap:6px;flex-wrap:nowrap;flex:1 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  overscroll-behavior-x:contain;scroll-snap-type:x proximity;scroll-padding-inline:24px;
+  padding:3px;margin:-3px} /* room for the focus ring, which overflow would clip */
+.an-chiprow::-webkit-scrollbar{display:none}
+.an-chiprow .chip{flex:none;scroll-snap-align:start}
+.an-chiprow.fade-end{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent)}
+.an-chiprow.fade-start{-webkit-mask-image:linear-gradient(90deg,transparent,#000 24px);mask-image:linear-gradient(90deg,transparent,#000 24px)}
+.an-chiprow.fade-start.fade-end{-webkit-mask-image:linear-gradient(90deg,transparent,#000 24px,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(90deg,transparent,#000 24px,#000 calc(100% - 24px),transparent)}
+.an-mode,.an-device{flex:0 0 auto}
+
+.analytics-table-wrap{border:1px solid var(--cf-border);border-radius:14px;overflow:hidden;background:var(--cf-bg-100)}
+.an-table-scroll{overflow-x:auto}
+.an-table{border-collapse:separate;border-spacing:0;width:100%;min-width:520px}
+.an-table th,.an-table td{padding:12px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--cf-border);font-size:14px;color:var(--cf-text)}
+.an-table tbody tr:last-child th,.an-table tbody tr:last-child td{border-bottom:none}
+.an-table thead th{position:sticky;top:0;z-index:2;background:var(--cf-bg-300);font-family:var(--font-sans);font-weight:700;white-space:nowrap}
+.an-colhead{min-width:200px}
+.an-logo{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;background:var(--cf-bg-100);box-shadow:inset 0 0 0 1px rgba(66,50,23,.12);margin-right:8px;overflow:hidden;vertical-align:middle}
+.an-logo img{width:15px;height:15px;object-fit:contain}
+.an-colhead span{vertical-align:middle}
+.an-rowhead{position:sticky;left:0;z-index:1;background:var(--cf-bg-200);font-family:var(--font-mono);font-size:12px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.06em;color:var(--cf-text-soft);white-space:nowrap;min-width:118px}
+.an-table thead .an-rowhead{z-index:3}
+.an-shot{border-radius:9px;overflow:hidden;border:1px solid var(--cf-border);cursor:zoom-in;max-width:240px;background:var(--cf-bg-300)}
+.an-shot img{display:block;width:100%;height:auto}
+/* Desktop shots fill their column up to 480px, so with three or more portals they shrink to fit instead of scrolling. */
+.an-shot--desktop{width:100%;max-width:480px}
+.an-noshot{display:grid;place-items:center;min-height:78px;max-width:240px;color:var(--cf-text-soft);font-size:13px;
+  border:1px dashed var(--cf-border-strong);border-radius:9px;background:var(--cf-bg-200)}
+.an-swatch{display:inline-block;width:22px;height:22px;border-radius:6px;vertical-align:middle;margin-right:8px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.an-table code{font-family:var(--font-mono);font-size:12px;color:var(--cf-text)}
+.an-palette{display:inline-flex;gap:4px;flex-wrap:wrap}
+.an-palette i{width:20px;height:20px;border-radius:5px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.an-tag{display:inline-block;padding:3px 9px;border-radius:999px;background:var(--cf-bg-300);border:1px solid var(--cf-border);font-family:var(--font-mono);font-size:12px;color:var(--cf-text)}
+.an-notes{color:var(--cf-text-soft);line-height:1.5;min-width:240px;max-width:340px;font-size:13.5px}
+/* Differences and Similarities rows (findingsCellHTML in public/analytics-canvas.js): "vs …" heading, then a bullet list. */
+.an-cmp{line-height:1.5;font-size:13.5px;min-width:200px}
+.an-cmp-head{font-family:var(--font-mono);font-size:12px;letter-spacing:.04em;color:var(--cf-text-soft);margin-bottom:6px}
+.an-cmp-note{font-size:13px;color:var(--cf-text-soft);font-style:italic;margin:-2px 0 6px}
+.an-cmp-list{margin:0;padding-left:1.1em}
+.an-cmp-list li{margin:0 0 4px}
+.an-cmp-list li:last-child{margin-bottom:0}
+.an-cmp-list li::marker{color:var(--cf-text-soft)}
+.an-cmp-empty{color:var(--cf-text-soft)}
+/* PAGE row: a link to each column's portal page, a .btn-secondary like the Compare button on portal pages, without
+   the shadow inside the table. */
+.an-page-link{--btn-secondary-shadow:none}
+.an-loading,.an-empty{padding:34px;text-align:center;color:var(--cf-text-soft);font-size:14px}
+@media(max-width:760px){
+  .an-label{flex-basis:100%;padding-top:0}
+  .an-notes{min-width:200px}
+  /* A cell spanning both columns is wider than the screen here (the table scrolls sideways): keep its text within
+     the visible width beside the sticky row label (page gutters 36px, table border 2px, row label 146px, cell padding 28px). */
+  .an-cmp--span .an-cmp-inner{max-width:calc(100vw - 212px)}
+}
+
+@media(max-width:760px){.topnav{gap:10px}.topnav-link{font-size:12.5px}}
+@media(max-width:420px){.wordmark{max-width:38vw}.topnav{gap:8px}.topnav-link{font-size:13px}}
+
+/* ---------- analytics: canvas view (public/analytics-canvas.js) ---------- */
+.an-view{flex:0 0 auto}
+.an-view .vt-btn:focus-visible,.an-canvas-wrap .vt-btn:focus-visible,.anc-tools .vt-btn:focus-visible,.anc-share:focus-visible,.anc-box-x:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.an-canvas-wrap{border:1px solid var(--cf-border);border-radius:14px;overflow:hidden;background:var(--cf-bg-100)}
+.anc-note{margin:0;color:var(--cf-text-soft);font-size:13.5px;line-height:1.4;min-width:0;overflow-wrap:anywhere}
+.anc-tools{display:flex;align-items:center;gap:8px}
+/* Right end of the Table/Canvas row: canvas tools (Canvas only), then Copy link (both views), 8px apart like the tools. */
+.an-resultsbar-end{display:flex;align-items:center;gap:8px;margin-left:auto}
+.anc-zoom{align-items:center}
+.anc-zoom .vt-btn{min-width:30px;justify-content:center}
+.anc-zoom-pct{min-width:44px;text-align:center;font-family:var(--font-mono);font-size:12px;color:var(--cf-text-soft)}
+/* Icon button, square and as tall as the zoom group: a zoom button is one text line (1lh) plus 6px padding
+   top and bottom, inside the group's 3px padding and 1px border, so 1lh + 20px (follows the loaded font). */
+.anc-reset{background:var(--cf-bg-300);border:1px solid var(--cf-border);width:calc(1lh + 20px);height:calc(1lh + 20px);padding:0;justify-content:center}
+/* Same height and surface as the reset button, with a label; wide enough for "Link copied" so it does not resize. */
+.anc-share{background:var(--cf-bg-300);border:1px solid var(--cf-border);height:calc(1lh + 20px);padding:0 12px;gap:6px;justify-content:center;min-width:8.5em;white-space:nowrap}
+.anc-board{position:relative;height:min(70vh,620px);overflow:hidden;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
+  background-color:var(--cf-bg-100);background-image:radial-gradient(var(--cf-border) 1px,transparent 1px);background-size:20px 20px}
+.anc-board:focus-visible{outline:2px solid var(--brand);outline-offset:-2px}
+.anc-board.is-panning{cursor:grabbing}
+.anc-board.is-connecting{cursor:crosshair}
+.anc-world{position:absolute;left:0;top:0;transform-origin:0 0}
+.anc-edges{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+.anc-edge{fill:none;stroke:var(--cf-border-strong);stroke-width:2}
+.anc-edge.is-selected{stroke:var(--brand);stroke-width:2.5}
+.anc-edge-hit{fill:none;stroke:transparent;stroke-width:14;pointer-events:stroke;cursor:pointer}
+.anc-ghost{fill:none;stroke:var(--brand);stroke-width:2;stroke-dasharray:6 5}
+.anc-card{position:absolute;left:0;top:0;width:280px;background:var(--cf-bg-100);border:1px solid var(--cf-border);border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);cursor:grab}
+.anc-card.is-dragging{cursor:grabbing;border-color:var(--cf-border-strong);z-index:2}
+.anc-card-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:10px 12px 8px}
+.anc-card-title{font-weight:700;font-size:15px;color:var(--cf-text)}
+.anc-card-sub{font-family:var(--font-mono);font-size:12px;color:var(--cf-text-soft);white-space:nowrap}
+.anc-thumb{margin:0 10px 10px;border-radius:9px;overflow:hidden;border:1px solid var(--cf-border);background:var(--cf-bg-300);cursor:zoom-in}
+.anc-thumb img{display:block;width:100%;height:auto;pointer-events:none}
+.anc-noshot{display:grid;place-items:center;min-height:120px;margin:0 10px 10px;color:var(--cf-text-soft);font-size:13px;
+  border:1px dashed var(--cf-border-strong);border-radius:9px;background:var(--cf-bg-200)}
+.anc-handle{position:absolute;top:50%;width:14px;height:14px;margin-top:-7px;border-radius:50%;background:var(--cf-bg-100);
+  border:2px solid var(--cf-border-strong);cursor:crosshair}
+.anc-handle--in{left:-8px}
+.anc-handle--out{right:-8px}
+.anc-handle:hover,.anc-board.is-connecting .anc-handle--in{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 12%,transparent)}
+.anc-box{position:absolute;left:0;top:0;width:230px;padding:8px 10px 10px;background:var(--cf-bg-200);border:1px solid var(--cf-border);
+  border-radius:var(--radius-sm);box-shadow:var(--shadow-sm);cursor:grab}
+.anc-box.is-dragging{cursor:grabbing;border-color:var(--cf-border-strong);z-index:2}
+.anc-box.is-selected{border-color:var(--brand)}
+.anc-box-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px;font-family:var(--font-mono);
+  font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--cf-text-soft)}
+.anc-box-x{border:none;background:transparent;color:var(--cf-text-soft);font-size:16px;line-height:1;padding:2px 5px;border-radius:6px;cursor:pointer}
+.anc-box-x:hover{color:var(--brand-text);background:color-mix(in srgb,var(--brand) 10%,transparent)}
+.anc-box-note{margin:0 0 6px;font-size:13px;line-height:1.4;font-style:italic;color:var(--cf-text-soft)}
+.anc-box-list{margin:0;padding:0 0 0 16px;font-size:13px;line-height:1.4;color:var(--cf-text)}
+.anc-box-list li+li{margin-top:4px}
+/* Narrow screens: stacked cards with the comparison between neighbours. */
+.an-canvas-wrap > .anc-note{padding:10px 12px;border-bottom:1px solid var(--cf-border);background:var(--cf-bg-200)}
+.anc-stack{display:flex;flex-direction:column;align-items:stretch;gap:10px;padding:12px}
+.anc-card--stack,.anc-box--stack{position:static;width:auto;cursor:default}
+.anc-box--stack{margin:0 14px}
+
+/* ---------- analytics: control layout ----------
+   Column 1 holds the Compare toggle (row 1) and the Device toggle (row 2): the column is as wide as the wider of the
+   two and both stretch to it, so their edges line up whatever their labels. The Week dropdown sits in column 2 of
+   row 2; the selected count and Clear sit at the right end of row 2 (a subgrid shares the outer rows).
+   Then the portal chips across the full width.
+   Above the results: View toggle left, canvas zoom and reset right (Canvas only), then the note. */
+#analyticsView .an-bar--top{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:12px 16px}
+#analyticsView .an-primary{grid-column:1;grid-row:1 / span 2;align-self:stretch;display:grid;grid-template-rows:subgrid;
+  grid-template-columns:auto auto;align-items:center;gap:12px;max-width:100%}
+#analyticsView .an-primary .an-mode{grid-column:1;grid-row:1}
+#analyticsView .an-primary .an-device{grid-column:1;grid-row:2}
+#analyticsView .an-primary .an-week{grid-column:2;grid-row:2}
+#analyticsView .an-selection{grid-column:2;grid-row:2;justify-self:end;display:flex;align-items:center;gap:4px}
+#analyticsView .an-count{font-family:var(--font-mono);font-size:12px;color:var(--cf-text-soft);white-space:nowrap}
+/* Icon-only Clear: no background or border in any state; hover changes only the icon colour. */
+#analyticsView .an-clear{display:inline-grid;place-items:center;width:24px;height:24px;padding:0;margin:0;border:0;border-radius:6px;
+  background:none;color:var(--cf-text-soft);cursor:pointer}
+#analyticsView .an-clear:hover{color:var(--cf-text)}
+#analyticsView .an-clear:disabled,#analyticsView .an-clear:disabled:hover{color:var(--cf-border-strong);cursor:not-allowed}
+#analyticsView .an-clear:focus-visible,#analyticsView .an-mode .vt-btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+#analyticsView .an-mode,#analyticsView .an-device,#analyticsView .an-view{display:grid;grid-auto-flow:column;grid-auto-columns:1fr}
+#analyticsView .an-mode .vt-btn,#analyticsView .an-device .vt-btn,#analyticsView .an-view .vt-btn{justify-content:center}
+#analyticsView .an-resultsbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+#analyticsView .anc-tools[hidden]{display:none}
+#analyticsView .an-canvas-note{margin:-2px 0 12px}
+@media(max-width:640px){
+  /* Phones: one full-width column: Compare, Device, then the Week dropdown; the count and Clear below. */
+  #analyticsView .an-bar--top{grid-template-columns:1fr}
+  #analyticsView .an-primary{grid-row:auto;grid-template-columns:1fr;grid-template-rows:none}
+  #analyticsView .an-primary .an-mode,#analyticsView .an-primary .an-device,#analyticsView .an-primary .an-week{grid-column:1;grid-row:auto}
+  #analyticsView .an-selection{grid-column:1;grid-row:auto}
+}
+
+/* ---------- week dropdown (public/analytics-weekpick.js): Compare's week and the Library filter bar's week ----------
+   Matches a toggle group: same background, border, radius and button font (the --toggle-* tokens); its vertical
+   padding is the group's track padding plus a button's, so it is exactly as tall as a toggle group. */
+.an-wp{position:relative;min-width:0}
+.an-wp-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin:0;
+  background:var(--cf-bg-300);border:1px solid var(--cf-border);border-radius:var(--toggle-track-radius);
+  padding:calc(var(--toggle-track-pad) + var(--toggle-pad-y)) 10px calc(var(--toggle-track-pad) + var(--toggle-pad-y)) 14px;cursor:pointer;
+  font-family:var(--font-sans);font-weight:var(--toggle-font-weight);font-size:var(--toggle-font-size);line-height:var(--toggle-line-height);color:var(--cf-text);text-align:left}
+.an-wp-btn:hover{border-color:var(--cf-border-strong)}
+.an-wp-btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.an-wp-value{display:grid}
+.an-wp-value > span{grid-area:1 / 1;white-space:nowrap}
+.an-wp-sizer{visibility:hidden}
+.an-wp-chevron{flex:0 0 auto;color:var(--cf-text-soft);transition:transform .15s ease-out}
+.an-wp.is-open .an-wp-chevron{transform:rotate(180deg)}
+.an-wp-list{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:30;margin:0;padding:4px;
+  max-height:min(320px,55vh);overflow-y:auto;overscroll-behavior:contain;
+  background:var(--cf-bg-100);border:1px solid var(--cf-border);border-radius:10px;box-shadow:var(--shadow-sm)}
+.an-wp-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;cursor:pointer;
+  font-family:var(--font-sans);font-size:13.5px;font-weight:600;color:var(--cf-text);white-space:nowrap}
+.an-wp-item:hover,.an-wp-item:focus{outline:none;background:color-mix(in srgb,var(--brand) 12%,transparent);color:var(--brand-text)}
+.an-wp-item:focus-visible{outline:2px solid var(--brand);outline-offset:-2px}
+.an-wp-item[aria-selected="true"]{color:var(--brand-text)}
+.an-wp-item[aria-disabled="true"]{color:var(--cf-border-strong);cursor:not-allowed;background:transparent}
+.an-wp-check{flex:0 0 auto;display:grid;place-items:center;width:14px;height:14px;border-radius:4px;
+  border:1.5px solid var(--cf-border-strong);background:var(--cf-bg-100)}
+.an-wp-item[aria-checked="true"] .an-wp-check{background:var(--brand);border-color:var(--brand)}
+.an-wp-item[aria-checked="true"] .an-wp-check::after{content:"";width:7px;height:4px;margin-top:-2px;
+  border-left:2px solid var(--cf-bg-100);border-bottom:2px solid var(--cf-bg-100);transform:rotate(-45deg)}
+
+/* ---------- phone top-bar menu (public/site-menu.js; the server pages repeat this in src/portal-page.ts) ---------- */
+/* Hidden behind the button only once html.js is set (inline <head> script), so the first paint is already collapsed
+   and, without JS, the links wrap onto a second row instead. html.menu-open shows the panel; the page behind keeps scrolling,
+   and the panel moves with the sticky bar. */
+.topnav-toggle{display:none}
+@media(max-width:640px){
+  html:not(.js) .topbar{flex-wrap:wrap;row-gap:6px}
+  html:not(.js) .topnav{width:100%;margin-left:0;flex-wrap:wrap;justify-content:flex-start}
+  html.js .wordmark{max-width:none}
+  html.js .topnav-toggle{
+    display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;margin-left:auto;
+    width:40px;height:40px;padding:0;border:1px solid var(--cf-border);border-radius:8px;
+    background:transparent;color:var(--cf-text);cursor:pointer;
+  }
+  html.js .topnav-toggle:hover,html.js .topnav-toggle:active{background:var(--cf-bg-300)}
+  html.js .topnav-toggle:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+  .topnav-toggle[aria-expanded="true"] .topnav-toggle-open,.topnav-toggle[aria-expanded="false"] .topnav-toggle-close{display:none}
+  html.js .topnav{
+    position:absolute;top:100%;left:0;right:0;margin:0;
+    flex-direction:column;align-items:stretch;gap:0;white-space:normal;
+    background:var(--cf-bg-100);border-bottom:1px solid var(--cf-border);box-shadow:0 16px 32px -20px rgba(66,50,23,.4);
+    opacity:0;transform:translateY(-6px);visibility:hidden;
+    transition:opacity .15s ease-out,transform .15s ease-out,visibility 0s linear .15s;
+  }
+  html.menu-open .topnav{opacity:1;transform:none;visibility:visible;transition:opacity .15s ease-out,transform .15s ease-out,visibility 0s}
+  html.js .topnav-link{display:flex;align-items:center;height:48px;margin:0;padding:0 16px;font-size:14px}
+}
+@media(max-width:640px) and (prefers-reduced-motion:reduce){html.js .topnav{transition:none}}
+
+/* ---------- press feedback ---------- */
+/* Buttons shrink a little while pressed; transform only, so it runs on the compositor. No scale with reduced motion. */
+.anc-share,.chip,.vt-btn,.topnav-toggle{transition-property:background-color,color,border-color,transform;transition-duration:.15s,.15s,.15s,160ms;transition-timing-function:ease-out}
+@media(prefers-reduced-motion:no-preference){
+  .anc-share:active,.chip:active,.vt-btn:not(:disabled):active,html.js .topnav-toggle:active{transform:scale(.97)}
+}
+
+/* ---------- focus ---------- */
+/* Every control shows the orange ring on keyboard focus. :where() keeps this at zero specificity, so a component's own
+   focus style still wins. */
+:where(a,button,select,summary,[tabindex]):focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+/* ---------- phones (≤ 640px): Compare and the chat button ---------- */
+@media(max-width:640px){
+  /* Table: one card per column (public/app.js renders anStackHTML here) instead of a sideways-scrolling table. */
+  .analytics-table-wrap{border:0;border-radius:0;background:transparent;overflow:visible}
+  /* Room below the results for the chat button. */
+  #analyticsView{padding-bottom:24px}
+}
+.an-mstack{display:flex;flex-direction:column;gap:12px}
+.an-mcard{background:var(--cf-bg-100);border:1px solid var(--cf-border);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden}
+.an-mcard-head{display:flex;align-items:center;margin:0;padding:12px 14px;font-size:15px;font-weight:700;color:var(--cf-text)}
+.an-mcard-shot{padding:0 14px 12px}
+.an-mcard-shot .an-shot,.an-mcard-shot .an-noshot{max-width:none;width:100%}
+.an-mcard-shot .an-shot--mobile{max-width:240px;margin:0 auto}
+.an-mcard-fields{margin:0;border-top:1px solid var(--cf-border)}
+.an-mfield{display:grid;grid-template-columns:112px minmax(0,1fr);gap:12px;align-items:start;padding:10px 14px;border-bottom:1px solid var(--cf-border);font-size:14px}
+.an-mfield:last-child{border-bottom:0}
+.an-mfield dt{padding-top:2px;font-family:var(--font-mono);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cf-text-soft)}
+.an-mfield dd{margin:0;min-width:0}
+.an-mfield.an-notes{display:block;max-width:none;min-width:0}
+.an-mfield.an-notes dt{margin-bottom:6px}
+.an-mfield.an-notes dd{color:var(--cf-text-soft);line-height:1.5;font-size:13.5px}
+.an-mcmp{padding:12px 14px;border:1px dashed var(--cf-border-strong);border-radius:var(--radius-sm);background:var(--cf-bg-200);font-size:14px;line-height:1.5}
+.an-mcmp-head{font-family:var(--font-mono);font-size:12px;letter-spacing:.04em;color:var(--cf-text-soft);margin-bottom:8px}
+.an-mcmp-kind{margin:10px 0 4px;font-weight:700;font-size:14px;color:var(--cf-text)}
+.an-mcmp-kind:first-of-type{margin-top:0}
+.an-mcmp .an-cmp-list{margin:0;padding-left:1.1em}
+.an-mcmp .an-cmp-list li{margin:0 0 4px}
+.an-mcmp .an-cmp-list li::marker{color:var(--cf-text-soft)}
+.an-mcmp .an-cmp-empty{color:var(--cf-text-soft)}
+.an-mcmp .an-cmp-note{font-size:13px;color:var(--cf-text-soft);font-style:italic;margin:0 0 4px}
+
+
+</style>
+</head>
+<body>
+<main>
+    <section class="hero" aria-label="AI Interface Library overview">
+      <div class="hero-frame">
+        <div class="hero-panel">
+          <div class="hero-grain" aria-hidden="true"></div>
+
+          <div class="hero-layer">
+          <div class="hero-copy">
+            <h1 class="hero-title" aria-label="AI Interface Library">
+              <span class="title-mask"><span class="title-line">AI Interface</span></span>
+              <span class="title-mask"><span class="title-line">Library</span></span>
+            </h1>
+            <p class="hero-sub">
+              <span class="sr-only">Find UI references from AI products, updated weekly, and compare layout, hierarchy and colour for your next design.</span>
+              <span aria-hidden="true">
+              <span class="w" style="--c:0">Find</span>
+              <span class="w" style="--c:5">UI</span>
+              <span class="w" style="--c:8">references</span>
+              <span class="w" style="--c:19">from</span>
+              <span class="w" style="--c:24">AI</span>
+              <span class="w" style="--c:27">products,</span>
+              <span class="w" style="--c:37">updated</span>
+              <span class="w" style="--c:45">weekly,</span>
+              <span class="w" style="--c:53">and</span>
+              <span class="w" style="--c:57">compare</span>
+              <span class="w" style="--c:65"><span class="kw kw-layout">layout<span class="ann box" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="ann tag orange" aria-hidden="true">Layout · 4 × 3 grid</span></span>,</span>
+              <span class="w" style="--c:73"><span class="kw kw-hier">hierarchy<span class="ann rule" aria-hidden="true"></span><span class="ann tag" aria-hidden="true"><span class="bars"><b></b><b></b><b></b></span>H1 74 · Body 20</span></span></span>
+              <span class="w" style="--c:83">and</span>
+              <span class="w" style="--c:87"><span class="kw kw-colour">colour<span class="ann rule o" aria-hidden="true"></span><span class="ann tag orange" aria-hidden="true"><span class="sw"></span>#C44C1C</span></span></span>
+              <span class="w" style="--c:94">for</span>
+              <span class="w" style="--c:98">your</span>
+              <span class="w" style="--c:103"><em>next&nbsp;design</em>.</span>
+              </span>
+            </p>
+          </div>
+
+          <dl class="stats" id="stats">
+            <div class="stat"><dt>Screenshots</dt><dd data-stat="screenshots">217</dd></div>
+            <div class="stat"><dt><span class="stat-full">Portals tracked</span><span class="stat-short" aria-hidden="true">Portals</span></dt><dd data-stat="portals">15</dd></div>
+            <div class="stat"><dt><span class="stat-full">Weeks archived</span><span class="stat-short" aria-hidden="true">Weeks</span></dt><dd data-stat="weeks">15</dd></div>
+          </dl>
+
+          <!-- One product's weekly wireframes: the Worker renders them here (src/wireframe.ts timelineHtml), public/timeline-hero.js
+               moves them (prototype: docs/prototypes/timeline-hero.html). Left empty when the database can't be read. -->
+          <div class="hero-timeline" role="group" aria-label="ChatGPT, week by week" data-slug="chatgpt"><div class="tl-view"><div class="tl-track"><a class="tl-frame" href="/weeks/2026-08-17" aria-label="ChatGPT · Week of Aug 17, 2026" data-tip="ChatGPT · Week of Aug 17, 2026" data-shapes="[[0,0,260,800,1],[260,0,1020,50,1],[660,270,220,30,1],[450,340,640,50,1],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]"><span class="tl-label" aria-hidden="true">W4 · Aug 17</span><span class="tl-screen"><svg viewBox="0 0 1280 800" preserveAspectRatio="none" focusable="false" aria-hidden="true"><rect class="w-sb" x="0" y="0" width="260" height="800" rx="0"/><rect class="w-tb" x="260" y="0" width="1020" height="50" rx="0"/><rect class="w-hd" x="660" y="270" width="220" height="30" rx="14"/><rect class="w-in" x="450" y="340" width="640" height="50" rx="36"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/></svg></span></a><a class="tl-frame" href="/weeks/2026-08-24" aria-label="ChatGPT · Week of Aug 24, 2026" data-tip="ChatGPT · Week of Aug 24, 2026" data-shapes="[[0,0,260,800,1],[260,0,1020,50,1],[620,270,300,30,1],[450,340,640,50,1],[460,420,240,140,1],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]"><span class="tl-label" aria-hidden="true">W5 · Aug 24</span><span class="tl-screen"><svg viewBox="0 0 1280 800" preserveAspectRatio="none" focusable="false" aria-hidden="true"><rect class="w-sb" x="0" y="0" width="260" height="800" rx="0"/><rect class="w-tb" x="260" y="0" width="1020" height="50" rx="0"/><rect class="w-hd" x="620" y="270" width="300" height="30" rx="14"/><rect class="w-in" x="450" y="340" width="640" height="50" rx="36"/><rect class="w-cd" x="460" y="420" width="240" height="140" rx="22"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/></svg></span></a><a class="tl-frame" href="/weeks/2026-09-07" aria-label="ChatGPT · Week of Sep 7, 2026" data-tip="ChatGPT · Week of Sep 7, 2026" data-shapes="[[0,0,260,800,1],[260,0,1020,50,1],[660,280,210,20,1],[450,340,640,50,1],[460,420,240,140,1],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]"><span class="tl-label" aria-hidden="true">W6 · Sep 7</span><span class="tl-screen"><svg viewBox="0 0 1280 800" preserveAspectRatio="none" focusable="false" aria-hidden="true"><rect class="w-sb" x="0" y="0" width="260" height="800" rx="0"/><rect class="w-tb" x="260" y="0" width="1020" height="50" rx="0"/><rect class="w-hd" x="660" y="280" width="210" height="20" rx="14"/><rect class="w-in" x="450" y="340" width="640" height="50" rx="36"/><rect class="w-cd" x="460" y="420" width="240" height="140" rx="22"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/></svg></span></a><a class="tl-frame" href="/weeks/2026-09-21" aria-label="ChatGPT · Week of Sep 21, 2026" data-tip="ChatGPT · Week of Sep 21, 2026" data-shapes="[[0,0,260,800,1],[260,0,1020,50,1],[630,280,280,20,1],[450,340,640,50,1],[450,670,640,90,1],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]"><span class="tl-label" aria-hidden="true">W7 · Sep 21</span><span class="tl-screen"><svg viewBox="0 0 1280 800" preserveAspectRatio="none" focusable="false" aria-hidden="true"><rect class="w-sb" x="0" y="0" width="260" height="800" rx="0"/><rect class="w-tb" x="260" y="0" width="1020" height="50" rx="0"/><rect class="w-hd" x="630" y="280" width="280" height="20" rx="14"/><rect class="w-in" x="450" y="340" width="640" height="50" rx="36"/><rect class="w-cd" x="450" y="670" width="640" height="90" rx="22"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/></svg></span></a><a class="tl-frame" href="/weeks/2026-09-28" aria-label="ChatGPT · Week of Sep 28, 2026" data-tip="ChatGPT · Week of Sep 28, 2026" data-shapes="[[0,0,260,800,1],[260,0,1020,50,1],[620,280,300,20,1],[450,340,640,50,1],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]"><span class="tl-label" aria-hidden="true">W8 · Sep 28</span><span class="tl-screen"><svg viewBox="0 0 1280 800" preserveAspectRatio="none" focusable="false" aria-hidden="true"><rect class="w-sb" x="0" y="0" width="260" height="800" rx="0"/><rect class="w-tb" x="260" y="0" width="1020" height="50" rx="0"/><rect class="w-hd" x="620" y="280" width="300" height="20" rx="14"/><rect class="w-in" x="450" y="340" width="640" height="50" rx="36"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/></svg></span></a><a class="tl-frame" href="/weeks/2026-10-05" aria-label="ChatGPT · Week of Oct 5, 2026" data-tip="ChatGPT · Week of Oct 5, 2026" data-shapes="[[0,0,260,800,1],[260,0,1020,50,1],[640,280,250,20,1],[450,340,640,50,1],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]"><span class="tl-label" aria-hidden="true">W9 · Oct 5</span><span class="tl-screen"><svg viewBox="0 0 1280 800" preserveAspectRatio="none" focusable="false" aria-hidden="true"><rect class="w-sb" x="0" y="0" width="260" height="800" rx="0"/><rect class="w-tb" x="260" y="0" width="1020" height="50" rx="0"/><rect class="w-hd" x="640" y="280" width="250" height="20" rx="14"/><rect class="w-in" x="450" y="340" width="640" height="50" rx="36"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/></svg></span></a><a class="tl-frame" href="/weeks/2026-10-12" aria-label="ChatGPT · Week of Oct 12, 2026" data-tip="ChatGPT · Week of Oct 12, 2026" data-shapes="[[0,0,350,800,1],[340,0,940,50,1],[660,280,300,20,1],[430,340,770,50,1],[600,440,420,300,1],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]"><span class="tl-label" aria-hidden="true">W10 · Oct 12</span><span class="tl-screen"><svg viewBox="0 0 1280 800" preserveAspectRatio="none" focusable="false" aria-hidden="true"><rect class="w-sb" x="0" y="0" width="350" height="800" rx="0"/><rect class="w-tb" x="340" y="0" width="940" height="50" rx="0"/><rect class="w-hd" x="660" y="280" width="300" height="20" rx="14"/><rect class="w-in" x="430" y="340" width="770" height="50" rx="36"/><rect class="w-cd" x="600" y="440" width="420" height="300" rx="22"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/></svg></span></a><a class="tl-frame" href="/weeks/2026-10-19" aria-label="ChatGPT · Week of Oct 19, 2026" data-tip="ChatGPT · Week of Oct 19, 2026" data-shapes="[[0,0,340,800,1],[340,0,940,50,1],[660,280,300,20,1],[430,340,770,50,1],[600,440,420,300,1],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]"><span class="tl-label" aria-hidden="true">W11 · Oct 19</span><span class="tl-screen"><svg viewBox="0 0 1280 800" preserveAspectRatio="none" focusable="false" aria-hidden="true"><rect class="w-sb" x="0" y="0" width="340" height="800" rx="0"/><rect class="w-tb" x="340" y="0" width="940" height="50" rx="0"/><rect class="w-hd" x="660" y="280" width="300" height="20" rx="14"/><rect class="w-in" x="430" y="340" width="770" height="50" rx="36"/><rect class="w-cd" x="600" y="440" width="420" height="300" rx="22"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/></svg></span></a><a class="tl-frame" href="/weeks/2026-10-26" aria-label="ChatGPT · Week of Oct 26, 2026" data-tip="ChatGPT · Week of Oct 26, 2026" data-shapes="[[0,0,340,800,1],[340,0,940,50,1],[660,280,300,20,1],[430,340,770,50,1],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]"><span class="tl-label" aria-hidden="true">W12 · Oct 26</span><span class="tl-screen"><svg viewBox="0 0 1280 800" preserveAspectRatio="none" focusable="false" aria-hidden="true"><rect class="w-sb" x="0" y="0" width="340" height="800" rx="0"/><rect class="w-tb" x="340" y="0" width="940" height="50" rx="0"/><rect class="w-hd" x="660" y="280" width="300" height="20" rx="14"/><rect class="w-in" x="430" y="340" width="770" height="50" rx="36"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/></svg></span></a><a class="tl-frame" href="/weeks/2026-11-02" aria-label="ChatGPT · Week of Nov 2, 2026" data-tip="ChatGPT · Week of Nov 2, 2026" data-shapes="[[0,0,340,800,1],[340,0,940,50,1],[680,310,260,30,1],[430,370,770,50,1],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]"><span class="tl-label" aria-hidden="true">W13 · Nov 2</span><span class="tl-screen"><svg viewBox="0 0 1280 800" preserveAspectRatio="none" focusable="false" aria-hidden="true"><rect class="w-sb" x="0" y="0" width="340" height="800" rx="0"/><rect class="w-tb" x="340" y="0" width="940" height="50" rx="0"/><rect class="w-hd" x="680" y="310" width="260" height="30" rx="14"/><rect class="w-in" x="430" y="370" width="770" height="50" rx="36"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/></svg></span></a><a class="tl-frame" href="/weeks/2026-11-09" aria-label="ChatGPT · Week of Nov 9, 2026" data-tip="ChatGPT · Week of Nov 9, 2026" data-shapes="[[0,0,340,800,1],[340,0,940,50,1],[680,310,260,30,1],[430,370,770,50,1],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0],[0,0,0,0,0]]"><span class="tl-label" aria-hidden="true">W14 · Nov 9</span><span class="tl-screen"><svg viewBox="0 0 1280 800" preserveAspectRatio="none" focusable="false" aria-hidden="true"><rect class="w-sb" x="0" y="0" width="340" height="800" rx="0"/><rect class="w-tb" x="340" y="0" width="940" height="50" rx="0"/><rect class="w-hd" x="680" y="310" width="260" height="30" rx="14"/><rect class="w-in" x="430" y="370" width="770" height="50" rx="36"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/></svg></span></a><a class="tl-frame is-latest" href="/weeks/2026-11-16" aria-label="ChatGPT · Week of Nov 16, 2026" data-tip="ChatGPT · Week of Nov 16, 2026" data-shapes="[[0,0,340,800,1],[340,0,940,50,1],[660,310,300,30,1],[430,370,770,50,1],[440,460,250,140,1],[430,700,770,70,1],[0,0,0,0,0],[0,0,0,0,0]]"><span class="tl-label" aria-hidden="true">W15 · Nov 16</span><span class="tl-screen"><svg viewBox="0 0 1280 800" preserveAspectRatio="none" focusable="false" aria-hidden="true"><rect class="w-sb" x="0" y="0" width="340" height="800" rx="0"/><rect class="w-tb" x="340" y="0" width="940" height="50" rx="0"/><rect class="w-hd" x="660" y="310" width="300" height="30" rx="14"/><rect class="w-in" x="430" y="370" width="770" height="50" rx="36"/><rect class="w-cd" x="440" y="460" width="250" height="140" rx="22"/><rect class="w-cd" x="430" y="700" width="770" height="70" rx="22"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/><rect class="w-cd" x="0" y="0" width="0" height="0" rx="22" opacity="0"/></svg><span class="tl-lock" aria-hidden="true"><i></i><i></i><i></i><i></i></span></span></a></div></div><span class="tl-tip" aria-hidden="true"></span></div>
+
+          <!-- The Worker fills in the latest week (src/homepage.ts); app.js does if it couldn't. -->
+          <p class="hero-week"><span class="hero-week-label">Latest capture</span><span id="heroWeek">Week of <b>Nov 16</b>, 2026</span></p>
+          </div>
+        </div>
+      </div>
+    </section>
+</main>
+<script>
+// Homepage hero: a strip of one product's weekly wireframes (rendered by the Worker, src/wireframe.ts timelineHtml;
+// prototype docs/prototypes/timeline-hero.html). The strip drifts left one frame every PERIOD ms. Each frame, while it
+// enters from the right, eases its regions from the previous week's places to its own, so a moved message box or a
+// wider sidebar can be seen moving. The latest week rests at the right end, where the corner brackets lock onto it.
+// The loop is seamless: copies of the strip sit before and after it, and its position is a pure function of time.
+// It stops while off screen, while the tab is hidden, and while a pointer or keyboard focus is on the strip; with
+// reduced motion it is the still strip the Worker rendered (the latest week at the right end). The panel's
+// data-timeline says which: "running", "paused" or "still".
+(() => {
+  const panel = document.querySelector(".hero-panel");
+  const root = panel?.querySelector(".hero-timeline:not([hidden])");
+  const view = root?.querySelector(".tl-view"), track = root?.querySelector(".tl-track");
+  if (!view || !track) return;
+  const real = [...track.children];
+  if (!real.length) return;
+  const tip = root.querySelector(".tl-tip");
+  const reducedMq = matchMedia("(prefers-reduced-motion: reduce)");
+  const PERIOD = 3000; // ms per frame of drift
+  const HOLD = 1500; // ms the latest week stays locked at rest before the first drift
+  const ease = (p) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
+  const clamp01 = (v) => Math.max(0, Math.min(1, v));
+
+  // Each frame morphs from the week before it (the oldest from itself: the strip's seam has no line, styles.css).
+  const shapes = real.map((a) => JSON.parse(a.dataset.shapes));
+  const from = shapes.map((s, i) => shapes[Math.max(0, i - 1)]);
+
+  let reduce = reducedMq.matches, visible = true, held = 0, running = false, raf = 0, last = 0, t = -HOLD;
+  let items = [], vw = 0, pitch = 0, setW = 0, restX = 0, enterX = 0, x = 0, base = 0, built = false;
+
+  /** Copies around the real strip (inert: keyboard and screen readers get the real one only), and the measurements. */
+  function build() {
+    for (const el of [...track.children]) if (!real.includes(el)) el.remove();
+    track.classList.add("is-moving");
+    track.style.transform = "";
+    vw = view.clientWidth;
+    const first = real[0], fw = first.offsetWidth;
+    pitch = real.length > 1 ? real[1].offsetLeft - first.offsetLeft : fw + 24;
+    setW = pitch * real.length;
+    if (!vw || !fw) { built = false; return; }
+    const k = Math.ceil(vw / setW) + 1;
+    const copy = () => real.map((a) => { const c = a.cloneNode(true); c.setAttribute("aria-hidden", "true"); c.tabIndex = -1; c.inert = true; return c; });
+    for (let i = 0; i < k; i++) { track.prepend(...copy()); track.append(...copy()); }
+    items = [...track.children].map((el, j) => ({ el, i: j % real.length, rects: el.querySelectorAll("rect"), p: -1 }));
+    const pad = parseFloat(getComputedStyle(root).getPropertyValue("--tl-pad")) || 0;
+    // The track stays anchored at the right (styles.css), so moving it never changes its box: offsets are from where
+    // it sits with the copies in it (base), and the transform puts the latest week back at the right end.
+    base = track.offsetLeft;
+    const latest = real[real.length - 1];
+    restX = vw - pad - (base + latest.offsetLeft + fw);
+    enterX = vw - pad - fw; // a frame's left edge when it has finished entering
+    built = true;
+  }
+
+  /** Draw item `it` at morph progress p (0: the previous week's regions, 1: its own). */
+  function morph(it, p) {
+    if (Math.abs(p - it.p) < 0.002) return;
+    it.p = p;
+    const a = from[it.i], b = shapes[it.i], e = ease(p);
+    it.rects.forEach((r, s) => {
+      const A = a[s], B = b[s];
+      const g = !A[4] ? B : !B[4] ? A : null; // a region that comes or goes fades in place
+      const v = (n) => (g ? g[n] : A[n] + (B[n] - A[n]) * e);
+      r.setAttribute("x", v(0).toFixed(1)); r.setAttribute("y", v(1).toFixed(1));
+      r.setAttribute("width", v(2).toFixed(1)); r.setAttribute("height", v(3).toFixed(1));
+      r.setAttribute("opacity", (A[4] + (B[4] - A[4]) * e).toFixed(3));
+    });
+    if (it.el.classList.contains("is-latest")) it.el.classList.toggle("is-locked", p >= 0.999);
+  }
+
+  /** The strip at offset `pos` px (x of the track): frames entering from the right morph over most of a pitch. */
+  function place(pos) {
+    x = pos;
+    track.style.transform = `translate3d(${pos.toFixed(2)}px,0,0)`;
+    for (const it of items) {
+      const left = base + pos + it.el.offsetLeft;
+      if (left > vw + pitch || left < -pitch) continue;
+      morph(it, clamp01((enterX + pitch * 0.85 - left) / (pitch * 0.7)));
+    }
+  }
+  /** Offset at loop time `ms`, wrapped into one strip's length so the copies take over seamlessly. */
+  const at = (ms) => restX - ((((Math.max(0, ms) / PERIOD) * pitch) % setW) + setW) % setW;
+
+  function loop(ts) {
+    if (!running) return;
+    raf = requestAnimationFrame(loop);
+    if (last) t += Math.min(50, ts - last);
+    last = ts;
+    place(at(t));
+  }
+  const setMode = (m) => { panel.dataset.timeline = m; };
+  function start() {
+    if (running || reduce || !built) return;
+    if (!visible || document.hidden || held) { setMode("paused"); return; }
+    running = true; last = 0; setMode("running");
+    raf = requestAnimationFrame(loop);
+  }
+  function stop() { running = false; cancelAnimationFrame(raf); if (!reduce && built) setMode("paused"); }
+
+  function init() {
+    stop();
+    if (reduce) {
+      for (const el of [...track.children]) if (!real.includes(el)) el.remove();
+      track.classList.remove("is-moving"); track.style.transform = "";
+      real.forEach((el, i) => { el.querySelectorAll("rect").forEach((r, s) => { const [rx, ry, w, h, o] = shapes[i][s]; r.setAttribute("x", rx); r.setAttribute("y", ry); r.setAttribute("width", w); r.setAttribute("height", h); r.setAttribute("opacity", o); }); });
+      real.at(-1).classList.add("is-locked");
+      built = false; setMode("still");
+      return;
+    }
+    build();
+    if (!built) return;
+    // Resume at the same place in the loop after a resize; the first start shows the latest week locked at rest.
+    place(at(t));
+    start();
+  }
+
+  // Pointer or keyboard on the strip: hold it still and name the frame ("ChatGPT · Week of Nov 16, 2026").
+  const showTip = (a) => {
+    if (!tip) return;
+    tip.textContent = a.dataset.tip;
+    const r = a.querySelector(".tl-screen").getBoundingClientRect(), rr = root.getBoundingClientRect();
+    const tw = tip.offsetWidth, left = Math.max(0, Math.min(rr.width - tw, r.left - rr.left + r.width / 2 - tw / 2));
+    tip.style.transform = `translate3d(${left.toFixed(1)}px,${(r.bottom - rr.top + 8).toFixed(1)}px,0)`;
+    tip.classList.add("is-on");
+  };
+  const hideTip = () => tip?.classList.remove("is-on");
+  const hold = () => { held++; stop(); };
+  const release = () => { held = Math.max(0, held - 1); if (!held) start(); };
+  root.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") hold(); });
+  root.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") { hideTip(); release(); } });
+  root.addEventListener("pointerover", (e) => { const a = e.target.closest?.(".tl-frame"); if (a && e.pointerType === "mouse") showTip(a); });
+  root.addEventListener("focusin", (e) => {
+    const a = e.target.closest?.(".tl-frame");
+    if (!a) return;
+    hold();
+    // Bring a frame that has drifted out of view back into it; the loop picks up from there.
+    if (built) {
+      const pad = parseFloat(getComputedStyle(root).getPropertyValue("--tl-pad")) || 0, left = base + x + a.offsetLeft, w = a.offsetWidth;
+      let pos = x;
+      if (left < pad) pos = pad - base - a.offsetLeft; else if (left + w > vw - pad) pos = vw - pad - w - base - a.offsetLeft;
+      if (pos !== x) { place(pos); t = ((restX - pos) / pitch) * PERIOD; }
+    }
+    showTip(a);
+  });
+  root.addEventListener("focusout", (e) => { if (!root.contains(e.relatedTarget)) { hideTip(); release(); } });
+
+  init();
+  let rt = 0, size = `${view.clientWidth}`;
+  new ResizeObserver(() => {
+    const s = `${view.clientWidth}`;
+    if (s === size) return;
+    clearTimeout(rt);
+    rt = setTimeout(() => { size = s; init(); }, 120);
+  }).observe(view);
+  new IntersectionObserver((es) => { visible = es[0].isIntersecting; visible ? start() : stop(); }).observe(root);
+  document.addEventListener("visibilitychange", () => (document.hidden ? stop() : start()));
+  reducedMq.addEventListener("change", () => { reduce = reducedMq.matches; init(); });
+})();
+
+</script>
+</body>
+</html>
